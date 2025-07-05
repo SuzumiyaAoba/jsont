@@ -51,7 +51,7 @@ cat file.json | npm run dev
 1. `index.tsx` reads from stdin and parses JSON
 2. Parsed data passed as `initialData` to `App`
 3. `App` manages state and passes data to `JsonViewer`
-4. `JsonViever` recursively renders JSON with appropriate colors and formatting
+4. `JsonViewer` recursively renders JSON with appropriate colors and formatting
 
 ## Technical Considerations
 
@@ -79,3 +79,15 @@ cat file.json | npm run dev
 - Biome for linting and formatting (recommended rules only)
 - Husky + lint-staged for pre-commit quality checks
 - Import organization automatically handled by Biome
+
+## Important Notes
+
+### Git Workflow
+- **Never use `--no-verify` flag** when committing
+- Pre-commit hooks run `biome check --write` automatically
+- If lint errors occur, fix them first using `npm run check:write`
+- Commit only after all quality checks pass
+
+### Known Lint Exceptions
+- `any` types are intentionally used for JSON data handling since the application processes arbitrary JSON
+- Array index keys in JsonViewer are acceptable for this static rendering use case
