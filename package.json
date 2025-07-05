@@ -10,7 +10,16 @@
     "build": "tsc",
     "dev": "tsx src/index.tsx",
     "start": "node dist/index.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "vitest",
+    "test:ui": "vitest --ui",
+    "test:run": "vitest run",
+    "lint": "biome lint ./src",
+    "lint:fix": "biome lint --write ./src",
+    "format": "biome format ./src",
+    "format:write": "biome format --write ./src",
+    "check": "biome check ./src",
+    "check:write": "biome check --write ./src",
+    "prepare": "husky"
   },
   "keywords": [],
   "author": "",
@@ -24,6 +33,19 @@
     "typescript": "^5.8.3"
   },
   "devDependencies": {
-    "@types/node": "^24.0.10"
+    "@biomejs/biome": "^2.0.6",
+    "@types/node": "^24.0.10",
+    "@vitest/ui": "^3.2.4",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.1.2",
+    "vitest": "^3.2.4"
+  },
+  "lint-staged": {
+    "*.{ts,tsx,js,jsx}": [
+      "biome check --write"
+    ],
+    "*.{json,md}": [
+      "biome format --write"
+    ]
   }
 }

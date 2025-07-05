@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import { Box, Text, useInput, useApp } from 'ink';
-import { JsonViewer } from './components/JsonViewer.js';
+import { Box, Text, useApp, useInput } from 'ink';
+import React, { useEffect, useState } from 'react';
 import { FilterInput } from './components/FilterInput.js';
+import { JsonViewer } from './components/JsonViewer.js';
 import { StatusBar } from './components/StatusBar.js';
 
 interface AppProps {
@@ -15,13 +15,16 @@ export function App({ initialData }: AppProps) {
   const [error, setError] = useState<string | null>(null);
   const { exit } = useApp();
 
-  useInput((input, key) => {
-    if (key.ctrl && input === 'c') {
-      exit();
-    }
-  }, {
-    isActive: process.stdin.isTTY ?? false
-  });
+  useInput(
+    (input, key) => {
+      if (key.ctrl && input === 'c') {
+        exit();
+      }
+    },
+    {
+      isActive: process.stdin.isTTY ?? false,
+    },
+  );
 
   return (
     <Box flexDirection="column" height="100%">
