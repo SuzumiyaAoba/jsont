@@ -1,5 +1,5 @@
-import { Box, Text } from 'ink';
-import type React from 'react';
+import { Box, Text } from "ink";
+import type React from "react";
 
 interface JsonViewerProps {
   data: any;
@@ -15,21 +15,21 @@ export function JsonViewer({ data }: JsonViewerProps) {
   }
 
   const renderJson = (obj: any, indent = 0): React.ReactNode => {
-    const spaces = '  '.repeat(indent);
+    const spaces = "  ".repeat(indent);
 
     if (obj === null) {
       return <Text color="gray">null</Text>;
     }
 
-    if (typeof obj === 'string') {
+    if (typeof obj === "string") {
       return <Text color="green">"{obj}"</Text>;
     }
 
-    if (typeof obj === 'number') {
+    if (typeof obj === "number") {
       return <Text color="cyan">{obj}</Text>;
     }
 
-    if (typeof obj === 'boolean') {
+    if (typeof obj === "boolean") {
       return <Text color="yellow">{obj.toString()}</Text>;
     }
 
@@ -53,15 +53,15 @@ export function JsonViewer({ data }: JsonViewerProps) {
       );
     }
 
-    if (typeof obj === 'object') {
+    if (typeof obj === "object") {
       const keys = Object.keys(obj);
       if (keys.length === 0) {
-        return <Text>{'{}'}</Text>;
+        return <Text>{"{}"}</Text>;
       }
 
       return (
         <Box flexDirection="column">
-          <Text>{'{'}</Text>
+          <Text>{"{"}</Text>
           {keys.map((key, index) => (
             <Box key={`object-${key}-${index}`}>
               <Text>{spaces} </Text>
@@ -73,7 +73,7 @@ export function JsonViewer({ data }: JsonViewerProps) {
           ))}
           <Text>
             {spaces}
-            {'}'}
+            {"}"}
           </Text>
         </Box>
       );

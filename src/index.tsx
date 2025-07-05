@@ -1,14 +1,14 @@
 #!/usr/bin/env node
-import { render } from 'ink';
-import React from 'react';
-import { App } from './App.js';
+import { render } from "ink";
+import React from "react";
+import { App } from "./App.js";
 
 async function main() {
   let jsonData = null;
 
   if (!process.stdin.isTTY) {
-    let input = '';
-    process.stdin.setEncoding('utf8');
+    let input = "";
+    process.stdin.setEncoding("utf8");
 
     for await (const chunk of process.stdin) {
       input += chunk;
@@ -18,7 +18,7 @@ async function main() {
       try {
         jsonData = JSON.parse(input);
       } catch (err) {
-        console.error('Failed to parse JSON:', err);
+        console.error("Failed to parse JSON:", err);
         process.exit(1);
       }
     }
