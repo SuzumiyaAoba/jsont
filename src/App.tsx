@@ -36,7 +36,14 @@ export function App({ initialData, initialError }: AppProps) {
         exit();
       } else if (input === "v") {
         // v: toggle viewer mode (like vim visual mode)
-        setUseNavigableViewer(!useNavigableViewer);
+        setUseNavigableViewer((prev) => {
+          const newValue = !prev;
+          // When switching to navigable viewer, automatically set focus to navigation
+          if (newValue) {
+            setFocusMode("navigation");
+          }
+          return newValue;
+        });
       } else if (input === "t") {
         // t: theme switching
         nextTheme();
@@ -52,7 +59,12 @@ export function App({ initialData, initialError }: AppProps) {
 
   return (
     <Box flexDirection="column" width="100%" height="100%">
-      <StatusBar error={error} focusMode={focusMode} themeName={themeName} />
+      <StatusBar
+        error={error}
+        focusMode={focusMode}
+        themeName={themeName}
+        useNavigableViewer={useNavigableViewer}
+      />
       <FilterInput
         filter={filter}
         onFilterChange={setFilter}

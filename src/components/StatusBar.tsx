@@ -4,9 +4,15 @@ interface StatusBarProps {
   error: string | null;
   focusMode?: "filter" | "navigation";
   themeName?: string;
+  useNavigableViewer?: boolean;
 }
 
-export function StatusBar({ error, focusMode, themeName }: StatusBarProps) {
+export function StatusBar({
+  error,
+  focusMode,
+  themeName,
+  useNavigableViewer,
+}: StatusBarProps) {
   const getFocusHint = () => {
     if (!focusMode) return "";
     const current = focusMode === "filter" ? "Filter" : "Navigation";
@@ -26,7 +32,7 @@ export function StatusBar({ error, focusMode, themeName }: StatusBarProps) {
       <Text color={error ? "red" : "green"}>
         {error
           ? `Error: ${error}`
-          : `JSON TUI Viewer - q: Quit | v: View mode | t: Theme${getThemeInfo()}${getFocusHint()}`}
+          : `JSON TUI Viewer - q: Quit | v: ${useNavigableViewer ? "Classic" : "Navigate"} | t: Theme${getThemeInfo()}${getFocusHint()}`}
       </Text>
     </Box>
   );

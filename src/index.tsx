@@ -94,13 +94,13 @@ async function main() {
     process.exit(0);
   });
 
-  // Only auto-exit in pipe mode if there's no valid JSON data
-  if (!process.stdin.isTTY && !process.argv[2] && !jsonData) {
+  // Only auto-exit in pipe mode if there's no valid JSON data AND we have an error
+  if (!process.stdin.isTTY && !process.argv[2] && !jsonData && errorMessage) {
     // Wait a moment for rendering to complete, then exit
     setTimeout(() => {
       cleanup();
       app.unmount();
-      process.exit(0);
+      process.exit(1);
     }, 100);
   }
 }

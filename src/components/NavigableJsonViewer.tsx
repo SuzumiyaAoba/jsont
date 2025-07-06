@@ -151,12 +151,14 @@ export function NavigableJsonViewer({
   themeName,
 }: NavigableJsonViewerProps) {
   const { getColor } = useTheme(themeName);
-  const navigation = useNavigation(data, {
+  const navigationOptions = {
     viewportHeight,
-    enableKeyboardNavigation: true,
+    enableKeyboardNavigation: options.enableKeyboardNavigation ?? true,
     initialSelectedIndex: controlledSelectedIndex || 0,
     ...options,
-  });
+  };
+
+  const navigation = useNavigation(data, navigationOptions);
 
   // Use controlled state if provided, otherwise use hook state
   const selectedIndex = controlledSelectedIndex ?? navigation.selectedIndex;
