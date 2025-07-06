@@ -54,6 +54,7 @@
     "@types/node": "^24.0.10",
     "@vitest/ui": "^3.2.4",
     "husky": "^9.1.7",
+    "ink-testing-library": "^4.0.0",
     "lint-staged": "^16.1.2",
     "vitest": "^3.2.4"
   },
