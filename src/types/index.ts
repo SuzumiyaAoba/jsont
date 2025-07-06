@@ -40,7 +40,7 @@ export interface ParseResult {
   success: boolean;
   data: JsonValue | null;
   error: string | null;
-  suggestion?: string;
+  suggestion?: string | undefined;
   parseTime?: number;
   validation?: ValidationResult;
 }
@@ -50,7 +50,7 @@ export interface ValidationResult {
   error?: string;
   suggestion?: string;
   stats?: JsonStats;
-  warnings?: string[];
+  warnings: string[];
 }
 
 export interface EnhancedParseResult extends ParseResult {

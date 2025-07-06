@@ -21,7 +21,7 @@ async function main() {
       jsonData = result.data;
 
       // Log stats in debug mode
-      if (process.env.DEBUG) {
+      if (process.env["DEBUG"]) {
         console.error(
           `Read ${result.stats.bytesRead} bytes from ${result.stats.source} in ${result.stats.readTime.toFixed(2)}ms`,
         );

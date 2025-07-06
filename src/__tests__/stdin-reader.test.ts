@@ -8,7 +8,6 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { autoReadJson, readJsonFromStdin } from "../utils/stdinReader.js";
 
 // Mock process.stdin
-const _mockStdin = vi.fn();
 vi.mock("node:process", () => ({
   stdin: {
     isTTY: false,
@@ -56,7 +55,7 @@ describe("Stdin Reader", () => {
       });
 
       vi.spyOn(process, "stdin", "get").mockReturnValue(
-        slowStdin as NodeJS.ReadableStream,
+        slowStdin as unknown as typeof process.stdin,
       );
 
       const result = await readJsonFromStdin({ timeout: 100 });
@@ -75,7 +74,7 @@ describe("Stdin Reader", () => {
       const largeStdin = Readable.from([largeData]);
 
       vi.spyOn(process, "stdin", "get").mockReturnValue(
-        largeStdin as NodeJS.ReadableStream,
+        largeStdin as unknown as typeof process.stdin,
       );
 
       const result = await readJsonFromStdin({ maxSize: 100 });
@@ -92,7 +91,7 @@ describe("Stdin Reader", () => {
 
       const emptyStdin = Readable.from([""]);
       vi.spyOn(process, "stdin", "get").mockReturnValue(
-        emptyStdin as NodeJS.ReadableStream,
+        emptyStdin as unknown as typeof process.stdin,
       );
 
       const result = await readJsonFromStdin();
@@ -111,7 +110,7 @@ describe("Stdin Reader", () => {
       const jsonStdin = Readable.from([jsonData]);
 
       vi.spyOn(process, "stdin", "get").mockReturnValue(
-        jsonStdin as NodeJS.ReadableStream,
+        jsonStdin as unknown as typeof process.stdin,
       );
 
       const result = await readJsonFromStdin();
@@ -137,7 +136,7 @@ describe("Stdin Reader", () => {
 
       const textStdin = Readable.from([textWithJson]);
       vi.spyOn(process, "stdin", "get").mockReturnValue(
-        textStdin as NodeJS.ReadableStream,
+        textStdin as unknown as typeof process.stdin,
       );
 
       const result = await readJsonFromStdin({ extractFromText: true });
@@ -171,7 +170,7 @@ describe("Stdin Reader", () => {
 
       const jsonStdin = Readable.from(['{"stdin": "data"}']);
       vi.spyOn(process, "stdin", "get").mockReturnValue(
-        jsonStdin as NodeJS.ReadableStream,
+        jsonStdin as unknown as typeof process.stdin,
       );
 
       const result = await autoReadJson();
@@ -191,7 +190,7 @@ describe("Stdin Reader", () => {
       const unicodeStdin = Readable.from([unicodeJson]);
 
       vi.spyOn(process, "stdin", "get").mockReturnValue(
-        unicodeStdin as NodeJS.ReadableStream,
+        unicodeStdin as unknown as typeof process.stdin,
       );
 
       const result = await readJsonFromStdin({ encoding: "utf8" });
@@ -213,7 +212,7 @@ describe("Stdin Reader", () => {
       const malformedStdin = Readable.from([malformedJson]);
 
       vi.spyOn(process, "stdin", "get").mockReturnValue(
-        malformedStdin as NodeJS.ReadableStream,
+        malformedStdin as unknown as typeof process.stdin,
       );
 
       const result = await readJsonFromStdin();
@@ -232,7 +231,7 @@ describe("Stdin Reader", () => {
       const jsonStdin = Readable.from([jsonData]);
 
       vi.spyOn(process, "stdin", "get").mockReturnValue(
-        jsonStdin as NodeJS.ReadableStream,
+        jsonStdin as unknown as typeof process.stdin,
       );
 
       const result = await readJsonFromStdin();

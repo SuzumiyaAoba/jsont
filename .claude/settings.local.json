@@ -20,7 +20,8 @@
       "Bash(gh pr:*)",
       "Bash(grep:*)",
       "Bash(npm audit:*)",
-      "WebFetch(domain:github.com)"
+      "WebFetch(domain:github.com)",
+      "Bash(npx tsc:*)"
     ],
     "deny": []
   }

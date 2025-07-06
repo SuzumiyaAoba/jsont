@@ -73,7 +73,7 @@ export function parseJsonSafely(input: string): ParseResult {
       success: false,
       data: null,
       error: `JSON parsing failed: ${errorMessage}`,
-      suggestion,
+      suggestion: suggestion ?? undefined,
       parseTime,
     };
   }
@@ -91,6 +91,7 @@ export function parseJsonWithValidation(input: string): EnhancedParseResult {
       validation: {
         isValid: false,
         error: parseResult.error || "Parse failed",
+        warnings: [],
       },
     };
   }
@@ -138,6 +139,7 @@ export function validateJsonStructure(data: JsonValue): ValidationResult {
             isValid: false,
             error: "Circular reference detected in JSON structure",
             suggestion: "Remove circular references before processing",
+            warnings: [],
           };
         }
         if (
@@ -149,6 +151,7 @@ export function validateJsonStructure(data: JsonValue): ValidationResult {
             error:
               "Circular reference or excessive nesting detected in JSON structure",
             suggestion: "Remove circular references before processing",
+            warnings: [],
           };
         }
       }
@@ -157,12 +160,13 @@ export function validateJsonStructure(data: JsonValue): ValidationResult {
     return {
       isValid: true,
       stats,
-      warnings: warnings.length > 0 ? warnings : undefined,
+      warnings: warnings.length > 0 ? warnings : [],
     };
   } catch (error) {
     return {
       isValid: false,
       error: error instanceof Error ? error.message : "Validation failed",
+      warnings: [],
     };
   }
 }
@@ -187,18 +191,18 @@ function calculateJsonStats(data: JsonValue): JsonStats {
     maxDepth = Math.max(maxDepth, currentDepth);
 
     if (value === null) {
-      types.null++;
+      types["null"] = (types["null"] || 0) + 1;
     } else if (typeof value === "string") {
-      types.string++;
+      types["string"] = (types["string"] || 0) + 1;
     } else if (typeof value === "number") {
-      types.number++;
+      types["number"] = (types["number"] || 0) + 1;
     } else if (typeof value === "boolean") {
-      types.boolean++;
+      types["boolean"] = (types["boolean"] || 0) + 1;
     } else if (Array.isArray(value)) {
-      types.array++;
+      types["array"] = (types["array"] || 0) + 1;
       value.forEach((item) => traverse(item, currentDepth + 1));
     } else if (typeof value === "object") {
-      types.object++;
+      types["object"] = (types["object"] || 0) + 1;
       Object.entries(value).forEach(([key, val]) => {
         keys.add(key);
         traverse(val, currentDepth + 1);
@@ -328,7 +332,7 @@ export function extractJsonFromText(text: string): string[] {
 
   match = codeBlockRegex.exec(text);
   while (match !== null) {
-    jsonBlocks.push(match[1].trim());
+    jsonBlocks.push(match[1]?.trim() ?? "");
     match = codeBlockRegex.exec(text);
   }
 

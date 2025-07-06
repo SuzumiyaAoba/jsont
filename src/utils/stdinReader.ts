@@ -130,7 +130,7 @@ export async function readJsonFromStdin(
     if (extractFromText) {
       const extractedJson = extractJsonFromText(inputData);
       if (extractedJson.length > 0) {
-        inputData = extractedJson[0]; // Use first found JSON
+        inputData = extractedJson[0] ?? ""; // Use first found JSON
       }
     }
 
@@ -260,7 +260,9 @@ function determineInputSource(): "stdin" | "file" | "pipe" {
 
   // Check if input is from a pipe vs file redirection
   // This is a heuristic and may not be 100% accurate
-  const stat = process.stdin._readableState;
+  const stat = (
+    process.stdin as unknown as { _readableState?: { fd?: number } }
+  )._readableState;
   if (stat && "fd" in stat && stat.fd === 0) {
     return "pipe";
   }
