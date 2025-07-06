@@ -140,5 +140,45 @@ export interface FormatterOptions {
   colors?: boolean;
 }
 
+// F2: Simple Navigation Types
+export interface NavigationItem {
+  key: string;
+  value: JsonValue;
+  path: string[];
+  depth: number;
+  type: "property" | "array-item" | "value";
+  isExpandable: boolean;
+  isExpanded?: boolean;
+}
+
+export interface NavigationState {
+  selectedIndex: number;
+  currentPath: string[];
+  scrollOffset: number;
+  isNavigable: boolean;
+  flatItems: NavigationItem[];
+}
+
+export interface NavigationOptions {
+  pageSize?: number;
+  viewportHeight?: number;
+  enableKeyboardNavigation?: boolean;
+  initialSelectedIndex?: number;
+}
+
+export interface NavigationActions {
+  navigateUp: () => void;
+  navigateDown: () => void;
+  navigatePageUp: () => void;
+  navigatePageDown: () => void;
+  navigateHome: () => void;
+  navigateEnd: () => void;
+  setSelectedIndex: (index: number) => void;
+  getVisibleItems: () => NavigationItem[];
+  getPathString: () => string;
+}
+
+export type NavigationHook = NavigationState & NavigationActions;
+
 // Export default to satisfy ES module requirements
 export default {};

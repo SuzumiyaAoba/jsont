@@ -2,6 +2,7 @@ import { Box, useApp, useInput } from "ink";
 import { useState } from "react";
 import { FilterInput } from "./components/FilterInput.js";
 import { JsonViewer } from "./components/JsonViewer.js";
+import { NavigableJsonViewer } from "./components/NavigableJsonViewer.js";
 import { StatusBar } from "./components/StatusBar.js";
 import type { JsonValue } from "./types/index.js";
 
@@ -14,12 +15,16 @@ export function App({ initialData, initialError }: AppProps) {
   const [filter, setFilter] = useState<string>("");
   const [filteredData] = useState<JsonValue>(initialData ?? null);
   const [error] = useState<string | null>(initialError ?? null);
+  const [useNavigableViewer, setUseNavigableViewer] = useState<boolean>(true);
   const { exit } = useApp();
 
   useInput(
     (input, key) => {
       if (key.ctrl && input === "c") {
         exit();
+      } else if (key.ctrl && input === "n") {
+        // Toggle between navigable and classic viewer
+        setUseNavigableViewer(!useNavigableViewer);
       }
     },
     {
@@ -31,7 +36,11 @@ export function App({ initialData, initialError }: AppProps) {
     <Box flexDirection="column" height="100%">
       <StatusBar error={error} />
       <FilterInput filter={filter} onFilterChange={setFilter} />
-      <JsonViewer data={filteredData} />
+      {useNavigableViewer ? (
+        <NavigableJsonViewer data={filteredData} />
+      ) : (
+        <JsonViewer data={filteredData} />
+      )}
     </Box>
   );
 }
