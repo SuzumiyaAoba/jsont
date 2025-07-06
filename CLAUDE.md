@@ -57,18 +57,20 @@ cat file.json | npm run dev
 
 ### TypeScript Configuration
 - Uses ES Modules (`"type": "module"` in package.json)
-- Node16 module resolution for proper import handling
+- Extends `@tsconfig/strictest` for maximum type safety
+- Bundler module resolution for modern import handling
 - All imports must use `.js` extensions in source files
 
 ### Ink Framework
-- React-based TUI framework for terminal applications
+- React-based TUI framework for terminal applications (v6.0+)
 - TTY detection prevents input conflicts when reading from pipes
 - Components use Ink's `Box` and `Text` for layout and styling
 
-### State Management
-- Currently uses basic React state
-- Filter functionality is placeholder for future jq integration
-- Error state managed at App level for global error display
+### State Management (2024 Architecture)
+- **Jotai 2.0+** for atomic state management
+- Atomic design with primitive and derived atoms
+- Persistent atoms for configuration and history
+- Optimized for CLI application performance
 
 ### Testing
 - Vitest for unit testing with TypeScript support
@@ -83,10 +85,45 @@ cat file.json | npm run dev
 ## Important Notes
 
 ### Git Workflow
+
+#### Starting New Work (MANDATORY)
+**Always follow this workflow before starting any new task:**
+
+```bash
+# 1. Switch to master branch
+git checkout master
+
+# 2. Fetch latest changes from remote
+git fetch origin
+
+# 3. Update local master to latest
+git pull origin master
+
+# 4. Create new feature branch
+git checkout -b feature/descriptive-name
+
+# 5. Begin work
+```
+
+#### Benefits of This Workflow
+- **Prevents conflicts** - Always start from latest master
+- **Clean history** - Avoids unnecessary merge commits
+- **Clear PRs** - Only relevant changes included
+- **Easy reviews** - Clear diff visualization
+
+#### Commit Guidelines
 - **Never use `--no-verify` flag** when committing
 - Pre-commit hooks run `biome check --write` automatically
 - If lint errors occur, fix them first using `npm run check:write`
 - Commit only after all quality checks pass
+- Use descriptive commit messages following conventional commits format
+
+#### Branch Naming Convention
+- `feat/feature-name` - New features
+- `fix/bug-description` - Bug fixes
+- `docs/documentation-update` - Documentation changes
+- `refactor/component-name` - Code refactoring
+- `test/test-description` - Test additions/updates
 
 ### Known Lint Exceptions
 - `any` types are intentionally used for JSON data handling since the application processes arbitrary JSON
