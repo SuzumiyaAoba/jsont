@@ -15,9 +15,14 @@ export function App({ initialData, initialError }: AppProps) {
   const [filter, setFilter] = useState<string>("");
   const [filteredData] = useState<JsonValue>(initialData ?? null);
   const [error] = useState<string | null>(initialError ?? null);
-  const [useNavigableViewer, setUseNavigableViewer] = useState<boolean>(true);
+  // Default to navigable viewer, only disable for stdin pipe without file arg
+  const isStdinPipe = !process.stdin.isTTY && !process.argv[2];
+  const [useNavigableViewer, setUseNavigableViewer] = useState<boolean>(
+    !isStdinPipe,
+  );
   const { exit } = useApp();
 
+  // Only enable keyboard input in TTY mode
   useInput(
     (input, key) => {
       if (key.ctrl && input === "c") {

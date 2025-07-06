@@ -198,7 +198,7 @@ export function useNavigation(
     }
   }, [selectedIndex, scrollOffset, viewportHeight]);
 
-  // Keyboard input handling
+  // Keyboard input handling - only enable in TTY mode
   useInput(
     (_input, key) => {
       if (!enableKeyboardNavigation) return;
@@ -218,7 +218,7 @@ export function useNavigation(
       }
     },
     {
-      isActive: enableKeyboardNavigation,
+      isActive: enableKeyboardNavigation && (process.stdin.isTTY ?? false),
     },
   );
 

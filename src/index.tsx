@@ -46,11 +46,29 @@ async function main() {
   }
 
   // Render the application with data or error
-  render(<App initialData={jsonData} initialError={errorMessage} />, {
-    stdin: process.stdin,
+  const renderOptions: any = {
     stdout: process.stdout,
     stderr: process.stderr,
-  });
+  };
+
+  // Only enable stdin in interactive mode to avoid raw mode issues
+  if (process.stdin.isTTY) {
+    renderOptions.stdin = process.stdin;
+  }
+
+  const app = render(
+    <App initialData={jsonData} initialError={errorMessage} />,
+    renderOptions,
+  );
+
+  // Auto-exit in pipe mode after rendering (stdin pipe without file arg)
+  if (!process.stdin.isTTY && !process.argv[2]) {
+    // Wait a moment for rendering to complete, then exit
+    setTimeout(() => {
+      app.unmount();
+      process.exit(0);
+    }, 100);
+  }
 }
 
 main().catch((err) => {
