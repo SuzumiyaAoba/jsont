@@ -136,7 +136,7 @@ export function useNavigation(
       selectedIndex < flatItems.length &&
       flatItems[selectedIndex]
     ) {
-      return flatItems[selectedIndex]!.path;
+      return flatItems[selectedIndex]?.path || [];
     }
     return [];
   }, [selectedIndex, flatItems]);
@@ -211,9 +211,9 @@ export function useNavigation(
         navigatePageUp();
       } else if (key.pageDown) {
         navigatePageDown();
-      } else if ((key as any).home) {
+      } else if ("home" in key && key.home) {
         navigateHome();
-      } else if ((key as any).end) {
+      } else if ("end" in key && key.end) {
         navigateEnd();
       }
     },

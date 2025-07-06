@@ -202,10 +202,12 @@ export function NavigableJsonViewer({
         {visibleItems.map((item, visibleIndex) => {
           const actualIndex = navigation.scrollOffset + visibleIndex;
           const isSelected = actualIndex === selectedIndex;
+          // Create unique key that includes both index and full path to prevent duplicates
+          const uniqueKey = `nav-${actualIndex}-${item.path.join(".")}-${item.key}-${item.depth}`;
 
           return (
             <NavigationItemComponent
-              key={`nav-item-${actualIndex}-${item.path.join(".")}-${item.key}`}
+              key={uniqueKey}
               item={item}
               isSelected={isSelected}
               index={actualIndex}
