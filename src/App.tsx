@@ -20,10 +20,13 @@ export function App({ initialData, initialError }: AppProps) {
       if (key.ctrl && input === "c") {
         // Ctrl+C: quit
         exit();
+      } else if (input === "q" && !key.ctrl) {
+        // q: quit (for easier exit)
+        exit();
       }
     },
     {
-      isActive: process.stdin.isTTY ?? false,
+      isActive: process.stdin.isTTY ?? false, // Only enable in TTY mode
     },
   );
 

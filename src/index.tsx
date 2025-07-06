@@ -94,15 +94,16 @@ async function main() {
     process.exit(0);
   });
 
-  // Only auto-exit in pipe mode if there's no valid JSON data AND we have an error
-  if (!process.stdin.isTTY && !process.argv[2] && !jsonData && errorMessage) {
-    // Wait a moment for rendering to complete, then exit
-    setTimeout(() => {
-      cleanup();
-      app.unmount();
-      process.exit(1);
-    }, 100);
-  }
+  // Prevent process from exiting when stdin closes in pipe mode
+  process.stdin.on("end", () => {
+    // Do nothing - let the TUI continue running
+  });
+
+  process.stdin.on("close", () => {
+    // Do nothing - let the TUI continue running
+  });
+
+  // Remove auto-exit functionality - let the TUI run until user explicitly exits
 }
 
 main().catch((err) => {

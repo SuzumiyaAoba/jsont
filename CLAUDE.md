@@ -45,10 +45,11 @@ cat file.json | npm run dev
 
 ### Keyboard Controls
 
-#### Global Controls
+#### Global Controls (TTY mode only)
+- **q**: Quit the application 
 - **Ctrl+C**: Exit the application
 
-Note: Additional features are being developed.
+Note: Keyboard controls only work in interactive terminal mode. When using pipes, the TUI will display the JSON and remain open until manually terminated.
 
 ## Architecture
 
