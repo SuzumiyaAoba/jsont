@@ -7,6 +7,7 @@ import { Box, Text } from "ink";
 import type React from "react";
 import { useEffect } from "react";
 import { useNavigation } from "../hooks/useNavigation.js";
+import { useTheme } from "../hooks/useTheme.js";
 import type {
   JsonValue,
   NavigationItem,
@@ -21,6 +22,7 @@ interface NavigableJsonViewerProps {
   currentPath?: string[];
   viewportHeight?: number;
   options?: NavigationOptions;
+  themeName?: string;
 }
 
 /**
@@ -30,58 +32,68 @@ function NavigationItemComponent({
   item,
   isSelected,
   index,
+  getColor,
 }: {
   item: NavigationItem;
   isSelected: boolean;
   index: number;
+  getColor: (
+    colorKey: keyof import("../types/theme.js").JsonColorScheme,
+  ) => string;
 }) {
   const indent = "  ".repeat(item.depth);
   const selectionIndicator = isSelected ? "→ " : "  ";
 
   const renderValue = (value: JsonValue): React.ReactNode => {
     if (value === null) {
-      return <Text color="gray">null</Text>;
+      return <Text color={getColor("null")}>null</Text>;
     }
 
     if (typeof value === "string") {
-      return <Text color="green">"{value}"</Text>;
+      return <Text color={getColor("strings")}>"{value}"</Text>;
     }
 
     if (typeof value === "number") {
-      return <Text color="cyan">{value}</Text>;
+      return <Text color={getColor("numbers")}>{value}</Text>;
     }
 
     if (typeof value === "boolean") {
-      return <Text color="yellow">{value.toString()}</Text>;
+      return <Text color={getColor("booleans")}>{value.toString()}</Text>;
     }
 
     if (Array.isArray(value)) {
-      return <Text color="magenta">[{value.length} items]</Text>;
+      return <Text color={getColor("structural")}>[{value.length} items]</Text>;
     }
 
     if (typeof value === "object") {
       const keys = Object.keys(value);
       return (
-        <Text color="blue">
+        <Text color={getColor("keys")}>
           {"{"}...{keys.length} keys{"}"}
         </Text>
       );
     }
 
-    return <Text>{String(value)}</Text>;
+    return <Text color={getColor("text")}>{String(value)}</Text>;
   };
 
   return (
     <Box data-testid={`json-item-${index}`} data-selected={isSelected}>
-      <Text color={isSelected ? "white" : "gray"}>{selectionIndicator}</Text>
-      <Text color={isSelected ? "white" : "gray"}>{indent}</Text>
+      <Text color={isSelected ? getColor("text") : getColor("null")}>
+        {selectionIndicator}
+      </Text>
+      <Text color={isSelected ? getColor("text") : getColor("null")}>
+        {indent}
+      </Text>
 
       {item.type === "property" || item.type === "array-item" ? (
         <>
-          <Text color={isSelected ? "white" : "blue"}>
+          <Text color={isSelected ? getColor("text") : getColor("keys")}>
             {item.type === "array-item" ? `[${item.key}]` : `"${item.key}"`}
           </Text>
-          <Text color={isSelected ? "white" : "gray"}>: </Text>
+          <Text color={isSelected ? getColor("text") : getColor("text")}>
+            :{" "}
+          </Text>
           {renderValue(item.value)}
         </>
       ) : (
@@ -136,7 +148,9 @@ export function NavigableJsonViewer({
   currentPath: controlledCurrentPath,
   viewportHeight = 20,
   options = {},
+  themeName,
 }: NavigableJsonViewerProps) {
+  const { getColor } = useTheme(themeName);
   const navigation = useNavigation(data, {
     viewportHeight,
     enableKeyboardNavigation: true,
@@ -166,7 +180,7 @@ export function NavigableJsonViewer({
   if (!data) {
     return (
       <Box flexGrow={1} justifyContent="center" alignItems="center">
-        <Text color="gray">No JSON data to display</Text>
+        <Text color={getColor("null")}>No JSON data to display</Text>
       </Box>
     );
   }
@@ -174,7 +188,7 @@ export function NavigableJsonViewer({
   if (navigation.flatItems.length === 0) {
     return (
       <Box flexGrow={1} justifyContent="center" alignItems="center">
-        <Text color="gray">Empty JSON structure</Text>
+        <Text color={getColor("null")}>Empty JSON structure</Text>
       </Box>
     );
   }
@@ -212,6 +226,7 @@ export function NavigableJsonViewer({
               item={item}
               isSelected={isSelected}
               index={actualIndex}
+              getColor={getColor}
             />
           );
         })}

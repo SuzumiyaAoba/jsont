@@ -43,6 +43,17 @@ echo '{"key": "value"}' | npm run dev
 cat file.json | npm run dev
 ```
 
+### Keyboard Controls
+- **Ctrl+C**: Exit the application
+- **Ctrl+T**: Switch to next theme (cycles through Default → Dark → Light → Monokai → Default)
+- **Ctrl+N**: Toggle between classic and navigable JSON viewer
+- **Tab**: Switch focus between filter and navigation modes
+- **Enter**: Edit filter (when filter is focused)
+- **/** : Quick access to filter mode from navigation
+- **↑/↓**: Navigate items (in navigation mode)
+- **PgUp/PgDn**: Page navigation (in navigation mode)
+- **Home/End**: Jump to start/end (in navigation mode)
+
 ## Architecture
 
 ### Entry Point (`src/index.tsx`)
@@ -56,9 +67,17 @@ cat file.json | npm run dev
 - Orchestrates the three main UI components
 
 ### Component Architecture
-- **StatusBar**: Displays application status and error messages
+- **StatusBar**: Displays application status, error messages, and theme information
 - **FilterInput**: Shows current filter state (planned for jq integration)
-- **JsonViewer**: Recursive renderer for JSON data with syntax highlighting
+- **JsonViewer**: Recursive renderer for JSON data with theme-aware syntax highlighting
+- **NavigableJsonViewer**: Interactive JSON viewer with keyboard navigation support
+
+### Theme System
+- **Theme Configuration**: Comprehensive color scheme management for JSON syntax highlighting
+- **Available Themes**: Default, Dark, Light, and Monokai color schemes
+- **Theme Switching**: Ctrl+T cycles through all available themes in real-time
+- **Color Categories**: Keys, strings, numbers, booleans, null values, structural elements, and text
+- **Customizable**: Easy to add new themes by extending the AVAILABLE_THEMES registry
 
 ### Data Flow
 1. `index.tsx` reads from stdin and parses JSON
