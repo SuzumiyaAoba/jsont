@@ -74,14 +74,14 @@ function NavigationItemComponent({
   return (
     <Box data-testid={`json-item-${index}`} data-selected={isSelected}>
       <Text color={isSelected ? "white" : "gray"}>{selectionIndicator}</Text>
-      <Text color={isSelected ? "white" : undefined}>{indent}</Text>
+      <Text color={isSelected ? "white" : "gray"}>{indent}</Text>
 
       {item.type === "property" || item.type === "array-item" ? (
         <>
           <Text color={isSelected ? "white" : "blue"}>
             {item.type === "array-item" ? `[${item.key}]` : `"${item.key}"`}
           </Text>
-          <Text color={isSelected ? "white" : undefined}>: </Text>
+          <Text color={isSelected ? "white" : "gray"}>: </Text>
           {renderValue(item.value)}
         </>
       ) : (
@@ -97,7 +97,7 @@ function NavigationItemComponent({
 function NavigationStatusBar({
   selectedIndex,
   totalItems,
-  currentPath,
+  currentPath: _currentPath,
   pathString,
 }: {
   selectedIndex: number;
@@ -196,8 +196,8 @@ export function NavigableJsonViewer({
         flexGrow={1}
         flexDirection="column"
         padding={1}
-        role="tree"
-        tabIndex={0}
+        // role="tree"
+        // tabIndex={0}
       >
         {visibleItems.map((item, visibleIndex) => {
           const actualIndex = navigation.scrollOffset + visibleIndex;

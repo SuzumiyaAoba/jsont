@@ -151,7 +151,15 @@ export interface NavigationItem {
   isExpanded?: boolean;
 }
 
+// Original navigation state interface
 export interface NavigationState {
+  selectedPath: string[];
+  canNavigateUp: boolean;
+  canNavigateDown: boolean;
+}
+
+// F2 Navigation state interface
+export interface F2NavigationState {
   selectedIndex: number;
   currentPath: string[];
   scrollOffset: number;
@@ -178,7 +186,7 @@ export interface NavigationActions {
   getPathString: () => string;
 }
 
-export type NavigationHook = NavigationState & NavigationActions;
+export type NavigationHook = F2NavigationState & NavigationActions;
 
 // Export default to satisfy ES module requirements
 export default {};

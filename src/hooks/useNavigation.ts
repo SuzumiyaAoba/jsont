@@ -81,7 +81,7 @@ function flattenJsonStructure(
     // Add object properties
     keys.forEach((key) => {
       const keyPath = [...path, key];
-      const value = (data as Record<string, JsonValue>)[key];
+      const value = (data as Record<string, JsonValue>)[key]!;
 
       // Add the property itself
       items.push({
@@ -131,8 +131,12 @@ export function useNavigation(
 
   // Calculate current path
   const currentPath = useMemo(() => {
-    if (selectedIndex >= 0 && selectedIndex < flatItems.length) {
-      return flatItems[selectedIndex].path;
+    if (
+      selectedIndex >= 0 &&
+      selectedIndex < flatItems.length &&
+      flatItems[selectedIndex]
+    ) {
+      return flatItems[selectedIndex]!.path;
     }
     return [];
   }, [selectedIndex, flatItems]);
@@ -143,7 +147,9 @@ export function useNavigation(
   }, []);
 
   const navigateDown = useCallback(() => {
-    setSelectedIndex((prev) => Math.min(flatItems.length - 1, prev + 1));
+    if (flatItems.length > 0) {
+      setSelectedIndex((prev) => Math.min(flatItems.length - 1, prev + 1));
+    }
   }, [flatItems.length]);
 
   const navigatePageUp = useCallback(() => {
@@ -194,7 +200,7 @@ export function useNavigation(
 
   // Keyboard input handling
   useInput(
-    (input, key) => {
+    (_input, key) => {
       if (!enableKeyboardNavigation) return;
 
       if (key.upArrow) {
@@ -205,9 +211,9 @@ export function useNavigation(
         navigatePageUp();
       } else if (key.pageDown) {
         navigatePageDown();
-      } else if (key.home) {
+      } else if ((key as any).home) {
         navigateHome();
-      } else if (key.end) {
+      } else if ((key as any).end) {
         navigateEnd();
       }
     },

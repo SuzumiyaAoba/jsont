@@ -7,19 +7,29 @@ import { describe, expect, it, vi } from "vitest";
 import type { JsonValue } from "../types/index.js";
 
 // Simplified hook testing without renderHook for now
+interface MockNavigationItem {
+  key: string;
+  value: JsonValue;
+  path: string[];
+  depth: number;
+}
+
 class MockNavigationHook {
-  private data: JsonValue;
+  // private _data: JsonValue; // Removed unused field
   private _selectedIndex = 0;
   private _scrollOffset = 0;
-  private _flatItems: any[] = [];
+  private _flatItems: MockNavigationItem[] = [];
 
   constructor(data: JsonValue) {
-    this.data = data;
+    // this._data = data; // Removed unused assignment
     this._flatItems = this.flattenData(data);
   }
 
-  private flattenData(data: JsonValue, path: string[] = []): any[] {
-    const items: any[] = [];
+  private flattenData(
+    data: JsonValue,
+    path: string[] = [],
+  ): MockNavigationItem[] {
+    const items: MockNavigationItem[] = [];
     if (typeof data === "object" && data !== null) {
       if (Array.isArray(data)) {
         data.forEach((item, index) => {
@@ -108,7 +118,7 @@ class MockNavigationHook {
 
 // Mock Ink's useInput hook
 vi.mock("ink", () => ({
-  useInput: vi.fn((callback, options) => {
+  useInput: vi.fn((callback, _options) => {
     // Store the callback for manual triggering in tests
     (global as any).inkInputCallback = callback;
     return undefined;
@@ -284,7 +294,7 @@ describe("useNavigation Hook", () => {
 
   describe("Large Dataset Performance", () => {
     const generateLargeData = (size: number): JsonValue => {
-      const items: any[] = [];
+      const items: JsonValue[] = [];
       for (let i = 0; i < size; i++) {
         items.push({
           id: i,
@@ -357,7 +367,7 @@ describe("useNavigation Hook", () => {
       if (nestedItemIndex >= 0) {
         hook.setSelectedIndex(nestedItemIndex);
 
-        const expectedPath = hook.flatItems[nestedItemIndex].path;
+        const expectedPath = hook.flatItems[nestedItemIndex]?.path;
         expect(hook.currentPath).toEqual(expectedPath);
       }
     });
