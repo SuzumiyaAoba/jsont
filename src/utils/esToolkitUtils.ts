@@ -23,7 +23,7 @@ export const getJsonPath = memoize(
       return data;
     }
 
-    let current = data;
+    let current: JsonValue = data;
     for (const key of path) {
       if (current === null || typeof current !== "object") {
         return null;
@@ -31,12 +31,16 @@ export const getJsonPath = memoize(
 
       if (Array.isArray(current)) {
         const index = parseInt(key, 10);
-        if (isNaN(index) || index < 0 || index >= current.length) {
+        if (Number.isNaN(index) || index < 0 || index >= current.length) {
           return null;
         }
-        current = current[index];
+        const nextValue: JsonValue | undefined = current[index];
+        current = nextValue !== undefined ? nextValue : null;
       } else {
-        current = (current as Record<string, JsonValue>)[key];
+        const nextValue: JsonValue | undefined = (
+          current as Record<string, JsonValue>
+        )[key];
+        current = nextValue !== undefined ? nextValue : null;
       }
     }
 
@@ -58,7 +62,7 @@ export const debouncedFilter = debounce(
     try {
       const result = applyBasicFilter(data, filterString);
       callback(result);
-    } catch (error) {
+    } catch (_error) {
       callback(data); // Return original data on error
     }
   },
