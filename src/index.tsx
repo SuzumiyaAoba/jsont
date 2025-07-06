@@ -57,8 +57,13 @@ async function main() {
     renderOptions,
   );
 
-  // Auto-exit in pipe mode after rendering (stdin pipe without file arg)
-  if (!process.stdin.isTTY && !process.argv[2]) {
+  // Clear screen on startup for better user experience
+  if (process.stdin.isTTY) {
+    process.stdout.write("\x1b[2J\x1b[H"); // Clear screen and move cursor to top
+  }
+
+  // Only auto-exit in pipe mode if there's no valid JSON data
+  if (!process.stdin.isTTY && !process.argv[2] && !jsonData) {
     // Wait a moment for rendering to complete, then exit
     setTimeout(() => {
       app.unmount();
