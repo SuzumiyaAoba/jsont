@@ -16,7 +16,8 @@
       "Bash(gh pr view:*)",
       "Bash(git fetch:*)",
       "Bash(git rebase:*)",
-      "Bash(git pull:*)"
+      "Bash(git pull:*)",
+      "Bash(gh pr:*)"
     ],
     "deny": []
   }
