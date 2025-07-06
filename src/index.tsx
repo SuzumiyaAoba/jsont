@@ -14,7 +14,8 @@ async function main() {
     const result = await autoReadJson(filePath, {
       timeout: 10000, // 10 seconds
       maxSize: 50 * 1024 * 1024, // 50MB
-      extractFromText: true, // Enable JSON extraction from text
+      // Only extract from text when reading from files, not from stdin pipes
+      extractFromText: !!filePath,
     });
 
     if (result.success) {
@@ -23,8 +24,9 @@ async function main() {
       // Log stats in debug mode
       if (process.env["DEBUG"]) {
         console.error(
-          `Read ${result.stats.bytesRead} bytes from ${result.stats.source} in ${result.stats.readTime.toFixed(2)}ms`,
+          `DEBUG: Read ${result.stats.bytesRead} bytes from ${result.stats.source} in ${result.stats.readTime.toFixed(2)}ms`,
         );
+        console.error(`DEBUG: JSON data:`, JSON.stringify(jsonData, null, 2));
       }
     } else {
       errorMessage = result.error;
