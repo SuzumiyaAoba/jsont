@@ -141,3 +141,71 @@ git checkout -b feature/descriptive-name
 ### Known Lint Exceptions
 - `any` types are intentionally used for JSON data handling since the application processes arbitrary JSON
 - Array index keys in JsonViewer are acceptable for this static rendering use case
+
+## Development Methodology
+
+### Feature-Driven Development Approach
+
+**Core Principle**: Build incrementally working features rather than component-by-component.
+
+#### Development Flow
+1. **Start with Simplest Working Feature**
+   - Implement minimal viable functionality
+   - Ensure it works end-to-end
+   - Add comprehensive tests
+   - Commit and merge
+
+2. **Iterative Enhancement**
+   - Add one feature at a time
+   - Each iteration should be demonstrable
+   - Maintain backward compatibility
+   - Focus on user value
+
+#### Feature Implementation Strategy
+
+**Phase 1: MVP Features**
+- **F1**: Basic JSON display (read from stdin, show formatted output)
+- **F2**: Simple navigation (scroll through large JSON)
+- **F3**: Basic filtering (simple path-based search)
+
+**Phase 2: Core Features**
+- **F4**: Enhanced JSON parsing (JSON5 support, error recovery)
+- **F5**: Interactive navigation (keyboard shortcuts, expand/collapse)
+- **F6**: Advanced filtering (jq/JSONata integration)
+
+**Phase 3: Polish Features**
+- **F7**: Theming system (dark/light modes)
+- **F8**: Data operations (copy, export)
+- **F9**: Accessibility improvements
+
+#### Benefits of Feature-Driven Approach
+- **Immediate Value**: Each iteration provides working functionality
+- **Risk Reduction**: Early validation of architecture decisions
+- **User Feedback**: Enable early user testing and feedback
+- **Parallel Development**: Multiple features can be developed simultaneously
+- **Easier Debugging**: Isolated feature implementation reduces complexity
+
+#### Implementation Guidelines
+- **Small PRs**: Each feature should be ~300-500 lines including tests
+- **Working Software**: Every merge should result in functional software
+- **Test Coverage**: Maintain >80% test coverage per feature
+- **Documentation**: Update docs with each feature addition
+- **Performance**: Each feature must meet performance targets
+
+#### Git Workflow for Features
+```bash
+# Start new feature
+git checkout master
+git pull origin master
+git checkout -b feature/f1-basic-json-display
+
+# Implement feature incrementally
+# Each commit should be a working state
+git commit -m "feat: add basic JSON parsing"
+git commit -m "feat: add simple display rendering"
+git commit -m "feat: add stdin input handling"
+git commit -m "test: add comprehensive F1 tests"
+
+# Create PR when feature is complete
+gh pr create --title "Feature F1: Basic JSON Display"
+```
