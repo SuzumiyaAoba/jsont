@@ -6,6 +6,19 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 This is `jsont`, a Terminal User Interface (TUI) JSON viewer built with React and Ink. The application reads JSON data from stdin and displays it in a colorized, hierarchical format in the terminal.
 
+## CI/CD Pipeline
+
+The project uses GitHub Actions for continuous integration with the following jobs:
+
+- **Lint and Format**: Runs Biome checks for code quality
+- **Type Check**: Validates TypeScript types across all files
+- **Test**: Runs comprehensive test suite on Node.js 18, 20, and 22
+- **Build**: Compiles TypeScript and tests the built application
+- **Security**: Performs dependency audits and security scans
+- **Publish**: Dry-run package publishing (master branch only)
+
+All pull requests must pass CI checks before merging.
+
 ## Key Commands
 
 ### Development

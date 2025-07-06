@@ -1,5 +1,10 @@
 # jsont Documentation
 
+[![CI/CD Pipeline](https://github.com/SuzumiyaAoba/jsont/actions/workflows/ci.yml/badge.svg)](https://github.com/SuzumiyaAoba/jsont/actions/workflows/ci.yml)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.8+-blue.svg)](https://www.typescriptlang.org/)
+[![Node.js](https://img.shields.io/badge/Node.js-18+-green.svg)](https://nodejs.org/)
+[![License](https://img.shields.io/badge/License-ISC-yellow.svg)](../package.json)
+
 This directory contains comprehensive documentation for jsont (JSON TUI Viewer) design and implementation.
 
 ## Documentation Overview

@@ -43,7 +43,7 @@ export const filteredDataAtom = atom((get) => {
     // For now, just return the data as-is
     // This will be replaced with hybrid query engine
     return data;
-  } catch (error) {
+  } catch (_error) {
     return data;
   }
 });
@@ -83,7 +83,7 @@ export const setFilterAtom = atom(null, (get, set, filter: string) => {
   }
 });
 
-export const clearErrorAtom = atom(null, (get, set) => {
+export const clearErrorAtom = atom(null, (_get, set) => {
   set(errorAtom, null);
 });
 
@@ -148,7 +148,7 @@ function getTypeDistribution(obj: unknown): Record<string, number> {
   return types;
 }
 
-function flattenForVirtualization(data: unknown, viewMode: string): unknown[] {
+function flattenForVirtualization(data: unknown, _viewMode: string): unknown[] {
   // Simple flattening for now - will be enhanced for virtualization
   if (Array.isArray(data)) {
     return data;
