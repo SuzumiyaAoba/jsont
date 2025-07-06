@@ -12,8 +12,8 @@ export function StatusBar({ error, focusMode, themeName }: StatusBarProps) {
     const current = focusMode === "filter" ? "Filter" : "Navigation";
     const shortcuts =
       focusMode === "filter"
-        ? "Enter: Edit | Tab: Switch to Navigation"
-        : "↑↓: Navigate | Tab: Switch to Filter | /: Quick Filter";
+        ? "Tab: Switch to Navigation"
+        : "↑↓: Navigate | Tab: Switch to Filter";
     return ` | Focus: ${current} | ${shortcuts}`;
   };
 

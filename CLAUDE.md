@@ -48,8 +48,6 @@ cat file.json | npm run dev
 - **Ctrl+T**: Switch to next theme (cycles through Default → Dark → Light → Monokai → Default)
 - **Ctrl+N**: Toggle between classic and navigable JSON viewer
 - **Tab**: Switch focus between filter and navigation modes
-- **Enter**: Edit filter (when filter is focused)
-- **/** : Quick access to filter mode from navigation
 - **↑/↓**: Navigate items (in navigation mode)
 - **PgUp/PgDn**: Page navigation (in navigation mode)
 - **Home/End**: Jump to start/end (in navigation mode)

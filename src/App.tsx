@@ -39,9 +39,6 @@ export function App({ initialData, initialError }: AppProps) {
       } else if (key.tab) {
         // Toggle focus between filter and navigation
         setFocusMode((prev) => (prev === "filter" ? "navigation" : "filter"));
-      } else if (input === "/" && focusMode === "navigation") {
-        // Quick filter access from navigation mode
-        setFocusMode("filter");
       }
     },
     {
