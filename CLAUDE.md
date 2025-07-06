@@ -43,14 +43,27 @@ echo '{"key": "value"}' | npm run dev
 cat file.json | npm run dev
 ```
 
-### Keyboard Controls
-- **Ctrl+C**: Exit the application
-- **Ctrl+T**: Switch to next theme (cycles through Default → Dark → Light → Monokai → Default)
-- **Ctrl+N**: Toggle between classic and navigable JSON viewer
+### Keyboard Controls (Vim-like)
+
+#### Global Controls
+- **q**: Quit the application (vim-like)
+- **Ctrl+C**: Alternative quit
+- **v**: Toggle between classic and navigable viewer modes (like vim visual mode)
+- **t**: Switch to next theme (cycles through Default → Dark → Light → Monokai → Default)
 - **Tab**: Switch focus between filter and navigation modes
-- **↑/↓**: Navigate items (in navigation mode)
-- **PgUp/PgDn**: Page navigation (in navigation mode)
-- **Home/End**: Jump to start/end (in navigation mode)
+
+#### Navigation Mode (vim-like)
+- **j**: Move down (vim-like)
+- **k**: Move up (vim-like)
+- **Ctrl+d**: Page down (vim-like)
+- **Ctrl+u**: Page up (vim-like)
+- **g**: Jump to start/top (vim-like)
+- **G**: Jump to end/bottom (vim-like)
+
+#### Legacy Controls (also supported)
+- **↑/↓**: Arrow key navigation
+- **PgUp/PgDn**: Page navigation
+- **Home/End**: Jump to start/end
 
 ## Architecture
 

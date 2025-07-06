@@ -25,19 +25,23 @@ export function App({ initialData, initialError }: AppProps) {
   // Theme management
   const { themeName, nextTheme } = useTheme("default");
 
-  // Global keyboard input handling
+  // Global keyboard input handling (vim-like)
   useInput(
     (input, key) => {
-      if (key.ctrl && input === "c") {
+      if (input === "q" && !key.ctrl) {
+        // q: quit (vim-like)
         exit();
-      } else if (key.ctrl && input === "n") {
-        // Toggle between navigable and classic viewer
+      } else if (key.ctrl && input === "c") {
+        // Ctrl+C: alternative quit
+        exit();
+      } else if (input === "v") {
+        // v: toggle viewer mode (like vim visual mode)
         setUseNavigableViewer(!useNavigableViewer);
-      } else if (key.ctrl && input === "t") {
-        // Cycle through themes
+      } else if (input === "t") {
+        // t: theme switching
         nextTheme();
       } else if (key.tab) {
-        // Toggle focus between filter and navigation
+        // Tab: focus switching (keep for ease of use)
         setFocusMode((prev) => (prev === "filter" ? "navigation" : "filter"));
       }
     },

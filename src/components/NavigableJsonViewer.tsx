@@ -130,7 +130,7 @@ function NavigationStatusBar({
       </Box>
       <Box>
         <Text color="gray">
-          ↑↓: Navigate | PgUp/PgDn: Page | Home/End: Jump
+          j/k: Navigate | Ctrl+d/u: Page | g/G: Jump | ↑↓: Arrow keys
         </Text>
       </Box>
     </Box>

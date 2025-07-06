@@ -13,12 +13,12 @@ export function StatusBar({ error, focusMode, themeName }: StatusBarProps) {
     const shortcuts =
       focusMode === "filter"
         ? "Tab: Switch to Navigation"
-        : "↑↓: Navigate | Tab: Switch to Filter";
+        : "j/k: Navigate | Tab: Switch to Filter";
     return ` | Focus: ${current} | ${shortcuts}`;
   };
 
   const getThemeInfo = () => {
-    return themeName ? ` | Theme: ${themeName} (Ctrl+T: Switch)` : "";
+    return themeName ? ` (${themeName})` : "";
   };
 
   return (
@@ -26,7 +26,7 @@ export function StatusBar({ error, focusMode, themeName }: StatusBarProps) {
       <Text color={error ? "red" : "green"}>
         {error
           ? `Error: ${error}`
-          : `JSON TUI Viewer - Ctrl+C: Exit${getThemeInfo()}${getFocusHint()}`}
+          : `JSON TUI Viewer - q: Quit | v: View mode | t: Theme${getThemeInfo()}${getFocusHint()}`}
       </Text>
     </Box>
   );

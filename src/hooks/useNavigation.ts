@@ -198,16 +198,30 @@ export function useNavigation(
     }
   }, [selectedIndex, scrollOffset, viewportHeight]);
 
-  // Keyboard input handling - only enable in TTY mode
+  // Keyboard input handling (vim-like) - only enable in TTY mode
   useInput(
-    (_input, key) => {
+    (input, key) => {
       if (!enableKeyboardNavigation) return;
 
-      if (key.upArrow) {
-        navigateUp();
-      } else if (key.downArrow) {
+      // Vim-like navigation
+      if (input === "j" || key.downArrow) {
         navigateDown();
+      } else if (input === "k" || key.upArrow) {
+        navigateUp();
+      } else if (key.ctrl && input === "d") {
+        // Ctrl+D: page down (vim-like)
+        navigatePageDown();
+      } else if (key.ctrl && input === "u") {
+        // Ctrl+U: page up (vim-like)
+        navigatePageUp();
+      } else if (input === "g" && key.shift) {
+        // G: go to end (vim-like)
+        navigateEnd();
+      } else if (input === "g") {
+        // gg: go to top (vim-like) - simplified to single g for now
+        navigateHome();
       } else if (key.pageUp) {
+        // Keep page up/down for compatibility
         navigatePageUp();
       } else if (key.pageDown) {
         navigatePageDown();
