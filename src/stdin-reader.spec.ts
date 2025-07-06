@@ -5,7 +5,7 @@
 
 import { Readable } from "node:stream";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { autoReadJson, readJsonFromStdin } from "../utils/stdinReader.js";
+import { autoReadJson, readJsonFromStdin } from "./utils/stdinReader.js";
 
 // Mock process.stdin
 vi.mock("node:process", () => ({

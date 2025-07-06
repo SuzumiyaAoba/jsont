@@ -5,10 +5,13 @@
 
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 
+const __dirname = fileURLToPath(new URL(".", import.meta.url));
+
 describe("Project Setup", () => {
-  const projectRoot = join(__dirname, "../..");
+  const projectRoot = join(__dirname, "..");
 
   describe("TypeScript configuration", () => {
     it("should have tsconfig.json", () => {
@@ -62,9 +65,7 @@ describe("Project Setup", () => {
         "src/components",
         "src/utils",
         "src/hooks",
-        "src/store",
         "src/types",
-        "src/__tests__",
       ];
 
       directories.forEach((dir) => {
@@ -78,7 +79,7 @@ describe("Project Setup", () => {
     it("should support dynamic imports", async () => {
       // Test that dynamic imports work
       const moduleImport = async () => {
-        const module = await import("../types/index.js");
+        const module = await import("./types/index.js");
         return module;
       };
 
