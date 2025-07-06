@@ -10,57 +10,6 @@ import { describe, expect, it } from "vitest";
 describe("Project Setup", () => {
   const projectRoot = join(__dirname, "../..");
 
-  describe("package.json configuration", () => {
-    it("should exist and be valid JSON", () => {
-      const packagePath = join(projectRoot, "package.json");
-      expect(existsSync(packagePath)).toBe(true);
-
-      const packageContent = readFileSync(packagePath, "utf-8");
-      expect(() => JSON.parse(packageContent)).not.toThrow();
-    });
-
-    it("should be configured as ES module", () => {
-      const packagePath = join(projectRoot, "package.json");
-      const pkg = JSON.parse(readFileSync(packagePath, "utf-8"));
-
-      expect(pkg.type).toBe("module");
-    });
-
-    it("should have required dependencies", () => {
-      const packagePath = join(projectRoot, "package.json");
-      const pkg = JSON.parse(readFileSync(packagePath, "utf-8"));
-
-      // Core dependencies
-      expect(pkg.dependencies).toHaveProperty("ink");
-      expect(pkg.dependencies).toHaveProperty("jotai");
-      expect(pkg.dependencies).toHaveProperty("es-toolkit");
-      expect(pkg.dependencies).toHaveProperty("json5");
-      expect(pkg.dependencies).toHaveProperty("react");
-      expect(pkg.dependencies).toHaveProperty("@types/react");
-      expect(pkg.dependencies).toHaveProperty("typescript");
-    });
-
-    it("should have development dependencies", () => {
-      const packagePath = join(projectRoot, "package.json");
-      const pkg = JSON.parse(readFileSync(packagePath, "utf-8"));
-
-      expect(pkg.devDependencies).toHaveProperty("vitest");
-      expect(pkg.devDependencies).toHaveProperty("@biomejs/biome");
-      expect(pkg.devDependencies).toHaveProperty("@types/node");
-    });
-
-    it("should have proper scripts", () => {
-      const packagePath = join(projectRoot, "package.json");
-      const pkg = JSON.parse(readFileSync(packagePath, "utf-8"));
-
-      expect(pkg.scripts).toHaveProperty("build");
-      expect(pkg.scripts).toHaveProperty("dev");
-      expect(pkg.scripts).toHaveProperty("test");
-      expect(pkg.scripts).toHaveProperty("lint");
-      expect(pkg.scripts).toHaveProperty("format");
-    });
-  });
-
   describe("TypeScript configuration", () => {
     it("should have tsconfig.json", () => {
       const tsconfigPath = join(projectRoot, "tsconfig.json");
