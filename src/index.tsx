@@ -45,6 +45,16 @@ async function main() {
     }
   }
 
+  // Clear screen and setup full terminal usage before rendering
+  if (process.stdin.isTTY) {
+    // Clear screen and move cursor to top
+    process.stdout.write("\x1b[2J\x1b[H");
+    // Hide cursor for cleaner display
+    process.stdout.write("\x1b[?25l");
+    // Enable alternative screen buffer for full terminal usage
+    process.stdout.write("\x1b[?1049h");
+  }
+
   // Render the application with data or error
   const renderOptions = {
     stdout: process.stdout,
@@ -57,15 +67,36 @@ async function main() {
     renderOptions,
   );
 
-  // Clear screen on startup for better user experience
-  if (process.stdin.isTTY) {
-    process.stdout.write("\x1b[2J\x1b[H"); // Clear screen and move cursor to top
-  }
+  // Setup cleanup for terminal restoration
+  const cleanup = () => {
+    if (process.stdin.isTTY) {
+      // Restore terminal state
+      process.stdout.write("\x1b[?1049l"); // Disable alternative screen buffer
+      process.stdout.write("\x1b[?25h"); // Show cursor
+    }
+  };
+
+  // Handle app exit
+  app.waitUntilExit().then(() => {
+    cleanup();
+  });
+
+  // Handle process signals for proper cleanup
+  process.on("SIGINT", () => {
+    cleanup();
+    process.exit(0);
+  });
+
+  process.on("SIGTERM", () => {
+    cleanup();
+    process.exit(0);
+  });
 
   // Only auto-exit in pipe mode if there's no valid JSON data
   if (!process.stdin.isTTY && !process.argv[2] && !jsonData) {
     // Wait a moment for rendering to complete, then exit
     setTimeout(() => {
+      cleanup();
       app.unmount();
       process.exit(0);
     }, 100);

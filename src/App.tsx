@@ -46,21 +46,23 @@ export function App({ initialData, initialError }: AppProps) {
   );
 
   return (
-    <Box flexDirection="column" height="100%">
+    <Box flexDirection="column" width="100%" height="100%">
       <StatusBar error={error} focusMode={focusMode} />
       <FilterInput
         filter={filter}
         onFilterChange={setFilter}
         isActive={focusMode === "filter"}
       />
-      {useNavigableViewer ? (
-        <NavigableJsonViewer
-          data={filteredData}
-          options={{ enableKeyboardNavigation: focusMode === "navigation" }}
-        />
-      ) : (
-        <JsonViewer data={filteredData} />
-      )}
+      <Box flexGrow={1} width="100%">
+        {useNavigableViewer ? (
+          <NavigableJsonViewer
+            data={filteredData}
+            options={{ enableKeyboardNavigation: focusMode === "navigation" }}
+          />
+        ) : (
+          <JsonViewer data={filteredData} />
+        )}
+      </Box>
     </Box>
   );
 }
