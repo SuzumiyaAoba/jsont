@@ -78,10 +78,7 @@ async function main() {
     }
   };
 
-  // Handle app exit
-  app.waitUntilExit().then(() => {
-    cleanup();
-  });
+  // Handle app exit (will be handled in keepAliveTimer section)
 
   // Handle process signals for proper cleanup
   process.on("SIGINT", () => {
@@ -100,7 +97,22 @@ async function main() {
   });
 
   process.stdin.on("close", () => {
+    // Keep process alive by preventing automatic exit
     // Do nothing - let the TUI continue running
+  });
+
+  // Keep the process alive by preventing auto-exit on event loop empty
+  process.stdin.setMaxListeners(0);
+
+  // Keep the event loop alive with a timer that does nothing
+  const keepAliveTimer = setInterval(() => {
+    // Do nothing, just keep the event loop alive
+  }, 1000);
+
+  // Clear timer when app exits
+  app.waitUntilExit().then(() => {
+    clearInterval(keepAliveTimer);
+    cleanup();
   });
 
   // Remove auto-exit functionality - let the TUI run until user explicitly exits
