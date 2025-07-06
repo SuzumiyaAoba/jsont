@@ -36,7 +36,8 @@
   "license": "ISC",
   "description": "A Terminal User Interface (TUI) JSON viewer with advanced query capabilities",
   "engines": {
-    "node": ">=18.0.0"
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
   },
   "dependencies": {
     "@types/react": "^18.3.23",
