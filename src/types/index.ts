@@ -35,6 +35,28 @@ export interface JsonStats {
   types: Record<string, number>;
 }
 
+// JSON processing types
+export interface ParseResult {
+  success: boolean;
+  data: JsonValue | null;
+  error: string | null;
+  suggestion?: string;
+  parseTime?: number;
+  validation?: ValidationResult;
+}
+
+export interface ValidationResult {
+  isValid: boolean;
+  error?: string;
+  suggestion?: string;
+  stats?: JsonStats;
+  warnings?: string[];
+}
+
+export interface EnhancedParseResult extends ParseResult {
+  validation: ValidationResult;
+}
+
 // Theme types
 export type Theme = "dark" | "light";
 
@@ -50,12 +72,7 @@ export interface FilterResult {
   engine?: "jq" | "jsonata" | "native";
 }
 
-// Validation result types
-export interface ValidationResult {
-  isValid: boolean;
-  error?: string;
-  suggestion?: string;
-}
+// Remove duplicate ValidationResult interface - already defined above
 
 // Component prop types
 export interface JsonViewerProps {
