@@ -46,15 +46,11 @@ async function main() {
   }
 
   // Render the application with data or error
-  const renderOptions: any = {
+  const renderOptions = {
     stdout: process.stdout,
     stderr: process.stderr,
+    ...(process.stdin.isTTY && { stdin: process.stdin }),
   };
-
-  // Only enable stdin in interactive mode to avoid raw mode issues
-  if (process.stdin.isTTY) {
-    renderOptions.stdin = process.stdin;
-  }
 
   const app = render(
     <App initialData={jsonData} initialError={errorMessage} />,
