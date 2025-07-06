@@ -24,7 +24,9 @@
       "Bash(npx tsc:*)",
       "Bash(gh run view:*)",
       "Bash(node:*)",
-      "Bash(npm:*)"
+      "Bash(npm:*)",
+      "Bash(mv:*)",
+      "Bash(rmdir:*)"
     ],
     "deny": []
   }

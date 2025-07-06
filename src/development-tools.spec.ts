@@ -5,10 +5,13 @@
 
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 
+const __dirname = fileURLToPath(new URL(".", import.meta.url));
+
 describe("Development Tools Integration", () => {
-  const projectRoot = join(__dirname, "../..");
+  const projectRoot = join(__dirname, "..");
 
   describe("Biome Configuration", () => {
     it("should have biome.json configuration file", () => {
@@ -86,7 +89,7 @@ describe("Development Tools Integration", () => {
     it("should support TypeScript imports", () => {
       // Test that dynamic imports work with Vitest
       const moduleImport = async () => {
-        const module = await import("../types/index.js");
+        const module = await import("./types/index.js");
         return module;
       };
 
