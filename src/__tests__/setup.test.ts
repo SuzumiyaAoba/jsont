@@ -74,9 +74,11 @@ describe("Project Setup", () => {
       const tsconfigPath = join(projectRoot, "tsconfig.json");
       const tsconfig = JSON.parse(readFileSync(tsconfigPath, "utf-8"));
 
-      expect(tsconfig.compilerOptions.strict).toBe(true);
-      expect(tsconfig.compilerOptions.noImplicitAny).toBe(true);
-      expect(tsconfig.compilerOptions.strictNullChecks).toBe(true);
+      // Check if using strictest config or has explicit strict settings
+      expect(
+        tsconfig.extends === "@tsconfig/strictest/tsconfig.json" ||
+          tsconfig.compilerOptions.strict === true,
+      ).toBe(true);
     });
 
     it("should support ES modules", () => {
@@ -84,7 +86,9 @@ describe("Project Setup", () => {
       const tsconfig = JSON.parse(readFileSync(tsconfigPath, "utf-8"));
 
       expect(tsconfig.compilerOptions.module).toBe("ESNext");
-      expect(tsconfig.compilerOptions.moduleResolution).toBe("Node");
+      expect(["Node", "bundler", "node16", "nodenext"]).toContain(
+        tsconfig.compilerOptions.moduleResolution,
+      );
       expect(tsconfig.compilerOptions.allowSyntheticDefaultImports).toBe(true);
     });
 
