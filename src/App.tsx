@@ -7,12 +7,13 @@ import type { JsonValue } from "./types/index.js";
 
 interface AppProps {
   initialData?: JsonValue;
+  initialError?: string | null;
 }
 
-export function App({ initialData }: AppProps) {
+export function App({ initialData, initialError }: AppProps) {
   const [filter, setFilter] = useState<string>("");
   const [filteredData] = useState<JsonValue>(initialData ?? null);
-  const [error] = useState<string | null>(null);
+  const [error] = useState<string | null>(initialError ?? null);
   const { exit } = useApp();
 
   useInput(

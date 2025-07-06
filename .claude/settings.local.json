@@ -19,7 +19,9 @@
       "Bash(git pull:*)",
       "Bash(gh pr:*)",
       "Bash(grep:*)",
-      "Bash(npm audit:*)"
+      "Bash(npm audit:*)",
+      "WebFetch(domain:github.com)",
+      "Bash(npx tsc:*)"
     ],
     "deny": []
   }

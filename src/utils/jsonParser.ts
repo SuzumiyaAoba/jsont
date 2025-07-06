@@ -1,26 +1,31 @@
-import type { JsonValue } from "../types/index.js";
+/**
+ * Legacy JSON Parser - Re-exported from enhanced jsonProcessor
+ * Maintains backward compatibility while using enhanced features
+ */
 
+import type { JsonValue } from "../types/index.js";
+import {
+  formatJsonValue as enhancedFormatJsonValue,
+  parseJsonSafely as enhancedParseJsonSafely,
+} from "./jsonProcessor.js";
+
+/**
+ * @deprecated Use parseJsonSafely from jsonProcessor.ts for enhanced features
+ */
 export function parseJsonSafely(input: string): {
   data: JsonValue;
   error: string | null;
 } {
-  try {
-    const data = JSON.parse(input);
-    return { data, error: null };
-  } catch (error) {
-    return {
-      data: null,
-      error: error instanceof Error ? error.message : "Unknown error",
-    };
-  }
+  const result = enhancedParseJsonSafely(input);
+  return {
+    data: result.data,
+    error: result.error,
+  };
 }
 
+/**
+ * @deprecated Use formatJsonValue from jsonProcessor.ts for enhanced features
+ */
 export function formatJsonValue(value: JsonValue): string {
-  if (value === null) return "null";
-  if (typeof value === "string") return `"${value}"`;
-  if (typeof value === "number") return value.toString();
-  if (typeof value === "boolean") return value.toString();
-  if (Array.isArray(value)) return `[${value.length} items]`;
-  if (typeof value === "object") return `{${Object.keys(value).length} keys}`;
-  return String(value);
+  return enhancedFormatJsonValue(value);
 }
