@@ -71,7 +71,7 @@ jobs:
         run: npm run test:run
         
       - name: Upload coverage reports
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v5
         if: matrix.node-version == '18'
         with:
           fail_ci_if_error: false
