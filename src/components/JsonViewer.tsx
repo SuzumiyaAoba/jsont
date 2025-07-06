@@ -1,8 +1,9 @@
 import { Box, Text } from "ink";
 import type React from "react";
+import type { JsonValue } from "../types/index.js";
 
 interface JsonViewerProps {
-  data: any;
+  data: JsonValue;
 }
 
 export function JsonViewer({ data }: JsonViewerProps) {
@@ -14,7 +15,7 @@ export function JsonViewer({ data }: JsonViewerProps) {
     );
   }
 
-  const renderJson = (obj: any, indent = 0): React.ReactNode => {
+  const renderJson = (obj: JsonValue, indent = 0): React.ReactNode => {
     const spaces = "  ".repeat(indent);
 
     if (obj === null) {
@@ -42,7 +43,9 @@ export function JsonViewer({ data }: JsonViewerProps) {
         <Box flexDirection="column">
           <Text>[</Text>
           {obj.map((item, index) => (
-            <Box key={`array-${index}`}>
+            <Box
+              key={`array-${indent}-${index}-${typeof item === "object" ? JSON.stringify(item).slice(0, 10) : String(item)}`}
+            >
               <Text>{spaces} </Text>
               {renderJson(item, indent + 1)}
               {index < obj.length - 1 && <Text>,</Text>}
@@ -63,11 +66,11 @@ export function JsonViewer({ data }: JsonViewerProps) {
         <Box flexDirection="column">
           <Text>{"{"}</Text>
           {keys.map((key, index) => (
-            <Box key={`object-${key}-${index}`}>
+            <Box key={`object-${key}`}>
               <Text>{spaces} </Text>
               <Text color="blue">"{key}"</Text>
               <Text>: </Text>
-              {renderJson(obj[key], indent + 1)}
+              {renderJson(obj[key] ?? null, indent + 1)}
               {index < keys.length - 1 && <Text>,</Text>}
             </Box>
           ))}

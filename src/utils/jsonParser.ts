@@ -1,5 +1,7 @@
+import type { JsonValue } from "../types/index.js";
+
 export function parseJsonSafely(input: string): {
-  data: any;
+  data: JsonValue;
   error: string | null;
 } {
   try {
@@ -13,7 +15,7 @@ export function parseJsonSafely(input: string): {
   }
 }
 
-export function formatJsonValue(value: any): string {
+export function formatJsonValue(value: JsonValue): string {
   if (value === null) return "null";
   if (typeof value === "string") return `"${value}"`;
   if (typeof value === "number") return value.toString();

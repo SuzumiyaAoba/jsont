@@ -1,12 +1,11 @@
 import { Box, Text } from "ink";
-import React from "react";
 
 interface FilterInputProps {
   filter: string;
   onFilterChange: (filter: string) => void;
 }
 
-export function FilterInput({ filter, onFilterChange }: FilterInputProps) {
+export function FilterInput({ filter }: FilterInputProps) {
   return (
     <Box borderStyle="single" borderColor="gray" padding={1}>
       <Text color="gray">Filter: </Text>
