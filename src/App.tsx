@@ -2,9 +2,7 @@ import { Box, useApp, useInput } from "ink";
 import { useState } from "react";
 import { FilterInput } from "./components/FilterInput.js";
 import { JsonViewer } from "./components/JsonViewer.js";
-import { NavigableJsonViewer } from "./components/NavigableJsonViewer.js";
 import { StatusBar } from "./components/StatusBar.js";
-import { useTheme } from "./hooks/useTheme.js";
 import type { JsonValue } from "./types/index.js";
 
 interface AppProps {
@@ -18,37 +16,16 @@ export function App({ initialData, initialError }: AppProps) {
   const [error] = useState<string | null>(initialError ?? null);
   const [focusMode, setFocusMode] = useState<"filter" | "navigation">("filter");
 
-  // Default to classic JSON viewer for cleaner display, enable navigation with Ctrl+N
-  const [useNavigableViewer, setUseNavigableViewer] = useState<boolean>(false);
   const { exit } = useApp();
 
-  // Theme management
-  const { themeName, nextTheme } = useTheme("default");
-
-  // Global keyboard input handling (vim-like)
+  // Global keyboard input handling
   useInput(
     (input, key) => {
-      if (input === "q" && !key.ctrl) {
-        // q: quit (vim-like)
+      if (key.ctrl && input === "c") {
+        // Ctrl+C: quit
         exit();
-      } else if (key.ctrl && input === "c") {
-        // Ctrl+C: alternative quit
-        exit();
-      } else if (input === "v") {
-        // v: toggle viewer mode (like vim visual mode)
-        setUseNavigableViewer((prev) => {
-          const newValue = !prev;
-          // When switching to navigable viewer, automatically set focus to navigation
-          if (newValue) {
-            setFocusMode("navigation");
-          }
-          return newValue;
-        });
-      } else if (input === "t") {
-        // t: theme switching
-        nextTheme();
       } else if (key.tab) {
-        // Tab: focus switching (keep for ease of use)
+        // Tab: focus switching
         setFocusMode((prev) => (prev === "filter" ? "navigation" : "filter"));
       }
     },
@@ -59,27 +36,14 @@ export function App({ initialData, initialError }: AppProps) {
 
   return (
     <Box flexDirection="column" width="100%" height="100%">
-      <StatusBar
-        error={error}
-        focusMode={focusMode}
-        themeName={themeName}
-        useNavigableViewer={useNavigableViewer}
-      />
+      <StatusBar error={error} focusMode={focusMode} />
       <FilterInput
         filter={filter}
         onFilterChange={setFilter}
         isActive={focusMode === "filter"}
       />
       <Box flexGrow={1} width="100%">
-        {useNavigableViewer ? (
-          <NavigableJsonViewer
-            data={filteredData}
-            options={{ enableKeyboardNavigation: focusMode === "navigation" }}
-            themeName={themeName}
-          />
-        ) : (
-          <JsonViewer data={filteredData} themeName={themeName} />
-        )}
+        <JsonViewer data={filteredData} />
       </Box>
     </Box>
   );

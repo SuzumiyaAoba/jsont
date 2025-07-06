@@ -43,27 +43,13 @@ echo '{"key": "value"}' | npm run dev
 cat file.json | npm run dev
 ```
 
-### Keyboard Controls (Vim-like)
+### Keyboard Controls
 
 #### Global Controls
-- **q**: Quit the application (vim-like)
-- **Ctrl+C**: Alternative quit
-- **v**: Toggle between classic and navigable viewer modes (like vim visual mode)
-- **t**: Switch to next theme (cycles through Default → Dark → Light → Monokai → Default)
+- **Ctrl+C**: Exit the application
 - **Tab**: Switch focus between filter and navigation modes
 
-#### Navigation Mode (vim-like)
-- **j**: Move down (vim-like)
-- **k**: Move up (vim-like)
-- **Ctrl+d**: Page down (vim-like)
-- **Ctrl+u**: Page up (vim-like)
-- **g**: Jump to start/top (vim-like)
-- **G**: Jump to end/bottom (vim-like)
-
-#### Legacy Controls (also supported)
-- **↑/↓**: Arrow key navigation
-- **PgUp/PgDn**: Page navigation
-- **Home/End**: Jump to start/end
+Note: Advanced navigation and theme features are being developed.
 
 ## Architecture
 
@@ -78,17 +64,9 @@ cat file.json | npm run dev
 - Orchestrates the three main UI components
 
 ### Component Architecture
-- **StatusBar**: Displays application status, error messages, and theme information
+- **StatusBar**: Displays application status and error messages
 - **FilterInput**: Shows current filter state (planned for jq integration)
-- **JsonViewer**: Recursive renderer for JSON data with theme-aware syntax highlighting
-- **NavigableJsonViewer**: Interactive JSON viewer with keyboard navigation support
-
-### Theme System
-- **Theme Configuration**: Comprehensive color scheme management for JSON syntax highlighting
-- **Available Themes**: Default, Dark, Light, and Monokai color schemes
-- **Theme Switching**: Ctrl+T cycles through all available themes in real-time
-- **Color Categories**: Keys, strings, numbers, booleans, null values, structural elements, and text
-- **Customizable**: Easy to add new themes by extending the AVAILABLE_THEMES registry
+- **JsonViewer**: Displays JSON data with syntax highlighting
 
 ### Data Flow
 1. `index.tsx` reads from stdin and parses JSON

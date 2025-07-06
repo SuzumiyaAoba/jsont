@@ -1,20 +1,16 @@
 import { Box, Text } from "ink";
 import type React from "react";
-import { useTheme } from "../hooks/useTheme.js";
 import type { JsonValue } from "../types/index.js";
 
 interface JsonViewerProps {
   data: JsonValue;
-  themeName?: string;
 }
 
-export function JsonViewer({ data, themeName }: JsonViewerProps) {
-  const { getColor } = useTheme(themeName);
-
+export function JsonViewer({ data }: JsonViewerProps) {
   if (!data) {
     return (
       <Box flexGrow={1} justifyContent="center" alignItems="center">
-        <Text color={getColor("null")}>No JSON data to display</Text>
+        <Text color="gray">No JSON data to display</Text>
       </Box>
     );
   }
@@ -39,23 +35,23 @@ export function JsonViewer({ data, themeName }: JsonViewerProps) {
       const valueMatch = afterColon.match(/:\s*(.+?)(?:,\s*)?$/);
       const value = valueMatch ? valueMatch[1] : afterColon.substring(1).trim();
 
-      let valueColor = getColor("text");
+      let valueColor = "white";
       if (value && value.startsWith('"') && value.endsWith('"')) {
-        valueColor = getColor("strings");
+        valueColor = "green";
       } else if (value === "true" || value === "false") {
-        valueColor = getColor("booleans");
+        valueColor = "yellow";
       } else if (value === "null") {
-        valueColor = getColor("null");
+        valueColor = "gray";
       } else if (value && /^\d+(\.\d+)?$/.test(value)) {
-        valueColor = getColor("numbers");
+        valueColor = "cyan";
       }
 
       return (
         <Text key={index}>
-          <Text color={getColor("keys")}>{beforeColon}</Text>
-          <Text color={getColor("text")}>: </Text>
+          <Text color="blue">{beforeColon}</Text>
+          <Text>: </Text>
           <Text color={valueColor}>{value || ""}</Text>
-          {line.endsWith(",") && <Text color={getColor("text")}>,</Text>}
+          {line.endsWith(",") && <Text>,</Text>}
         </Text>
       );
     }
@@ -68,7 +64,7 @@ export function JsonViewer({ data, themeName }: JsonViewerProps) {
       trimmedLine === "]"
     ) {
       return (
-        <Text key={index} color={getColor("structural")}>
+        <Text key={index} color="magenta">
           {line}
         </Text>
       );
@@ -84,35 +80,29 @@ export function JsonViewer({ data, themeName }: JsonViewerProps) {
       trimmedLine !== "]"
     ) {
       const cleanValue = trimmedLine.replace(/,$/, ""); // Remove trailing comma
-      let valueColor = getColor("text");
+      let valueColor = "white";
 
       if (cleanValue.startsWith('"') && cleanValue.endsWith('"')) {
-        valueColor = getColor("strings");
+        valueColor = "green";
       } else if (cleanValue === "true" || cleanValue === "false") {
-        valueColor = getColor("booleans");
+        valueColor = "yellow";
       } else if (cleanValue === "null") {
-        valueColor = getColor("null");
+        valueColor = "gray";
       } else if (/^\d+(\.\d+)?$/.test(cleanValue)) {
-        valueColor = getColor("numbers");
+        valueColor = "cyan";
       }
 
       return (
         <Text key={index}>
-          <Text color={getColor("text")}>
-            {line.substring(0, line.indexOf(trimmedLine))}
-          </Text>
+          <Text>{line.substring(0, line.indexOf(trimmedLine))}</Text>
           <Text color={valueColor}>{cleanValue}</Text>
-          {line.endsWith(",") && <Text color={getColor("text")}>,</Text>}
+          {line.endsWith(",") && <Text>,</Text>}
         </Text>
       );
     }
 
     // Default rendering
-    return (
-      <Text key={index} color={getColor("text")}>
-        {line}
-      </Text>
-    );
+    return <Text key={index}>{line}</Text>;
   };
 
   return (
