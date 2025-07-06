@@ -6,7 +6,8 @@
       "Bash(npm run test:run:*)",
       "Bash(git add:*)",
       "Bash(git commit:*)",
-      "Bash(mkdir:*)"
+      "Bash(mkdir:*)",
+      "Bash(npm run test:*)"
     ],
     "deny": []
   }
