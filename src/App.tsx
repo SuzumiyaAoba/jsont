@@ -1,6 +1,5 @@
 import { Box, useApp, useInput } from "ink";
 import { useState } from "react";
-import { FilterInput } from "./components/FilterInput.js";
 import { JsonViewer } from "./components/JsonViewer.js";
 import { StatusBar } from "./components/StatusBar.js";
 import type { JsonValue } from "./types/index.js";
@@ -11,10 +10,7 @@ interface AppProps {
 }
 
 export function App({ initialData, initialError }: AppProps) {
-  const [filter, setFilter] = useState<string>("");
-  const [filteredData] = useState<JsonValue>(initialData ?? null);
   const [error] = useState<string | null>(initialError ?? null);
-  const [focusMode, setFocusMode] = useState<"filter" | "navigation">("filter");
 
   const { exit } = useApp();
 
@@ -24,9 +20,6 @@ export function App({ initialData, initialError }: AppProps) {
       if (key.ctrl && input === "c") {
         // Ctrl+C: quit
         exit();
-      } else if (key.tab) {
-        // Tab: focus switching
-        setFocusMode((prev) => (prev === "filter" ? "navigation" : "filter"));
       }
     },
     {
@@ -36,14 +29,9 @@ export function App({ initialData, initialError }: AppProps) {
 
   return (
     <Box flexDirection="column" width="100%" height="100%">
-      <StatusBar error={error} focusMode={focusMode} />
-      <FilterInput
-        filter={filter}
-        onFilterChange={setFilter}
-        isActive={focusMode === "filter"}
-      />
+      <StatusBar error={error} />
       <Box flexGrow={1} width="100%">
-        <JsonViewer data={filteredData} />
+        <JsonViewer data={initialData ?? null} />
       </Box>
     </Box>
   );
