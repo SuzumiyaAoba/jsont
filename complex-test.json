@@ -1,0 +1,65 @@
+{
+  "users": [
+    {
+      "id": 1,
+      "name": "Alice Johnson",
+      "email": "alice@example.com",
+      "profile": {
+        "age": 30,
+        "city": "Tokyo",
+        "skills": ["JavaScript", "React", "Node.js", "TypeScript"],
+        "experience": {
+          "years": 8,
+          "companies": ["TechCorp", "StartupInc", "DevCompany"]
+        }
+      },
+      "preferences": {
+        "theme": "dark",
+        "language": "en",
+        "notifications": {
+          "email": true,
+          "push": false,
+          "sms": true
+        }
+      }
+    },
+    {
+      "id": 2,
+      "name": "Bob Smith",
+      "email": "bob@example.com",
+      "profile": {
+        "age": 25,
+        "city": "Osaka",
+        "skills": ["Python", "Django", "PostgreSQL", "Docker"],
+        "experience": {
+          "years": 5,
+          "companies": ["WebDev LLC", "CloudTech"]
+        }
+      },
+      "preferences": {
+        "theme": "light",
+        "language": "ja",
+        "notifications": {
+          "email": false,
+          "push": true,
+          "sms": false
+        }
+      }
+    }
+  ],
+  "meta": {
+    "total": 2,
+    "created": "2024-01-01T00:00:00Z",
+    "version": "1.0.0",
+    "config": {
+      "pagination": {
+        "limit": 10,
+        "offset": 0
+      },
+      "sorting": {
+        "field": "name",
+        "order": "asc"
+      }
+    }
+  }
+}

@@ -182,7 +182,7 @@ export function NavigableJsonViewer({
   const visibleItems = navigation.getVisibleItems();
 
   return (
-    <Box flexDirection="column" height="100%">
+    <Box flexDirection="column" width="100%" height="100%">
       {/* Navigation status bar */}
       <NavigationStatusBar
         selectedIndex={selectedIndex}
@@ -194,6 +194,7 @@ export function NavigableJsonViewer({
       {/* Main content area */}
       <Box
         flexGrow={1}
+        width="100%"
         flexDirection="column"
         padding={1}
         // role="tree"

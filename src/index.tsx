@@ -14,7 +14,8 @@ async function main() {
     const result = await autoReadJson(filePath, {
       timeout: 10000, // 10 seconds
       maxSize: 50 * 1024 * 1024, // 50MB
-      extractFromText: true, // Enable JSON extraction from text
+      // Only extract from text when reading from files, not from stdin pipes
+      extractFromText: !!filePath,
     });
 
     if (result.success) {
@@ -23,8 +24,9 @@ async function main() {
       // Log stats in debug mode
       if (process.env["DEBUG"]) {
         console.error(
-          `Read ${result.stats.bytesRead} bytes from ${result.stats.source} in ${result.stats.readTime.toFixed(2)}ms`,
+          `DEBUG: Read ${result.stats.bytesRead} bytes from ${result.stats.source} in ${result.stats.readTime.toFixed(2)}ms`,
         );
+        console.error(`DEBUG: JSON data:`, JSON.stringify(jsonData, null, 2));
       }
     } else {
       errorMessage = result.error;
@@ -45,6 +47,16 @@ async function main() {
     }
   }
 
+  // Clear screen and setup full terminal usage before rendering
+  if (process.stdin.isTTY) {
+    // Clear screen and move cursor to top
+    process.stdout.write("\x1b[2J\x1b[H");
+    // Hide cursor for cleaner display
+    process.stdout.write("\x1b[?25l");
+    // Enable alternative screen buffer for full terminal usage
+    process.stdout.write("\x1b[?1049h");
+  }
+
   // Render the application with data or error
   const renderOptions = {
     stdout: process.stdout,
@@ -57,10 +69,36 @@ async function main() {
     renderOptions,
   );
 
-  // Auto-exit in pipe mode after rendering (stdin pipe without file arg)
-  if (!process.stdin.isTTY && !process.argv[2]) {
+  // Setup cleanup for terminal restoration
+  const cleanup = () => {
+    if (process.stdin.isTTY) {
+      // Restore terminal state
+      process.stdout.write("\x1b[?1049l"); // Disable alternative screen buffer
+      process.stdout.write("\x1b[?25h"); // Show cursor
+    }
+  };
+
+  // Handle app exit
+  app.waitUntilExit().then(() => {
+    cleanup();
+  });
+
+  // Handle process signals for proper cleanup
+  process.on("SIGINT", () => {
+    cleanup();
+    process.exit(0);
+  });
+
+  process.on("SIGTERM", () => {
+    cleanup();
+    process.exit(0);
+  });
+
+  // Only auto-exit in pipe mode if there's no valid JSON data
+  if (!process.stdin.isTTY && !process.argv[2] && !jsonData) {
     // Wait a moment for rendering to complete, then exit
     setTimeout(() => {
+      cleanup();
       app.unmount();
       process.exit(0);
     }, 100);
