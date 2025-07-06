@@ -22,7 +22,9 @@
       "Bash(npm audit:*)",
       "WebFetch(domain:github.com)",
       "Bash(npx tsc:*)",
-      "Bash(gh run view:*)"
+      "Bash(gh run view:*)",
+      "Bash(node:*)",
+      "Bash(npm:*)"
     ],
     "deny": []
   }
