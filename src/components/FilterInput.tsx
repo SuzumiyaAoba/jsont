@@ -54,7 +54,7 @@ export function FilterInput({
   const displayText = isEditing ? currentInput : filter || "(empty)";
   const statusText = isEditing
     ? "Editing - Enter: Apply, Esc: Cancel"
-    : "Enter: Edit filter";
+    : "(Filter not yet implemented)";
 
   return (
     <Box

@@ -26,7 +26,8 @@
       "Bash(node:*)",
       "Bash(npm:*)",
       "Bash(mv:*)",
-      "Bash(rmdir:*)"
+      "Bash(rmdir:*)",
+      "Bash(cat:*)"
     ],
     "deny": []
   }

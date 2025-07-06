@@ -37,13 +37,13 @@ export function JsonViewer({ data }: JsonViewerProps) {
 
       let valueColor = "white";
       if (value && value.startsWith('"') && value.endsWith('"')) {
-        valueColor = "green"; // Strings
+        valueColor = "green";
       } else if (value === "true" || value === "false") {
-        valueColor = "yellow"; // Booleans
+        valueColor = "yellow";
       } else if (value === "null") {
-        valueColor = "gray"; // Null
+        valueColor = "gray";
       } else if (value && /^\d+(\.\d+)?$/.test(value)) {
-        valueColor = "cyan"; // Numbers
+        valueColor = "cyan";
       }
 
       return (
@@ -83,13 +83,13 @@ export function JsonViewer({ data }: JsonViewerProps) {
       let valueColor = "white";
 
       if (cleanValue.startsWith('"') && cleanValue.endsWith('"')) {
-        valueColor = "green"; // Strings
+        valueColor = "green";
       } else if (cleanValue === "true" || cleanValue === "false") {
-        valueColor = "yellow"; // Booleans
+        valueColor = "yellow";
       } else if (cleanValue === "null") {
-        valueColor = "gray"; // Null
+        valueColor = "gray";
       } else if (/^\d+(\.\d+)?$/.test(cleanValue)) {
-        valueColor = "cyan"; // Numbers
+        valueColor = "cyan";
       }
 
       return (

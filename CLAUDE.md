@@ -43,6 +43,14 @@ echo '{"key": "value"}' | npm run dev
 cat file.json | npm run dev
 ```
 
+### Keyboard Controls
+
+#### Global Controls (TTY mode only)
+- **q**: Quit the application 
+- **Ctrl+C**: Exit the application
+
+Note: Keyboard controls only work in interactive terminal mode. When using pipes, the TUI will display the JSON and remain open until manually terminated.
+
 ## Architecture
 
 ### Entry Point (`src/index.tsx`)
@@ -51,20 +59,19 @@ cat file.json | npm run dev
 - Manages TTY detection to prevent conflicts with Ink's input handling
 
 ### Main Application (`src/App.tsx`)
-- Central state management for JSON data, filters, and errors
+- Central state management for JSON data and errors
 - Keyboard input handling (Ctrl+C to exit)
-- Orchestrates the three main UI components
+- Orchestrates the main UI components
 
 ### Component Architecture
 - **StatusBar**: Displays application status and error messages
-- **FilterInput**: Shows current filter state (planned for jq integration)
-- **JsonViewer**: Recursive renderer for JSON data with syntax highlighting
+- **JsonViewer**: Displays JSON data with syntax highlighting
 
 ### Data Flow
 1. `index.tsx` reads from stdin and parses JSON
 2. Parsed data passed as `initialData` to `App`
-3. `App` manages state and passes data to `JsonViewer`
-4. `JsonViewer` recursively renders JSON with appropriate colors and formatting
+3. `App` passes data directly to `JsonViewer`
+4. `JsonViewer` renders JSON with syntax highlighting
 
 ## Technical Considerations
 
