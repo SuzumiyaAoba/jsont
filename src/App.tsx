@@ -17,11 +17,8 @@ export function App({ initialData, initialError }: AppProps) {
   const [error] = useState<string | null>(initialError ?? null);
   const [focusMode, setFocusMode] = useState<"filter" | "navigation">("filter");
 
-  // Default to navigable viewer, only disable for stdin pipe without file arg
-  const isStdinPipe = !process.stdin.isTTY && !process.argv[2];
-  const [useNavigableViewer, setUseNavigableViewer] = useState<boolean>(
-    !isStdinPipe,
-  );
+  // Default to classic JSON viewer for cleaner display, enable navigation with Ctrl+N
+  const [useNavigableViewer, setUseNavigableViewer] = useState<boolean>(false);
   const { exit } = useApp();
 
   // Global keyboard input handling

@@ -15,79 +15,101 @@ export function JsonViewer({ data }: JsonViewerProps) {
     );
   }
 
-  const renderJson = (obj: JsonValue, indent = 0): React.ReactNode => {
-    const spaces = "  ".repeat(indent);
+  // Format JSON with 2-space indentation for clean display
+  const formattedJson = JSON.stringify(data, null, 2);
 
-    if (obj === null) {
-      return <Text color="gray">null</Text>;
-    }
+  // Split into lines for line-by-line rendering
+  const lines = formattedJson.split("\n");
 
-    if (typeof obj === "string") {
-      return <Text color="green">"{obj}"</Text>;
-    }
+  const renderLine = (line: string, index: number): React.ReactNode => {
+    // Apply syntax highlighting based on content
+    const trimmedLine = line.trim();
 
-    if (typeof obj === "number") {
-      return <Text color="cyan">{obj}</Text>;
-    }
+    // Key-value pairs
+    if (trimmedLine.includes(":")) {
+      const colonIndex = line.indexOf(":");
+      const beforeColon = line.substring(0, colonIndex);
+      const afterColon = line.substring(colonIndex);
 
-    if (typeof obj === "boolean") {
-      return <Text color="yellow">{obj.toString()}</Text>;
-    }
+      // Extract the value part (after colon and space)
+      const valueMatch = afterColon.match(/:\s*(.+?)(?:,\s*)?$/);
+      const value = valueMatch ? valueMatch[1] : afterColon.substring(1).trim();
 
-    if (Array.isArray(obj)) {
-      if (obj.length === 0) {
-        return <Text>[]</Text>;
+      let valueColor = "white";
+      if (value && value.startsWith('"') && value.endsWith('"')) {
+        valueColor = "green"; // Strings
+      } else if (value === "true" || value === "false") {
+        valueColor = "yellow"; // Booleans
+      } else if (value === "null") {
+        valueColor = "gray"; // Null
+      } else if (value && /^\d+(\.\d+)?$/.test(value)) {
+        valueColor = "cyan"; // Numbers
       }
 
       return (
-        <Box flexDirection="column">
-          <Text>[</Text>
-          {obj.map((item, index) => (
-            <Box
-              key={`array-${indent}-${index}-${typeof item === "object" ? JSON.stringify(item).slice(0, 10) : String(item)}`}
-            >
-              <Text>{spaces} </Text>
-              {renderJson(item, indent + 1)}
-              {index < obj.length - 1 && <Text>,</Text>}
-            </Box>
-          ))}
-          <Text>{spaces}]</Text>
-        </Box>
+        <Text key={index}>
+          <Text color="blue">{beforeColon}</Text>
+          <Text>: </Text>
+          <Text color={valueColor}>{value || ""}</Text>
+          {line.endsWith(",") && <Text>,</Text>}
+        </Text>
       );
     }
 
-    if (typeof obj === "object") {
-      const keys = Object.keys(obj);
-      if (keys.length === 0) {
-        return <Text>{"{}"}</Text>;
+    // Structural characters (braces, brackets)
+    if (
+      trimmedLine === "{" ||
+      trimmedLine === "}" ||
+      trimmedLine === "[" ||
+      trimmedLine === "]"
+    ) {
+      return (
+        <Text key={index} color="magenta">
+          {line}
+        </Text>
+      );
+    }
+
+    // Array values (numbers, strings, etc. without keys)
+    if (
+      trimmedLine &&
+      !trimmedLine.includes(":") &&
+      trimmedLine !== "{" &&
+      trimmedLine !== "}" &&
+      trimmedLine !== "[" &&
+      trimmedLine !== "]"
+    ) {
+      const cleanValue = trimmedLine.replace(/,$/, ""); // Remove trailing comma
+      let valueColor = "white";
+
+      if (cleanValue.startsWith('"') && cleanValue.endsWith('"')) {
+        valueColor = "green"; // Strings
+      } else if (cleanValue === "true" || cleanValue === "false") {
+        valueColor = "yellow"; // Booleans
+      } else if (cleanValue === "null") {
+        valueColor = "gray"; // Null
+      } else if (/^\d+(\.\d+)?$/.test(cleanValue)) {
+        valueColor = "cyan"; // Numbers
       }
 
       return (
-        <Box flexDirection="column">
-          <Text>{"{"}</Text>
-          {keys.map((key, index) => (
-            <Box key={`object-${key}`}>
-              <Text>{spaces} </Text>
-              <Text color="blue">"{key}"</Text>
-              <Text>: </Text>
-              {renderJson(obj[key] ?? null, indent + 1)}
-              {index < keys.length - 1 && <Text>,</Text>}
-            </Box>
-          ))}
-          <Text>
-            {spaces}
-            {"}"}
-          </Text>
-        </Box>
+        <Text key={index}>
+          <Text>{line.substring(0, line.indexOf(trimmedLine))}</Text>
+          <Text color={valueColor}>{cleanValue}</Text>
+          {line.endsWith(",") && <Text>,</Text>}
+        </Text>
       );
     }
 
-    return <Text>{String(obj)}</Text>;
+    // Default rendering
+    return <Text key={index}>{line}</Text>;
   };
 
   return (
     <Box flexGrow={1} flexDirection="column" padding={1}>
-      {renderJson(data)}
+      <Box flexDirection="column">
+        {lines.map((line, index) => renderLine(line, index))}
+      </Box>
     </Box>
   );
 }
