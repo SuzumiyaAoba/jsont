@@ -13,21 +13,37 @@
     "test": "vitest",
     "test:ui": "vitest --ui",
     "test:run": "vitest run",
+    "test:watch": "vitest --watch",
     "lint": "biome lint ./src",
     "lint:fix": "biome lint --write ./src",
     "format": "biome format ./src",
     "format:write": "biome format --write ./src",
     "check": "biome check ./src",
     "check:write": "biome check --write ./src",
+    "type-check": "tsc --noEmit",
     "prepare": "husky"
   },
-  "keywords": [],
+  "keywords": [
+    "json",
+    "tui",
+    "terminal",
+    "cli",
+    "viewer",
+    "jq",
+    "jsonata"
+  ],
   "author": "",
   "license": "ISC",
-  "description": "",
+  "description": "A Terminal User Interface (TUI) JSON viewer with advanced query capabilities",
+  "engines": {
+    "node": ">=18.0.0"
+  },
   "dependencies": {
     "@types/react": "^19.1.8",
+    "es-toolkit": "^1.28.1",
     "ink": "^6.0.1",
+    "jotai": "^2.10.3",
+    "json5": "^2.2.3",
     "react": "^19.1.0",
     "tsx": "^4.20.3",
     "typescript": "^5.8.3"
