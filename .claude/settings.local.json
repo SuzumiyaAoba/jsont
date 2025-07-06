@@ -9,7 +9,13 @@
       "Bash(mkdir:*)",
       "Bash(npm run test:*)",
       "Bash(git checkout:*)",
-      "Bash(npm run type-check:*)"
+      "Bash(npm run type-check:*)",
+      "Bash(ls:*)",
+      "Bash(git mv:*)",
+      "Bash(gh pr create:*)",
+      "Bash(gh pr view:*)",
+      "Bash(git fetch:*)",
+      "Bash(git rebase:*)"
     ],
     "deny": []
   }
