@@ -22,6 +22,9 @@ export function App({
   const visibleLines = Math.max(1, terminalHeight - 3);
   const maxScroll = Math.max(0, jsonLines - visibleLines);
 
+  // Calculate half-page scroll amount
+  const halfPageLines = Math.max(1, Math.floor(visibleLines / 2));
+
   // Handle keyboard input function - memoized to prevent unnecessary re-renders
   const handleKeyInput = useCallback(
     (
@@ -33,12 +36,20 @@ export function App({
       } else if (input === "q" && !key.ctrl) {
         exit();
       } else if (input === "j" && !key.ctrl) {
+        // Line down
         setScrollOffset((prev) => Math.min(maxScroll, prev + 1));
       } else if (input === "k" && !key.ctrl) {
+        // Line up
         setScrollOffset((prev) => Math.max(0, prev - 1));
+      } else if (key.ctrl && input === "f") {
+        // Half-page down (Ctrl-f)
+        setScrollOffset((prev) => Math.min(maxScroll, prev + halfPageLines));
+      } else if (key.ctrl && input === "b") {
+        // Half-page up (Ctrl-b)
+        setScrollOffset((prev) => Math.max(0, prev - halfPageLines));
       }
     },
-    [exit, maxScroll],
+    [exit, maxScroll, halfPageLines],
   );
 
   // Use Ink's useInput hook for keyboard handling

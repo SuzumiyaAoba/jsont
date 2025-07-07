@@ -52,6 +52,8 @@ cat file.json | npm run dev
 #### Navigation Controls (Available in all modes)
 - **j**: Scroll down one line
 - **k**: Scroll up one line
+- **Ctrl+f**: Scroll down half a page
+- **Ctrl+b**: Scroll up half a page
 
 #### Input Mode Compatibility
 - **Interactive Terminal Mode**: All keyboard controls work normally
