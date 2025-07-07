@@ -1,5 +1,5 @@
 import { Box, useApp, useInput } from "ink";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { JsonViewer } from "./components/JsonViewer.js";
 import { StatusBar } from "./components/StatusBar.js";
 import type { AppProps } from "./types/app.js";
@@ -11,6 +11,8 @@ export function App({
 }: AppProps) {
   const [error] = useState<string | null>(initialError ?? null);
   const [scrollOffset, setScrollOffset] = useState<number>(0);
+  const [waitingForSecondG, setWaitingForSecondG] = useState<boolean>(false);
+  const gTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const { exit } = useApp();
 
@@ -24,6 +26,15 @@ export function App({
 
   // Calculate half-page scroll amount
   const halfPageLines = Math.max(1, Math.floor(visibleLines / 2));
+
+  // Clear timeout when component unmounts or when g sequence is reset
+  useEffect(() => {
+    return () => {
+      if (gTimeoutRef.current) {
+        clearTimeout(gTimeoutRef.current);
+      }
+    };
+  }, []);
 
   // Handle keyboard input function - memoized to prevent unnecessary re-renders
   const handleKeyInput = useCallback(
@@ -47,9 +58,39 @@ export function App({
       } else if (key.ctrl && input === "b") {
         // Half-page up (Ctrl-b)
         setScrollOffset((prev) => Math.max(0, prev - halfPageLines));
+      } else if (input === "g" && !key.ctrl && !key.meta) {
+        if (waitingForSecondG) {
+          // Second 'g' pressed - goto top (gg)
+          setScrollOffset(0);
+          setWaitingForSecondG(false);
+          if (gTimeoutRef.current) {
+            clearTimeout(gTimeoutRef.current);
+            gTimeoutRef.current = null;
+          }
+        } else {
+          // First 'g' pressed - wait for second 'g'
+          setWaitingForSecondG(true);
+          // Reset after 1 second if second 'g' is not pressed
+          gTimeoutRef.current = setTimeout(() => {
+            setWaitingForSecondG(false);
+            gTimeoutRef.current = null;
+          }, 1000);
+        }
+      } else if (input === "G" && !key.ctrl && !key.meta) {
+        // Goto bottom (G)
+        setScrollOffset(maxScroll);
+      } else {
+        // Any other key resets the 'g' sequence
+        if (waitingForSecondG) {
+          setWaitingForSecondG(false);
+          if (gTimeoutRef.current) {
+            clearTimeout(gTimeoutRef.current);
+            gTimeoutRef.current = null;
+          }
+        }
       }
     },
-    [exit, maxScroll, halfPageLines],
+    [exit, maxScroll, halfPageLines, waitingForSecondG],
   );
 
   // Use Ink's useInput hook for keyboard handling

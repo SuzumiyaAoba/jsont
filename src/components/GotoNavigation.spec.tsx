@@ -1,0 +1,72 @@
+import { render } from "ink-testing-library";
+import { describe, expect, it, vi } from "vitest";
+import { App } from "../App.js";
+import type { JsonValue } from "../types/index.js";
+
+// Mock the useInput hook
+vi.mock("ink", async () => {
+  const actual = await vi.importActual("ink");
+  return {
+    ...actual,
+    useInput: vi.fn(),
+    useApp: () => ({ exit: vi.fn() }),
+  };
+});
+
+describe("Goto Navigation (gg/G)", () => {
+  const createLargeJsonData = (): JsonValue => {
+    const data: Record<string, string> = {};
+    for (let i = 1; i <= 50; i++) {
+      data[`line${i}`] = `value${i}`;
+    }
+    return data;
+  };
+
+  it("should render app with goto navigation enabled", () => {
+    const data = createLargeJsonData();
+
+    const { lastFrame } = render(
+      <App initialData={data} keyboardEnabled={true} />,
+    );
+
+    const output = lastFrame();
+    expect(output).toBeDefined();
+    expect(output).toContain("line1");
+  });
+
+  it("should show updated status bar with gg/G help", () => {
+    const data = { test: "data" };
+
+    const { lastFrame } = render(
+      <App initialData={data} keyboardEnabled={true} />,
+    );
+
+    const output = lastFrame();
+    expect(output).toContain("gg/G: Top/Bottom");
+  });
+
+  it("should handle large JSON data without errors", () => {
+    const data = createLargeJsonData();
+
+    const { lastFrame } = render(
+      <App initialData={data} keyboardEnabled={false} />,
+    );
+
+    const output = lastFrame();
+    expect(output).toBeDefined();
+    expect(output).toContain("JSON TUI Viewer");
+  });
+
+  it("should display navigation help correctly", () => {
+    const data = { simple: "data" };
+
+    const { lastFrame } = render(
+      <App initialData={data} keyboardEnabled={true} />,
+    );
+
+    const output = lastFrame();
+    expect(output).toContain("j/k: Line");
+    expect(output).toContain("Ctrl+f/b: Half-page");
+    expect(output).toContain("gg/G: Top/Bottom");
+  });
+});
