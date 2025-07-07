@@ -24,7 +24,8 @@ export async function readStdinThenReinitialize(): Promise<StdinReadResult> {
       return {
         success: false,
         data: null,
-        error: "No input available - stdin is connected to a terminal",
+        error:
+          'No JSON input provided. Usage: echo \'{"key": "value"}\' | jsont',
         canUseKeyboard: true, // TTY mode, can use keyboard
       };
     }
@@ -36,7 +37,7 @@ export async function readStdinThenReinitialize(): Promise<StdinReadResult> {
       return {
         success: false,
         data: null,
-        error: "No data received from stdin",
+        error: "Empty input received. Please provide valid JSON data.",
         canUseKeyboard: false,
       };
     }
@@ -90,188 +91,98 @@ async function readAllStdinData(): Promise<string> {
 }
 
 /**
- * Attempt to reinitialize stdin for keyboard input using multiple approaches
- * This implements various strategies to achieve keyboard input after pipe consumption
+ * Attempt to reinitialize stdin for keyboard input
+ * Uses the most reliable approach: direct TTY access via /dev/tty
  */
 async function reinitializeStdinForKeyboard(): Promise<boolean> {
   try {
-    // Method 1: Try to open controlling terminal directly using different approaches
-    if (process.platform !== "win32") {
-      try {
-        // Try multiple approaches to access the controlling terminal
-        const terminalPaths = ["/dev/tty", "/proc/self/fd/0", "/dev/fd/0"];
-
-        for (const termPath of terminalPaths) {
-          try {
-            const fs = await import("node:fs");
-
-            // Test if the terminal path is accessible
-            try {
-              fs.accessSync(termPath, fs.constants.R_OK);
-            } catch (accessError) {
-              continue;
-            }
-
-            // Try to open the terminal device
-            const termFd = fs.openSync(termPath, "r");
-            const termStream = new ReadStream(termFd);
-
-            // Set up proper raw mode handling with fallback
-            termStream.setRawMode = function (mode: boolean) {
-              try {
-                // Try to enable raw mode on the terminal itself
-                if (this.isTTY && typeof this.setRawMode === "function") {
-                  return ReadStream.prototype.setRawMode.call(this, mode);
-                }
-              } catch (error) {
-                // Expected error for non-TTY streams, silently ignore
-              }
-              return this;
-            };
-
-            // Ensure TTY properties are set
-            Object.defineProperty(termStream, "isTTY", {
-              value: true,
-              writable: false,
-              configurable: true,
-            });
-
-            // Clean up existing stdin listeners
-            process.stdin.removeAllListeners();
-
-            // Replace process.stdin with our terminal stream
-            Object.defineProperty(process, "stdin", {
-              value: termStream,
-              writable: true,
-              configurable: true,
-            });
-
-            return true;
-          } catch (termError) {}
-        }
-      } catch (error) {
-        // Fallback to other methods
-      }
-
-      // Method 1b: Try to re-open stdin file descriptor as TTY
-      try {
-        // Try to re-open stdin as a TTY stream
-        const stdinFd = process.stdin.fd || 0;
-        const newStdinStream = new ReadStream(stdinFd);
-
-        // Check if this stream supports TTY operations
-        if (newStdinStream.isTTY) {
-          // Set up proper raw mode handling
-          const originalSetRawMode = newStdinStream.setRawMode;
-          newStdinStream.setRawMode = function (mode: boolean) {
-            try {
-              if (originalSetRawMode) {
-                return originalSetRawMode.call(this, mode);
-              }
-            } catch (error) {
-              // Silently handle setRawMode errors
-            }
-            return this;
-          };
-
-          // Clean up existing stdin listeners
-          process.stdin.removeAllListeners();
-
-          // Replace process.stdin with our new TTY stream
-          Object.defineProperty(process, "stdin", {
-            value: newStdinStream,
-            writable: true,
-            configurable: true,
-          });
-
-          return true;
-        }
-      } catch (error) {
-        // Continue to next method
-      }
-
-      // Method 2: Try to use the process.stdin directly but reset its state
-      try {
-        // Remove all existing listeners
-        process.stdin.removeAllListeners();
-
-        // Reset stdin to readable state
-        process.stdin.pause();
-        process.stdin.resume();
-
-        // Force TTY properties
-        Object.defineProperty(process.stdin, "isTTY", {
-          value: true,
-          writable: true,
-          configurable: true,
-        });
-
-        // Create a wrapper for setRawMode that handles errors gracefully
-        const originalSetRawMode = process.stdin.setRawMode;
-        Object.defineProperty(process.stdin, "setRawMode", {
-          value: function (mode: boolean) {
-            try {
-              if (
-                originalSetRawMode &&
-                typeof originalSetRawMode === "function"
-              ) {
-                return originalSetRawMode.call(this, mode);
-              }
-            } catch (error) {
-              // Silently handle setRawMode errors
-            }
-            return this;
-          },
-          writable: true,
-          configurable: true,
-        });
-
-        return true;
-      } catch (error) {
-        // Continue to next method
-      }
+    // Only attempt TTY reinitialization on Unix-like systems
+    if (process.platform === "win32") {
+      return setupMinimalStdin();
     }
 
-    // Method 3: Last resort - create minimal TTY interface for Ink
+    // Try to open the controlling terminal directly
+    try {
+      const fs = await import("node:fs");
 
-    // Create a minimal stdin-like object that Ink can work with
-    const minimalStdin = {
-      isTTY: true,
-      setRawMode: function (_mode: boolean) {
-        return this;
-      },
-      on: function (_event: string, _listener: (...args: unknown[]) => void) {
-        return this;
-      },
-      removeListener: function (
-        _event: string,
-        _listener: (...args: unknown[]) => void,
-      ) {
-        return this;
-      },
-      removeAllListeners: function () {
-        return this;
-      },
-      pause: function () {
-        return this;
-      },
-      resume: function () {
-        return this;
-      },
-      read: () => null,
-      readable: true,
-      fd: 0,
-    };
+      // Check if /dev/tty is accessible
+      fs.accessSync("/dev/tty", fs.constants.R_OK);
 
-    // Replace process.stdin with our minimal implementation
-    Object.defineProperty(process, "stdin", {
-      value: minimalStdin,
+      // Open the terminal device
+      const termFd = fs.openSync("/dev/tty", "r");
+      const termStream = new ReadStream(termFd);
+
+      // Set up safe raw mode handling
+      termStream.setRawMode = function (mode: boolean) {
+        try {
+          if (this.isTTY && ReadStream.prototype.setRawMode) {
+            return ReadStream.prototype.setRawMode.call(this, mode);
+          }
+        } catch {
+          // Silently handle setRawMode errors
+        }
+        return this;
+      };
+
+      // Ensure TTY properties are set
+      Object.defineProperty(termStream, "isTTY", {
+        value: true,
+        writable: false,
+        configurable: true,
+      });
+
+      // Clean up existing stdin and replace with terminal stream
+      process.stdin.removeAllListeners();
+      Object.defineProperty(process, "stdin", {
+        value: termStream,
+        writable: true,
+        configurable: true,
+      });
+
+      return true;
+    } catch {
+      // TTY access failed, fall back to minimal stdin
+      return setupMinimalStdin();
+    }
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Set up minimal stdin interface for Ink compatibility
+ */
+function setupMinimalStdin(): boolean {
+  try {
+    // Clean up existing stdin listeners
+    process.stdin.removeAllListeners();
+
+    // Override setRawMode to prevent errors
+    const originalSetRawMode = process.stdin.setRawMode;
+    Object.defineProperty(process.stdin, "setRawMode", {
+      value: function (mode: boolean) {
+        try {
+          if (originalSetRawMode && typeof originalSetRawMode === "function") {
+            return originalSetRawMode.call(this, mode);
+          }
+        } catch {
+          // Silently handle setRawMode errors
+        }
+        return this;
+      },
       writable: true,
       configurable: true,
     });
 
-    return false;
-  } catch (error) {
+    // Ensure isTTY is set for Ink compatibility
+    Object.defineProperty(process.stdin, "isTTY", {
+      value: true,
+      writable: true,
+      configurable: true,
+    });
+
+    return false; // Indicate limited keyboard support
+  } catch {
     return false;
   }
 }
@@ -289,7 +200,7 @@ export async function readFromFile(filePath: string): Promise<StdinReadResult> {
       return {
         success: false,
         data: null,
-        error: "File is empty or contains only whitespace",
+        error: `File '${filePath}' is empty or contains only whitespace`,
         canUseKeyboard: true, // File mode, stdin should be available for keyboard
       };
     }
@@ -310,7 +221,9 @@ export async function readFromFile(filePath: string): Promise<StdinReadResult> {
       success: false,
       data: null,
       error:
-        error instanceof Error ? error.message : "Unknown error reading file",
+        error instanceof Error
+          ? `Failed to read file '${filePath}': ${error.message}`
+          : `Unknown error reading file '${filePath}'`,
       canUseKeyboard: process.stdin.isTTY === true,
     };
   }

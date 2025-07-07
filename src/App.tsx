@@ -1,9 +1,8 @@
 import { Box, useApp, useInput } from "ink";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { JsonViewer } from "./components/JsonViewer.js";
 import { StatusBar } from "./components/StatusBar.js";
 import type { AppProps } from "./types/app.js";
-import { type KeyEvent, keyboardHandler } from "./utils/keyboardHandler.js";
 
 export function App({
   initialData,
@@ -42,40 +41,10 @@ export function App({
     [exit, maxScroll],
   );
 
-  // Global keyboard input handling - try both Ink's useInput and custom handler
+  // Use Ink's useInput hook for keyboard handling
   useInput(handleKeyInput, {
-    isActive: keyboardEnabled, // Enable only when explicitly allowed
+    isActive: keyboardEnabled,
   });
-
-  // Custom keyboard handler for cases where Ink's useInput doesn't work
-  useEffect(() => {
-    if (!keyboardEnabled) {
-      return;
-    }
-
-    // Set up custom keyboard handler as fallback
-    const handleCustomKey = (keyEvent: KeyEvent) => {
-      // Convert custom key event to Ink-style format
-      const input = keyEvent.name || keyEvent.sequence;
-      const key = {
-        ctrl: keyEvent.ctrl,
-        meta: keyEvent.meta,
-        shift: keyEvent.shift,
-      };
-
-      handleKeyInput(input, key);
-    };
-
-    // Start custom keyboard handler
-    keyboardHandler.on("key", handleCustomKey);
-    keyboardHandler.start();
-
-    // Cleanup
-    return () => {
-      keyboardHandler.off("key", handleCustomKey);
-      keyboardHandler.stop();
-    };
-  }, [keyboardEnabled, handleKeyInput]); // Include handleKeyInput dependency
 
   return (
     <Box flexDirection="column" width="100%" height="100%">
