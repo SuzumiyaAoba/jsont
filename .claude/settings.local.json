@@ -29,7 +29,8 @@
       "Bash(rmdir:*)",
       "Bash(cat:*)",
       "Bash(git cherry-pick:*)",
-      "Bash(timeout:*)"
+      "Bash(timeout:*)",
+      "Bash(true)"
     ],
     "deny": []
   }

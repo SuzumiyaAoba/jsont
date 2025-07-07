@@ -1,0 +1,36 @@
+{
+  "simple_object": {
+    "key": "value"
+  },
+  "array_example": [
+    "item1",
+    "item2",
+    {
+      "nested_key": "nested_value"
+    }
+  ],
+  "mixed_nesting": {
+    "level1": {
+      "level2": [
+        {
+          "deep_object": {
+            "deep_array": [1, 2, 3]
+          }
+        }
+      ]
+    }
+  },
+  "empty_structures": {
+    "empty_object": {},
+    "empty_array": []
+  },
+  "complex_array": [
+    [1, 2, 3],
+    ["a", "b", "c"],
+    [
+      {
+        "nested": [{ "key": "value" }]
+      }
+    ]
+  ]
+}
