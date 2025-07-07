@@ -45,3 +45,24 @@ export interface ProcessState {
   keepAliveTimer: NodeJS.Timeout | null;
   signalHandlersAttached: boolean;
 }
+
+/**
+ * Search functionality state
+ */
+export interface SearchState {
+  isSearching: boolean;
+  searchTerm: string;
+  searchResults: SearchResult[];
+  currentResultIndex: number;
+}
+
+/**
+ * Individual search result
+ */
+export interface SearchResult {
+  lineIndex: number;
+  columnStart: number;
+  columnEnd: number;
+  matchText: string;
+  contextLine: string;
+}

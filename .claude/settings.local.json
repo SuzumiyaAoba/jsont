@@ -30,7 +30,9 @@
       "Bash(cat:*)",
       "Bash(git cherry-pick:*)",
       "Bash(timeout:*)",
-      "Bash(true)"
+      "Bash(true)",
+      "Bash(git branch:*)",
+      "Bash(npx biome check:*)"
     ],
     "deny": []
   }

@@ -1,13 +1,23 @@
 import { Box, Text } from "ink";
 import type React from "react";
-import type { JsonValue } from "../types/index.js";
+import type { JsonValue, SearchResult } from "../types/index.js";
+import { highlightSearchInLine } from "../utils/searchUtils.js";
 
 interface JsonViewerProps {
   data: JsonValue;
   scrollOffset?: number;
+  searchTerm?: string;
+  searchResults?: SearchResult[];
+  currentSearchIndex?: number;
 }
 
-export function JsonViewer({ data, scrollOffset = 0 }: JsonViewerProps) {
+export function JsonViewer({
+  data,
+  scrollOffset = 0,
+  searchTerm = "",
+  searchResults = [],
+  currentSearchIndex = 0,
+}: JsonViewerProps) {
   if (!data) {
     return (
       <Box flexGrow={1} justifyContent="center" alignItems="center">
@@ -31,7 +41,54 @@ export function JsonViewer({ data, scrollOffset = 0 }: JsonViewerProps) {
   const endLine = Math.min(lines.length, startLine + visibleLines);
   const visibleLineData = lines.slice(startLine, endLine);
 
+  // Render line with search highlighting
+  const renderLineWithSearch = (
+    line: string,
+    originalIndex: number,
+    searchTerm: string,
+    isCurrentResult: boolean,
+  ): React.ReactNode => {
+    const highlightedParts = highlightSearchInLine(line, searchTerm);
+
+    return (
+      <Text
+        key={originalIndex}
+        {...(isCurrentResult ? { backgroundColor: "yellow" } : {})}
+      >
+        {highlightedParts.map((part, partIndex) => (
+          <Text
+            key={`${originalIndex}-${partIndex}-${part.text}`}
+            color={part.isMatch ? "black" : "white"}
+            {...(part.isMatch
+              ? { backgroundColor: isCurrentResult ? "red" : "yellow" }
+              : {})}
+          >
+            {part.text}
+          </Text>
+        ))}
+      </Text>
+    );
+  };
+
   const renderLine = (line: string, originalIndex: number): React.ReactNode => {
+    // Check if this line has search results
+    const lineSearchResults = searchResults.filter(
+      (result) => result.lineIndex === originalIndex,
+    );
+    const hasSearchHighlight = searchTerm && lineSearchResults.length > 0;
+    const isCurrentSearchResult =
+      searchResults.length > 0 &&
+      searchResults[currentSearchIndex]?.lineIndex === originalIndex;
+
+    // If we have search highlights, use highlighted rendering
+    if (hasSearchHighlight) {
+      return renderLineWithSearch(
+        line,
+        originalIndex,
+        searchTerm,
+        isCurrentSearchResult,
+      );
+    }
     // Apply syntax highlighting based on content
     const trimmedLine = line.trim();
 
@@ -52,7 +109,7 @@ export function JsonViewer({ data, scrollOffset = 0 }: JsonViewerProps) {
       if (isStructuralValue) {
         // Use different colors for different structural characters
         valueColor = value === "{" ? "magenta" : "cyan"; // Objects: magenta, Arrays: cyan
-      } else if (value && value.startsWith('"') && value.endsWith('"')) {
+      } else if (value?.startsWith('"') && value.endsWith('"')) {
         valueColor = "green";
       } else if (value === "true" || value === "false") {
         valueColor = "yellow";
