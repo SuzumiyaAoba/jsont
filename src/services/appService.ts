@@ -73,5 +73,32 @@ export class AppService {
     app.waitUntilExit().then(() => {
       this.processManager.cleanup();
     });
+
+    // In CI environments, auto-exit after a short delay
+    if (this.isCIEnvironment()) {
+      setTimeout(() => {
+        app.unmount();
+        this.processManager.cleanup();
+      }, 100); // 100ms delay to allow rendering
+    }
+  }
+
+  /**
+   * Detect if running in CI environment
+   */
+  private isCIEnvironment(): boolean {
+    const ciEnvVars = [
+      "CI",
+      "GITHUB_ACTIONS",
+      "JENKINS_URL",
+      "TRAVIS",
+      "CIRCLECI",
+      "GITLAB_CI",
+      "BUILDKITE",
+      "DRONE",
+      "CONTINUOUS_INTEGRATION",
+    ];
+
+    return ciEnvVars.some((env) => process.env[env]);
   }
 }
