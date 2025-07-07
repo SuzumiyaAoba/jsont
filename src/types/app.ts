@@ -10,6 +10,7 @@ import type { JsonValue } from "./index.js";
 export interface AppProps {
   initialData?: JsonValue | null;
   initialError?: string | null;
+  keyboardEnabled?: boolean;
 }
 
 /**

@@ -45,11 +45,20 @@ cat file.json | npm run dev
 
 ### Keyboard Controls
 
-#### Global Controls (TTY mode only)
+#### Global Controls
 - **q**: Quit the application 
 - **Ctrl+C**: Exit the application
 
-Note: Keyboard controls only work in interactive terminal mode. When using pipes, the TUI will display the JSON and remain open until manually terminated.
+#### Navigation Controls (Available in all modes)
+- **j**: Scroll down one line
+- **k**: Scroll up one line
+
+#### Input Mode Compatibility
+- **Interactive Terminal Mode**: All keyboard controls work normally
+- **Pipe Mode**: Navigation controls available via advanced TTY stream handling
+- **File Input Mode**: All keyboard controls work normally
+
+The application implements sophisticated stdin handling to enable keyboard navigation even when JSON data is provided via pipes (e.g., `echo '...' | jsont`), similar to how tools like `less` operate.
 
 ## Architecture
 
@@ -69,6 +78,8 @@ Note: Keyboard controls only work in interactive terminal mode. When using pipes
 - **ProcessManager** (`src/utils/processManager.ts`): Process lifecycle and keep-alive management
 - **ErrorHandler** (`src/utils/errorHandler.ts`): Centralized error handling and recovery
 - **DebugLogger** (`src/utils/debug.ts`): Structured debug logging
+- **StdinHandler** (`src/utils/stdinHandler.ts`): Advanced stdin/pipe processing with TTY reinitialization
+- **KeyboardHandler** (`src/utils/keyboardHandler.ts`): Custom keyboard input system for pipe mode compatibility
 
 #### Configuration
 - **Constants** (`src/config/constants.ts`): All magic numbers, strings, and configuration
@@ -94,6 +105,52 @@ Note: Keyboard controls only work in interactive terminal mode. When using pipes
 - **Type Safety**: Comprehensive TypeScript coverage
 - **Configuration Management**: Centralized constants and configuration
 - **Error Handling**: Consistent error handling across the application
+
+## Navigation Implementation
+
+### Advanced Stdin Handling
+
+The application implements sophisticated stdin processing to enable keyboard navigation in all input modes:
+
+#### Pipe Mode Navigation
+- **Challenge**: When JSON data is piped (`echo '...' | jsont`), stdin is consumed for data input, preventing keyboard interaction
+- **Solution**: Read-then-reinitialize strategy that restores keyboard input after JSON processing
+- **Implementation**: 
+  1. Completely read stdin data into memory
+  2. Parse JSON content
+  3. Create new TTY streams using `/dev/fd/0` or similar device files
+  4. Replace `process.stdin` with new TTY stream for keyboard input
+  5. Enable Ink framework compatibility with custom setRawMode handling
+
+#### Fallback Strategy
+The stdin handler implements multiple fallback approaches:
+1. **Primary**: Open `/dev/tty` directly for terminal access
+2. **Secondary**: Use `/dev/fd/0` or `/proc/self/fd/0` as TTY stream
+3. **Fallback**: Reset existing `process.stdin` with TTY properties
+4. **Minimal**: Create compatible stdin mock for Ink framework
+
+#### Dual Input System
+- **Ink useInput Hook**: Primary keyboard handling for standard cases
+- **Custom KeyboardHandler**: Fallback system for complex pipe scenarios
+- **Event Coordination**: Both systems use the same input handling logic
+
+### Scrolling Architecture
+
+#### Line-Based Scrolling
+- **Granular Control**: Single-line scrolling for precise navigation
+- **Boundary Management**: Automatic scroll limits based on content size
+- **Performance**: Efficient rendering with visible line calculation
+
+#### State Management
+```typescript
+const [scrollOffset, setScrollOffset] = useState<number>(0);
+const maxScroll = Math.max(0, jsonLines - visibleLines);
+```
+
+#### React Optimization
+- **useCallback**: Memoized input handlers prevent unnecessary re-renders
+- **Minimal Dependencies**: Optimized useEffect dependencies reduce computation
+- **Clean Rendering**: Eliminated debug output prevents screen flickering
 
 ## Technical Considerations
 
@@ -192,10 +249,10 @@ git checkout -b feature/descriptive-name
 
 #### Feature Implementation Strategy
 
-**Phase 1: MVP Features**
-- **F1**: Basic JSON display (read from stdin, show formatted output)
-- **F2**: Simple navigation (scroll through large JSON)
-- **F3**: Basic filtering (simple path-based search)
+**Phase 1: MVP Features** ✅ COMPLETED
+- **F1**: Basic JSON display (read from stdin, show formatted output) ✅
+- **F2**: Advanced navigation with pipe mode support (j/k scroll, TTY stream handling) ✅
+- **F3**: Basic filtering (simple path-based search) 🚧 PLANNED
 
 **Phase 2: Core Features**
 - **F4**: Enhanced JSON parsing (JSON5 support, error recovery)
