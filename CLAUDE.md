@@ -83,7 +83,6 @@ The application implements sophisticated stdin handling to enable keyboard navig
 - **ErrorHandler** (`src/utils/errorHandler.ts`): Centralized error handling and recovery
 - **DebugLogger** (`src/utils/debug.ts`): Structured debug logging
 - **StdinHandler** (`src/utils/stdinHandler.ts`): Advanced stdin/pipe processing with TTY reinitialization
-- **KeyboardHandler** (`src/utils/keyboardHandler.ts`): Custom keyboard input system for pipe mode compatibility
 
 #### Configuration
 - **Constants** (`src/config/constants.ts`): All magic numbers, strings, and configuration
@@ -133,17 +132,42 @@ The stdin handler implements multiple fallback approaches:
 3. **Fallback**: Reset existing `process.stdin` with TTY properties
 4. **Minimal**: Create compatible stdin mock for Ink framework
 
-#### Dual Input System
-- **Ink useInput Hook**: Primary keyboard handling for standard cases
-- **Custom KeyboardHandler**: Fallback system for complex pipe scenarios
-- **Event Coordination**: Both systems use the same input handling logic
+#### Simplified Input System
+- **Ink useInput Hook**: Primary and exclusive keyboard handling system
+- **TTY Stream Management**: Direct TTY access via `/dev/tty` for pipe mode compatibility
+- **Clean Architecture**: Removed dual system complexity for better maintainability
 
-### Scrolling Architecture
+### Navigation System
 
-#### Line-Based Scrolling
+#### Comprehensive Navigation Features
+The application provides multiple navigation methods for efficient JSON browsing:
+
+1. **Line Navigation**: 
+   - `j`: Scroll down one line
+   - `k`: Scroll up one line
+   - Precise control for detailed examination
+
+2. **Page Navigation**:
+   - `Ctrl+f`: Scroll down half a page (forward)
+   - `Ctrl+b`: Scroll up half a page (backward)
+   - Efficient movement through large content
+
+3. **Goto Navigation**:
+   - `gg`: Jump to top of file (vi-style double 'g' sequence)
+   - `G`: Jump to bottom of file
+   - Instant positioning for large files
+
+#### Scrolling Architecture
+
+##### Line-Based Scrolling
 - **Granular Control**: Single-line scrolling for precise navigation
 - **Boundary Management**: Automatic scroll limits based on content size
 - **Performance**: Efficient rendering with visible line calculation
+
+##### Goto Sequence Handling
+- **Smart Timeout**: gg sequence resets after 1 second
+- **State Management**: React state tracks sequence progress
+- **Memory Cleanup**: Proper timeout cleanup on unmount
 
 #### State Management
 ```typescript
@@ -175,10 +199,38 @@ const maxScroll = Math.max(0, jsonLines - visibleLines);
 - Persistent atoms for configuration and history
 - Optimized for CLI application performance
 
+### JSON Syntax Highlighting
+
+#### Advanced Color Coding
+The JsonViewer component provides comprehensive syntax highlighting:
+
+1. **Structural Characters**:
+   - **Objects**: `{}` displayed in magenta
+   - **Arrays**: `[]` displayed in cyan
+   - **Enhanced distinction** between object and array boundaries
+
+2. **Data Types**:
+   - **Strings**: Green color with quote preservation
+   - **Numbers**: Cyan color for numeric values
+   - **Booleans**: Yellow color for true/false
+   - **Null values**: Gray color for null
+
+3. **Key-Value Pairs**:
+   - **Keys**: Blue color for object property names
+   - **Mixed content**: Proper handling of lines like `"array": [`
+   - **Trailing commas**: Correct highlighting of `],` and `},` patterns
+
+#### Rendering Optimizations
+- **Line-by-line rendering**: Efficient display of large JSON files
+- **Scrolling viewport**: Only visible lines are processed
+- **Smart parsing**: Handles complex nested structures and edge cases
+
 ### Testing
 - Vitest for unit testing with TypeScript support
 - Tests focus on utility functions (JSON parsing, formatting)
+- Component testing for JsonViewer and App functionality
 - Test files use `.test.ts` suffix and are co-located with source
+- Current test coverage: 111+ tests across 10 test suites
 
 ### Development Tools
 - Biome for linting and formatting (recommended rules only)
