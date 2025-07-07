@@ -4,9 +4,10 @@ import type { JsonValue } from "../types/index.js";
 
 interface JsonViewerProps {
   data: JsonValue;
+  scrollOffset?: number;
 }
 
-export function JsonViewer({ data }: JsonViewerProps) {
+export function JsonViewer({ data, scrollOffset = 0 }: JsonViewerProps) {
   if (!data) {
     return (
       <Box flexGrow={1} justifyContent="center" alignItems="center">
@@ -21,7 +22,16 @@ export function JsonViewer({ data }: JsonViewerProps) {
   // Split into lines for line-by-line rendering
   const lines = formattedJson.split("\n");
 
-  const renderLine = (line: string, index: number): React.ReactNode => {
+  // Calculate visible area (subtract 2 for StatusBar height and padding)
+  const terminalHeight = process.stdout.rows || 24;
+  const visibleLines = Math.max(1, terminalHeight - 3); // Reserve space for StatusBar and padding
+
+  // Calculate which lines to display based on scroll offset
+  const startLine = scrollOffset;
+  const endLine = Math.min(lines.length, startLine + visibleLines);
+  const visibleLineData = lines.slice(startLine, endLine);
+
+  const renderLine = (line: string, originalIndex: number): React.ReactNode => {
     // Apply syntax highlighting based on content
     const trimmedLine = line.trim();
 
@@ -47,7 +57,7 @@ export function JsonViewer({ data }: JsonViewerProps) {
       }
 
       return (
-        <Text key={index}>
+        <Text key={originalIndex}>
           <Text color="blue">{beforeColon}</Text>
           <Text>: </Text>
           <Text color={valueColor}>{value || ""}</Text>
@@ -64,7 +74,7 @@ export function JsonViewer({ data }: JsonViewerProps) {
       trimmedLine === "]"
     ) {
       return (
-        <Text key={index} color="magenta">
+        <Text key={originalIndex} color="magenta">
           {line}
         </Text>
       );
@@ -93,7 +103,7 @@ export function JsonViewer({ data }: JsonViewerProps) {
       }
 
       return (
-        <Text key={index}>
+        <Text key={originalIndex}>
           <Text>{line.substring(0, line.indexOf(trimmedLine))}</Text>
           <Text color={valueColor}>{cleanValue}</Text>
           {line.endsWith(",") && <Text>,</Text>}
@@ -102,13 +112,18 @@ export function JsonViewer({ data }: JsonViewerProps) {
     }
 
     // Default rendering
-    return <Text key={index}>{line}</Text>;
+    return <Text key={originalIndex}>{line}</Text>;
   };
 
   return (
     <Box flexGrow={1} flexDirection="column" padding={1}>
       <Box flexDirection="column">
-        {lines.map((line, index) => renderLine(line, index))}
+        {visibleLineData.map((line, index) => {
+          const uniqueKey = `line-${startLine + index}`;
+          return (
+            <Box key={uniqueKey}>{renderLine(line, startLine + index)}</Box>
+          );
+        })}
       </Box>
     </Box>
   );

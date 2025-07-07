@@ -27,7 +27,9 @@
       "Bash(npm:*)",
       "Bash(mv:*)",
       "Bash(rmdir:*)",
-      "Bash(cat:*)"
+      "Bash(cat:*)",
+      "Bash(git cherry-pick:*)",
+      "Bash(timeout:*)"
     ],
     "deny": []
   }
