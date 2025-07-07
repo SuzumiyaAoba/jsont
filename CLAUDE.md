@@ -54,6 +54,8 @@ cat file.json | npm run dev
 - **k**: Scroll up one line
 - **Ctrl+f**: Scroll down half a page
 - **Ctrl+b**: Scroll up half a page
+- **gg**: Go to the top of the file (first 'g', then second 'g' within 1 second)
+- **G**: Go to the bottom of the file
 
 #### Input Mode Compatibility
 - **Interactive Terminal Mode**: All keyboard controls work normally
