@@ -2,12 +2,7 @@ import { Box, useApp, useInput } from "ink";
 import { useState } from "react";
 import { JsonViewer } from "./components/JsonViewer.js";
 import { StatusBar } from "./components/StatusBar.js";
-import type { JsonValue } from "./types/index.js";
-
-interface AppProps {
-  initialData?: JsonValue;
-  initialError?: string | null;
-}
+import type { AppProps } from "./types/app.js";
 
 export function App({ initialData, initialError }: AppProps) {
   const [error] = useState<string | null>(initialError ?? null);

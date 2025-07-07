@@ -53,25 +53,47 @@ Note: Keyboard controls only work in interactive terminal mode. When using pipes
 
 ## Architecture
 
-### Entry Point (`src/index.tsx`)
-- Handles stdin reading before React rendering
-- Parses JSON input and passes to the App component
-- Manages TTY detection to prevent conflicts with Ink's input handling
+### Refactored Clean Architecture
 
-### Main Application (`src/App.tsx`)
-- Central state management for JSON data and errors
-- Keyboard input handling (Ctrl+C to exit)
-- Orchestrates the main UI components
+#### Entry Point (`src/index.tsx`)
+- Minimal entry point with proper error handling
+- Delegates all logic to AppService
+- Single responsibility: application bootstrapping
 
-### Component Architecture
-- **StatusBar**: Displays application status and error messages
-- **JsonViewer**: Displays JSON data with syntax highlighting
+#### Services Layer
+- **AppService** (`src/services/appService.ts`): Application lifecycle orchestration
+- **JsonService** (`src/services/jsonService.ts`): JSON processing and validation
 
-### Data Flow
-1. `index.tsx` reads from stdin and parses JSON
-2. Parsed data passed as `initialData` to `App`
-3. `App` passes data directly to `JsonViewer`
-4. `JsonViewer` renders JSON with syntax highlighting
+#### Utilities Layer
+- **TerminalManager** (`src/utils/terminal.ts`): Terminal state and control sequences
+- **ProcessManager** (`src/utils/processManager.ts`): Process lifecycle and keep-alive management
+- **ErrorHandler** (`src/utils/errorHandler.ts`): Centralized error handling and recovery
+- **DebugLogger** (`src/utils/debug.ts`): Structured debug logging
+
+#### Configuration
+- **Constants** (`src/config/constants.ts`): All magic numbers, strings, and configuration
+- **Types** (`src/types/app.ts`): Application-specific type definitions
+
+#### UI Components
+- **App** (`src/App.tsx`): Main React component with keyboard handling
+- **StatusBar**: Status display and error messaging
+- **JsonViewer**: JSON rendering with syntax highlighting
+
+### Data Flow (Refactored)
+1. `index.tsx` → `AppService.run()`
+2. `AppService` → `JsonService.processInput()` for data processing
+3. `AppService` → `TerminalManager.initialize()` for terminal setup
+4. `AppService` → `ProcessManager.setup()` for lifecycle management
+5. `AppService` renders `App` component with processed data
+6. `App` → `JsonViewer` for display rendering
+
+### Benefits of Refactoring
+- **Separation of Concerns**: Each class has a single responsibility
+- **Testability**: Services and utilities can be unit tested independently
+- **Maintainability**: Clear interfaces and dependency injection
+- **Type Safety**: Comprehensive TypeScript coverage
+- **Configuration Management**: Centralized constants and configuration
+- **Error Handling**: Consistent error handling across the application
 
 ## Technical Considerations
 
