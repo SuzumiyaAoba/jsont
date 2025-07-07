@@ -35,7 +35,7 @@ export function JsonViewer({ data, scrollOffset = 0 }: JsonViewerProps) {
     // Apply syntax highlighting based on content
     const trimmedLine = line.trim();
 
-    // Key-value pairs
+    // Key-value pairs with proper bracket/brace handling
     if (trimmedLine.includes(":")) {
       const colonIndex = line.indexOf(":");
       const beforeColon = line.substring(0, colonIndex);
@@ -45,8 +45,14 @@ export function JsonViewer({ data, scrollOffset = 0 }: JsonViewerProps) {
       const valueMatch = afterColon.match(/:\s*(.+?)(?:,\s*)?$/);
       const value = valueMatch ? valueMatch[1] : afterColon.substring(1).trim();
 
+      // Check if the value is a structural character
+      const isStructuralValue = value === "{" || value === "[";
+
       let valueColor = "white";
-      if (value && value.startsWith('"') && value.endsWith('"')) {
+      if (isStructuralValue) {
+        // Use different colors for different structural characters
+        valueColor = value === "{" ? "magenta" : "cyan"; // Objects: magenta, Arrays: cyan
+      } else if (value && value.startsWith('"') && value.endsWith('"')) {
         valueColor = "green";
       } else if (value === "true" || value === "false") {
         valueColor = "yellow";
@@ -73,9 +79,28 @@ export function JsonViewer({ data, scrollOffset = 0 }: JsonViewerProps) {
       trimmedLine === "[" ||
       trimmedLine === "]"
     ) {
+      // Use different colors for different structural characters
+      const isArrayBracket = trimmedLine === "[" || trimmedLine === "]";
+      const color = isArrayBracket ? "cyan" : "magenta"; // Arrays: cyan, Objects: magenta
+
       return (
-        <Text key={originalIndex} color="magenta">
+        <Text key={originalIndex} color={color}>
           {line}
+        </Text>
+      );
+    }
+
+    // Handle lines with closing brackets/braces that might have commas
+    if (trimmedLine === "}," || trimmedLine === "],") {
+      const isArrayBracket = trimmedLine.startsWith("]");
+      const color = isArrayBracket ? "cyan" : "magenta";
+      const bracket = trimmedLine.charAt(0);
+
+      return (
+        <Text key={originalIndex}>
+          <Text>{line.substring(0, line.indexOf(trimmedLine))}</Text>
+          <Text color={color}>{bracket}</Text>
+          <Text>,</Text>
         </Text>
       );
     }
@@ -87,7 +112,9 @@ export function JsonViewer({ data, scrollOffset = 0 }: JsonViewerProps) {
       trimmedLine !== "{" &&
       trimmedLine !== "}" &&
       trimmedLine !== "[" &&
-      trimmedLine !== "]"
+      trimmedLine !== "]" &&
+      trimmedLine !== "}," &&
+      trimmedLine !== "],"
     ) {
       const cleanValue = trimmedLine.replace(/,$/, ""); // Remove trailing comma
       let valueColor = "white";
