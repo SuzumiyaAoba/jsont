@@ -27,7 +27,8 @@
       "Bash(npm:*)",
       "Bash(mv:*)",
       "Bash(rmdir:*)",
-      "Bash(cat:*)"
+      "Bash(cat:*)",
+      "Bash(gh run list:*)"
     ],
     "deny": []
   }
