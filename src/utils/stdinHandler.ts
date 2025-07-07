@@ -92,11 +92,11 @@ async function readAllStdinData(): Promise<string> {
 
 /**
  * Attempt to reinitialize stdin for keyboard input
- * Uses the most reliable approach: direct TTY access via /dev/tty
+ * Uses a more reliable approach that works better with pipes
  */
 async function reinitializeStdinForKeyboard(): Promise<boolean> {
   try {
-    // Only attempt TTY reinitialization on Unix-like systems
+    // For Windows, use minimal setup
     if (process.platform === "win32") {
       return setupMinimalStdin();
     }
@@ -141,11 +141,52 @@ async function reinitializeStdinForKeyboard(): Promise<boolean> {
 
       return true;
     } catch {
-      // TTY access failed, fall back to minimal stdin
-      return setupMinimalStdin();
+      // TTY access failed, try alternative approach
+      return setupEnhancedStdin();
     }
   } catch {
     return false;
+  }
+}
+
+/**
+ * Enhanced stdin setup that works better after reading from pipes
+ */
+function setupEnhancedStdin(): boolean {
+  try {
+    // Clean up existing stdin listeners
+    process.stdin.removeAllListeners();
+
+    // Force TTY properties for better Ink compatibility
+    Object.defineProperty(process.stdin, "isTTY", {
+      value: true,
+      writable: true,
+      configurable: true,
+    });
+
+    // Set up enhanced setRawMode that's more robust
+    Object.defineProperty(process.stdin, "setRawMode", {
+      value: function (mode: boolean) {
+        try {
+          // Try to call the original setRawMode if available
+          if (this._setRawMode && typeof this._setRawMode === "function") {
+            return this._setRawMode.call(this, mode);
+          }
+        } catch {
+          // Silently handle setRawMode errors
+        }
+        return this;
+      },
+      writable: true,
+      configurable: true,
+    });
+
+    // Force resume stdin to make sure it's ready
+    process.stdin.resume();
+
+    return true; // Indicate enhanced keyboard support
+  } catch {
+    return setupMinimalStdin();
   }
 }
 
