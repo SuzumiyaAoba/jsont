@@ -52,7 +52,7 @@ export async function readStdinThenReinitialize(): Promise<StdinReadResult> {
       success: parseResult.success,
       data: parseResult.data,
       error: parseResult.error,
-      canUseKeyboard: keyboardReady,
+      canUseKeyboard: true, // Always enable keyboard for piped input
     };
   } catch (error) {
     return {
@@ -164,13 +164,31 @@ function setupEnhancedStdin(): boolean {
       configurable: true,
     });
 
-    // Set up enhanced setRawMode that's more robust
+    // Store original setRawMode if it exists
+    const originalSetRawMode = process.stdin.setRawMode;
+
+    // Set up enhanced setRawMode that works with TTY reinitialization
     Object.defineProperty(process.stdin, "setRawMode", {
       value: function (mode: boolean) {
         try {
-          // Try to call the original setRawMode if available
-          if (this._setRawMode && typeof this._setRawMode === "function") {
-            return this._setRawMode.call(this, mode);
+          // First try the original setRawMode
+          if (originalSetRawMode && typeof originalSetRawMode === "function") {
+            return originalSetRawMode.call(this, mode);
+          }
+          // If no original, try accessing /dev/tty directly for raw mode
+          if (process.platform !== "win32" && mode) {
+            const fs = require("node:fs");
+            const termios = require("node:tty");
+            // Try to enable raw mode on the controlling terminal
+            try {
+              const ttyFd = fs.openSync("/dev/tty", "r+");
+              const ttyStream = new termios.ReadStream(ttyFd);
+              if (ttyStream.setRawMode) {
+                ttyStream.setRawMode(mode);
+              }
+            } catch {
+              // Ignore errors, fallback to no raw mode
+            }
           }
         } catch {
           // Silently handle setRawMode errors
@@ -255,7 +273,7 @@ export async function readFromFile(filePath: string): Promise<StdinReadResult> {
       success: parseResult.success,
       data: parseResult.data,
       error: parseResult.error,
-      canUseKeyboard: process.stdin.isTTY === true, // Only enable if truly a TTY
+      canUseKeyboard: true, // Always enable keyboard for file input
     };
   } catch (error) {
     return {
@@ -265,7 +283,7 @@ export async function readFromFile(filePath: string): Promise<StdinReadResult> {
         error instanceof Error
           ? `Failed to read file '${filePath}': ${error.message}`
           : `Unknown error reading file '${filePath}'`,
-      canUseKeyboard: process.stdin.isTTY === true,
+      canUseKeyboard: true, // Always enable keyboard for file input
     };
   }
 }

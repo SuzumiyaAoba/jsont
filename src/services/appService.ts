@@ -40,7 +40,7 @@ export class AppService {
     this.setupEnvironment();
 
     // Render the application with appropriate keyboard support
-    const app = this.renderApp(data, error, canUseKeyboard);
+    const app = await this.renderApp(data, error, canUseKeyboard);
 
     // Setup exit handling
     this.setupExitHandling(app);
@@ -64,11 +64,11 @@ export class AppService {
   /**
    * Render the Ink application
    */
-  private renderApp(
+  private async renderApp(
     data: JsonValue | null,
     error: string | null,
     enableKeyboard: boolean = false,
-  ): Instance {
+  ): Promise<Instance> {
     const renderOptions: {
       stdout: NodeJS.WriteStream;
       stderr: NodeJS.WriteStream;
@@ -78,9 +78,12 @@ export class AppService {
       stderr: process.stderr,
     };
 
-    // Always provide stdin for keyboard input when enabled, regardless of TTY status
-    // The TTY status may be affected by file reading operations
-    if (enableKeyboard) {
+    // Check if raw mode is supported manually
+    const rawModeSupported = await this.checkRawModeSupport();
+    const actualKeyboardEnabled = enableKeyboard && rawModeSupported;
+
+    // Only provide stdin for keyboard input when raw mode is truly supported
+    if (actualKeyboardEnabled) {
       renderOptions.stdin = process.stdin;
     }
 
@@ -88,7 +91,7 @@ export class AppService {
       React.createElement(App, {
         initialData: data,
         initialError: error,
-        keyboardEnabled: enableKeyboard,
+        keyboardEnabled: actualKeyboardEnabled,
       }),
       renderOptions,
     );
@@ -108,6 +111,43 @@ export class AppService {
         app.unmount();
         this.processManager.cleanup();
       }, 100); // 100ms delay to allow rendering
+    }
+  }
+
+  /**
+   * Check if raw mode is supported on stdin
+   */
+  private async checkRawModeSupport(): Promise<boolean> {
+    try {
+      // Only enable keyboard if process.stdin actually supports raw mode
+      if (
+        process.stdin.setRawMode &&
+        typeof process.stdin.setRawMode === "function"
+      ) {
+        process.stdin.setRawMode(false);
+        return process.stdin.isTTY === true;
+      }
+      return false;
+    } catch {
+      return false;
+    }
+  }
+
+  /**
+   * Check if we can create a TTY stream for input
+   */
+  private async canCreateTTYStream(): Promise<boolean> {
+    try {
+      if (process.platform === "win32") {
+        return false; // Skip TTY creation on Windows
+      }
+
+      const fs = await import("node:fs");
+      // Test if /dev/tty is accessible
+      fs.accessSync("/dev/tty", fs.constants.R_OK);
+      return true;
+    } catch (error) {
+      return false;
     }
   }
 

@@ -32,7 +32,8 @@
       "Bash(timeout:*)",
       "Bash(true)",
       "Bash(git branch:*)",
-      "Bash(npx biome check:*)"
+      "Bash(npx biome check:*)",
+      "Bash(echo:*)"
     ],
     "deny": []
   }
