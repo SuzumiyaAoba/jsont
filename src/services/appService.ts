@@ -123,7 +123,7 @@ export class AppService {
       this.setupStdinForInk();
 
       return true;
-    } catch (error) {
+    } catch (_error) {
       return false;
     }
   }
@@ -142,8 +142,29 @@ export class AppService {
     // Provide a working setRawMode function
     if (!process.stdin.setRawMode) {
       Object.defineProperty(process.stdin, "setRawMode", {
-        value: function (mode: boolean) {
+        value: function (_mode: boolean) {
           // Just return this for chaining without actually setting raw mode
+          return this;
+        },
+        writable: true,
+        configurable: true,
+      });
+    }
+
+    // Provide required ref/unref functions for Ink
+    if (!process.stdin.ref) {
+      Object.defineProperty(process.stdin, "ref", {
+        value: function () {
+          return this;
+        },
+        writable: true,
+        configurable: true,
+      });
+    }
+
+    if (!process.stdin.unref) {
+      Object.defineProperty(process.stdin, "unref", {
+        value: function () {
           return this;
         },
         writable: true,
@@ -161,24 +182,6 @@ export class AppService {
     // Resume stdin to make it available for reading
     if (process.stdin.resume) {
       process.stdin.resume();
-    }
-  }
-
-  /**
-   * Check if we can create a TTY stream for input
-   */
-  private async canCreateTTYStream(): Promise<boolean> {
-    try {
-      if (process.platform === "win32") {
-        return false; // Skip TTY creation on Windows
-      }
-
-      const fs = await import("node:fs");
-      // Test if /dev/tty is accessible
-      fs.accessSync("/dev/tty", fs.constants.R_OK);
-      return true;
-    } catch (error) {
-      return false;
     }
   }
 

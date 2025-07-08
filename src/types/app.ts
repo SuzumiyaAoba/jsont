@@ -2,7 +2,7 @@
  * Application-specific type definitions
  */
 
-import type { JsonValue } from "./index.js";
+import type { JsonValue, SearchResult } from "./index.js";
 
 /**
  * Props for the main App component
@@ -54,15 +54,4 @@ export interface SearchState {
   searchTerm: string;
   searchResults: SearchResult[];
   currentResultIndex: number;
-}
-
-/**
- * Individual search result
- */
-export interface SearchResult {
-  lineIndex: number;
-  columnStart: number;
-  columnEnd: number;
-  matchText: string;
-  contextLine: string;
 }

@@ -191,18 +191,18 @@ function calculateJsonStats(data: JsonValue): JsonStats {
     maxDepth = Math.max(maxDepth, currentDepth);
 
     if (value === null) {
-      types.null = (types.null || 0) + 1;
+      types["null"] = (types["null"] || 0) + 1;
     } else if (typeof value === "string") {
-      types.string = (types.string || 0) + 1;
+      types["string"] = (types["string"] || 0) + 1;
     } else if (typeof value === "number") {
-      types.number = (types.number || 0) + 1;
+      types["number"] = (types["number"] || 0) + 1;
     } else if (typeof value === "boolean") {
-      types.boolean = (types.boolean || 0) + 1;
+      types["boolean"] = (types["boolean"] || 0) + 1;
     } else if (Array.isArray(value)) {
-      types.array = (types.array || 0) + 1;
+      types["array"] = (types["array"] || 0) + 1;
       value.forEach((item) => traverse(item, currentDepth + 1));
     } else if (typeof value === "object") {
-      types.object = (types.object || 0) + 1;
+      types["object"] = (types["object"] || 0) + 1;
       Object.entries(value).forEach(([key, val]) => {
         keys.add(key);
         traverse(val, currentDepth + 1);

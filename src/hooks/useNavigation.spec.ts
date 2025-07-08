@@ -120,7 +120,8 @@ class MockNavigationHook {
 vi.mock("ink", () => ({
   useInput: vi.fn((callback, _options) => {
     // Store the callback for manual triggering in tests
-    (global as any).inkInputCallback = callback;
+    (global as { inkInputCallback?: typeof callback }).inkInputCallback =
+      callback;
     return undefined;
   }),
   useStdout: () => ({ stdout: { columns: 80, rows: 24 } }),
@@ -212,7 +213,9 @@ describe("useNavigation Hook", () => {
       const initialIndex = hook.selectedIndex;
 
       // Simulate arrow down key press
-      const callback = (global as any).inkInputCallback;
+      const callback = (
+        global as { inkInputCallback?: (input: string, key: object) => void }
+      ).inkInputCallback;
       if (callback) {
         callback("", { downArrow: true });
       }
@@ -230,7 +233,9 @@ describe("useNavigation Hook", () => {
       hook.navigateDown();
 
       // Simulate arrow up key press
-      const callback = (global as any).inkInputCallback;
+      const callback = (
+        global as { inkInputCallback?: (input: string, key: object) => void }
+      ).inkInputCallback;
       if (callback) {
         callback("", { upArrow: true });
       }
@@ -245,7 +250,9 @@ describe("useNavigation Hook", () => {
       const hook = new MockNavigationHook(sampleData);
 
       // Simulate page down key press
-      const callback = (global as any).inkInputCallback;
+      const callback = (
+        global as { inkInputCallback?: (input: string, key: object) => void }
+      ).inkInputCallback;
       if (callback) {
         callback("", { pageDown: true });
       }
@@ -263,7 +270,9 @@ describe("useNavigation Hook", () => {
       hook.setSelectedIndex(5);
 
       // Simulate home key press
-      const callback = (global as any).inkInputCallback;
+      const callback = (
+        global as { inkInputCallback?: (input: string, key: object) => void }
+      ).inkInputCallback;
       if (callback) {
         callback("", { home: true });
       }
@@ -280,7 +289,9 @@ describe("useNavigation Hook", () => {
       const maxIndex = hook.flatItems.length - 1;
 
       // Simulate end key press
-      const callback = (global as any).inkInputCallback;
+      const callback = (
+        global as { inkInputCallback?: (input: string, key: object) => void }
+      ).inkInputCallback;
       if (callback) {
         callback("", { end: true });
       }

@@ -46,7 +46,7 @@ export async function readStdinThenReinitialize(): Promise<StdinReadResult> {
     const parseResult = parseJsonWithValidation(inputData);
 
     // Now try to reinitialize stdin for keyboard input
-    const keyboardReady = await reinitializeStdinForKeyboard();
+    await reinitializeStdinForKeyboard();
 
     return {
       success: parseResult.success,

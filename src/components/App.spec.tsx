@@ -47,6 +47,7 @@ describe("App", () => {
     const output = lastFrame();
     expect(output).toContain("j/k: Line");
     expect(output).toContain("Ctrl+f/b: Half-page");
+    expect(output).toContain("s: Search");
   });
 
   it("should show initializing message when keyboard is disabled", () => {
@@ -56,7 +57,7 @@ describe("App", () => {
     );
 
     const output = lastFrame();
-    expect(output).toContain("Navigation: Initializing...");
+    expect(output).toContain("Keyboard input not available");
   });
 
   it("should handle null data gracefully", () => {

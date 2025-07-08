@@ -7,6 +7,13 @@ import type { AppProps } from "./types/app.js";
 import type { SearchState } from "./types/index.js";
 import { searchInJson } from "./utils/searchUtils.js";
 
+/**
+ * Main application component for the JSON TUI Viewer
+ *
+ * @param initialData - JSON data to display
+ * @param initialError - Initial error message to display
+ * @param keyboardEnabled - Whether keyboard navigation is enabled
+ */
 export function App({
   initialData,
   initialError,
@@ -29,15 +36,68 @@ export function App({
   const { exit } = useApp();
 
   // Calculate max scroll based on JSON data
+  const JSON_INDENT = 2;
+  const DEFAULT_TERMINAL_HEIGHT = 24;
+  const UI_RESERVED_LINES = 3; // Status bar, search bar, and borders
+  const G_SEQUENCE_TIMEOUT = 1000;
+
   const jsonLines = initialData
-    ? JSON.stringify(initialData, null, 2).split("\n").length
+    ? JSON.stringify(initialData, null, JSON_INDENT).split("\n").length
     : 0;
-  const terminalHeight = process.stdout.rows || 24;
-  const visibleLines = Math.max(1, terminalHeight - 3);
+  const terminalHeight = process.stdout.rows || DEFAULT_TERMINAL_HEIGHT;
+  const visibleLines = Math.max(1, terminalHeight - UI_RESERVED_LINES);
   const maxScroll = Math.max(0, jsonLines - visibleLines);
 
   // Calculate half-page scroll amount
   const halfPageLines = Math.max(1, Math.floor(visibleLines / 2));
+
+  // Helper function to scroll to search result
+  const scrollToSearchResult = useCallback(
+    (result: (typeof searchState.searchResults)[0]) => {
+      if (result) {
+        const targetLine = Math.max(
+          0,
+          result.lineIndex - Math.floor(visibleLines / 2),
+        );
+        setScrollOffset(Math.min(maxScroll, targetLine));
+      }
+    },
+    [visibleLines, maxScroll],
+  );
+
+  // Helper function to navigate to next search result
+  const navigateToNextResult = useCallback(() => {
+    if (searchState.searchResults.length === 0) return;
+    const nextIndex =
+      (searchState.currentResultIndex + 1) % searchState.searchResults.length;
+    setSearchState((prev) => ({ ...prev, currentResultIndex: nextIndex }));
+    const nextResult = searchState.searchResults[nextIndex];
+    if (nextResult) {
+      scrollToSearchResult(nextResult);
+    }
+  }, [
+    searchState.currentResultIndex,
+    searchState.searchResults,
+    scrollToSearchResult,
+  ]);
+
+  // Helper function to navigate to previous search result
+  const navigateToPreviousResult = useCallback(() => {
+    if (searchState.searchResults.length === 0) return;
+    const prevIndex =
+      searchState.currentResultIndex === 0
+        ? searchState.searchResults.length - 1
+        : searchState.currentResultIndex - 1;
+    setSearchState((prev) => ({ ...prev, currentResultIndex: prevIndex }));
+    const prevResult = searchState.searchResults[prevIndex];
+    if (prevResult) {
+      scrollToSearchResult(prevResult);
+    }
+  }, [
+    searchState.currentResultIndex,
+    searchState.searchResults,
+    scrollToSearchResult,
+  ]);
 
   // Update search results when search term changes
   useEffect(() => {
@@ -50,15 +110,8 @@ export function App({
       }));
 
       // Auto-scroll to first result
-      if (results.length > 0) {
-        const firstResult = results[0];
-        if (firstResult) {
-          const targetLine = Math.max(
-            0,
-            firstResult.lineIndex - Math.floor(visibleLines / 2),
-          );
-          setScrollOffset(Math.min(maxScroll, targetLine));
-        }
+      if (results.length > 0 && results[0]) {
+        scrollToSearchResult(results[0]);
       }
     } else {
       setSearchState((prev) => ({
@@ -67,7 +120,7 @@ export function App({
         currentResultIndex: 0,
       }));
     }
-  }, [searchState.searchTerm, initialData, visibleLines, maxScroll]);
+  }, [searchState.searchTerm, initialData, scrollToSearchResult]);
 
   // Clear timeout when component unmounts or when g sequence is reset
   useEffect(() => {
@@ -120,17 +173,17 @@ export function App({
         } else {
           // First 'g' pressed - wait for second 'g'
           setWaitingForSecondG(true);
-          // Reset after 1 second if second 'g' is not pressed
+          // Reset after timeout if second 'g' is not pressed
           gTimeoutRef.current = setTimeout(() => {
             setWaitingForSecondG(false);
             gTimeoutRef.current = null;
-          }, 1000);
+          }, G_SEQUENCE_TIMEOUT);
         }
       } else if (input === "G" && !key.ctrl && !key.meta) {
         // Goto bottom (G)
         setScrollOffset(maxScroll);
       } else if (
-        input === "/" &&
+        input === "s" &&
         !key.ctrl &&
         !key.meta &&
         !searchState.isSearching
@@ -165,18 +218,7 @@ export function App({
         searchState.searchResults.length > 0
       ) {
         // Next search result
-        const nextIndex =
-          (searchState.currentResultIndex + 1) %
-          searchState.searchResults.length;
-        setSearchState((prev) => ({ ...prev, currentResultIndex: nextIndex }));
-        const result = searchState.searchResults[nextIndex];
-        if (result) {
-          const targetLine = Math.max(
-            0,
-            result.lineIndex - Math.floor(visibleLines / 2),
-          );
-          setScrollOffset(Math.min(maxScroll, targetLine));
-        }
+        navigateToNextResult();
       } else if (
         input === "N" &&
         !key.ctrl &&
@@ -184,19 +226,7 @@ export function App({
         searchState.searchResults.length > 0
       ) {
         // Previous search result
-        const prevIndex =
-          searchState.currentResultIndex === 0
-            ? searchState.searchResults.length - 1
-            : searchState.currentResultIndex - 1;
-        setSearchState((prev) => ({ ...prev, currentResultIndex: prevIndex }));
-        const result = searchState.searchResults[prevIndex];
-        if (result) {
-          const targetLine = Math.max(
-            0,
-            result.lineIndex - Math.floor(visibleLines / 2),
-          );
-          setScrollOffset(Math.min(maxScroll, targetLine));
-        }
+        navigateToPreviousResult();
       } else {
         // Any other key resets the 'g' sequence
         if (waitingForSecondG) {
@@ -215,7 +245,8 @@ export function App({
       waitingForSecondG,
       searchState,
       searchInput,
-      visibleLines,
+      navigateToNextResult,
+      navigateToPreviousResult,
     ],
   );
 

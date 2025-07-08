@@ -81,7 +81,8 @@ function flattenJsonStructure(
     // Add object properties
     keys.forEach((key) => {
       const keyPath = [...path, key];
-      const value = (data as Record<string, JsonValue>)[key]!;
+      const value = (data as Record<string, JsonValue>)[key];
+      if (value === undefined) return;
 
       // Add the property itself
       items.push({

@@ -173,10 +173,10 @@ describe("JSON Processing - Enhanced Parser", () => {
       const result = validateJsonStructure(data);
 
       expect(result.isValid).toBe(true);
-      expect(result.stats?.types.string).toBe(2); // "text" and "value"
-      expect(result.stats?.types.number).toBe(4); // 42, 1, 2, 3
-      expect(result.stats?.types.boolean).toBe(1);
-      expect(result.stats?.types.null).toBe(1);
+      expect(result.stats?.types["string"]).toBe(2); // "text" and "value"
+      expect(result.stats?.types["number"]).toBe(4); // 42, 1, 2, 3
+      expect(result.stats?.types["boolean"]).toBe(1);
+      expect(result.stats?.types["null"]).toBe(1);
     });
 
     it("should calculate correct depth for nested structures", () => {
@@ -237,7 +237,7 @@ describe("JSON Processing - Enhanced Parser", () => {
 
     it("should handle invalid data gracefully", () => {
       const circularRef: Record<string, unknown> = { a: 1 };
-      circularRef.self = circularRef;
+      circularRef["self"] = circularRef;
 
       const result = validateJsonStructure(
         circularRef as import("./types/index.js").JsonValue,

@@ -33,7 +33,8 @@
       "Bash(true)",
       "Bash(git branch:*)",
       "Bash(npx biome check:*)",
-      "Bash(echo:*)"
+      "Bash(echo:*)",
+      "Bash(CI=true npm run test:run)"
     ],
     "deny": []
   }

@@ -5,7 +5,11 @@
 import { CONFIG } from "../config/constants.js";
 import type { JsonValue } from "../types/index.js";
 import { DebugLogger } from "../utils/debug.js";
-import { ErrorHandler } from "../utils/errorHandler.js";
+import {
+  getErrorMessage,
+  handleInputError,
+  handleNoInput,
+} from "../utils/errorHandler.js";
 import { autoReadJson } from "../utils/stdinReader.js";
 
 export interface JsonProcessingResult {
@@ -36,7 +40,7 @@ export class JsonService {
           error: null,
         };
       } else {
-        ErrorHandler.handleNoInput(filePath);
+        handleNoInput(filePath);
 
         return {
           data: null,
@@ -44,8 +48,8 @@ export class JsonService {
         };
       }
     } catch (error) {
-      const errorMessage = ErrorHandler.getErrorMessage(error);
-      ErrorHandler.handleInputError(error, filePath);
+      const errorMessage = getErrorMessage(error);
+      handleInputError(error, filePath);
 
       return {
         data: null,

@@ -10,7 +10,7 @@ export class DebugLogger {
   private readonly isEnabled: boolean;
 
   constructor() {
-    this.isEnabled = !!process.env.DEBUG;
+    this.isEnabled = !!process.env["DEBUG"];
   }
 
   /**

@@ -6,12 +6,16 @@ import type { JsonValue, SearchResult } from "../types/index.js";
 
 /**
  * Search for a term in JSON content and return all matches
+ *
+ * @param data - JSON data to search in
+ * @param searchTerm - Term to search for (case-insensitive)
+ * @returns Array of search results with line and column information
  */
 export function searchInJson(
   data: JsonValue,
   searchTerm: string,
 ): SearchResult[] {
-  if (!searchTerm.trim()) {
+  if (!data || !searchTerm.trim()) {
     return [];
   }
 
