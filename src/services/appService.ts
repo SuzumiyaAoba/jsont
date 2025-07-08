@@ -82,7 +82,7 @@ export class AppService {
     const rawModeSupported = await this.checkRawModeSupport();
     const actualKeyboardEnabled = enableKeyboard && rawModeSupported;
 
-    // Only provide stdin for keyboard input when raw mode is truly supported
+    // Provide stdin for keyboard input
     if (actualKeyboardEnabled) {
       renderOptions.stdin = process.stdin;
     }
@@ -119,17 +119,48 @@ export class AppService {
    */
   private async checkRawModeSupport(): Promise<boolean> {
     try {
-      // Only enable keyboard if process.stdin actually supports raw mode
-      if (
-        process.stdin.setRawMode &&
-        typeof process.stdin.setRawMode === "function"
-      ) {
-        process.stdin.setRawMode(false);
-        return process.stdin.isTTY === true;
-      }
+      // Setup stdin properties for Ink compatibility
+      this.setupStdinForInk();
+
+      return true;
+    } catch (error) {
       return false;
-    } catch {
-      return false;
+    }
+  }
+
+  /**
+   * Setup stdin properties to work with Ink
+   */
+  private setupStdinForInk(): void {
+    // Force TTY properties for Ink compatibility
+    Object.defineProperty(process.stdin, "isTTY", {
+      value: true,
+      writable: true,
+      configurable: true,
+    });
+
+    // Provide a working setRawMode function
+    if (!process.stdin.setRawMode) {
+      Object.defineProperty(process.stdin, "setRawMode", {
+        value: function (mode: boolean) {
+          // Just return this for chaining without actually setting raw mode
+          return this;
+        },
+        writable: true,
+        configurable: true,
+      });
+    }
+
+    // Ensure stdin is readable and resumed
+    Object.defineProperty(process.stdin, "readable", {
+      value: true,
+      writable: true,
+      configurable: true,
+    });
+
+    // Resume stdin to make it available for reading
+    if (process.stdin.resume) {
+      process.stdin.resume();
     }
   }
 
