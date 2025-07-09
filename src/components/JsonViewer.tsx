@@ -43,6 +43,15 @@ export function JsonViewer({
   const endLine = Math.min(lines.length, startLine + effectiveVisibleLines);
   const visibleLineData = lines.slice(startLine, endLine);
 
+  // Create a Map for O(1) search result lookup by line index
+  const searchResultsByLine = new Map<number, SearchResult[]>();
+  searchResults.forEach((result) => {
+    if (!searchResultsByLine.has(result.lineIndex)) {
+      searchResultsByLine.set(result.lineIndex, []);
+    }
+    searchResultsByLine.get(result.lineIndex)?.push(result);
+  });
+
   // Render line with search highlighting
   const renderLineWithSearch = (
     line: string,
@@ -84,10 +93,8 @@ export function JsonViewer({
   };
 
   const renderLine = (line: string, originalIndex: number): React.ReactNode => {
-    // Check if this line has search results
-    const lineSearchResults = searchResults.filter(
-      (result) => result.lineIndex === originalIndex,
-    );
+    // Check if this line has search results using O(1) Map lookup
+    const lineSearchResults = searchResultsByLine.get(originalIndex) || [];
     const hasSearchHighlight = searchTerm && lineSearchResults.length > 0;
     const isCurrentSearchResult =
       searchResults.length > 0 &&

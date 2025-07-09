@@ -2,7 +2,7 @@
  * Application-specific type definitions
  */
 
-import type { JsonValue, SearchResult } from "./index.js";
+import type { JsonValue } from "./index.js";
 
 /**
  * Props for the main App component
@@ -44,14 +44,4 @@ export interface TerminalState {
 export interface ProcessState {
   keepAliveTimer: NodeJS.Timeout | null;
   signalHandlersAttached: boolean;
-}
-
-/**
- * Search functionality state
- */
-export interface SearchState {
-  isSearching: boolean;
-  searchTerm: string;
-  searchResults: SearchResult[];
-  currentResultIndex: number;
 }

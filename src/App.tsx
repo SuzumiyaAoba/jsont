@@ -1,5 +1,5 @@
 import { Box, useApp, useInput } from "ink";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { DebugBar } from "./components/DebugBar.js";
 import { JsonViewer } from "./components/JsonViewer.js";
 import { SearchBar } from "./components/SearchBar.js";
@@ -46,8 +46,8 @@ export function App({
   // Calculate max scroll based on JSON data
   const JSON_INDENT = 2;
   const DEFAULT_TERMINAL_HEIGHT = 24;
-  // Calculate debug bar height dynamically based on content length
-  const calculateDebugBarHeight = () => {
+  // Calculate debug bar height dynamically based on content length with memoization
+  const debugBarHeight = useMemo(() => {
     const terminalWidth = process.stdout.columns || 80;
     let debugContent = `DEBUG: Keyboard: ${keyboardEnabled ? "ON" : "OFF"}`;
 
@@ -71,13 +71,18 @@ export function App({
       Math.ceil(debugContent.length / terminalWidth),
     );
     return estimatedLines;
-  };
+  }, [
+    keyboardEnabled,
+    searchState.isSearching,
+    searchState.searchTerm,
+    debugInfo,
+  ]);
 
   // Calculate UI reserved lines dynamically
   const statusBarLines = 3; // Status bar with borders
   const searchBarLines =
     searchState.isSearching || searchState.searchTerm ? 3 : 0; // Search bar with borders
-  const debugBarLines = calculateDebugBarHeight(); // Debug bar height based on content
+  const debugBarLines = debugBarHeight; // Debug bar height based on content
   const UI_RESERVED_LINES = statusBarLines + searchBarLines + debugBarLines;
   const G_SEQUENCE_TIMEOUT = 1000;
 
@@ -161,7 +166,14 @@ export function App({
 
       // Auto-scroll to first result
       if (results.length > 0 && results[0]) {
-        scrollToSearchResult(results[0]);
+        const targetLine = Math.max(
+          0,
+          results[0].lineIndex - Math.floor(visibleLines / 2),
+        );
+        const currentMaxScroll = searchState.isSearching
+          ? maxScrollSearchMode
+          : maxScroll;
+        setScrollOffset(Math.min(currentMaxScroll, targetLine));
       }
     } else {
       setSearchState((prev) => ({
@@ -170,7 +182,14 @@ export function App({
         currentResultIndex: 0,
       }));
     }
-  }, [searchState.searchTerm, initialData, scrollToSearchResult]);
+  }, [
+    searchState.searchTerm,
+    initialData,
+    visibleLines,
+    maxScroll,
+    maxScrollSearchMode,
+    searchState.isSearching,
+  ]);
 
   // Clear timeout when component unmounts or when g sequence is reset
   useEffect(() => {
@@ -180,6 +199,172 @@ export function App({
       }
     };
   }, []);
+
+  // Helper function to update debug info
+  const updateDebugInfo = useCallback(
+    (action: string, input: string) => {
+      const timestamp = new Date().toLocaleTimeString();
+      setDebugInfo({
+        lastKey: input,
+        lastKeyAction: `${action} (searching: ${searchState.isSearching})`,
+        timestamp: timestamp,
+      });
+    },
+    [searchState.isSearching],
+  );
+
+  // Handle search input mode
+  const handleSearchInput = useCallback(
+    (
+      input: string,
+      key: {
+        return?: boolean;
+        escape?: boolean;
+        backspace?: boolean;
+        delete?: boolean;
+        ctrl?: boolean;
+        meta?: boolean;
+      },
+    ) => {
+      if (key.return) {
+        // Confirm search
+        updateDebugInfo("Confirm search", input);
+        setSearchState((prev) => ({
+          ...prev,
+          isSearching: false,
+          searchTerm: searchInput,
+        }));
+      } else if (key.escape) {
+        // Cancel search
+        updateDebugInfo("Cancel search", input);
+        setSearchState((prev) => ({ ...prev, isSearching: false }));
+        setSearchInput("");
+      } else if (key.backspace || key.delete) {
+        // Remove character
+        updateDebugInfo("Delete character", input);
+        setSearchInput((prev) => prev.slice(0, -1));
+      } else if (input && !key.ctrl && !key.meta && input.length === 1) {
+        // Add character
+        updateDebugInfo(`Type: "${input}"`, input);
+        setSearchInput((prev) => prev + input);
+      } else {
+        // In search mode, ignore other keys
+        updateDebugInfo(`Ignored in search mode: "${input}"`, input);
+      }
+    },
+    [searchInput, updateDebugInfo],
+  );
+
+  // Handle navigation input mode
+  const handleNavigationInput = useCallback(
+    (
+      input: string,
+      key: {
+        ctrl?: boolean;
+        meta?: boolean;
+      },
+    ) => {
+      if (input === "s" && !key.ctrl && !key.meta) {
+        // Start search mode
+        updateDebugInfo("Start search mode", input);
+        console.error(
+          `[${new Date().toLocaleTimeString()}] [SEARCH] Starting search mode! Setting isSearching to true`,
+        );
+        setSearchState((prev) => ({ ...prev, isSearching: true }));
+        setSearchInput("");
+        setScrollOffset(0);
+      } else if (input === "j" && !key.ctrl) {
+        // Line down
+        updateDebugInfo("Scroll down", input);
+        const currentMaxScroll = searchState.isSearching
+          ? maxScrollSearchMode
+          : maxScroll;
+        setScrollOffset((prev) => Math.min(currentMaxScroll, prev + 1));
+      } else if (input === "k" && !key.ctrl) {
+        // Line up
+        updateDebugInfo("Scroll up", input);
+        setScrollOffset((prev) => Math.max(0, prev - 1));
+      } else if (key.ctrl && input === "f") {
+        // Half-page down (Ctrl-f)
+        updateDebugInfo("Half-page down", input);
+        const currentMaxScroll = searchState.isSearching
+          ? maxScrollSearchMode
+          : maxScroll;
+        setScrollOffset((prev) =>
+          Math.min(currentMaxScroll, prev + halfPageLines),
+        );
+      } else if (key.ctrl && input === "b") {
+        // Half-page up (Ctrl-b)
+        updateDebugInfo("Half-page up", input);
+        setScrollOffset((prev) => Math.max(0, prev - halfPageLines));
+      } else if (input === "g" && !key.ctrl && !key.meta) {
+        if (waitingForSecondG) {
+          // Second 'g' pressed - goto top (gg)
+          updateDebugInfo("Go to top (gg)", input);
+          setScrollOffset(0);
+          setWaitingForSecondG(false);
+          if (gTimeoutRef.current) {
+            clearTimeout(gTimeoutRef.current);
+            gTimeoutRef.current = null;
+          }
+        } else {
+          // First 'g' pressed - wait for second 'g'
+          updateDebugInfo("First 'g' (waiting for second)", input);
+          setWaitingForSecondG(true);
+          gTimeoutRef.current = setTimeout(() => {
+            setWaitingForSecondG(false);
+            gTimeoutRef.current = null;
+          }, G_SEQUENCE_TIMEOUT);
+        }
+      } else if (input === "G" && !key.ctrl && !key.meta) {
+        // Goto bottom (G)
+        updateDebugInfo("Go to bottom (G)", input);
+        const currentMaxScroll = searchState.isSearching
+          ? maxScrollSearchMode
+          : maxScroll;
+        setScrollOffset(currentMaxScroll);
+      } else if (
+        input === "n" &&
+        !key.ctrl &&
+        !key.meta &&
+        searchState.searchResults.length > 0
+      ) {
+        // Next search result
+        updateDebugInfo("Next result", input);
+        navigateToNextResult();
+      } else if (
+        input === "N" &&
+        !key.ctrl &&
+        !key.meta &&
+        searchState.searchResults.length > 0
+      ) {
+        // Previous search result
+        updateDebugInfo("Previous result", input);
+        navigateToPreviousResult();
+      } else {
+        // Any other key resets the 'g' sequence
+        updateDebugInfo(`Unhandled key: "${input}"`, input);
+        if (waitingForSecondG) {
+          setWaitingForSecondG(false);
+          if (gTimeoutRef.current) {
+            clearTimeout(gTimeoutRef.current);
+            gTimeoutRef.current = null;
+          }
+        }
+      }
+    },
+    [
+      searchState.isSearching,
+      searchState.searchResults.length,
+      maxScrollSearchMode,
+      maxScroll,
+      halfPageLines,
+      waitingForSecondG,
+      navigateToNextResult,
+      navigateToPreviousResult,
+      updateDebugInfo,
+    ],
+  );
 
   // Handle keyboard input function - memoized to prevent unnecessary re-renders
   const handleKeyInput = useCallback(
@@ -211,156 +396,28 @@ export function App({
         `[${timestamp}] [KEYBOARD] Conditions for 's': input=="${input}" && !ctrl=${!key.ctrl} && !meta=${!key.meta} && !isSearching=${!searchState.isSearching}`,
       );
 
-      // Helper function to update debug info
-      const updateDebugInfo = (action: string) => {
-        setDebugInfo({
-          lastKey: input,
-          lastKeyAction: `${action} (searching: ${searchState.isSearching})`,
-          timestamp: timestamp,
-        });
-      };
-
       // Always allow exit commands
       if (key.ctrl && input === "c") {
-        updateDebugInfo("Exit (Ctrl+C)");
+        updateDebugInfo("Exit (Ctrl+C)", input);
         exit();
       } else if (input === "q" && !key.ctrl && !searchState.isSearching) {
-        updateDebugInfo("Quit");
+        updateDebugInfo("Quit", input);
         exit();
       } else if (searchState.isSearching) {
         // Handle search input
-        if (key.return) {
-          // Confirm search
-          updateDebugInfo("Confirm search");
-          setSearchState((prev) => ({
-            ...prev,
-            isSearching: false,
-            searchTerm: searchInput,
-          }));
-        } else if (key.escape) {
-          // Cancel search
-          updateDebugInfo("Cancel search");
-          setSearchState((prev) => ({ ...prev, isSearching: false }));
-          setSearchInput("");
-
-          // When search bar disappears, JSON display area expands
-          // No need to adjust scroll position as it will naturally expand
-        } else if (key.backspace || key.delete) {
-          // Remove character
-          updateDebugInfo("Delete character");
-          setSearchInput((prev) => prev.slice(0, -1));
-        } else if (input && !key.ctrl && !key.meta && input.length === 1) {
-          // Add character
-          updateDebugInfo(`Type: "${input}"`);
-          setSearchInput((prev) => prev + input);
-        } else {
-          // In search mode, ignore other keys
-          updateDebugInfo(`Ignored in search mode: "${input}"`);
-        }
-      } else if (input === "s" && !key.ctrl && !key.meta) {
-        // Start search mode (first time or after completing previous search)
-        updateDebugInfo("Start search mode");
-        console.error(
-          `[${timestamp}] [SEARCH] Starting search mode! Setting isSearching to true`,
-        );
-        setSearchState((prev) => ({ ...prev, isSearching: true }));
-        setSearchInput("");
-
-        // When search bar appears, the JSON display area becomes smaller
-        // Reset scroll to top to ensure search bar is visible
-        setScrollOffset(0);
-      } else if (input === "j" && !key.ctrl) {
-        // Line down
-        updateDebugInfo("Scroll down");
-        const currentMaxScroll = searchState.isSearching
-          ? maxScrollSearchMode
-          : maxScroll;
-        setScrollOffset((prev) => Math.min(currentMaxScroll, prev + 1));
-      } else if (input === "k" && !key.ctrl) {
-        // Line up
-        updateDebugInfo("Scroll up");
-        setScrollOffset((prev) => Math.max(0, prev - 1));
-      } else if (key.ctrl && input === "f") {
-        // Half-page down (Ctrl-f)
-        updateDebugInfo("Half-page down");
-        const currentMaxScroll = searchState.isSearching
-          ? maxScrollSearchMode
-          : maxScroll;
-        setScrollOffset((prev) =>
-          Math.min(currentMaxScroll, prev + halfPageLines),
-        );
-      } else if (key.ctrl && input === "b") {
-        // Half-page up (Ctrl-b)
-        updateDebugInfo("Half-page up");
-        setScrollOffset((prev) => Math.max(0, prev - halfPageLines));
-      } else if (input === "g" && !key.ctrl && !key.meta) {
-        if (waitingForSecondG) {
-          // Second 'g' pressed - goto top (gg)
-          updateDebugInfo("Go to top (gg)");
-          setScrollOffset(0);
-          setWaitingForSecondG(false);
-          if (gTimeoutRef.current) {
-            clearTimeout(gTimeoutRef.current);
-            gTimeoutRef.current = null;
-          }
-        } else {
-          // First 'g' pressed - wait for second 'g'
-          updateDebugInfo("First 'g' (waiting for second)");
-          setWaitingForSecondG(true);
-          // Reset after timeout if second 'g' is not pressed
-          gTimeoutRef.current = setTimeout(() => {
-            setWaitingForSecondG(false);
-            gTimeoutRef.current = null;
-          }, G_SEQUENCE_TIMEOUT);
-        }
-      } else if (input === "G" && !key.ctrl && !key.meta) {
-        // Goto bottom (G)
-        updateDebugInfo("Go to bottom (G)");
-        const currentMaxScroll = searchState.isSearching
-          ? maxScrollSearchMode
-          : maxScroll;
-        setScrollOffset(currentMaxScroll);
-      } else if (
-        input === "n" &&
-        !key.ctrl &&
-        !key.meta &&
-        searchState.searchResults.length > 0
-      ) {
-        // Next search result
-        updateDebugInfo("Next result");
-        navigateToNextResult();
-      } else if (
-        input === "N" &&
-        !key.ctrl &&
-        !key.meta &&
-        searchState.searchResults.length > 0
-      ) {
-        // Previous search result
-        updateDebugInfo("Previous result");
-        navigateToPreviousResult();
+        handleSearchInput(input, key);
       } else {
-        // Any other key resets the 'g' sequence
-        updateDebugInfo(`Unhandled key: "${input}"`);
-        if (waitingForSecondG) {
-          setWaitingForSecondG(false);
-          if (gTimeoutRef.current) {
-            clearTimeout(gTimeoutRef.current);
-            gTimeoutRef.current = null;
-          }
-        }
+        // Handle navigation input
+        handleNavigationInput(input, key);
       }
     },
     [
       exit,
-      maxScroll,
-      halfPageLines,
-      waitingForSecondG,
-      searchState,
-      searchInput,
-      navigateToNextResult,
-      navigateToPreviousResult,
+      searchState.isSearching,
       keyboardEnabled,
-      maxScrollSearchMode,
+      handleSearchInput,
+      handleNavigationInput,
+      updateDebugInfo,
     ],
   );
 
