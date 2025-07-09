@@ -273,6 +273,16 @@ export function App({
         setSearchState((prev) => ({ ...prev, isSearching: true }));
         setSearchInput("");
         setScrollOffset(0);
+      } else if (
+        input === "q" &&
+        !key.ctrl &&
+        !key.meta &&
+        searchState.searchTerm
+      ) {
+        // Return to search input mode when 'q' is pressed after search
+        updateDebugInfo("Return to search input", input);
+        setSearchState((prev) => ({ ...prev, isSearching: true }));
+        setSearchInput(searchState.searchTerm); // Pre-fill with current search term
       } else if (input === "j" && !key.ctrl) {
         // Line down
         updateDebugInfo("Scroll down", input);
@@ -355,6 +365,7 @@ export function App({
     },
     [
       searchState.isSearching,
+      searchState.searchTerm,
       searchState.searchResults.length,
       maxScrollSearchMode,
       maxScroll,
@@ -400,9 +411,28 @@ export function App({
       if (key.ctrl && input === "c") {
         updateDebugInfo("Exit (Ctrl+C)", input);
         exit();
-      } else if (input === "q" && !key.ctrl && !searchState.isSearching) {
+      } else if (
+        input === "q" &&
+        !key.ctrl &&
+        !searchState.isSearching &&
+        !searchState.searchTerm
+      ) {
         updateDebugInfo("Quit", input);
         exit();
+      } else if (
+        key.escape &&
+        (searchState.isSearching || searchState.searchTerm)
+      ) {
+        // Exit search mode when Escape is pressed and search bar is visible
+        updateDebugInfo("Exit search mode", input);
+        setSearchState((prev) => ({
+          ...prev,
+          isSearching: false,
+          searchTerm: "",
+          searchResults: [],
+          currentResultIndex: 0,
+        }));
+        setSearchInput("");
       } else if (searchState.isSearching) {
         // Handle search input
         handleSearchInput(input, key);
@@ -414,6 +444,7 @@ export function App({
     [
       exit,
       searchState.isSearching,
+      searchState.searchTerm,
       keyboardEnabled,
       handleSearchInput,
       handleNavigationInput,
