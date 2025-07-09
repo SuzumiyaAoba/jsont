@@ -2,8 +2,8 @@
  * Process Lifecycle Management
  */
 
-import { CONFIG } from "../config/constants.js";
-import type { TerminalManager } from "./terminal.js";
+import { CONFIG } from "../config/constants";
+import type { TerminalManager } from "./terminal";
 
 export class ProcessManager {
   private keepAliveTimer: NodeJS.Timeout | null = null;

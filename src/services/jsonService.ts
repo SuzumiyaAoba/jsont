@@ -2,15 +2,15 @@
  * JSON Processing Service
  */
 
-import { CONFIG } from "../config/constants.js";
-import type { JsonValue } from "../types/index.js";
-import { DebugLogger } from "../utils/debug.js";
+import { CONFIG } from "../config/constants";
+import type { JsonValue } from "../types/index";
+import { DebugLogger } from "../utils/debug";
 import {
   getErrorMessage,
   handleInputError,
   handleNoInput,
-} from "../utils/errorHandler.js";
-import { autoReadJson } from "../utils/stdinReader.js";
+} from "../utils/errorHandler";
+import { autoReadJson } from "../utils/stdinReader";
 
 export interface JsonProcessingResult {
   data: JsonValue | null;

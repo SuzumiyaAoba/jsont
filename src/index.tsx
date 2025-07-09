@@ -1,11 +1,10 @@
-#!/usr/bin/env node
 /**
  * JSON TUI Viewer - Main Entry Point
  * Refactored for better separation of concerns and maintainability
  */
 
-import { AppService } from "./services/appService.js";
-import { handleFatalError } from "./utils/errorHandler.js";
+import { AppService } from "./services/appService";
+import { handleFatalError } from "./utils/errorHandler";
 
 async function main(): Promise<void> {
   const appService = new AppService();

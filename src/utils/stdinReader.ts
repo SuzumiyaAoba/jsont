@@ -6,11 +6,8 @@
 import { createReadStream } from "node:fs";
 import { Transform } from "node:stream";
 import { pipeline } from "node:stream/promises";
-import type { JsonValue } from "../types/index.js";
-import {
-  extractJsonFromText,
-  parseJsonWithValidation,
-} from "./jsonProcessor.js";
+import type { JsonValue } from "../types/index";
+import { extractJsonFromText, parseJsonWithValidation } from "./jsonProcessor";
 
 export interface StdinReadOptions {
   timeout?: number; // milliseconds
