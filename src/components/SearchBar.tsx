@@ -8,17 +8,13 @@ interface SearchBarProps {
 }
 
 export function SearchBar({ searchState, searchInput }: SearchBarProps) {
-  if (!searchState.isSearching && !searchState.searchTerm) {
-    return null;
-  }
-
   const navigationInfo = getSearchNavigationInfo(
     searchState.searchResults,
     searchState.currentResultIndex,
   );
 
   return (
-    <Box borderStyle="single" borderColor="yellow" padding={1}>
+    <Box borderStyle="single" borderColor="yellow" padding={1} width="100%">
       <Box flexGrow={1}>
         {searchState.isSearching ? (
           <>

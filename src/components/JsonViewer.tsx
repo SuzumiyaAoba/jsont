@@ -9,6 +9,7 @@ interface JsonViewerProps {
   searchTerm?: string;
   searchResults?: SearchResult[];
   currentSearchIndex?: number;
+  visibleLines?: number;
 }
 
 export function JsonViewer({
@@ -17,6 +18,7 @@ export function JsonViewer({
   searchTerm = "",
   searchResults = [],
   currentSearchIndex = 0,
+  visibleLines,
 }: JsonViewerProps) {
   if (!data) {
     return (
@@ -32,13 +34,13 @@ export function JsonViewer({
   // Split into lines for line-by-line rendering
   const lines = formattedJson.split("\n");
 
-  // Calculate visible area (subtract 2 for StatusBar height and padding)
-  const terminalHeight = process.stdout.rows || 24;
-  const visibleLines = Math.max(1, terminalHeight - 3); // Reserve space for StatusBar and padding
+  // Use provided visibleLines or calculate fallback
+  const effectiveVisibleLines =
+    visibleLines || Math.max(1, (process.stdout.rows || 24) - 3);
 
   // Calculate which lines to display based on scroll offset
   const startLine = scrollOffset;
-  const endLine = Math.min(lines.length, startLine + visibleLines);
+  const endLine = Math.min(lines.length, startLine + effectiveVisibleLines);
   const visibleLineData = lines.slice(startLine, endLine);
 
   // Render line with search highlighting
@@ -53,14 +55,25 @@ export function JsonViewer({
     return (
       <Text
         key={originalIndex}
-        {...(isCurrentResult ? { backgroundColor: "yellow" } : {})}
+        {...(isCurrentResult ? { backgroundColor: "blue" } : {})}
       >
         {highlightedParts.map((part, partIndex) => (
           <Text
             key={`${originalIndex}-${partIndex}-${part.text}`}
-            color={part.isMatch ? "black" : "white"}
+            color={
+              part.isMatch
+                ? isCurrentResult
+                  ? "white" // Current result: white text on bright cyan
+                  : "black" // Other results: black text on yellow
+                : isCurrentResult
+                  ? "white" // Non-match text on current result line: white
+                  : "white" // Normal text: white
+            }
             {...(part.isMatch
-              ? { backgroundColor: isCurrentResult ? "red" : "yellow" }
+              ? {
+                  backgroundColor: isCurrentResult ? "magenta" : "yellow",
+                  bold: isCurrentResult,
+                }
               : {})}
           >
             {part.text}
