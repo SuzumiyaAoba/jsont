@@ -188,5 +188,21 @@ export interface NavigationActions {
 
 export type NavigationHook = F2NavigationState & NavigationActions;
 
+// Search types
+export interface SearchState {
+  isSearching: boolean;
+  searchTerm: string;
+  searchResults: SearchResult[];
+  currentResultIndex: number;
+}
+
+export interface SearchResult {
+  lineIndex: number;
+  columnStart: number;
+  columnEnd: number;
+  matchText: string;
+  contextLine: string;
+}
+
 // Export default to satisfy ES module requirements
 export default {};

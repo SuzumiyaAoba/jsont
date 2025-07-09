@@ -30,7 +30,13 @@
       "Bash(cat:*)",
       "Bash(git cherry-pick:*)",
       "Bash(timeout:*)",
-      "Bash(true)"
+      "Bash(true)",
+      "Bash(git branch:*)",
+      "Bash(npx biome check:*)",
+      "Bash(echo:*)",
+      "Bash(CI=true npm run test:run)",
+      "Bash(gh api:*)",
+      "Bash(npx tsx:*)"
     ],
     "deny": []
   }

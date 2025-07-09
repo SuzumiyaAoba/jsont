@@ -5,7 +5,7 @@
  */
 
 import { AppService } from "./services/appService.js";
-import { ErrorHandler } from "./utils/errorHandler.js";
+import { handleFatalError } from "./utils/errorHandler.js";
 
 async function main(): Promise<void> {
   const appService = new AppService();
@@ -13,4 +13,4 @@ async function main(): Promise<void> {
 }
 
 // Run the application with proper error handling
-main().catch(ErrorHandler.handleFatalError);
+main().catch(handleFatalError);

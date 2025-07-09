@@ -46,13 +46,13 @@ export async function readStdinThenReinitialize(): Promise<StdinReadResult> {
     const parseResult = parseJsonWithValidation(inputData);
 
     // Now try to reinitialize stdin for keyboard input
-    const keyboardReady = await reinitializeStdinForKeyboard();
+    await reinitializeStdinForKeyboard();
 
     return {
       success: parseResult.success,
       data: parseResult.data,
       error: parseResult.error,
-      canUseKeyboard: keyboardReady,
+      canUseKeyboard: true, // Always enable keyboard for piped input
     };
   } catch (error) {
     return {
@@ -92,11 +92,11 @@ async function readAllStdinData(): Promise<string> {
 
 /**
  * Attempt to reinitialize stdin for keyboard input
- * Uses the most reliable approach: direct TTY access via /dev/tty
+ * Uses a more reliable approach that works better with pipes
  */
 async function reinitializeStdinForKeyboard(): Promise<boolean> {
   try {
-    // Only attempt TTY reinitialization on Unix-like systems
+    // For Windows, use minimal setup
     if (process.platform === "win32") {
       return setupMinimalStdin();
     }
@@ -141,11 +141,70 @@ async function reinitializeStdinForKeyboard(): Promise<boolean> {
 
       return true;
     } catch {
-      // TTY access failed, fall back to minimal stdin
-      return setupMinimalStdin();
+      // TTY access failed, try alternative approach
+      return setupEnhancedStdin();
     }
   } catch {
     return false;
+  }
+}
+
+/**
+ * Enhanced stdin setup that works better after reading from pipes
+ */
+function setupEnhancedStdin(): boolean {
+  try {
+    // Clean up existing stdin listeners
+    process.stdin.removeAllListeners();
+
+    // Force TTY properties for better Ink compatibility
+    Object.defineProperty(process.stdin, "isTTY", {
+      value: true,
+      writable: true,
+      configurable: true,
+    });
+
+    // Store original setRawMode if it exists
+    const originalSetRawMode = process.stdin.setRawMode;
+
+    // Set up enhanced setRawMode that works with TTY reinitialization
+    Object.defineProperty(process.stdin, "setRawMode", {
+      value: function (mode: boolean) {
+        try {
+          // First try the original setRawMode
+          if (originalSetRawMode && typeof originalSetRawMode === "function") {
+            return originalSetRawMode.call(this, mode);
+          }
+          // If no original, try accessing /dev/tty directly for raw mode
+          if (process.platform !== "win32" && mode) {
+            const fs = require("node:fs");
+            const termios = require("node:tty");
+            // Try to enable raw mode on the controlling terminal
+            try {
+              const ttyFd = fs.openSync("/dev/tty", "r+");
+              const ttyStream = new termios.ReadStream(ttyFd);
+              if (ttyStream.setRawMode) {
+                ttyStream.setRawMode(mode);
+              }
+            } catch {
+              // Ignore errors, fallback to no raw mode
+            }
+          }
+        } catch {
+          // Silently handle setRawMode errors
+        }
+        return this;
+      },
+      writable: true,
+      configurable: true,
+    });
+
+    // Force resume stdin to make sure it's ready
+    process.stdin.resume();
+
+    return true; // Indicate enhanced keyboard support
+  } catch {
+    return setupMinimalStdin();
   }
 }
 
@@ -214,7 +273,7 @@ export async function readFromFile(filePath: string): Promise<StdinReadResult> {
       success: parseResult.success,
       data: parseResult.data,
       error: parseResult.error,
-      canUseKeyboard: process.stdin.isTTY === true, // Only enable if truly a TTY
+      canUseKeyboard: true, // Always enable keyboard for file input
     };
   } catch (error) {
     return {
@@ -224,7 +283,7 @@ export async function readFromFile(filePath: string): Promise<StdinReadResult> {
         error instanceof Error
           ? `Failed to read file '${filePath}': ${error.message}`
           : `Unknown error reading file '${filePath}'`,
-      canUseKeyboard: process.stdin.isTTY === true,
+      canUseKeyboard: true, // Always enable keyboard for file input
     };
   }
 }

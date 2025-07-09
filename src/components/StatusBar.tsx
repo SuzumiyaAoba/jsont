@@ -12,9 +12,9 @@ export function StatusBar({ error, keyboardEnabled = false }: StatusBarProps) {
     }
 
     if (keyboardEnabled) {
-      return `JSON TUI Viewer - q: Quit | Ctrl+C: Exit | j/k: Line | Ctrl+f/b: Half-page | gg/G: Top/Bottom`;
+      return `JSON TUI Viewer - q: Quit | Ctrl+C: Exit | j/k: Line | Ctrl+f/b: Half-page | gg/G: Top/Bottom | s: Search`;
     } else {
-      return `JSON TUI Viewer - q: Quit | Ctrl+C: Exit | Navigation: Initializing...`;
+      return `JSON TUI Viewer - Keyboard input not available (try: jsont < file.json in terminal)`;
     }
   };
 

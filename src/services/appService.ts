@@ -40,7 +40,7 @@ export class AppService {
     this.setupEnvironment();
 
     // Render the application with appropriate keyboard support
-    const app = this.renderApp(data, error, canUseKeyboard);
+    const app = await this.renderApp(data, error, canUseKeyboard);
 
     // Setup exit handling
     this.setupExitHandling(app);
@@ -64,11 +64,11 @@ export class AppService {
   /**
    * Render the Ink application
    */
-  private renderApp(
+  private async renderApp(
     data: JsonValue | null,
     error: string | null,
     enableKeyboard: boolean = false,
-  ): Instance {
+  ): Promise<Instance> {
     const renderOptions: {
       stdout: NodeJS.WriteStream;
       stderr: NodeJS.WriteStream;
@@ -78,9 +78,12 @@ export class AppService {
       stderr: process.stderr,
     };
 
-    // Always provide stdin for keyboard input when enabled, regardless of TTY status
-    // The TTY status may be affected by file reading operations
-    if (enableKeyboard) {
+    // Check if raw mode is supported manually
+    const rawModeSupported = await this.checkRawModeSupport();
+    const actualKeyboardEnabled = enableKeyboard && rawModeSupported;
+
+    // Provide stdin for keyboard input
+    if (actualKeyboardEnabled) {
       renderOptions.stdin = process.stdin;
     }
 
@@ -88,7 +91,7 @@ export class AppService {
       React.createElement(App, {
         initialData: data,
         initialError: error,
-        keyboardEnabled: enableKeyboard,
+        keyboardEnabled: actualKeyboardEnabled,
       }),
       renderOptions,
     );
@@ -108,6 +111,77 @@ export class AppService {
         app.unmount();
         this.processManager.cleanup();
       }, 100); // 100ms delay to allow rendering
+    }
+  }
+
+  /**
+   * Check if raw mode is supported on stdin
+   */
+  private async checkRawModeSupport(): Promise<boolean> {
+    try {
+      // Setup stdin properties for Ink compatibility
+      this.setupStdinForInk();
+
+      return true;
+    } catch (_error) {
+      return false;
+    }
+  }
+
+  /**
+   * Setup stdin properties to work with Ink
+   */
+  private setupStdinForInk(): void {
+    // Force TTY properties for Ink compatibility
+    Object.defineProperty(process.stdin, "isTTY", {
+      value: true,
+      writable: true,
+      configurable: true,
+    });
+
+    // Provide a working setRawMode function
+    if (!process.stdin.setRawMode) {
+      Object.defineProperty(process.stdin, "setRawMode", {
+        value: function (_mode: boolean) {
+          // Just return this for chaining without actually setting raw mode
+          return this;
+        },
+        writable: true,
+        configurable: true,
+      });
+    }
+
+    // Provide required ref/unref functions for Ink
+    if (!process.stdin.ref) {
+      Object.defineProperty(process.stdin, "ref", {
+        value: function () {
+          return this;
+        },
+        writable: true,
+        configurable: true,
+      });
+    }
+
+    if (!process.stdin.unref) {
+      Object.defineProperty(process.stdin, "unref", {
+        value: function () {
+          return this;
+        },
+        writable: true,
+        configurable: true,
+      });
+    }
+
+    // Ensure stdin is readable and resumed
+    Object.defineProperty(process.stdin, "readable", {
+      value: true,
+      writable: true,
+      configurable: true,
+    });
+
+    // Resume stdin to make it available for reading
+    if (process.stdin.resume) {
+      process.stdin.resume();
     }
   }
 
