@@ -3,11 +3,11 @@
  * Maintains backward compatibility while using enhanced features
  */
 
-import type { JsonValue } from "../types/index.js";
+import type { JsonValue } from "../types/index";
 import {
   formatJsonValue as enhancedFormatJsonValue,
   parseJsonSafely as enhancedParseJsonSafely,
-} from "./jsonProcessor.js";
+} from "./jsonProcessor";
 
 /**
  * @deprecated Use parseJsonSafely from jsonProcessor.ts for enhanced features

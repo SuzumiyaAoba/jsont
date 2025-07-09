@@ -186,7 +186,7 @@ const maxScroll = Math.max(0, jsonLines - visibleLines);
 - Uses ES Modules (`"type": "module"` in package.json)
 - Extends `@tsconfig/strictest` for maximum type safety
 - Bundler module resolution for modern import handling
-- All imports must use `.js` extensions in source files
+- All imports use TypeScript paths without file extensions
 
 ### Ink Framework
 - React-based TUI framework for terminal applications (v6.0+)

@@ -79,7 +79,7 @@ describe("Project Setup", () => {
     it("should support dynamic imports", async () => {
       // Test that dynamic imports work
       const moduleImport = async () => {
-        const module = await import("./types/index.js");
+        const module = await import("./types/index");
         return module;
       };
 
