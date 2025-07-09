@@ -10,7 +10,7 @@ import type {
   JsonValue,
   ParseResult,
   ValidationResult,
-} from "../types/index";
+} from "../types/index.js";
 
 /**
  * Parse JSON/JSON5 safely with enhanced error handling

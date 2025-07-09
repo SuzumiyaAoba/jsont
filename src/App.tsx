@@ -1,12 +1,12 @@
 import { Box, useApp, useInput } from "ink";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { DebugBar } from "./components/DebugBar";
-import { JsonViewer } from "./components/JsonViewer";
-import { SearchBar } from "./components/SearchBar";
-import { StatusBar } from "./components/StatusBar";
-import type { AppProps } from "./types/app";
-import type { SearchState } from "./types/index";
-import { searchInJson } from "./utils/searchUtils";
+import { DebugBar } from "./components/DebugBar.js";
+import { JsonViewer } from "./components/JsonViewer.js";
+import { SearchBar } from "./components/SearchBar.js";
+import { StatusBar } from "./components/StatusBar.js";
+import type { AppProps } from "./types/app.js";
+import type { SearchState } from "./types/index.js";
+import { searchInJson } from "./utils/searchUtils.js";
 
 /**
  * Main application component for the JSON TUI Viewer

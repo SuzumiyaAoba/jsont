@@ -6,13 +6,13 @@
 import { Box, Text } from "ink";
 import type React from "react";
 import { useEffect } from "react";
-import { useNavigation } from "../hooks/useNavigation";
-import { useTheme } from "../hooks/useTheme";
+import { useNavigation } from "../hooks/useNavigation.js";
+import { useTheme } from "../hooks/useTheme.js";
 import type {
   JsonValue,
   NavigationItem,
   NavigationOptions,
-} from "../types/index";
+} from "../types/index.js";
 
 interface NavigableJsonViewerProps {
   data: JsonValue;
@@ -38,7 +38,7 @@ function NavigationItemComponent({
   isSelected: boolean;
   index: number;
   getColor: (
-    colorKey: keyof import("../types/theme").JsonColorScheme,
+    colorKey: keyof import("../types/theme.js").JsonColorScheme,
   ) => string;
 }) {
   const indent = "  ".repeat(item.depth);

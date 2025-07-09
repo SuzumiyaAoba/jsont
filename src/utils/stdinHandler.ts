@@ -4,8 +4,8 @@
  */
 
 import { ReadStream } from "node:tty";
-import type { JsonValue } from "../types/index";
-import { parseJsonWithValidation } from "./jsonProcessor";
+import type { JsonValue } from "../types/index.js";
+import { parseJsonWithValidation } from "./jsonProcessor.js";
 
 export interface StdinReadResult {
   success: boolean;

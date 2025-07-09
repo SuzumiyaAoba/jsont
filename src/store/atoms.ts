@@ -5,7 +5,7 @@
 
 import { atom } from "jotai";
 import { atomWithStorage } from "jotai/utils";
-import type { JsonValue } from "../types/index";
+import type { JsonValue } from "../types/index.js";
 
 // Primitive atoms
 export const jsonDataAtom = atom<JsonValue>(null);

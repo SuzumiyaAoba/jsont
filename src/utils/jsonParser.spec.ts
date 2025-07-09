@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { formatJsonValue, parseJsonSafely } from "./jsonParser";
+import { formatJsonValue, parseJsonSafely } from "./jsonParser.js";
 
 describe("parseJsonSafely", () => {
   it("should parse valid JSON", () => {

@@ -37,7 +37,7 @@ describe("Project Setup", () => {
       const tsconfigPath = join(projectRoot, "tsconfig.json");
       const tsconfig = JSON.parse(readFileSync(tsconfigPath, "utf-8"));
 
-      expect(tsconfig.compilerOptions.module).toBe("ESNext");
+      expect(tsconfig.compilerOptions.module).toBe("Node16");
       expect(["Node", "bundler", "node16", "nodenext"]).toContain(
         tsconfig.compilerOptions.moduleResolution,
       );
@@ -79,7 +79,7 @@ describe("Project Setup", () => {
     it("should support dynamic imports", async () => {
       // Test that dynamic imports work
       const moduleImport = async () => {
-        const module = await import("./types/index");
+        const module = await import("./types/index.js");
         return module;
       };
 

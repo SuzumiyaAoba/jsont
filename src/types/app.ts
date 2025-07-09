@@ -2,7 +2,7 @@
  * Application-specific type definitions
  */
 
-import type { JsonValue } from "./index";
+import type { JsonValue } from "./index.js";
 
 /**
  * Props for the main App component

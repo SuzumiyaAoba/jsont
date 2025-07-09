@@ -8,7 +8,7 @@ import {
   parseJsonSafely,
   parseJsonWithValidation,
   validateJsonStructure,
-} from "./utils/jsonProcessor";
+} from "./utils/jsonProcessor.js";
 
 describe("JSON Processing - Enhanced Parser", () => {
   describe("parseJsonSafely", () => {
@@ -240,7 +240,7 @@ describe("JSON Processing - Enhanced Parser", () => {
       circularRef["self"] = circularRef;
 
       const result = validateJsonStructure(
-        circularRef as import("./types/index").JsonValue,
+        circularRef as import("./types/index.js").JsonValue,
       );
 
       expect(result.isValid).toBe(false);

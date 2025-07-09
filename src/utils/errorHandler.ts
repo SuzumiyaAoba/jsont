@@ -2,7 +2,7 @@
  * Centralized Error Handling
  */
 
-import { CONFIG, MESSAGES } from "../config/constants";
+import { CONFIG, MESSAGES } from "../config/constants.js";
 
 /**
  * Handle fatal errors that should terminate the process

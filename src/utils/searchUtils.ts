@@ -2,7 +2,7 @@
  * Search utilities for JSON content
  */
 
-import type { JsonValue, SearchResult } from "../types/index";
+import type { JsonValue, SearchResult } from "../types/index.js";
 
 /**
  * Search for a term in JSON content and return all matches

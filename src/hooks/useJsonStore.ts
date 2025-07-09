@@ -18,7 +18,7 @@ import {
   setFilterAtom,
   themeAtom,
   viewModeAtom,
-} from "../store/atoms";
+} from "../store/atoms.js";
 
 /**
  * Main hook for JSON store access

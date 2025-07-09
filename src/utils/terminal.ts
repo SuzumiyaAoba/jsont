@@ -2,7 +2,7 @@
  * Terminal Control Utilities
  */
 
-import { CONFIG } from "../config/constants";
+import { CONFIG } from "../config/constants.js";
 
 export class TerminalManager {
   private isInitialized = false;

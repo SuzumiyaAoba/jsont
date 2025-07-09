@@ -2,9 +2,9 @@
  * Debug Utilities
  */
 
-import { DEBUG_PREFIX } from "../config/constants";
-import type { JsonValue } from "../types/index";
-import type { StdinReadResult } from "./stdinReader";
+import { DEBUG_PREFIX } from "../config/constants.js";
+import type { JsonValue } from "../types/index.js";
+import type { StdinReadResult } from "./stdinReader.js";
 
 export class DebugLogger {
   private readonly isEnabled: boolean;

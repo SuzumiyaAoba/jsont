@@ -1,7 +1,7 @@
 import { Box, Text } from "ink";
 import type React from "react";
-import type { JsonValue, SearchResult } from "../types/index";
-import { highlightSearchInLine } from "../utils/searchUtils";
+import type { JsonValue, SearchResult } from "../types/index.js";
+import { highlightSearchInLine } from "../utils/searchUtils.js";
 
 interface JsonViewerProps {
   data: JsonValue;

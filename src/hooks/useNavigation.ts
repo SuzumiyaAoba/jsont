@@ -10,7 +10,7 @@ import type {
   NavigationHook,
   NavigationItem,
   NavigationOptions,
-} from "../types/index";
+} from "../types/index.js";
 
 /**
  * Flattens JSON structure into navigable items

@@ -4,7 +4,7 @@
  */
 
 import { describe, expect, it, vi } from "vitest";
-import type { JsonValue } from "../types/index";
+import type { JsonValue } from "../types/index.js";
 
 // Simplified hook testing without renderHook for now
 interface MockNavigationItem {
