@@ -5,14 +5,11 @@
 
 import { type Instance, render } from "ink";
 import React from "react";
-import { App } from "../App.js";
-import type { JsonValue } from "../types/index.js";
-import { ProcessManager } from "../utils/processManager.js";
-import {
-  readFromFile,
-  readStdinThenReinitialize,
-} from "../utils/stdinHandler.js";
-import { TerminalManager } from "../utils/terminal.js";
+import { App } from "../App";
+import type { JsonValue } from "../types/index";
+import { ProcessManager } from "../utils/processManager";
+import { readFromFile, readStdinThenReinitialize } from "../utils/stdinHandler";
+import { TerminalManager } from "../utils/terminal";
 
 export class AppService {
   private terminalManager = new TerminalManager();

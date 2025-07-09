@@ -1,6 +1,6 @@
 import { render } from "ink-testing-library";
 import { describe, expect, it } from "vitest";
-import { JsonViewer } from "./JsonViewer.js";
+import { JsonViewer } from "./JsonViewer";
 
 describe("JsonViewer", () => {
   it("should render null data gracefully", () => {

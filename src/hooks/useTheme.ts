@@ -9,7 +9,7 @@ import {
   getTheme,
   getThemeNames,
   type ThemeConfig,
-} from "../types/theme.js";
+} from "../types/theme";
 
 export interface ThemeHook {
   // Current theme state

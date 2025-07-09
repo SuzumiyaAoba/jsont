@@ -1,11 +1,11 @@
 import { describe, expect, it } from "vitest";
-import type { JsonValue } from "../types/index.js";
+import type { JsonValue } from "../types/index";
 import {
   getSearchNavigationInfo,
   highlightSearchInLine,
   lineContainsSearch,
   searchInJson,
-} from "./searchUtils.js";
+} from "./searchUtils";
 
 describe("searchUtils", () => {
   describe("searchInJson", () => {

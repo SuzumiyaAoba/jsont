@@ -12,7 +12,7 @@ import {
   omit,
   pick,
 } from "es-toolkit";
-import type { JsonValue } from "../types/index.js";
+import type { JsonValue } from "../types/index";
 
 /**
  * Memoized JSON path getter using es-toolkit

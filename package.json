@@ -7,7 +7,7 @@
     "jsont": "dist/index.js"
   },
   "scripts": {
-    "build": "tsc",
+    "build": "tsup",
     "dev": "tsx src/index.tsx",
     "start": "node dist/index.js",
     "test": "vitest",
@@ -59,6 +59,7 @@
     "husky": "^9.1.7",
     "ink-testing-library": "^4.0.0",
     "lint-staged": "^16.1.2",
+    "tsup": "^8.5.0",
     "vitest": "^3.2.4"
   },
   "lint-staged": {

@@ -1,6 +1,6 @@
 import { render } from "ink-testing-library";
 import { describe, expect, it, vi } from "vitest";
-import { App } from "../App.js";
+import { App } from "../App";
 
 // Mock the useInput hook to simulate keyboard input
 vi.mock("ink", async () => {

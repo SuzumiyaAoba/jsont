@@ -23,7 +23,7 @@ All pull requests must pass CI checks before merging.
 
 ### Development
 - `npm run dev` - Run the application in development mode using tsx
-- `npm run build` - Compile TypeScript to JavaScript in the `dist/` directory
+- `npm run build` - Bundle the application using tsup (supports extensionless imports)
 - `npm run start` - Run the compiled application from `dist/index.js`
 
 ### Testing
@@ -186,7 +186,8 @@ const maxScroll = Math.max(0, jsonLines - visibleLines);
 - Uses ES Modules (`"type": "module"` in package.json)
 - Extends `@tsconfig/strictest` for maximum type safety
 - Bundler module resolution for modern import handling
-- All imports must use `.js` extensions in source files
+- Imports use standard TypeScript syntax (no .js extensions needed)
+- Built with tsup for optimal bundling and modern module support
 
 ### Ink Framework
 - React-based TUI framework for terminal applications (v6.0+)

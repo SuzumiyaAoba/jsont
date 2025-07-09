@@ -1,6 +1,6 @@
 import { Box, Text } from "ink";
-import type { SearchState } from "../types/index.js";
-import { getSearchNavigationInfo } from "../utils/searchUtils.js";
+import type { SearchState } from "../types/index";
+import { getSearchNavigationInfo } from "../utils/searchUtils";
 
 interface SearchBarProps {
   searchState: SearchState;
