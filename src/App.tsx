@@ -41,6 +41,7 @@ export function App({
     timestamp: string;
   } | null>(null);
   const [debugVisible, setDebugVisible] = useState<boolean>(false);
+  const [lineNumbersVisible, setLineNumbersVisible] = useState<boolean>(false);
 
   const { exit } = useApp();
 
@@ -377,6 +378,13 @@ export function App({
         // Toggle debug visibility
         setDebugVisible((prev) => !prev);
         updateDebugInfo(`Toggle debug ${debugVisible ? "OFF" : "ON"}`, input);
+      } else if (input === "L" && !key.ctrl && !key.meta) {
+        // Toggle line numbers visibility
+        setLineNumbersVisible((prev) => !prev);
+        updateDebugInfo(
+          `Toggle line numbers ${lineNumbersVisible ? "OFF" : "ON"}`,
+          input,
+        );
       } else {
         // Any other key resets the 'g' sequence
         updateDebugInfo(`Unhandled key: "${input}"`, input);
@@ -401,6 +409,7 @@ export function App({
       navigateToPreviousResult,
       updateDebugInfo,
       debugVisible,
+      lineNumbersVisible,
     ],
   );
 
@@ -496,6 +505,7 @@ export function App({
           searchResults={searchState.searchResults}
           currentSearchIndex={searchState.currentResultIndex}
           visibleLines={visibleLines}
+          showLineNumbers={lineNumbersVisible}
         />
       </Box>
       {/* Debug bar - conditionally rendered based on debugVisible */}

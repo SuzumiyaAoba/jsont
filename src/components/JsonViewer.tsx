@@ -10,6 +10,7 @@ interface JsonViewerProps {
   searchResults?: SearchResult[];
   currentSearchIndex?: number;
   visibleLines?: number;
+  showLineNumbers?: boolean;
 }
 
 export function JsonViewer({
@@ -19,6 +20,7 @@ export function JsonViewer({
   searchResults = [],
   currentSearchIndex = 0,
   visibleLines,
+  showLineNumbers = false,
 }: JsonViewerProps) {
   if (!data) {
     return (
@@ -42,6 +44,16 @@ export function JsonViewer({
   const startLine = scrollOffset;
   const endLine = Math.min(lines.length, startLine + effectiveVisibleLines);
   const visibleLineData = lines.slice(startLine, endLine);
+
+  // Calculate line number width based on total number of lines
+  const totalLines = lines.length;
+  const lineNumberWidth = totalLines.toString().length;
+
+  // Format line number with padding
+  const formatLineNumber = (lineIndex: number): string => {
+    const lineNumber = lineIndex + 1; // Line numbers start from 1
+    return lineNumber.toString().padStart(lineNumberWidth, " ");
+  };
 
   // Create a Map for O(1) search result lookup by line index
   const searchResultsByLine = new Map<number, SearchResult[]>();
@@ -223,9 +235,19 @@ export function JsonViewer({
     <Box flexGrow={1} flexDirection="column" padding={1}>
       <Box flexDirection="column">
         {visibleLineData.map((line, index) => {
-          const uniqueKey = `line-${startLine + index}`;
+          const originalIndex = startLine + index;
+          const uniqueKey = `line-${originalIndex}`;
           return (
-            <Box key={uniqueKey}>{renderLine(line, startLine + index)}</Box>
+            <Box key={uniqueKey} flexDirection="row">
+              {showLineNumbers && (
+                <Box marginRight={1}>
+                  <Text color="gray" dimColor>
+                    {formatLineNumber(originalIndex)}
+                  </Text>
+                </Box>
+              )}
+              <Box flexGrow={1}>{renderLine(line, originalIndex)}</Box>
+            </Box>
           );
         })}
       </Box>
