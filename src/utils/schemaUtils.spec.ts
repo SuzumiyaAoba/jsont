@@ -40,9 +40,9 @@ describe("JSON Schema Utils", () => {
       const schema = inferJsonSchema(data);
       expect(schema.type).toBe("object");
       expect(schema.properties).toBeDefined();
-      expect(schema.properties!["name"].type).toBe("string");
-      expect(schema.properties!["age"].type).toBe("integer");
-      expect(schema.properties!["active"].type).toBe("boolean");
+      expect(schema.properties?.["name"]?.type).toBe("string");
+      expect(schema.properties?.["age"]?.type).toBe("integer");
+      expect(schema.properties?.["active"]?.type).toBe("boolean");
       expect(schema.required).toEqual(["name", "age", "active"]);
     });
 
@@ -83,41 +83,41 @@ describe("JSON Schema Utils", () => {
 
       const schema = inferJsonSchema(data);
       expect(schema.type).toBe("object");
-      expect(schema.properties!["user"].type).toBe("object");
-      expect(schema.properties!["user"].properties!["profile"].type).toBe(
+      expect(schema.properties?.["user"]?.type).toBe("object");
+      expect(schema.properties?.["user"]?.properties?.["profile"]?.type).toBe(
         "object",
       );
-      expect(schema.properties!["user"].properties!["posts"].type).toBe(
+      expect(schema.properties?.["user"]?.properties?.["posts"]?.type).toBe(
         "array",
       );
-      expect(schema.properties!["user"].properties!["posts"].items?.type).toBe(
-        "object",
-      );
+      expect(
+        schema.properties?.["user"]?.properties?.["posts"]?.items?.type,
+      ).toBe("object");
     });
 
     it("should detect string formats", () => {
       const emailData = { email: "test@example.com" };
       const emailSchema = inferJsonSchema(emailData);
-      expect(emailSchema.properties!["email"].format).toBe("email");
+      expect(emailSchema.properties?.["email"]?.format).toBe("email");
 
       const urlData = { website: "https://example.com" };
       const urlSchema = inferJsonSchema(urlData);
-      expect(urlSchema.properties!["website"].format).toBe("uri");
+      expect(urlSchema.properties?.["website"]?.format).toBe("uri");
 
       const dateData = { created: "2023-01-01T00:00:00Z" };
       const dateSchema = inferJsonSchema(dateData);
-      expect(dateSchema.properties!["created"].format).toBe("date-time");
+      expect(dateSchema.properties?.["created"]?.format).toBe("date-time");
 
       const uuidData = { id: "123e4567-e89b-12d3-a456-426614174000" };
       const uuidSchema = inferJsonSchema(uuidData);
-      expect(uuidSchema.properties!["id"].format).toBe("uuid");
+      expect(uuidSchema.properties?.["id"]?.format).toBe("uuid");
     });
 
     it("should handle empty arrays", () => {
       const data = { items: [] };
       const schema = inferJsonSchema(data);
-      expect(schema.properties!["items"].type).toBe("array");
-      expect(schema.properties!["items"].items?.type).toBe("string"); // default fallback
+      expect(schema.properties?.["items"]?.type).toBe("array");
+      expect(schema.properties?.["items"]?.items?.type).toBe("string"); // default fallback
     });
 
     it("should handle complex nested structures", () => {
@@ -143,14 +143,14 @@ describe("JSON Schema Utils", () => {
 
       const schema = inferJsonSchema(data);
       expect(schema.type).toBe("object");
-      expect(schema.properties!["users"].type).toBe("array");
-      expect(schema.properties!["users"].items?.type).toBe("object");
-      expect(schema.properties!["metadata"].type).toBe("object");
+      expect(schema.properties?.["users"]?.type).toBe("array");
+      expect(schema.properties?.["users"]?.items?.type).toBe("object");
+      expect(schema.properties?.["metadata"]?.type).toBe("object");
 
-      const userSchema = schema.properties!["users"].items!;
-      expect(userSchema.properties!["email"].format).toBe("email");
-      expect(userSchema.properties!["tags"].type).toBe("array");
-      expect(userSchema.properties!["preferences"].type).toBe("object");
+      const userSchema = schema.properties?.["users"]?.items;
+      expect(userSchema?.properties?.["email"]?.format).toBe("email");
+      expect(userSchema?.properties?.["tags"]?.type).toBe("array");
+      expect(userSchema?.properties?.["preferences"]?.type).toBe("object");
     });
   });
 
@@ -223,8 +223,8 @@ describe("JSON Schema Utils", () => {
     it("should handle objects with null values", () => {
       const data = { value: null, name: "test" };
       const schema = inferJsonSchema(data);
-      expect(schema.properties!["value"].type).toBe("null");
-      expect(schema.properties!["name"].type).toBe("string");
+      expect(schema.properties?.["value"]?.type).toBe("null");
+      expect(schema.properties?.["name"]?.type).toBe("string");
     });
 
     it("should handle arrays with mixed types", () => {
@@ -242,11 +242,11 @@ describe("JSON Schema Utils", () => {
     it("should detect integer vs number types correctly", () => {
       const integerData = { count: 42 };
       const integerSchema = inferJsonSchema(integerData);
-      expect(integerSchema.properties!["count"].type).toBe("integer");
+      expect(integerSchema.properties?.["count"]?.type).toBe("integer");
 
       const floatData = { score: 95.5 };
       const floatSchema = inferJsonSchema(floatData);
-      expect(floatSchema.properties!["score"].type).toBe("number");
+      expect(floatSchema.properties?.["score"]?.type).toBe("number");
     });
   });
 });

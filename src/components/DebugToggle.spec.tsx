@@ -3,13 +3,24 @@ import { describe, expect, it, vi } from "vitest";
 import { App } from "../App";
 
 // Mock the useInput hook to simulate keyboard input
-let mockInputHandler: ((input: string, key: any) => void) | null = null;
+type MockKeyInput = {
+  ctrl?: boolean;
+  meta?: boolean;
+  shift?: boolean;
+  return?: boolean;
+  escape?: boolean;
+  backspace?: boolean;
+  delete?: boolean;
+};
+
+let mockInputHandler: ((input: string, key: MockKeyInput) => void) | null =
+  null;
 
 vi.mock("ink", async () => {
   const actual = await vi.importActual("ink");
   return {
     ...actual,
-    useInput: vi.fn((handler: (input: string, key: any) => void) => {
+    useInput: vi.fn((handler: (input: string, key: MockKeyInput) => void) => {
       mockInputHandler = handler;
     }),
     useApp: () => ({ exit: vi.fn() }),
