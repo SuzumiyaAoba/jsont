@@ -243,7 +243,7 @@ The JsonViewer component provides comprehensive syntax highlighting:
 ### Git Workflow
 
 #### Starting New Work (MANDATORY)
-**Always follow this workflow before starting any new task:**
+**⚠️ CRITICAL: Always follow this workflow before starting any new task or feature implementation:**
 
 ```bash
 # 1. Switch to master branch
@@ -261,11 +261,22 @@ git checkout -b feature/descriptive-name
 # 5. Begin work
 ```
 
+#### **For Claude Code Users**
+**🤖 IMPORTANT: Claude Code must ALWAYS create a new branch before implementing any feature, fix, or change:**
+
+- **Before writing ANY code**: Check current branch with `git branch` or `git status`
+- **If on master**: Immediately create a new branch following the workflow above
+- **If on existing branch**: Confirm it's the appropriate branch for the current task
+- **Never commit directly to master**: All work must be done on feature branches
+- **One branch per feature**: Each distinct feature or fix should have its own branch
+
 #### Benefits of This Workflow
 - **Prevents conflicts** - Always start from latest master
 - **Clean history** - Avoids unnecessary merge commits
 - **Clear PRs** - Only relevant changes included
 - **Easy reviews** - Clear diff visualization
+- **Safe experimentation** - Master branch remains stable
+- **Parallel development** - Multiple features can be developed simultaneously
 
 #### Commit Guidelines
 - **Never use `--no-verify` flag** when committing
@@ -352,3 +363,34 @@ git commit -m "test: add comprehensive F1 tests"
 # Create PR when feature is complete
 gh pr create --title "Feature F1: Basic JSON Display"
 ```
+
+---
+
+# 🚨 CRITICAL INSTRUCTIONS FOR CLAUDE CODE
+
+## ⚠️ MANDATORY BRANCH WORKFLOW
+**Before implementing ANY feature, fix, or change, you MUST:**
+
+1. **Check current branch**: `git status` or `git branch`
+2. **If on master**: Create new branch immediately
+3. **If on wrong branch**: Switch to appropriate branch or create new one
+4. **NEVER commit to master**: All work must be on feature branches
+
+### Quick Branch Creation Command
+```bash
+git checkout master && git pull origin master && git checkout -b feature/descriptive-name
+```
+
+### Branch Naming Examples
+- `feature/search-functionality`
+- `fix/json-parsing-error`
+- `docs/update-readme`
+- `refactor/clean-components`
+
+## 🎯 Implementation Guidelines
+- **One branch per task**: Each feature/fix gets its own branch
+- **Descriptive names**: Branch names should clearly indicate the work being done
+- **Start from latest master**: Always pull latest changes before creating branch
+- **Clean history**: Avoid mixing unrelated changes in same branch
+
+**Failure to follow this workflow will result in messy git history and difficult code reviews.**

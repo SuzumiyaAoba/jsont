@@ -40,6 +40,7 @@ export function App({
     lastKeyAction: string;
     timestamp: string;
   } | null>(null);
+  const [debugVisible, setDebugVisible] = useState<boolean>(false);
 
   const { exit } = useApp();
 
@@ -48,6 +49,8 @@ export function App({
   const DEFAULT_TERMINAL_HEIGHT = 24;
   // Calculate debug bar height dynamically based on content length with memoization
   const debugBarHeight = useMemo(() => {
+    if (!debugVisible) return 0; // No debug bar when hidden
+
     const terminalWidth = process.stdout.columns || 80;
     let debugContent = `DEBUG: Keyboard: ${keyboardEnabled ? "ON" : "OFF"}`;
 
@@ -72,6 +75,7 @@ export function App({
     );
     return estimatedLines;
   }, [
+    debugVisible,
     keyboardEnabled,
     searchState.isSearching,
     searchState.searchTerm,
@@ -369,6 +373,10 @@ export function App({
           currentResultIndex: 0,
         }));
         setSearchInput("");
+      } else if (input === "D" && !key.ctrl && !key.meta) {
+        // Toggle debug visibility
+        setDebugVisible((prev) => !prev);
+        updateDebugInfo(`Toggle debug ${debugVisible ? "OFF" : "ON"}`, input);
       } else {
         // Any other key resets the 'g' sequence
         updateDebugInfo(`Unhandled key: "${input}"`, input);
@@ -392,6 +400,7 @@ export function App({
       navigateToNextResult,
       navigateToPreviousResult,
       updateDebugInfo,
+      debugVisible,
     ],
   );
 
@@ -489,13 +498,16 @@ export function App({
           visibleLines={visibleLines}
         />
       </Box>
-      <Box flexShrink={0} width="100%">
-        <DebugBar
-          debugInfo={debugInfo}
-          keyboardEnabled={keyboardEnabled}
-          searchState={searchState}
-        />
-      </Box>
+      {/* Debug bar - conditionally rendered based on debugVisible */}
+      {debugVisible && (
+        <Box flexShrink={0} width="100%">
+          <DebugBar
+            debugInfo={debugInfo}
+            keyboardEnabled={keyboardEnabled}
+            searchState={searchState}
+          />
+        </Box>
+      )}
     </Box>
   );
 }
