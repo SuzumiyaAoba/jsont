@@ -38,7 +38,8 @@
       "Bash(gh api:*)",
       "Bash(npx tsx:*)",
       "Bash(rg:*)",
-      "Bash(gh run list:*)"
+      "Bash(gh run list:*)",
+      "Bash(git push:*)"
     ],
     "deny": []
   }
