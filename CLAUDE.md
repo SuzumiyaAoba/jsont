@@ -266,6 +266,21 @@ The JsonViewer component provides comprehensive syntax highlighting:
 - Define proper type interfaces instead of using `any` type
 - Utilize modern ES Module syntax consistently
 
+### Error Handling with neverthrow
+- **Result Type Pattern**: Use `Result<T, E>` for safe error handling instead of throwing exceptions
+- **Safe Operations**: All potentially failing operations return `Result` types
+- **Error Recovery**: Comprehensive error types with context and recovery suggestions
+- **Example Usage**:
+  ```typescript
+  import { parseJsonSafely } from "./utils/result";
+  
+  const result = parseJsonSafely(input);
+  result.match(
+    (data) => console.log("Success:", data),
+    (error) => console.error("Error:", error.message)
+  );
+  ```
+
 ## Important Notes
 
 ### Git Workflow
