@@ -186,7 +186,12 @@ const maxScroll = Math.max(0, jsonLines - visibleLines);
 - Uses ES Modules (`"type": "module"` in package.json)
 - Extends `@tsconfig/strictest` for maximum type safety
 - Bundler module resolution for modern import handling
-- Imports use standard TypeScript syntax (no .js extensions needed)
+- **Import Guidelines**: 
+  - **Always use extensionless imports** for TypeScript files
+  - Example: `import { helper } from "./utils/helper"` ✅
+  - Example: `import { helper } from "./utils/helper.ts"` ❌
+  - Node.js resolution handles extension inference automatically
+  - tsup bundler optimizes extensionless imports for better compatibility
 - Built with tsup for optimal bundling and modern module support
 
 ### Ink Framework
@@ -237,6 +242,29 @@ The JsonViewer component provides comprehensive syntax highlighting:
 - Biome for linting and formatting (recommended rules only)
 - Husky + lint-staged for pre-commit quality checks
 - Import organization automatically handled by Biome
+
+## Coding Guidelines
+
+### Import Standards
+- **ALWAYS use extensionless imports** for TypeScript files
+- **Correct**: `import { JsonValue } from "../types"`
+- **Incorrect**: `import { JsonValue } from "../types/index.ts"`
+- **Rationale**: 
+  - Modern bundler (tsup) handles extension resolution automatically
+  - Better compatibility across different module systems
+  - Cleaner code and consistent with modern TypeScript practices
+  - Avoids potential issues with different build tools
+
+### File Organization
+- Use descriptive filenames without unnecessary extensions in imports
+- Organize imports by: external libraries → internal modules → relative imports
+- Use barrel exports (`index.ts`) for clean module interfaces
+
+### TypeScript Best Practices
+- Leverage strict mode configuration for maximum type safety
+- Use optional chaining (`?.`) instead of non-null assertions (`!`) for better safety
+- Define proper type interfaces instead of using `any` type
+- Utilize modern ES Module syntax consistently
 
 ## Important Notes
 
@@ -394,3 +422,20 @@ git checkout master && git pull origin master && git checkout -b feature/descrip
 - **Clean history**: Avoid mixing unrelated changes in same branch
 
 **Failure to follow this workflow will result in messy git history and difficult code reviews.**
+
+# important-instruction-reminders
+Do what has been asked; nothing more, nothing less.
+NEVER create files unless they're absolutely necessary for achieving your goal.
+ALWAYS prefer editing an existing file to creating a new one.
+NEVER proactively create documentation files (*.md) or README files. Only create documentation files if explicitly requested by the User.
+
+## 🚨 Critical Import Guidelines
+**MANDATORY**: Always use extensionless imports for TypeScript files
+- ✅ Correct: `import { Component } from "./components/Component"`
+- ❌ Wrong: `import { Component } from "./components/Component.ts"`
+- ❌ Wrong: `import { Component } from "./components/Component.tsx"`
+
+This is essential for:
+- Modern bundler compatibility (tsup)
+- Consistent code style across the project
+- Avoiding build issues and import resolution problems

@@ -2,10 +2,12 @@ import { Box, useApp, useInput } from "ink";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { DebugBar } from "./components/DebugBar";
 import { JsonViewer } from "./components/JsonViewer";
+import { SchemaViewer } from "./components/SchemaViewer";
 import { SearchBar } from "./components/SearchBar";
 import { StatusBar } from "./components/StatusBar";
 import type { AppProps } from "./types/app";
 import type { SearchState } from "./types/index";
+import { formatJsonSchema, inferJsonSchema } from "./utils/schemaUtils";
 import { searchInJson } from "./utils/searchUtils";
 
 /**
@@ -42,6 +44,7 @@ export function App({
   } | null>(null);
   const [debugVisible, setDebugVisible] = useState<boolean>(false);
   const [lineNumbersVisible, setLineNumbersVisible] = useState<boolean>(false);
+  const [schemaVisible, setSchemaVisible] = useState<boolean>(false);
 
   const { exit } = useApp();
 
@@ -94,16 +97,31 @@ export function App({
   const jsonLines = initialData
     ? JSON.stringify(initialData, null, JSON_INDENT).split("\n").length
     : 0;
+
+  // Calculate schema lines when in schema view mode
+  const schemaLines = useMemo(() => {
+    if (!initialData || !schemaVisible) return 0;
+    const schema = inferJsonSchema(initialData, "JSON Schema");
+    const formattedSchema = formatJsonSchema(schema);
+    return formattedSchema.split("\n").length;
+  }, [initialData, schemaVisible]);
+
   const terminalHeight = process.stdout.rows || DEFAULT_TERMINAL_HEIGHT;
   const visibleLines = Math.max(1, terminalHeight - UI_RESERVED_LINES);
-  const maxScroll = Math.max(0, jsonLines - visibleLines);
+
+  // Use schema lines for scroll calculation when in schema view
+  const currentDataLines = schemaVisible ? schemaLines : jsonLines;
+  const maxScroll = Math.max(0, currentDataLines - visibleLines);
 
   // Calculate max scroll for search mode (when search bar is visible)
   const searchModeVisibleLines = Math.max(
     1,
     terminalHeight - (statusBarLines + 3 + debugBarLines),
   );
-  const maxScrollSearchMode = Math.max(0, jsonLines - searchModeVisibleLines);
+  const maxScrollSearchMode = Math.max(
+    0,
+    currentDataLines - searchModeVisibleLines,
+  );
 
   // Calculate half-page scroll amount
   const halfPageLines = Math.max(1, Math.floor(visibleLines / 2));
@@ -385,6 +403,13 @@ export function App({
           `Toggle line numbers ${lineNumbersVisible ? "OFF" : "ON"}`,
           input,
         );
+      } else if (input === "S" && !key.ctrl && !key.meta) {
+        // Toggle schema view
+        setSchemaVisible((prev) => !prev);
+        updateDebugInfo(
+          `Toggle schema view ${schemaVisible ? "OFF" : "ON"}`,
+          input,
+        );
       } else {
         // Any other key resets the 'g' sequence
         updateDebugInfo(`Unhandled key: "${input}"`, input);
@@ -410,6 +435,7 @@ export function App({
       updateDebugInfo,
       debugVisible,
       lineNumbersVisible,
+      schemaVisible,
     ],
   );
 
@@ -498,15 +524,27 @@ export function App({
         </Box>
       )}
       <Box flexGrow={1} width="100%" minHeight={0}>
-        <JsonViewer
-          data={initialData ?? null}
-          scrollOffset={scrollOffset}
-          searchTerm={searchState.searchTerm}
-          searchResults={searchState.searchResults}
-          currentSearchIndex={searchState.currentResultIndex}
-          visibleLines={visibleLines}
-          showLineNumbers={lineNumbersVisible}
-        />
+        {schemaVisible ? (
+          <SchemaViewer
+            data={initialData ?? null}
+            scrollOffset={scrollOffset}
+            searchTerm={searchState.searchTerm}
+            searchResults={searchState.searchResults}
+            currentSearchIndex={searchState.currentResultIndex}
+            visibleLines={visibleLines}
+            showLineNumbers={lineNumbersVisible}
+          />
+        ) : (
+          <JsonViewer
+            data={initialData ?? null}
+            scrollOffset={scrollOffset}
+            searchTerm={searchState.searchTerm}
+            searchResults={searchState.searchResults}
+            currentSearchIndex={searchState.currentResultIndex}
+            visibleLines={visibleLines}
+            showLineNumbers={lineNumbersVisible}
+          />
+        )}
       </Box>
       {/* Debug bar - conditionally rendered based on debugVisible */}
       {debugVisible && (
