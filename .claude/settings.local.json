@@ -37,7 +37,8 @@
       "Bash(CI=true npm run test:run)",
       "Bash(gh api:*)",
       "Bash(npx tsx:*)",
-      "Bash(rg:*)"
+      "Bash(rg:*)",
+      "Bash(gh run list:*)"
     ],
     "deny": []
   }

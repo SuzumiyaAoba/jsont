@@ -235,9 +235,15 @@ export function App({
           searchTerm: searchInput,
         }));
       } else if (key.escape) {
-        // Cancel search
+        // Cancel search - exit search mode entirely and clear all search state
         updateDebugInfo("Cancel search", input);
-        setSearchState((prev) => ({ ...prev, isSearching: false }));
+        setSearchState((prev) => ({
+          ...prev,
+          isSearching: false,
+          searchTerm: "",
+          searchResults: [],
+          currentResultIndex: 0,
+        }));
         setSearchInput("");
       } else if (key.backspace || key.delete) {
         // Remove character
@@ -262,6 +268,7 @@ export function App({
       key: {
         ctrl?: boolean;
         meta?: boolean;
+        escape?: boolean;
       },
     ) => {
       if (input === "s" && !key.ctrl && !key.meta) {
@@ -273,6 +280,16 @@ export function App({
         setSearchState((prev) => ({ ...prev, isSearching: true }));
         setSearchInput("");
         setScrollOffset(0);
+      } else if (
+        input === "q" &&
+        !key.ctrl &&
+        !key.meta &&
+        searchState.searchTerm
+      ) {
+        // Return to search input mode when 'q' is pressed after search
+        updateDebugInfo("Return to search input", input);
+        setSearchState((prev) => ({ ...prev, isSearching: true }));
+        setSearchInput(searchState.searchTerm); // Pre-fill with current search term
       } else if (input === "j" && !key.ctrl) {
         // Line down
         updateDebugInfo("Scroll down", input);
@@ -341,6 +358,17 @@ export function App({
         // Previous search result
         updateDebugInfo("Previous result", input);
         navigateToPreviousResult();
+      } else if (key.escape && searchState.searchTerm) {
+        // Exit search mode when Escape is pressed and search results are visible
+        updateDebugInfo("Exit search mode", input);
+        setSearchState((prev) => ({
+          ...prev,
+          isSearching: false,
+          searchTerm: "",
+          searchResults: [],
+          currentResultIndex: 0,
+        }));
+        setSearchInput("");
       } else {
         // Any other key resets the 'g' sequence
         updateDebugInfo(`Unhandled key: "${input}"`, input);
@@ -355,6 +383,7 @@ export function App({
     },
     [
       searchState.isSearching,
+      searchState.searchTerm,
       searchState.searchResults.length,
       maxScrollSearchMode,
       maxScroll,
@@ -400,7 +429,12 @@ export function App({
       if (key.ctrl && input === "c") {
         updateDebugInfo("Exit (Ctrl+C)", input);
         exit();
-      } else if (input === "q" && !key.ctrl && !searchState.isSearching) {
+      } else if (
+        input === "q" &&
+        !key.ctrl &&
+        !searchState.isSearching &&
+        !searchState.searchTerm
+      ) {
         updateDebugInfo("Quit", input);
         exit();
       } else if (searchState.isSearching) {
@@ -414,6 +448,7 @@ export function App({
     [
       exit,
       searchState.isSearching,
+      searchState.searchTerm,
       keyboardEnabled,
       handleSearchInput,
       handleNavigationInput,
