@@ -235,9 +235,15 @@ export function App({
           searchTerm: searchInput,
         }));
       } else if (key.escape) {
-        // Cancel search
+        // Cancel search - exit search mode entirely and clear all search state
         updateDebugInfo("Cancel search", input);
-        setSearchState((prev) => ({ ...prev, isSearching: false }));
+        setSearchState((prev) => ({
+          ...prev,
+          isSearching: false,
+          searchTerm: "",
+          searchResults: [],
+          currentResultIndex: 0,
+        }));
         setSearchInput("");
       } else if (key.backspace || key.delete) {
         // Remove character
@@ -351,6 +357,17 @@ export function App({
         // Previous search result
         updateDebugInfo("Previous result", input);
         navigateToPreviousResult();
+      } else if (key.escape && searchState.searchTerm) {
+        // Exit search mode when Escape is pressed and search results are visible
+        updateDebugInfo("Exit search mode", input);
+        setSearchState((prev) => ({
+          ...prev,
+          isSearching: false,
+          searchTerm: "",
+          searchResults: [],
+          currentResultIndex: 0,
+        }));
+        setSearchInput("");
       } else {
         // Any other key resets the 'g' sequence
         updateDebugInfo(`Unhandled key: "${input}"`, input);
@@ -419,20 +436,6 @@ export function App({
       ) {
         updateDebugInfo("Quit", input);
         exit();
-      } else if (
-        key.escape &&
-        (searchState.isSearching || searchState.searchTerm)
-      ) {
-        // Exit search mode when Escape is pressed and search bar is visible
-        updateDebugInfo("Exit search mode", input);
-        setSearchState((prev) => ({
-          ...prev,
-          isSearching: false,
-          searchTerm: "",
-          searchResults: [],
-          currentResultIndex: 0,
-        }));
-        setSearchInput("");
       } else if (searchState.isSearching) {
         // Handle search input
         handleSearchInput(input, key);

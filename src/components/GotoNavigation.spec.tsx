@@ -43,6 +43,7 @@ describe("Goto Navigation (gg/G)", () => {
 
     const output = lastFrame();
     expect(output).toContain("gg/G:");
+    expect(output).toContain("Top/Bottom");
   });
 
   it("should handle large JSON data without errors", () => {
@@ -68,5 +69,6 @@ describe("Goto Navigation (gg/G)", () => {
     expect(output).toContain("j/k: Line");
     expect(output).toContain("Ctrl+f/b: Half-page");
     expect(output).toContain("gg/G:");
+    expect(output).toContain("Top/Bottom");
   });
 });
