@@ -4,7 +4,7 @@
 
 import { DEBUG_PREFIX } from "../config/constants";
 import type { JsonValue } from "../types/index";
-import type { StdinReadResult } from "./stdinReader";
+import type { StdinReadResult } from "./stdinHandler";
 
 export class DebugLogger {
   private readonly isEnabled: boolean;
@@ -22,7 +22,7 @@ export class DebugLogger {
     }
 
     console.error(
-      `${DEBUG_PREFIX} Read ${result.stats.bytesRead} bytes from ${result.stats.source} in ${result.stats.readTime.toFixed(2)}ms`,
+      `${DEBUG_PREFIX} Read result: ${result.success ? "success" : "failed"}, keyboard: ${result.canUseKeyboard}`,
     );
   }
 

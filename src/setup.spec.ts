@@ -64,8 +64,8 @@ describe("Project Setup", () => {
       const directories = [
         "src/components",
         "src/utils",
-        "src/hooks",
         "src/types",
+        "src/services",
       ];
 
       directories.forEach((dir) => {
