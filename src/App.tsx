@@ -2,6 +2,7 @@ import { Box, useApp, useInput } from "ink";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { DebugBar } from "./components/DebugBar";
 import { JsonViewer } from "./components/JsonViewer";
+import { SchemaViewer } from "./components/SchemaViewer";
 import { SearchBar } from "./components/SearchBar";
 import { StatusBar } from "./components/StatusBar";
 import type { AppProps } from "./types/app";
@@ -42,6 +43,7 @@ export function App({
   } | null>(null);
   const [debugVisible, setDebugVisible] = useState<boolean>(false);
   const [lineNumbersVisible, setLineNumbersVisible] = useState<boolean>(false);
+  const [schemaVisible, setSchemaVisible] = useState<boolean>(false);
 
   const { exit } = useApp();
 
@@ -385,6 +387,13 @@ export function App({
           `Toggle line numbers ${lineNumbersVisible ? "OFF" : "ON"}`,
           input,
         );
+      } else if (input === "S" && !key.ctrl && !key.meta) {
+        // Toggle schema view
+        setSchemaVisible((prev) => !prev);
+        updateDebugInfo(
+          `Toggle schema view ${schemaVisible ? "OFF" : "ON"}`,
+          input,
+        );
       } else {
         // Any other key resets the 'g' sequence
         updateDebugInfo(`Unhandled key: "${input}"`, input);
@@ -410,6 +419,7 @@ export function App({
       updateDebugInfo,
       debugVisible,
       lineNumbersVisible,
+      schemaVisible,
     ],
   );
 
@@ -498,15 +508,27 @@ export function App({
         </Box>
       )}
       <Box flexGrow={1} width="100%" minHeight={0}>
-        <JsonViewer
-          data={initialData ?? null}
-          scrollOffset={scrollOffset}
-          searchTerm={searchState.searchTerm}
-          searchResults={searchState.searchResults}
-          currentSearchIndex={searchState.currentResultIndex}
-          visibleLines={visibleLines}
-          showLineNumbers={lineNumbersVisible}
-        />
+        {schemaVisible ? (
+          <SchemaViewer
+            data={initialData ?? null}
+            scrollOffset={scrollOffset}
+            searchTerm={searchState.searchTerm}
+            searchResults={searchState.searchResults}
+            currentSearchIndex={searchState.currentResultIndex}
+            visibleLines={visibleLines}
+            showLineNumbers={lineNumbersVisible}
+          />
+        ) : (
+          <JsonViewer
+            data={initialData ?? null}
+            scrollOffset={scrollOffset}
+            searchTerm={searchState.searchTerm}
+            searchResults={searchState.searchResults}
+            currentSearchIndex={searchState.currentResultIndex}
+            visibleLines={visibleLines}
+            showLineNumbers={lineNumbersVisible}
+          />
+        )}
       </Box>
       {/* Debug bar - conditionally rendered based on debugVisible */}
       {debugVisible && (
