@@ -79,8 +79,8 @@ describe("Result utilities", () => {
 
       expect(result.isOk()).toBe(true);
       if (result.isOk()) {
-        expect(result.value.data).toEqual({ name: "test" });
-        expect(result.value.validation.isValid).toBe(true);
+        expect(result.value["data"]).toEqual({ name: "test" });
+        expect(result.value["validation"]["isValid"]).toBe(true);
       }
     });
 
@@ -105,7 +105,7 @@ describe("Result utilities", () => {
 
       expect(result.isOk()).toBe(true);
       if (result.isOk()) {
-        expect(result.value.validation.warnings).toContain("many-keys");
+        expect(result.value["validation"]["warnings"]).toContain("many-keys");
       }
     });
   });
@@ -117,8 +117,8 @@ describe("Result utilities", () => {
 
       expect(result.isOk()).toBe(true);
       if (result.isOk()) {
-        expect(result.value.isValid).toBe(true);
-        expect(result.value.stats).toBeDefined();
+        expect(result.value["isValid"]).toBe(true);
+        expect(result.value["stats"]).toBeDefined();
       }
     });
 
@@ -127,7 +127,7 @@ describe("Result utilities", () => {
 
       expect(result.isOk()).toBe(true);
       if (result.isOk()) {
-        expect(result.value.isValid).toBe(true);
+        expect(result.value["isValid"]).toBe(true);
       }
     });
 
@@ -137,8 +137,8 @@ describe("Result utilities", () => {
 
       expect(result.isOk()).toBe(true);
       if (result.isOk()) {
-        expect(result.value.isValid).toBe(true);
-        expect(result.value.stats?.depth).toBeGreaterThan(1);
+        expect(result.value["isValid"]).toBe(true);
+        expect(result.value["stats"]?.["depth"]).toBeGreaterThan(1);
       }
     });
   });

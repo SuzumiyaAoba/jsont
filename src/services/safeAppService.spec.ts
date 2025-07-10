@@ -74,9 +74,9 @@ describe("Safe App Service", () => {
 
       expect(result.isOk()).toBe(true);
       if (result.isOk()) {
-        expect(result.value.schema).toContain('"$schema"');
-        expect(result.value.schema).toContain('"title": "Test Schema"');
-        expect(result.value.lineCount).toBeGreaterThan(1);
+        expect(result.value["schema"]).toContain('"$schema"');
+        expect(result.value["schema"]).toContain('"title": "Test Schema"');
+        expect(result.value["lineCount"]).toBeGreaterThan(1);
       }
     });
 
@@ -96,8 +96,8 @@ describe("Safe App Service", () => {
 
       expect(result.isOk()).toBe(true);
       if (result.isOk()) {
-        expect(result.value.schema).toContain('"type": "array"');
-        expect(result.value.lineCount).toBeGreaterThan(1);
+        expect(result.value["schema"]).toContain('"type": "array"');
+        expect(result.value["lineCount"]).toBeGreaterThan(1);
       }
     });
 
@@ -112,9 +112,9 @@ describe("Safe App Service", () => {
 
       expect(result.isOk()).toBe(true);
       if (result.isOk()) {
-        expect(result.value.schema).toContain('"type": "object"');
-        expect(result.value.schema).toContain('"properties"');
-        expect(result.value.lineCount).toBeGreaterThan(5);
+        expect(result.value["schema"]).toContain('"type": "object"');
+        expect(result.value["schema"]).toContain('"properties"');
+        expect(result.value["lineCount"]).toBeGreaterThan(5);
       }
     });
   });
@@ -124,18 +124,18 @@ describe("Safe App Service", () => {
       const parseResult = processInitialData('{"test": true}');
       const state = createAppState(parseResult);
 
-      expect(state.data).toEqual({ test: true });
-      expect(state.error).toBe(null);
-      expect(state.schemaGenerated).toBe(false);
+      expect(state["data"]).toEqual({ test: true });
+      expect(state["error"]).toBe(null);
+      expect(state["schemaGenerated"]).toBe(false);
     });
 
     it("should create error state for invalid data", () => {
       const parseResult = processInitialData("invalid json");
       const state = createAppState(parseResult);
 
-      expect(state.data).toBe(null);
-      expect(state.error).toContain("JSON Parse Error");
-      expect(state.schemaGenerated).toBe(false);
+      expect(state["data"]).toBe(null);
+      expect(state["error"]).toContain("JSON Parse Error");
+      expect(state["schemaGenerated"]).toBe(false);
     });
   });
 
@@ -149,11 +149,11 @@ describe("Safe App Service", () => {
 
       const result = handleSchemaError(error);
 
-      expect(result.error).toContain("Schema Error");
-      expect(result.error).toContain("Schema generation failed");
-      expect(result.error).toContain("test context");
-      expect(result.fallback).toContain("Schema generation failed");
-      expect(result.fallback).toContain("test context");
+      expect(result["error"]).toContain("Schema Error");
+      expect(result["error"]).toContain("Schema generation failed");
+      expect(result["error"]).toContain("test context");
+      expect(result["fallback"]).toContain("Schema generation failed");
+      expect(result["fallback"]).toContain("test context");
     });
 
     it("should handle error without context", () => {
@@ -164,9 +164,9 @@ describe("Safe App Service", () => {
 
       const result = handleSchemaError(error);
 
-      expect(result.error).toContain("Schema Error");
-      expect(result.error).toContain("Unknown error");
-      expect(result.fallback).toContain("unknown");
+      expect(result["error"]).toContain("Schema Error");
+      expect(result["error"]).toContain("Unknown error");
+      expect(result["fallback"]).toContain("unknown");
     });
   });
 
@@ -177,7 +177,7 @@ describe("Safe App Service", () => {
 
       expect(result.isOk()).toBe(true);
       if (result.isOk()) {
-        expect(result.value.valid).toBe(true);
+        expect(result.value["valid"]).toBe(true);
       }
     });
 
@@ -187,7 +187,7 @@ describe("Safe App Service", () => {
 
       expect(result.isOk()).toBe(true);
       if (result.isOk()) {
-        expect(result.value.valid).toBe(true);
+        expect(result.value["valid"]).toBe(true);
       }
     });
 

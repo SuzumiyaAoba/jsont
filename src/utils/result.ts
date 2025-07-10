@@ -22,8 +22,8 @@ import {
 export type JsonParseError = {
   readonly type: "PARSE_ERROR";
   readonly message: string;
-  readonly suggestion?: string;
-  readonly parseTime?: number;
+  readonly suggestion?: string | undefined;
+  readonly parseTime?: number | undefined;
 };
 
 export type JsonValidationError = {
@@ -63,7 +63,7 @@ export function parseJsonSafely(
       return err({
         type: "PARSE_ERROR" as const,
         message: parseResult.error || "Unknown parsing error",
-        suggestion: parseResult.suggestion,
+        suggestion: parseResult.suggestion || undefined,
         parseTime: parseResult.parseTime,
       });
     }
@@ -91,7 +91,7 @@ export function parseJsonWithValidation(
       return err({
         type: "PARSE_ERROR" as const,
         message: result.error || "Parse failed",
-        suggestion: result.suggestion,
+        suggestion: result.suggestion || undefined,
         parseTime: result.parseTime,
       });
     }

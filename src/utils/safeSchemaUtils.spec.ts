@@ -104,8 +104,8 @@ describe("Safe Schema Utils", () => {
         expect(result.value.type).toBe("object");
         expect(result.value.title).toBe("Nested Schema");
         expect(result.value.properties).toBeDefined();
-        expect(result.value.properties?.user).toBeDefined();
-        expect(result.value.properties?.metadata).toBeDefined();
+        expect(result.value["properties"]?.["user"]).toBeDefined();
+        expect(result.value["properties"]?.["metadata"]).toBeDefined();
       }
     });
 
@@ -121,11 +121,11 @@ describe("Safe Schema Utils", () => {
 
       expect(result.isOk()).toBe(true);
       if (result.isOk()) {
-        const props = result.value.properties;
-        expect(props?.email?.format).toBe("email");
-        expect(props?.website?.format).toBe("uri");
-        expect(props?.id?.format).toBe("uuid");
-        expect(props?.createdAt?.format).toBe("date-time");
+        const props = result.value["properties"];
+        expect(props?.["email"]?.["format"]).toBe("email");
+        expect(props?.["website"]?.["format"]).toBe("uri");
+        expect(props?.["id"]?.["format"]).toBe("uuid");
+        expect(props?.["createdAt"]?.["format"]).toBe("date-time");
       }
     });
   });
@@ -162,9 +162,9 @@ describe("Safe Schema Utils", () => {
         },
       } as Record<string, unknown>;
       // Create circular reference
-      (schema.properties as Record<string, unknown>).self = schema;
+      (schema["properties"] as Record<string, unknown>)["self"] = schema as any;
 
-      const result = safeFormatJsonSchema(schema);
+      const result = safeFormatJsonSchema(schema as any);
 
       expect(result.isErr()).toBe(true);
       if (result.isErr()) {
@@ -207,9 +207,9 @@ describe("Safe Schema Utils", () => {
       if (result.isOk()) {
         expect(result.value.totalProperties).toBe(3);
         expect(result.value.maxDepth).toBeGreaterThanOrEqual(0);
-        expect(result.value.typeDistribution.string).toBe(1);
-        expect(result.value.typeDistribution.integer).toBe(1);
-        expect(result.value.typeDistribution.boolean).toBe(1);
+        expect(result.value.typeDistribution["string"]).toBe(1);
+        expect(result.value.typeDistribution["integer"]).toBe(1);
+        expect(result.value.typeDistribution["boolean"]).toBe(1);
       }
     });
 
@@ -244,8 +244,8 @@ describe("Safe Schema Utils", () => {
       if (result.isOk()) {
         expect(result.value.totalProperties).toBeGreaterThan(3);
         expect(result.value.maxDepth).toBeGreaterThan(1);
-        expect(result.value.typeDistribution.object).toBeGreaterThan(1);
-        expect(result.value.typeDistribution.string).toBeGreaterThan(1);
+        expect(result.value.typeDistribution["object"]).toBeGreaterThan(1);
+        expect(result.value.typeDistribution["string"]).toBeGreaterThan(1);
       }
     });
 
@@ -267,8 +267,8 @@ describe("Safe Schema Utils", () => {
       if (result.isOk()) {
         expect(result.value.totalProperties).toBe(2);
         expect(result.value.maxDepth).toBeGreaterThanOrEqual(1);
-        expect(result.value.typeDistribution.array).toBe(1);
-        expect(result.value.typeDistribution.object).toBe(1);
+        expect(result.value.typeDistribution["array"]).toBe(1);
+        expect(result.value.typeDistribution["object"]).toBe(1);
       }
     });
 
@@ -284,12 +284,12 @@ describe("Safe Schema Utils", () => {
         };
       }
 
-      const result = safeGetSchemaStats(deepSchema);
+      const result = safeGetSchemaStats(deepSchema as any);
 
       expect(result.isOk()).toBe(true);
       if (result.isOk()) {
         expect(result.value.maxDepth).toBeGreaterThan(10);
-        expect(result.value.typeDistribution.object).toBeGreaterThan(10);
+        expect(result.value.typeDistribution["object"]).toBeGreaterThan(10);
       }
     });
 
@@ -305,7 +305,7 @@ describe("Safe Schema Utils", () => {
         };
       }
 
-      const result = safeGetSchemaStats(veryDeepSchema);
+      const result = safeGetSchemaStats(veryDeepSchema as any);
 
       expect(result.isErr()).toBe(true);
       if (result.isErr()) {
@@ -324,7 +324,7 @@ describe("Safe Schema Utils", () => {
         },
       } as Record<string, unknown>;
 
-      const result = safeGetSchemaStats(invalidSchema);
+      const result = safeGetSchemaStats(invalidSchema as any);
 
       expect(result.isOk()).toBe(true);
       if (result.isOk()) {
