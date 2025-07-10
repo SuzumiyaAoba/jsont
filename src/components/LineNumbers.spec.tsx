@@ -117,7 +117,7 @@ describe("Line Numbers Functionality", () => {
     // Should contain line numbers
     expect(output).toMatch(/\d+/);
     // For a JSON with multiple lines, should have several line numbers
-    const lineNumbers = output.match(/\d+/g);
+    const lineNumbers = output?.match(/\d+/g);
     expect(lineNumbers).toBeTruthy();
     if (lineNumbers) {
       expect(lineNumbers.length).toBeGreaterThan(1);
