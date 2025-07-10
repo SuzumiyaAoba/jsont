@@ -242,6 +242,9 @@ describe("Schema Toggle Functionality", () => {
     rerender(<App initialData={data} keyboardEnabled={true} />);
 
     const output = lastFrame();
-    expect(output).toContain('"$schema"'); // Should still be in schema view
+    // After navigation (especially G to bottom), we should see schema content, even if not the $schema line
+    expect(output).toMatch(
+      /(required|properties|additionalProperties|"\$schema")/,
+    ); // Should still be in schema view
   });
 });

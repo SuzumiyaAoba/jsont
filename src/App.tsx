@@ -7,6 +7,7 @@ import { SearchBar } from "./components/SearchBar";
 import { StatusBar } from "./components/StatusBar";
 import type { AppProps } from "./types/app";
 import type { SearchState } from "./types/index";
+import { formatJsonSchema, inferJsonSchema } from "./utils/schemaUtils";
 import { searchInJson } from "./utils/searchUtils";
 
 /**
@@ -96,16 +97,31 @@ export function App({
   const jsonLines = initialData
     ? JSON.stringify(initialData, null, JSON_INDENT).split("\n").length
     : 0;
+
+  // Calculate schema lines when in schema view mode
+  const schemaLines = useMemo(() => {
+    if (!initialData || !schemaVisible) return 0;
+    const schema = inferJsonSchema(initialData, "JSON Schema");
+    const formattedSchema = formatJsonSchema(schema);
+    return formattedSchema.split("\n").length;
+  }, [initialData, schemaVisible]);
+
   const terminalHeight = process.stdout.rows || DEFAULT_TERMINAL_HEIGHT;
   const visibleLines = Math.max(1, terminalHeight - UI_RESERVED_LINES);
-  const maxScroll = Math.max(0, jsonLines - visibleLines);
+
+  // Use schema lines for scroll calculation when in schema view
+  const currentDataLines = schemaVisible ? schemaLines : jsonLines;
+  const maxScroll = Math.max(0, currentDataLines - visibleLines);
 
   // Calculate max scroll for search mode (when search bar is visible)
   const searchModeVisibleLines = Math.max(
     1,
     terminalHeight - (statusBarLines + 3 + debugBarLines),
   );
-  const maxScrollSearchMode = Math.max(0, jsonLines - searchModeVisibleLines);
+  const maxScrollSearchMode = Math.max(
+    0,
+    currentDataLines - searchModeVisibleLines,
+  );
 
   // Calculate half-page scroll amount
   const halfPageLines = Math.max(1, Math.floor(visibleLines / 2));
