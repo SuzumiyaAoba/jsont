@@ -1,11 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { formatJsonValue, parseJsonSafely } from "./jsonParser";
+import { formatJsonValue, parseJsonSafely } from "./jsonProcessor";
 
 describe("parseJsonSafely", () => {
   it("should parse valid JSON", () => {
     const input = '{"name": "test", "value": 42}';
     const result = parseJsonSafely(input);
 
+    expect(result.success).toBe(true);
     expect(result.error).toBeNull();
     expect(result.data).toEqual({ name: "test", value: 42 });
   });
@@ -14,6 +15,7 @@ describe("parseJsonSafely", () => {
     const input = "{invalid json}";
     const result = parseJsonSafely(input);
 
+    expect(result.success).toBe(false);
     expect(result.error).toBeTruthy();
     expect(result.data).toBeNull();
   });
@@ -22,6 +24,7 @@ describe("parseJsonSafely", () => {
     const input = "";
     const result = parseJsonSafely(input);
 
+    expect(result.success).toBe(false);
     expect(result.error).toBeTruthy();
     expect(result.data).toBeNull();
   });

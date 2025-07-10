@@ -1,8 +1,11 @@
 import { Box, Text } from "ink";
 import type React from "react";
-import { handleSchemaError } from "../services/safeAppService";
 import type { JsonValue, SearchResult } from "../types/index";
-import { formatJsonSchema, inferJsonSchema } from "../utils/schemaUtils";
+import {
+  formatJsonSchema,
+  handleSchemaError,
+  inferJsonSchema,
+} from "../utils/schemaUtils";
 import { highlightSearchInLine } from "../utils/searchUtils";
 
 interface SchemaViewerProps {
@@ -39,14 +42,9 @@ export function SchemaViewer({
     formattedSchema = formatJsonSchema(schema);
   } catch (error) {
     // Fallback to error display if schema generation fails
-    const schemaError = {
-      type: "SCHEMA_ERROR" as const,
-      message:
-        error instanceof Error ? error.message : "Schema generation failed",
-      context: "SchemaViewer component",
-    };
-    const { fallback } = handleSchemaError(schemaError);
-    formattedSchema = fallback;
+    formattedSchema = handleSchemaError(
+      error instanceof Error ? error : new Error("Schema generation failed"),
+    );
   }
 
   // Split into lines for line-by-line rendering

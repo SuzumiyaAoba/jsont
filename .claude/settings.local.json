@@ -39,7 +39,8 @@
       "Bash(npx tsx:*)",
       "Bash(rg:*)",
       "Bash(gh run list:*)",
-      "Bash(git push:*)"
+      "Bash(git push:*)",
+      "Bash(find:*)"
     ],
     "deny": []
   }

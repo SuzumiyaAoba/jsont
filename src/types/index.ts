@@ -83,25 +83,10 @@ export interface JsonViewerProps {
   viewMode?: ViewMode;
 }
 
-export interface FilterInputProps {
-  value: string;
-  onChange: (value: string) => void;
-  onSubmit?: (value: string) => void;
-  placeholder?: string;
-  disabled?: boolean;
-}
-
 export interface StatusBarProps {
   error: string | null;
   stats?: JsonStats | null;
   theme?: Theme;
-}
-
-// Navigation types
-export interface NavigationState {
-  selectedPath: string[];
-  canNavigateUp: boolean;
-  canNavigateDown: boolean;
 }
 
 // Virtual scrolling types
@@ -139,54 +124,6 @@ export interface FormatterOptions {
   indent?: number;
   colors?: boolean;
 }
-
-// F2: Simple Navigation Types
-export interface NavigationItem {
-  key: string;
-  value: JsonValue;
-  path: string[];
-  depth: number;
-  type: "property" | "array-item" | "value";
-  isExpandable: boolean;
-  isExpanded?: boolean;
-}
-
-// Original navigation state interface
-export interface NavigationState {
-  selectedPath: string[];
-  canNavigateUp: boolean;
-  canNavigateDown: boolean;
-}
-
-// F2 Navigation state interface
-export interface F2NavigationState {
-  selectedIndex: number;
-  currentPath: string[];
-  scrollOffset: number;
-  isNavigable: boolean;
-  flatItems: NavigationItem[];
-}
-
-export interface NavigationOptions {
-  pageSize?: number;
-  viewportHeight?: number;
-  enableKeyboardNavigation?: boolean;
-  initialSelectedIndex?: number;
-}
-
-export interface NavigationActions {
-  navigateUp: () => void;
-  navigateDown: () => void;
-  navigatePageUp: () => void;
-  navigatePageDown: () => void;
-  navigateHome: () => void;
-  navigateEnd: () => void;
-  setSelectedIndex: (index: number) => void;
-  getVisibleItems: () => NavigationItem[];
-  getPathString: () => string;
-}
-
-export type NavigationHook = F2NavigationState & NavigationActions;
 
 // Search types
 export interface SearchState {

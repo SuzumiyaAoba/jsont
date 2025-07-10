@@ -2,9 +2,7 @@
  * JSON Schema inference and utilities with Result-based error handling
  */
 
-import { err, ok, type Result } from "neverthrow";
 import type { JsonArray, JsonObject, JsonValue } from "../types";
-import type { SchemaGenerationError } from "./result";
 
 export interface JsonSchemaProperty {
   type: string;
@@ -47,42 +45,6 @@ export function inferJsonSchema(data: JsonValue, title?: string): JsonSchema {
     description: `Auto-generated schema from JSON data`,
     ...schema,
   };
-}
-
-/**
- * Safely infer JSON Schema from a JSON value with Result type
- */
-export function safeInferJsonSchema(
-  data: JsonValue,
-  title?: string,
-): Result<JsonSchema, SchemaGenerationError> {
-  try {
-    if (data === undefined) {
-      return err({
-        type: "SCHEMA_ERROR" as const,
-        message: "Cannot generate schema from undefined value",
-        context: "data validation",
-      });
-    }
-
-    const schema = inferType(data);
-
-    const result: JsonSchema = {
-      $schema: "https://json-schema.org/draft/2020-12/schema",
-      title: title || "Generated Schema",
-      description: `Auto-generated schema from JSON data`,
-      ...schema,
-    };
-
-    return ok(result);
-  } catch (error) {
-    return err({
-      type: "SCHEMA_ERROR" as const,
-      message:
-        error instanceof Error ? error.message : "Schema generation failed",
-      context: "schema inference",
-    });
-  }
 }
 
 /**
@@ -228,34 +190,6 @@ export function formatJsonSchema(schema: JsonSchema): string {
 }
 
 /**
- * Safely format JSON Schema as a readable string with Result type
- */
-export function safeFormatJsonSchema(
-  schema: JsonSchema,
-): Result<string, SchemaGenerationError> {
-  try {
-    const formatted = JSON.stringify(schema, null, 2);
-
-    if (!formatted) {
-      return err({
-        type: "SCHEMA_ERROR" as const,
-        message: "Failed to serialize schema to JSON string",
-        context: "schema formatting",
-      });
-    }
-
-    return ok(formatted);
-  } catch (error) {
-    return err({
-      type: "SCHEMA_ERROR" as const,
-      message:
-        error instanceof Error ? error.message : "Schema formatting failed",
-      context: "JSON serialization",
-    });
-  }
-}
-
-/**
  * Check if a string looks like an email
  */
 function isEmail(str: string): boolean {
@@ -337,60 +271,15 @@ export function getSchemaStats(schema: JsonSchema): SchemaStats {
 }
 
 /**
- * Safely get schema statistics with Result type
+ * Simple error handler for schema generation failures
  */
-export function safeGetSchemaStats(
-  schema: JsonSchema,
-): Result<SchemaStats, SchemaGenerationError> {
-  try {
-    const stats: SchemaStats = {
-      totalProperties: 0,
-      maxDepth: 0,
-      typeDistribution: {},
-    };
-
-    let recursionDepth = 0;
-    const MAX_RECURSION_DEPTH = 1000;
-
-    function analyzeSchema(s: JsonSchemaProperty, depth = 0): void {
-      recursionDepth++;
-
-      if (recursionDepth > MAX_RECURSION_DEPTH) {
-        throw new Error(
-          "Maximum recursion depth exceeded during schema analysis",
-        );
-      }
-
-      stats.maxDepth = Math.max(stats.maxDepth, depth);
-
-      // Count types
-      const type = s.type;
-      if (typeof type === "string") {
-        stats.typeDistribution[type] = (stats.typeDistribution[type] || 0) + 1;
-      }
-
-      if (s.properties) {
-        stats.totalProperties += Object.keys(s.properties).length;
-        for (const prop of Object.values(s.properties)) {
-          analyzeSchema(prop, depth + 1);
-        }
-      }
-
-      if (s.items) {
-        analyzeSchema(s.items, depth + 1);
-      }
-
-      recursionDepth--;
-    }
-
-    analyzeSchema(schema);
-    return ok(stats);
-  } catch (error) {
-    return err({
-      type: "SCHEMA_ERROR" as const,
-      message:
-        error instanceof Error ? error.message : "Schema analysis failed",
-      context: "statistics calculation",
-    });
-  }
+export function handleSchemaError(error: Error): string {
+  return JSON.stringify(
+    {
+      error: "Schema generation failed",
+      reason: error.message,
+    },
+    null,
+    2,
+  );
 }
