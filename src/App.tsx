@@ -268,6 +268,7 @@ export function App({
       key: {
         ctrl?: boolean;
         meta?: boolean;
+        escape?: boolean;
       },
     ) => {
       if (input === "s" && !key.ctrl && !key.meta) {
