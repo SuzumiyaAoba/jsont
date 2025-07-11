@@ -93,35 +93,14 @@ export function App({
     debugInfo,
   ]);
 
-  // Calculate search bar height dynamically based on content length
+  // Calculate search bar height - use fixed 3 lines for consistent display
   const searchBarHeight = useMemo(() => {
     if (!searchState.isSearching && !searchState.searchTerm) return 0;
-
-    const terminalWidth = process.stdout.columns || 80;
-    let searchContent = "";
-
-    if (searchState.isSearching) {
-      searchContent = `Search: ${searchInput} (Enter: confirm, Esc: cancel)`;
-    } else {
-      const navigationInfo =
-        searchState.searchResults.length > 0
-          ? `${searchState.currentResultIndex + 1}/${searchState.searchResults.length}`
-          : "0/0";
-      searchContent = `Search: ${searchState.searchTerm} (${navigationInfo}) n: next, N: prev, s: new search`;
-    }
-
-    // Account for borders and padding: border (1 top + 1 bottom) + padding (1 top + 1 bottom) + content
-    const contentLines = Math.ceil(
-      searchContent.length / Math.max(terminalWidth - 4, 20),
-    ); // Account for border/padding
-    return contentLines + 2; // Add 2 for borders
-  }, [
-    searchState.isSearching,
-    searchState.searchTerm,
-    searchInput,
-    searchState.searchResults.length,
-    searchState.currentResultIndex,
-  ]);
+    // SearchBar component uses padding={1} and borderStyle="single"
+    // This requires: 1 (top border) + 1 (top padding) + 1 (content) + 1 (bottom padding) + 1 (bottom border) = 5 lines minimum
+    // However, Ink optimizes this to 3 lines total for single-line content
+    return 3;
+  }, [searchState.isSearching, searchState.searchTerm]);
 
   // Calculate UI reserved lines dynamically
   const statusBarLines = helpVisible ? 3 : 0; // Status bar with borders (only when help is visible)
@@ -605,7 +584,11 @@ export function App({
             searchTerm={searchState.searchTerm}
             searchResults={searchState.searchResults}
             currentSearchIndex={searchState.currentResultIndex}
-            visibleLines={visibleLines}
+            visibleLines={
+              searchState.isSearching || searchState.searchTerm
+                ? searchModeVisibleLines
+                : visibleLines
+            }
             showLineNumbers={lineNumbersVisible}
             onScrollChange={handleCollapsibleScrollChange}
           />
@@ -616,7 +599,11 @@ export function App({
             searchTerm={searchState.searchTerm}
             searchResults={searchState.searchResults}
             currentSearchIndex={searchState.currentResultIndex}
-            visibleLines={visibleLines}
+            visibleLines={
+              searchState.isSearching || searchState.searchTerm
+                ? searchModeVisibleLines
+                : visibleLines
+            }
             showLineNumbers={lineNumbersVisible}
           />
         ) : (
@@ -626,7 +613,11 @@ export function App({
             searchTerm={searchState.searchTerm}
             searchResults={searchState.searchResults}
             currentSearchIndex={searchState.currentResultIndex}
-            visibleLines={visibleLines}
+            visibleLines={
+              searchState.isSearching || searchState.searchTerm
+                ? searchModeVisibleLines
+                : visibleLines
+            }
             showLineNumbers={lineNumbersVisible}
           />
         )}
