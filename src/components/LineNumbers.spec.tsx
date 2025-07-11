@@ -84,9 +84,15 @@ describe("Line Numbers Functionality", () => {
 
   it("should show toggle line numbers help in status bar", () => {
     const data = { name: "test", value: 123 };
-    const { lastFrame } = render(
+    const { lastFrame, rerender } = render(
       <App initialData={data} keyboardEnabled={true} />,
     );
+
+    // Press '?' to show help
+    if (mockInputHandler) {
+      mockInputHandler("?", {});
+      rerender(<App initialData={data} keyboardEnabled={true} />);
+    }
 
     const output = lastFrame();
     expect(output).toContain("L: Toggle line numbers");

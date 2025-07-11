@@ -105,9 +105,15 @@ describe("Schema Toggle Functionality", () => {
 
   it("should show schema toggle help in status bar", () => {
     const data = { name: "test", value: 123 };
-    const { lastFrame } = render(
+    const { lastFrame, rerender } = render(
       <App initialData={data} keyboardEnabled={true} />,
     );
+
+    // Press '?' to show help
+    if (mockInputHandler) {
+      mockInputHandler("?", {});
+      rerender(<App initialData={data} keyboardEnabled={true} />);
+    }
 
     const output = lastFrame();
     // Check for the S key binding in help text

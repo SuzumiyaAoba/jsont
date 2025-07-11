@@ -83,9 +83,15 @@ describe("Debug Toggle Functionality", () => {
 
   it("should show toggle debug help in status bar", () => {
     const data = { name: "test", value: 123 };
-    const { lastFrame } = render(
+    const { lastFrame, rerender } = render(
       <App initialData={data} keyboardEnabled={true} />,
     );
+
+    // Press '?' to show help
+    if (mockInputHandler) {
+      mockInputHandler("?", {});
+      rerender(<App initialData={data} keyboardEnabled={true} />);
+    }
 
     const output = lastFrame();
     expect(output).toContain("D: Toggle debug");

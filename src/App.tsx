@@ -69,14 +69,20 @@ export function App({
     };
 
     // Update size on resize if supported
-    if (process.stdout.on) {
+    if (process.stdout.on && process.stdout.off) {
+      // Increase max listeners to prevent warnings in tests
+      if (process.stdout.setMaxListeners) {
+        process.stdout.setMaxListeners(20);
+      }
+
       process.stdout.on("resize", updateTerminalSize);
       return () => {
-        if (process.stdout.off) {
-          process.stdout.off("resize", updateTerminalSize);
-        }
+        process.stdout.off("resize", updateTerminalSize);
       };
     }
+
+    // Return undefined when process.stdout.on is not available
+    return undefined;
   }, []);
 
   // Calculate max scroll based on JSON data

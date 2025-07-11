@@ -315,5 +315,46 @@ describe("collapsibleJson", () => {
         }
       }
     });
+
+    it("should handle comma placement correctly for closing brackets", () => {
+      const nestedData = {
+        first: { a: 1, b: 2 },
+        second: [1, 2, 3],
+        third: "value",
+      };
+
+      const state = initializeCollapsibleState(nestedData);
+      const flattenedNodes = state.flattenedNodes;
+
+      // Find closing bracket for first object
+      const firstClosingNode = flattenedNodes.find(
+        (node) => node.id === "first_closing",
+      );
+
+      if (firstClosingNode) {
+        // Should have comma since it's not the last element
+        expect(getNodeDisplayText(firstClosingNode, false)).toBe("  },");
+      }
+
+      // Find closing bracket for second array
+      const secondClosingNode = flattenedNodes.find(
+        (node) => node.id === "second_closing",
+      );
+
+      if (secondClosingNode) {
+        // Should have comma since it's not the last element
+        expect(getNodeDisplayText(secondClosingNode, false)).toBe("  ],");
+      }
+
+      // Find last element (third)
+      const thirdNode = flattenedNodes.find(
+        (node) => node.path.key === "third",
+      );
+
+      if (thirdNode) {
+        // Should NOT have comma since it's the last element
+        expect(getNodeDisplayText(thirdNode, false)).toBe('  "third": "value"');
+      }
+    });
   });
 });

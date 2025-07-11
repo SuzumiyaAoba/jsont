@@ -126,7 +126,7 @@ export function flattenNodes(
           level: node.level,
           isCollapsible: false,
           isCollapsed: false,
-          ...(node.parent && { parent: node.parent }),
+          parent: node, // The closing bracket's parent is the node itself
         };
         result.push(closingNode);
       }
@@ -426,7 +426,26 @@ export function getNodeDisplayText(
 
   // Handle closing bracket nodes specially
   if (node.id.endsWith("_closing")) {
-    return `${indent}${node.value}`;
+    // For closing brackets, check if the node that is being closed needs a comma
+    // The parent of closing node is the node being closed
+    const originalNode = node.parent;
+
+    if (originalNode?.parent && originalNode.path.key !== undefined) {
+      // Check if this is the last element in its parent
+      const isLastElement = (() => {
+        if (!originalNode.parent.children) return true;
+        const siblingIndex = originalNode.parent.children.findIndex(
+          (child) => child.id === originalNode.id,
+        );
+        return siblingIndex === originalNode.parent.children.length - 1;
+      })();
+
+      if (!isLastElement) {
+        comma = ",";
+      }
+    }
+
+    return `${indent}${node.value}${comma}`;
   }
 
   // Add key for object properties and array indices
@@ -462,7 +481,12 @@ export function getNodeDisplayText(
   }
 
   // Add comma if this is not the last element in an array or object
-  if (node.parent && node.path.key !== undefined) {
+  // Only add comma for non-expanded collapsible nodes or primitive nodes
+  if (
+    node.parent &&
+    node.path.key !== undefined &&
+    (node.type === "primitive" || (node.isCollapsible && !isExpanded))
+  ) {
     const isLastElement = (() => {
       if (!node.parent.children) return true;
 
