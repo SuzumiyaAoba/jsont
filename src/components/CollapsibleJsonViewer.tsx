@@ -101,9 +101,6 @@ export const CollapsibleJsonViewer = forwardRef<
 
       // Handle scroll adjustment for height changes
       if (result.scrollToLine !== undefined && onScrollChange) {
-        const effectiveVisibleLines =
-          visibleLines || Math.max(1, (process.stdout.rows || 24) - 3);
-
         // Calculate optimal scroll position to keep cursor visible
         const targetScrollOffset = Math.max(
           0,
@@ -123,7 +120,7 @@ export const CollapsibleJsonViewer = forwardRef<
         onNavigate(action);
       }
     },
-    [collapsibleState, onNavigate, onScrollChange, visibleLines],
+    [collapsibleState, onNavigate, onScrollChange, effectiveVisibleLines],
   );
 
   // Create search results map for O(1) lookup
