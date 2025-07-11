@@ -627,7 +627,7 @@ export function App({
       )}
       {/* Search bar fixed at top when in search mode */}
       {(searchState.isSearching || searchState.searchTerm) && (
-        <Box flexShrink={0} width="100%" height={3}>
+        <Box flexShrink={0} width="100%">
           <SearchBar searchState={searchState} searchInput={searchInput} />
         </Box>
       )}
