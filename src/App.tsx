@@ -140,13 +140,12 @@ export function App({
     const contentLines = Math.ceil(statusContent.length / availableWidth);
 
     // Total height = top border + top padding + content lines + bottom padding + bottom border
-    // Conservative calculation: contentLines + 4 (2 for borders + 2 for padding)
-    // Add extra buffer for wrapping edge cases
-    const calculatedHeight = contentLines + 4;
+    // Optimized calculation: contentLines + 3 (Ink typically optimizes border+padding to 3 total overhead)
+    const calculatedHeight = contentLines + 3;
 
-    // For typical 80-char terminal, messages are ~300 chars, so need ~4-5 content lines + overhead = 8-9 total
-    // Use conservative calculation: add extra buffer for safety
-    const finalHeight = Math.max(10, calculatedHeight + 2); // Minimum 10 lines with extra buffer
+    // For typical 80-char terminal, messages are ~300 chars, so need ~4-5 content lines + overhead = 7-8 total
+    // Use balanced calculation: just enough height without waste
+    const finalHeight = Math.max(5, calculatedHeight); // Minimum 5 lines, rely on calculation
     return finalHeight;
   }, [helpVisible, keyboardEnabled, collapsibleMode, terminalSize.width]);
 
