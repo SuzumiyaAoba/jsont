@@ -136,6 +136,7 @@ export function App({
     terminalHeight -
       (statusBarLines + searchBarLines + debugBarLines + contentPaddingLines),
   );
+
   const maxScrollSearchMode = Math.max(
     0,
     currentDataLines - searchModeVisibleLines,
@@ -571,11 +572,19 @@ export function App({
       )}
       {/* Search bar fixed at top when in search mode */}
       {(searchState.isSearching || searchState.searchTerm) && (
-        <Box flexShrink={0} width="100%">
+        <Box flexShrink={0} width="100%" height={3}>
           <SearchBar searchState={searchState} searchInput={searchInput} />
         </Box>
       )}
-      <Box flexGrow={1} width="100%" minHeight={0}>
+      <Box
+        flexGrow={1}
+        width="100%"
+        minHeight={
+          searchState.isSearching || searchState.searchTerm
+            ? searchModeVisibleLines
+            : 1
+        }
+      >
         {collapsibleMode ? (
           <CollapsibleJsonViewer
             ref={collapsibleViewerRef}
