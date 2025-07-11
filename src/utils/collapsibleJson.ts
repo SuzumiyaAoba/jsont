@@ -422,6 +422,7 @@ export function getNodeDisplayText(
   const indent = "  ".repeat(node.level);
   let prefix = "";
   let suffix = "";
+  let comma = "";
 
   // Handle closing bracket nodes specially
   if (node.id.endsWith("_closing")) {
@@ -460,7 +461,23 @@ export function getNodeDisplayText(
     }
   }
 
-  return `${indent}${prefix}${suffix}`;
+  // Add comma if this is not the last element in an array or object
+  if (node.parent && node.path.key !== undefined) {
+    const isLastElement = (() => {
+      if (!node.parent.children) return true;
+
+      const siblingIndex = node.parent.children.findIndex(
+        (child) => child.id === node.id,
+      );
+      return siblingIndex === node.parent.children.length - 1;
+    })();
+
+    if (!isLastElement) {
+      comma = ",";
+    }
+  }
+
+  return `${indent}${prefix}${suffix}${comma}`;
 }
 
 /**
