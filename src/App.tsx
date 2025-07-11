@@ -149,13 +149,12 @@ export function App({
     return finalHeight;
   }, [helpVisible, keyboardEnabled, collapsibleMode, terminalSize.width]);
 
-  // Calculate search bar height - use fixed 3 lines for consistent display
+  // Calculate search bar height - use compact 2 lines for efficient display
   const searchBarHeight = useMemo(() => {
     if (!searchState.isSearching && !searchState.searchTerm) return 0;
     // SearchBar component uses padding={1} and borderStyle="single"
-    // This requires: 1 (top border) + 1 (top padding) + 1 (content) + 1 (bottom padding) + 1 (bottom border) = 5 lines minimum
-    // However, Ink optimizes this to 3 lines total for single-line content
-    return 3;
+    // Optimize to 2 lines for compact display
+    return 2;
   }, [searchState.isSearching, searchState.searchTerm]);
 
   // Calculate UI reserved lines dynamically
@@ -628,7 +627,7 @@ export function App({
       )}
       {/* Search bar fixed at top when in search mode */}
       {(searchState.isSearching || searchState.searchTerm) && (
-        <Box flexShrink={0} width="100%" height={3}>
+        <Box flexShrink={0} width="100%" height={2}>
           <SearchBar searchState={searchState} searchInput={searchInput} />
         </Box>
       )}
