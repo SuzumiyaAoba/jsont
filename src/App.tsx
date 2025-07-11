@@ -93,10 +93,39 @@ export function App({
     debugInfo,
   ]);
 
+  // Calculate search bar height dynamically based on content length
+  const searchBarHeight = useMemo(() => {
+    if (!searchState.isSearching && !searchState.searchTerm) return 0;
+
+    const terminalWidth = process.stdout.columns || 80;
+    let searchContent = "";
+
+    if (searchState.isSearching) {
+      searchContent = `Search: ${searchInput} (Enter: confirm, Esc: cancel)`;
+    } else {
+      const navigationInfo =
+        searchState.searchResults.length > 0
+          ? `${searchState.currentResultIndex + 1}/${searchState.searchResults.length}`
+          : "0/0";
+      searchContent = `Search: ${searchState.searchTerm} (${navigationInfo}) n: next, N: prev, s: new search`;
+    }
+
+    // Account for borders and padding: border (1 top + 1 bottom) + padding (1 top + 1 bottom) + content
+    const contentLines = Math.ceil(
+      searchContent.length / Math.max(terminalWidth - 4, 20),
+    ); // Account for border/padding
+    return contentLines + 2; // Add 2 for borders
+  }, [
+    searchState.isSearching,
+    searchState.searchTerm,
+    searchInput,
+    searchState.searchResults.length,
+    searchState.currentResultIndex,
+  ]);
+
   // Calculate UI reserved lines dynamically
   const statusBarLines = helpVisible ? 3 : 0; // Status bar with borders (only when help is visible)
-  const searchBarLines =
-    searchState.isSearching || searchState.searchTerm ? 3 : 0; // Search bar with borders
+  const searchBarLines = searchBarHeight; // Dynamic search bar height
   const debugBarLines = debugBarHeight; // Debug bar height based on content
   const contentPaddingLines = 2; // JsonViewer padding={1} adds 1 line top + 1 line bottom
   const UI_RESERVED_LINES =
@@ -125,7 +154,8 @@ export function App({
   // Calculate max scroll for search mode (when search bar is visible)
   const searchModeVisibleLines = Math.max(
     1,
-    terminalHeight - (statusBarLines + 3 + debugBarLines),
+    terminalHeight -
+      (statusBarLines + searchBarLines + debugBarLines + contentPaddingLines),
   );
   const maxScrollSearchMode = Math.max(
     0,
