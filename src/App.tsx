@@ -193,6 +193,14 @@ export function App({
     [],
   );
 
+  // Helper function to handle scroll changes from collapsible viewer
+  const handleCollapsibleScrollChange = useCallback(
+    (newScrollOffset: number) => {
+      setScrollOffset(newScrollOffset);
+    },
+    [],
+  );
+
   // Update search results when search term or view mode changes
   useEffect(() => {
     if (searchState.searchTerm && initialData) {
@@ -585,6 +593,7 @@ export function App({
             currentSearchIndex={searchState.currentResultIndex}
             visibleLines={visibleLines}
             showLineNumbers={lineNumbersVisible}
+            onScrollChange={handleCollapsibleScrollChange}
           />
         ) : schemaVisible ? (
           <SchemaViewer

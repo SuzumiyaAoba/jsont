@@ -167,6 +167,56 @@ describe("collapsibleJson", () => {
         );
       }
     });
+
+    it("should provide scroll adjustment for height changes", () => {
+      const state = initializeCollapsibleState(testData);
+
+      // Find a collapsible node and position cursor on it
+      const collapsibleNode = Array.from(state.nodes.values()).find(
+        (node) => node.isCollapsible,
+      );
+      if (collapsibleNode) {
+        state.cursorPosition = { nodeId: collapsibleNode.id, lineIndex: 5 };
+
+        const result = handleNavigation(state, { type: "toggle_node" });
+
+        // Should provide scroll line when height changes
+        expect(result.scrollToLine).toBeDefined();
+        expect(typeof result.scrollToLine).toBe("number");
+      }
+    });
+
+    it("should handle cursor position when node becomes invisible", () => {
+      const complexData = {
+        root: {
+          child1: { nested: "value1" },
+          child2: { nested: "value2" },
+        },
+      };
+      const state = initializeCollapsibleState(complexData);
+
+      // Position cursor on a nested node
+      const nestedNode = Array.from(state.nodes.values()).find(
+        (node) => node.path.path.length > 1,
+      );
+      if (nestedNode) {
+        state.cursorPosition = { nodeId: nestedNode.id, lineIndex: 3 };
+
+        // Collapse the parent to make nested node invisible
+        const parentNode = nestedNode.parent;
+        if (parentNode) {
+          state.cursorPosition = { nodeId: parentNode.id, lineIndex: 2 };
+          const result = handleNavigation(state, { type: "toggle_node" });
+
+          // Cursor should be moved to a visible node
+          expect(result.newState.cursorPosition).toBeTruthy();
+          const cursorNode = result.newState.nodes.get(
+            result.newState.cursorPosition!.nodeId,
+          );
+          expect(cursorNode).toBeTruthy();
+        }
+      }
+    });
   });
 
   describe("formatCollapsedNode", () => {

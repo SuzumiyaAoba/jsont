@@ -186,7 +186,8 @@ export function handleNavigation(
 
   switch (action.type) {
     case "move_up": {
-      if (!newState.cursorPosition) break;
+      if (!newState.cursorPosition || newState.flattenedNodes.length === 0)
+        break;
 
       const currentIndex = newState.flattenedNodes.findIndex(
         (node) => node.id === newState.cursorPosition?.nodeId,
@@ -201,18 +202,32 @@ export function handleNavigation(
           };
           scrollToLine = currentIndex - 1;
         }
+      } else if (currentIndex === -1 && newState.flattenedNodes.length > 0) {
+        // Cursor position is invalid, reset to first node
+        const firstNode = newState.flattenedNodes[0];
+        if (firstNode) {
+          newState.cursorPosition = {
+            nodeId: firstNode.id,
+            lineIndex: 0,
+          };
+          scrollToLine = 0;
+        }
       }
       break;
     }
 
     case "move_down": {
-      if (!newState.cursorPosition) break;
+      if (!newState.cursorPosition || newState.flattenedNodes.length === 0)
+        break;
 
       const currentIndex = newState.flattenedNodes.findIndex(
         (node) => node.id === newState.cursorPosition?.nodeId,
       );
 
-      if (currentIndex < newState.flattenedNodes.length - 1) {
+      if (
+        currentIndex >= 0 &&
+        currentIndex < newState.flattenedNodes.length - 1
+      ) {
         const newNode = newState.flattenedNodes[currentIndex + 1];
         if (newNode) {
           newState.cursorPosition = {
@@ -220,6 +235,16 @@ export function handleNavigation(
             lineIndex: currentIndex + 1,
           };
           scrollToLine = currentIndex + 1;
+        }
+      } else if (currentIndex === -1 && newState.flattenedNodes.length > 0) {
+        // Cursor position is invalid, reset to first node
+        const firstNode = newState.flattenedNodes[0];
+        if (firstNode) {
+          newState.cursorPosition = {
+            nodeId: firstNode.id,
+            lineIndex: 0,
+          };
+          scrollToLine = 0;
         }
       }
       break;
@@ -247,13 +272,45 @@ export function handleNavigation(
           newState.expandedNodes,
         );
 
-        // Update cursor line index
+        // Update cursor line index and handle scroll adjustment
         const newIndex = newState.flattenedNodes.findIndex(
           (node) => node.id === newState.cursorPosition?.nodeId,
         );
         if (newIndex >= 0) {
+          const oldLineIndex = newState.cursorPosition.lineIndex;
           newState.cursorPosition.lineIndex = newIndex;
-          scrollToLine = newIndex;
+
+          // If the cursor moved significantly due to collapse/expand,
+          // set scroll to keep cursor visible
+          const lineDelta = Math.abs(newIndex - oldLineIndex);
+          if (lineDelta > 0) {
+            scrollToLine = newIndex;
+          }
+        } else if (newState.flattenedNodes.length > 0) {
+          // Cursor node is no longer visible (collapsed), move to parent or first available node
+          const parentNode = currentNode.parent;
+          let targetNode = null;
+
+          if (parentNode) {
+            targetNode = newState.flattenedNodes.find(
+              (node) => node.id === parentNode.id,
+            );
+          }
+
+          if (!targetNode && newState.flattenedNodes.length > 0) {
+            targetNode = newState.flattenedNodes[0];
+          }
+
+          if (targetNode) {
+            const targetIndex = newState.flattenedNodes.findIndex(
+              (node) => node.id === targetNode.id,
+            );
+            newState.cursorPosition = {
+              nodeId: targetNode.id,
+              lineIndex: targetIndex,
+            };
+            scrollToLine = targetIndex;
+          }
         }
       }
       break;
