@@ -270,10 +270,9 @@ describe("Schema Toggle Functionality", () => {
     rerender(<App initialData={data} keyboardEnabled={true} />);
 
     // Type search term
-    mockInputHandler?.("t", { ctrl: false, meta: false });
-    mockInputHandler?.("e", { ctrl: false, meta: false });
-    mockInputHandler?.("s", { ctrl: false, meta: false });
-    mockInputHandler?.("t", { ctrl: false, meta: false });
+    for (const char of "test") {
+      mockInputHandler?.(char, { ctrl: false, meta: false });
+    }
     rerender(<App initialData={data} keyboardEnabled={true} />);
 
     // Confirm search
@@ -307,12 +306,9 @@ describe("Schema Toggle Functionality", () => {
     rerender(<App initialData={data} keyboardEnabled={true} />);
 
     // Type search term for something that exists in schema
-    mockInputHandler?.("s", { ctrl: false, meta: false });
-    mockInputHandler?.("t", { ctrl: false, meta: false });
-    mockInputHandler?.("r", { ctrl: false, meta: false });
-    mockInputHandler?.("i", { ctrl: false, meta: false });
-    mockInputHandler?.("n", { ctrl: false, meta: false });
-    mockInputHandler?.("g", { ctrl: false, meta: false });
+    for (const char of "string") {
+      mockInputHandler?.(char, { ctrl: false, meta: false });
+    }
     rerender(<App initialData={data} keyboardEnabled={true} />);
 
     // Confirm search

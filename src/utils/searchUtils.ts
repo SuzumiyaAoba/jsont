@@ -20,33 +20,8 @@ export function searchInJson(
     return [];
   }
 
-  const results: SearchResult[] = [];
   const jsonString = JSON.stringify(data, null, 2);
-  const lines = jsonString.split("\n");
-  const searchTermLower = searchTerm.toLowerCase();
-
-  lines.forEach((line, lineIndex) => {
-    const lineLower = line.toLowerCase();
-    let startIndex = 0;
-
-    // Find all occurrences in this line
-    while (true) {
-      const foundIndex = lineLower.indexOf(searchTermLower, startIndex);
-      if (foundIndex === -1) break;
-
-      results.push({
-        lineIndex,
-        columnStart: foundIndex,
-        columnEnd: foundIndex + searchTerm.length,
-        matchText: line.substring(foundIndex, foundIndex + searchTerm.length),
-        contextLine: line,
-      });
-
-      startIndex = foundIndex + 1;
-    }
-  });
-
-  return results;
+  return searchInText(jsonString, searchTerm);
 }
 
 /**
