@@ -98,7 +98,9 @@ export function App({
   const searchBarLines =
     searchState.isSearching || searchState.searchTerm ? 3 : 0; // Search bar with borders
   const debugBarLines = debugBarHeight; // Debug bar height based on content
-  const UI_RESERVED_LINES = statusBarLines + searchBarLines + debugBarLines;
+  const contentPaddingLines = 2; // JsonViewer padding={1} adds 1 line top + 1 line bottom
+  const UI_RESERVED_LINES =
+    statusBarLines + searchBarLines + debugBarLines + contentPaddingLines;
   const G_SEQUENCE_TIMEOUT = 1000;
 
   const jsonLines = initialData
