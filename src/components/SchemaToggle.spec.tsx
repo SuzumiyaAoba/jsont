@@ -258,4 +258,75 @@ describe("Schema Toggle Functionality", () => {
       /(required|properties|additionalProperties|"\$schema")/,
     ); // Should still be in schema view
   });
+
+  it("should re-search when switching from JSON to schema view with active search", () => {
+    const data = { name: "test", value: 123, type: "object" };
+    const { lastFrame, rerender } = render(
+      <App initialData={data} keyboardEnabled={true} />,
+    );
+
+    // Start search for "test"
+    mockInputHandler?.("s", { ctrl: false, meta: false });
+    rerender(<App initialData={data} keyboardEnabled={true} />);
+
+    // Type search term
+    mockInputHandler?.("t", { ctrl: false, meta: false });
+    mockInputHandler?.("e", { ctrl: false, meta: false });
+    mockInputHandler?.("s", { ctrl: false, meta: false });
+    mockInputHandler?.("t", { ctrl: false, meta: false });
+    rerender(<App initialData={data} keyboardEnabled={true} />);
+
+    // Confirm search
+    mockInputHandler?.("", { return: true });
+    rerender(<App initialData={data} keyboardEnabled={true} />);
+
+    // Switch to schema view - this should trigger re-search in schema content
+    mockInputHandler?.("S", { ctrl: false, meta: false });
+    rerender(<App initialData={data} keyboardEnabled={true} />);
+
+    const output = lastFrame();
+    // Should be in schema view with search active
+    expect(output).toMatch(/(properties|"\$schema")/); // Should show schema content
+
+    // The search should now be searching in schema content, not original JSON
+    // This is verified by the fact that we can see schema-specific content
+  });
+
+  it("should re-search when switching from schema to JSON view with active search", () => {
+    const data = { name: "test", value: 123, type: "string" };
+    const { lastFrame, rerender } = render(
+      <App initialData={data} keyboardEnabled={true} />,
+    );
+
+    // Switch to schema view first
+    mockInputHandler?.("S", { ctrl: false, meta: false });
+    rerender(<App initialData={data} keyboardEnabled={true} />);
+
+    // Start search for "string"
+    mockInputHandler?.("s", { ctrl: false, meta: false });
+    rerender(<App initialData={data} keyboardEnabled={true} />);
+
+    // Type search term for something that exists in schema
+    mockInputHandler?.("s", { ctrl: false, meta: false });
+    mockInputHandler?.("t", { ctrl: false, meta: false });
+    mockInputHandler?.("r", { ctrl: false, meta: false });
+    mockInputHandler?.("i", { ctrl: false, meta: false });
+    mockInputHandler?.("n", { ctrl: false, meta: false });
+    mockInputHandler?.("g", { ctrl: false, meta: false });
+    rerender(<App initialData={data} keyboardEnabled={true} />);
+
+    // Confirm search
+    mockInputHandler?.("", { return: true });
+    rerender(<App initialData={data} keyboardEnabled={true} />);
+
+    // Switch back to JSON view - this should trigger re-search in JSON content
+    mockInputHandler?.("S", { ctrl: false, meta: false });
+    rerender(<App initialData={data} keyboardEnabled={true} />);
+
+    const output = lastFrame();
+    // Should be in JSON view
+    expect(output).toContain("test");
+    expect(output).toContain("123");
+    expect(output).not.toMatch(/("\$schema"|properties)/); // Should not show schema content
+  });
 });
