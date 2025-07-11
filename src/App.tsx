@@ -149,13 +149,40 @@ export function App({
     return finalHeight;
   }, [helpVisible, keyboardEnabled, collapsibleMode, terminalSize.width]);
 
-  // Calculate search bar height - use minimum 3 lines for proper display
+  // Calculate search bar height dynamically based on content
   const searchBarHeight = useMemo(() => {
     if (!searchState.isSearching && !searchState.searchTerm) return 0;
-    // SearchBar component uses padding={1} and borderStyle="single"
-    // Minimum 3 lines required: top border + content + bottom border
-    return 3;
-  }, [searchState.isSearching, searchState.searchTerm]);
+
+    const terminalWidth = terminalSize.width;
+    let searchContent = "";
+
+    if (searchState.isSearching) {
+      searchContent = `Search: ${searchInput} (Enter: confirm, Esc: cancel)`;
+    } else {
+      const navigationInfo =
+        searchState.searchResults.length > 0
+          ? `${searchState.currentResultIndex + 1}/${searchState.searchResults.length}`
+          : "0/0";
+      searchContent = `Search: ${searchState.searchTerm} (${navigationInfo}) n: next, N: prev, s: new search`;
+    }
+
+    // SearchBar uses borderStyle="single" + padding={1}
+    // Available width = terminalWidth - 4 (2 borders + 2 padding)
+    const availableWidth = Math.max(terminalWidth - 4, 20);
+    const contentLines = Math.ceil(searchContent.length / availableWidth);
+
+    // Total height = contentLines + 2 (borders) + 2 (padding) = contentLines + 4
+    // But Ink optimizes this, so use conservative calculation
+    const calculatedHeight = contentLines + 3;
+    return Math.max(3, calculatedHeight); // Minimum 3 lines
+  }, [
+    searchState.isSearching,
+    searchState.searchTerm,
+    searchInput,
+    searchState.searchResults.length,
+    searchState.currentResultIndex,
+    terminalSize.width,
+  ]);
 
   // Calculate UI reserved lines dynamically
   const statusBarLines = statusBarHeight; // Dynamic status bar height
@@ -627,7 +654,7 @@ export function App({
       )}
       {/* Search bar fixed at top when in search mode */}
       {(searchState.isSearching || searchState.searchTerm) && (
-        <Box flexShrink={0} width="100%">
+        <Box flexShrink={0} width="100%" height={searchBarHeight}>
           <SearchBar searchState={searchState} searchInput={searchInput} />
         </Box>
       )}
