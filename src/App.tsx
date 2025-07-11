@@ -48,6 +48,7 @@ export function App({
   const [lineNumbersVisible, setLineNumbersVisible] = useState<boolean>(false);
   const [schemaVisible, setSchemaVisible] = useState<boolean>(false);
   const [collapsibleMode, setCollapsibleMode] = useState<boolean>(false);
+  const [helpVisible, setHelpVisible] = useState<boolean>(false);
   const collapsibleViewerRef = useRef<{
     navigate: (action: NavigationAction) => void;
   } | null>(null);
@@ -93,7 +94,7 @@ export function App({
   ]);
 
   // Calculate UI reserved lines dynamically
-  const statusBarLines = 3; // Status bar with borders
+  const statusBarLines = helpVisible ? 3 : 0; // Status bar with borders (only when help is visible)
   const searchBarLines =
     searchState.isSearching || searchState.searchTerm ? 3 : 0; // Search bar with borders
   const debugBarLines = debugBarHeight; // Debug bar height based on content
@@ -460,6 +461,10 @@ export function App({
           `Toggle collapsible mode ${collapsibleMode ? "OFF" : "ON"}`,
           input,
         );
+      } else if (input === "?" && !key.ctrl && !key.meta) {
+        // Toggle help visibility
+        setHelpVisible((prev) => !prev);
+        updateDebugInfo(`Toggle help ${helpVisible ? "OFF" : "ON"}`, input);
       } else {
         // Any other key resets the 'g' sequence
         updateDebugInfo(`Unhandled key: "${input}"`, input);
@@ -487,6 +492,7 @@ export function App({
       lineNumbersVisible,
       schemaVisible,
       collapsibleMode,
+      helpVisible,
       handleCollapsibleNavigation,
     ],
   );
@@ -542,13 +548,16 @@ export function App({
 
   return (
     <Box flexDirection="column" width="100%">
-      <Box flexShrink={0} width="100%">
-        <StatusBar
-          error={error}
-          keyboardEnabled={keyboardEnabled}
-          collapsibleMode={collapsibleMode}
-        />
-      </Box>
+      {/* Help bar - only shown when ? key is pressed */}
+      {helpVisible && (
+        <Box flexShrink={0} width="100%">
+          <StatusBar
+            error={error}
+            keyboardEnabled={keyboardEnabled}
+            collapsibleMode={collapsibleMode}
+          />
+        </Box>
+      )}
       {/* Search bar fixed at top when in search mode */}
       {(searchState.isSearching || searchState.searchTerm) && (
         <Box flexShrink={0} width="100%">
