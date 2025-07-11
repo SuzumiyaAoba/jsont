@@ -1,16 +1,16 @@
 import { Box, useApp, useInput } from "ink";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { CollapsibleJsonViewer } from "./components/CollapsibleJsonViewer";
-import { DebugBar } from "./components/DebugBar";
-import { JsonViewer } from "./components/JsonViewer";
-import { SchemaViewer } from "./components/SchemaViewer";
-import { SearchBar } from "./components/SearchBar";
-import { StatusBar } from "./components/StatusBar";
-import type { AppProps } from "./types/app";
-import type { NavigationAction } from "./types/collapsible";
-import type { SearchState } from "./types/index";
-import { formatJsonSchema, inferJsonSchema } from "./utils/schemaUtils";
-import { searchInJson, searchInJsonSchema } from "./utils/searchUtils";
+import { CollapsibleJsonViewer } from "./components/CollapsibleJsonViewer.js";
+import { DebugBar } from "./components/DebugBar.js";
+import { JsonViewer } from "./components/JsonViewer.js";
+import { SchemaViewer } from "./components/SchemaViewer.js";
+import { SearchBar } from "./components/SearchBar.js";
+import { StatusBar } from "./components/StatusBar.js";
+import type { AppProps } from "./types/app.js";
+import type { NavigationAction } from "./types/collapsible.js";
+import type { SearchState } from "./types/index.js";
+import { formatJsonSchema, inferJsonSchema } from "./utils/schemaUtils.js";
+import { searchInJson, searchInJsonSchema } from "./utils/searchUtils.js";
 
 /**
  * Main application component for the JSON TUI Viewer

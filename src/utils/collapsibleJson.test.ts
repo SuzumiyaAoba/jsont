@@ -9,7 +9,7 @@ import {
   handleNavigation,
   initializeCollapsibleState,
   isCollapsible,
-} from "./collapsibleJson";
+} from "./collapsibleJson.js";
 
 describe("collapsibleJson", () => {
   const testData = {

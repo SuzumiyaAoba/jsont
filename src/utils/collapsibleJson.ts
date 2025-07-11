@@ -9,8 +9,8 @@ import type {
   JsonPath,
   NavigationAction,
   NavigationResult,
-} from "../types/collapsible";
-import type { JsonValue } from "../types/index";
+} from "../types/collapsible.js";
+import type { JsonValue } from "../types/index.js";
 
 /**
  * Generate a unique ID for a JSON node based on its path
@@ -240,9 +240,7 @@ export function handleNavigation(
       }
 
       // Rebuild flattened nodes
-      const rootNode = Array.from(newState.nodes.values()).find(
-        (n) => n.path.path.length === 0,
-      );
+      const rootNode = newState.nodes.get("root");
       if (rootNode) {
         newState.flattenedNodes = flattenNodes(
           rootNode,
@@ -269,9 +267,7 @@ export function handleNavigation(
         }
       }
 
-      const rootNode = Array.from(newState.nodes.values()).find(
-        (n) => n.path.path.length === 0,
-      );
+      const rootNode = newState.nodes.get("root");
       if (rootNode) {
         newState.flattenedNodes = flattenNodes(
           rootNode,
@@ -294,9 +290,7 @@ export function handleNavigation(
     case "collapse_all": {
       newState.expandedNodes = new Set();
 
-      const rootNode = Array.from(newState.nodes.values()).find(
-        (n) => n.path.path.length === 0,
-      );
+      const rootNode = newState.nodes.get("root");
       if (rootNode) {
         newState.flattenedNodes = flattenNodes(
           rootNode,
@@ -410,4 +404,23 @@ export function getNodeDisplayText(
   }
 
   return `${indent}${prefix}${suffix}`;
+}
+
+/**
+ * Helper function to check if a node can be toggled
+ */
+export function canToggleNode(
+  state: CollapsibleState,
+  nodeId: string,
+): boolean {
+  const node = state.nodes.get(nodeId);
+  return node ? node.isCollapsible : false;
+}
+
+/**
+ * Helper function to get current cursor node
+ */
+export function getCurrentCursorNode(state: CollapsibleState) {
+  if (!state.cursorPosition) return null;
+  return state.nodes.get(state.cursorPosition.nodeId) || null;
 }

@@ -7,17 +7,20 @@ import {
   useMemo,
   useState,
 } from "react";
-import type { CollapsibleState, NavigationAction } from "../types/collapsible";
-import type { JsonValue, SearchResult } from "../types/index";
+import type {
+  CollapsibleState,
+  NavigationAction,
+} from "../types/collapsible.js";
+import type { JsonValue, SearchResult } from "../types/index.js";
 import {
   getNodeDisplayText,
   handleNavigation,
   initializeCollapsibleState,
-} from "../utils/collapsibleJson";
+} from "../utils/collapsibleJson.js";
 import {
   applySearchHighlighting,
   tokenizeLine,
-} from "../utils/syntaxHighlight";
+} from "../utils/syntaxHighlight.js";
 
 interface CollapsibleJsonViewerProps {
   data: JsonValue;
@@ -239,18 +242,3 @@ export const CollapsibleJsonViewer = forwardRef<
     </Box>
   );
 });
-
-// Helper function to check if a node can be toggled
-export function canToggleNode(
-  state: CollapsibleState,
-  nodeId: string,
-): boolean {
-  const node = state.nodes.get(nodeId);
-  return node ? node.isCollapsible : false;
-}
-
-// Helper function to get current cursor node
-export function getCurrentCursorNode(state: CollapsibleState) {
-  if (!state.cursorPosition) return null;
-  return state.nodes.get(state.cursorPosition.nodeId) || null;
-}
