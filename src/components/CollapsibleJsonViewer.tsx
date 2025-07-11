@@ -220,6 +220,8 @@ export const CollapsibleJsonViewer = forwardRef<
           const globalLineIndex = startLine + index;
           const uniqueKey = `collapsible-line-${globalLineIndex}`;
 
+          if (!node) return null;
+
           return (
             <Box key={uniqueKey} flexDirection="row">
               {showLineNumbers && (

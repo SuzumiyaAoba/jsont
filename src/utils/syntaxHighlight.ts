@@ -121,7 +121,7 @@ export function parseKeyValueLine(line: string): {
   const afterColon = line.substring(colonIndex);
 
   const valueMatch = afterColon.match(/:\s*(.+?)(?:,\s*)?$/);
-  const value = valueMatch ? valueMatch[1] : afterColon.substring(1).trim();
+  const value = valueMatch?.[1] ?? afterColon.substring(1).trim();
   const isStructuralValue = value === "{" || value === "[";
 
   return { beforeColon, afterColon, value, isStructuralValue };

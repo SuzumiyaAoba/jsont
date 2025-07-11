@@ -40,7 +40,11 @@ export function isCollapsible(value: JsonValue): boolean {
 
   if (type === "array") return Array.isArray(value) && value.length > 0;
   if (type === "object")
-    return value && typeof value === "object" && Object.keys(value).length > 0;
+    return !!(
+      value &&
+      typeof value === "object" &&
+      Object.keys(value).length > 0
+    );
 
   return false;
 }
@@ -65,7 +69,7 @@ export function buildJsonTree(
         : Array.isArray(parent?.value)
           ? "array"
           : "object",
-    key: path.length > 0 ? path[path.length - 1] : undefined,
+    ...(path.length > 0 && { key: path[path.length - 1] }),
     path: [...path],
   };
 
@@ -77,7 +81,7 @@ export function buildJsonTree(
     level,
     isCollapsible: canCollapse,
     isCollapsed: false, // Start expanded by default
-    parent,
+    ...(parent && { parent }),
   };
 
   // Build children for objects and arrays
@@ -122,7 +126,7 @@ export function flattenNodes(
           level: node.level,
           isCollapsible: false,
           isCollapsed: false,
-          parent: node.parent,
+          ...(node.parent && { parent: node.parent }),
         };
         result.push(closingNode);
       }
@@ -158,7 +162,7 @@ export function initializeCollapsibleState(data: JsonValue): CollapsibleState {
 
   const flattenedNodes = flattenNodes(rootNode, expandedNodes);
   const cursorPosition: CursorPosition | null =
-    flattenedNodes.length > 0
+    flattenedNodes.length > 0 && flattenedNodes[0]
       ? { nodeId: flattenedNodes[0].id, lineIndex: 0 }
       : null;
 
@@ -190,11 +194,13 @@ export function handleNavigation(
 
       if (currentIndex > 0) {
         const newNode = newState.flattenedNodes[currentIndex - 1];
-        newState.cursorPosition = {
-          nodeId: newNode.id,
-          lineIndex: currentIndex - 1,
-        };
-        scrollToLine = currentIndex - 1;
+        if (newNode) {
+          newState.cursorPosition = {
+            nodeId: newNode.id,
+            lineIndex: currentIndex - 1,
+          };
+          scrollToLine = currentIndex - 1;
+        }
       }
       break;
     }
@@ -208,11 +214,13 @@ export function handleNavigation(
 
       if (currentIndex < newState.flattenedNodes.length - 1) {
         const newNode = newState.flattenedNodes[currentIndex + 1];
-        newState.cursorPosition = {
-          nodeId: newNode.id,
-          lineIndex: currentIndex + 1,
-        };
-        scrollToLine = currentIndex + 1;
+        if (newNode) {
+          newState.cursorPosition = {
+            nodeId: newNode.id,
+            lineIndex: currentIndex + 1,
+          };
+          scrollToLine = currentIndex + 1;
+        }
       }
       break;
     }
@@ -321,7 +329,7 @@ export function handleNavigation(
     }
   }
 
-  return { newState, scrollToLine };
+  return { newState, ...(scrollToLine !== undefined && { scrollToLine }) };
 }
 
 /**
