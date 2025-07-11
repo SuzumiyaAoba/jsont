@@ -136,12 +136,18 @@ export function App({
 
     // StatusBar uses borderStyle="single" (2 lines) + padding={1} (2 lines) = 4 lines overhead
     // Available width = terminalWidth - 2 (left/right borders) - 2 (left/right padding) = terminalWidth - 4
-    const availableWidth = Math.max(terminalWidth - 4, 10); // Minimum 10 chars for safety
+    const availableWidth = Math.max(terminalWidth - 4, 20); // Minimum 20 chars for safety
     const contentLines = Math.ceil(statusContent.length / availableWidth);
 
     // Total height = top border + top padding + content lines + bottom padding + bottom border
-    // But Ink optimizes this to: content lines + 2 (for borders)
-    return Math.max(3, contentLines + 2); // Minimum 3 lines for single-line content
+    // Conservative calculation: contentLines + 4 (2 for borders + 2 for padding)
+    // Add extra buffer for wrapping edge cases
+    const calculatedHeight = contentLines + 4;
+
+    // For typical 80-char terminal, messages are ~300 chars, so need ~4-5 content lines + overhead = 8-9 total
+    // Use conservative calculation: add extra buffer for safety
+    const finalHeight = Math.max(10, calculatedHeight + 2); // Minimum 10 lines with extra buffer
+    return finalHeight;
   }, [helpVisible, keyboardEnabled, collapsibleMode, terminalSize.width]);
 
   // Calculate search bar height - use fixed 3 lines for consistent display
