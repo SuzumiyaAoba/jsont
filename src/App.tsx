@@ -93,6 +93,30 @@ export function App({
     debugInfo,
   ]);
 
+  // Calculate status bar height dynamically based on content length
+  const statusBarHeight = useMemo(() => {
+    if (!helpVisible) return 0;
+
+    const terminalWidth = process.stdout.columns || 80;
+    let statusContent = "";
+
+    if (keyboardEnabled) {
+      if (collapsibleMode) {
+        statusContent = `JSON TUI Viewer (Collapsible) - q: Quit | Ctrl+C: Exit | j/k: Move cursor | Enter: Toggle expand/collapse | s: Search | C: Toggle collapsible mode | D: Debug | L: Line numbers | S: Schema | ?: Toggle help`;
+      } else {
+        statusContent = `JSON TUI Viewer - q: Quit/Search input | Ctrl+C: Exit | j/k: Line | Ctrl+f/b: Half-page | gg/G: Top/Bottom | s: Search | Esc: Exit search | D: Toggle debug | L: Toggle line numbers | S: Toggle schema | C: Toggle collapsible | ?: Toggle help`;
+      }
+    } else {
+      statusContent = `JSON TUI Viewer - Keyboard input not available (try: jsont < file.json in terminal) | ?: Toggle help`;
+    }
+
+    // Account for borders and padding: border (2) + padding (2) + content lines
+    const contentLines = Math.ceil(
+      statusContent.length / Math.max(terminalWidth - 4, 20),
+    );
+    return Math.max(3, contentLines + 2); // Minimum 3 lines, add 2 for borders
+  }, [helpVisible, keyboardEnabled, collapsibleMode]);
+
   // Calculate search bar height - use fixed 3 lines for consistent display
   const searchBarHeight = useMemo(() => {
     if (!searchState.isSearching && !searchState.searchTerm) return 0;
@@ -103,7 +127,7 @@ export function App({
   }, [searchState.isSearching, searchState.searchTerm]);
 
   // Calculate UI reserved lines dynamically
-  const statusBarLines = helpVisible ? 3 : 0; // Status bar with borders (only when help is visible)
+  const statusBarLines = statusBarHeight; // Dynamic status bar height
   const searchBarLines = searchBarHeight; // Dynamic search bar height
   const debugBarLines = debugBarHeight; // Debug bar height based on content
   const contentPaddingLines = 2; // JsonViewer padding={1} adds 1 line top + 1 line bottom
@@ -562,7 +586,7 @@ export function App({
     <Box flexDirection="column" width="100%">
       {/* Help bar - only shown when ? key is pressed */}
       {helpVisible && (
-        <Box flexShrink={0} width="100%">
+        <Box flexShrink={0} width="100%" height={statusBarHeight}>
           <StatusBar
             error={error}
             keyboardEnabled={keyboardEnabled}
