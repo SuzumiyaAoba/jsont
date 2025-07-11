@@ -1,12 +1,16 @@
 import { Box, Text } from "ink";
-import React from "react";
+import type React from "react";
 import type { JsonValue, SearchResult } from "../types/index";
 import {
   formatJsonSchema,
   handleSchemaError,
   inferJsonSchema,
 } from "../utils/schemaUtils";
-import { highlightSearchInLine } from "../utils/searchUtils";
+import {
+  applySearchHighlighting,
+  DEFAULT_COLOR_SCHEME,
+  tokenizeLine,
+} from "../utils/syntaxHighlight";
 
 interface SchemaViewerProps {
   data: JsonValue;
@@ -78,180 +82,54 @@ export function SchemaViewer({
     searchResultsByLine.get(result.lineIndex)?.push(result);
   });
 
-  // Apply schema syntax highlighting to a single text segment
-  const applySchemaHighlight = (
-    text: string,
-    line: string,
-  ): React.ReactNode => {
-    const trimmedLine = line.trim();
-
-    // Schema-specific keywords
-    if (
-      trimmedLine.includes('"$schema":') ||
-      trimmedLine.includes('"title":') ||
-      trimmedLine.includes('"description":')
-    ) {
-      const colonIndex = line.indexOf(":");
-      const beforeColon = line.substring(0, colonIndex);
-      const afterColon = line.substring(colonIndex);
-
-      if (text === beforeColon) {
-        return <Text color="blue">{text}</Text>;
-      } else if (text === ": ") {
-        return <Text>{text}</Text>;
-      } else if (
-        text.includes(afterColon.substring(1).trim().replace(/,$/, ""))
-      ) {
-        return <Text color="green">{text}</Text>;
-      } else if (text === ",") {
-        return <Text>{text}</Text>;
-      }
-    }
-
-    // Type definitions
-    if (trimmedLine.includes('"type":')) {
-      const colonIndex = line.indexOf(":");
-      const beforeColon = line.substring(0, colonIndex);
-      const afterColon = line.substring(colonIndex);
-
-      if (text === beforeColon) {
-        return <Text color="blue">{text}</Text>;
-      } else if (text === ": ") {
-        return <Text>{text}</Text>;
-      } else if (
-        text.includes(afterColon.substring(1).trim().replace(/,$/, ""))
-      ) {
-        return <Text color="yellow">{text}</Text>;
-      } else if (text === ",") {
-        return <Text>{text}</Text>;
-      }
-    }
-
-    // Property names (but not special keywords)
-    if (
-      trimmedLine.includes(":") &&
-      !trimmedLine.includes('"$') &&
-      !trimmedLine.includes('"additionalProperties"') &&
-      !trimmedLine.includes('"required"')
-    ) {
-      const colonIndex = line.indexOf(":");
-      const beforeColon = line.substring(0, colonIndex);
-      const afterColon = line.substring(colonIndex);
-
-      const valueMatch = afterColon.match(/:\s*(.+?)(?:,\s*)?$/);
-      const value = valueMatch ? valueMatch[1] : afterColon.substring(1).trim();
-
-      const isStructuralValue = value === "{" || value === "[";
-
-      if (text === beforeColon) {
-        return <Text color="cyan">{text}</Text>;
-      } else if (text === ": ") {
-        return <Text>{text}</Text>;
-      } else if (text === value || text === value?.replace(/,$/, "")) {
-        let valueColor = "white";
-        if (isStructuralValue) {
-          valueColor = value === "{" ? "magenta" : "cyan";
-        } else if (value?.startsWith('"') && value.endsWith('"')) {
-          valueColor = "green";
-        } else if (value === "true" || value === "false") {
-          valueColor = "yellow";
-        } else if (value === "null") {
-          valueColor = "gray";
-        } else if (value && /^\d+(\.\d+)?$/.test(value)) {
-          valueColor = "cyan";
-        }
-        return <Text color={valueColor}>{text}</Text>;
-      } else if (text === ",") {
-        return <Text>{text}</Text>;
-      }
-    }
-
-    // Structural characters (braces, brackets)
-    if (
-      trimmedLine === "{" ||
-      trimmedLine === "}" ||
-      trimmedLine === "[" ||
-      trimmedLine === "]" ||
-      trimmedLine === "}," ||
-      trimmedLine === "],"
-    ) {
-      const isArrayBracket = text.includes("[") || text.includes("]");
-      const color = isArrayBracket ? "cyan" : "magenta";
-      return <Text color={color}>{text}</Text>;
-    }
-
-    // Array values (numbers, strings, etc. without keys)
-    if (
-      trimmedLine &&
-      !trimmedLine.includes(":") &&
-      trimmedLine !== "{" &&
-      trimmedLine !== "}" &&
-      trimmedLine !== "[" &&
-      trimmedLine !== "]" &&
-      trimmedLine !== "}," &&
-      trimmedLine !== "],"
-    ) {
-      const cleanValue = trimmedLine.replace(/,$/, "");
-      let valueColor = "white";
-
-      if (cleanValue.startsWith('"') && cleanValue.endsWith('"')) {
-        valueColor = "green";
-      } else if (cleanValue === "true" || cleanValue === "false") {
-        valueColor = "yellow";
-      } else if (cleanValue === "null") {
-        valueColor = "gray";
-      } else if (/^\d+(\.\d+)?$/.test(cleanValue)) {
-        valueColor = "cyan";
-      }
-
-      if (text === cleanValue || text === `${cleanValue},`) {
-        return <Text color={valueColor}>{text}</Text>;
-      } else if (text === ",") {
-        return <Text>{text}</Text>;
-      }
-    }
-
-    // Default rendering with no special color
-    return <Text>{text}</Text>;
-  };
-
-  // Render line with search highlighting and schema syntax highlighting combined
-  const renderLineWithSearch = (
+  // Render line with combined syntax and search highlighting using token-based approach
+  const renderLineWithHighlighting = (
     line: string,
     originalIndex: number,
     searchTerm: string,
     isCurrentResult: boolean,
   ): React.ReactNode => {
-    const highlightedParts = highlightSearchInLine(line, searchTerm);
+    // Create schema-specific color scheme where regular properties are cyan
+    const schemaColorScheme = {
+      ...DEFAULT_COLOR_SCHEME,
+      key: "cyan", // Schema properties use cyan instead of blue
+    };
 
+    // First tokenize the line for syntax highlighting
+    const syntaxTokens = tokenizeLine(line, "", schemaColorScheme);
+
+    // Then apply search highlighting to the tokens
+    const highlightedTokens = applySearchHighlighting(
+      syntaxTokens,
+      searchTerm,
+      isCurrentResult,
+    );
+
+    // Render the tokens locally
     return (
       <Text
         key={originalIndex}
         {...(isCurrentResult ? { backgroundColor: "blue" } : {})}
       >
-        {highlightedParts.map((part, partIndex) => {
-          const syntaxHighlighted = applySchemaHighlight(part.text, line);
+        {highlightedTokens.map((token, tokenIndex) => {
+          const key = `${originalIndex}-${tokenIndex}-${token.text}`;
 
-          if (part.isMatch) {
-            // For search matches, override syntax highlighting with search colors
+          if (token.isMatch) {
             return (
               <Text
-                key={`${originalIndex}-${partIndex}-${part.text}`}
-                color={isCurrentResult ? "white" : "black"}
+                key={key}
+                color={token.color}
                 backgroundColor={isCurrentResult ? "magenta" : "yellow"}
                 bold={isCurrentResult}
               >
-                {part.text}
+                {token.text}
               </Text>
             );
           } else {
-            // For non-matches, preserve syntax highlighting
             return (
-              <React.Fragment
-                key={`${originalIndex}-${partIndex}-${part.text}`}
-              >
-                {syntaxHighlighted}
-              </React.Fragment>
+              <Text key={key} color={token.color}>
+                {token.text}
+              </Text>
             );
           }
         })}
@@ -267,168 +145,13 @@ export function SchemaViewer({
       searchResults.length > 0 &&
       searchResults[currentSearchIndex]?.lineIndex === originalIndex;
 
-    // If we have search highlights, use highlighted rendering
-    if (hasSearchHighlight) {
-      return renderLineWithSearch(
-        line,
-        originalIndex,
-        searchTerm,
-        isCurrentSearchResult,
-      );
-    }
-
-    // Apply syntax highlighting for JSON Schema
-    return renderSchemaLine(line, originalIndex);
-  };
-
-  const renderSchemaLine = (
-    line: string,
-    originalIndex: number,
-  ): React.ReactNode => {
-    const trimmedLine = line.trim();
-
-    // Schema-specific keywords
-    if (
-      trimmedLine.includes('"$schema":') ||
-      trimmedLine.includes('"title":') ||
-      trimmedLine.includes('"description":')
-    ) {
-      const colonIndex = line.indexOf(":");
-      const beforeColon = line.substring(0, colonIndex);
-      const afterColon = line.substring(colonIndex);
-
-      return (
-        <Text key={originalIndex}>
-          <Text color="blue">{beforeColon}</Text>
-          <Text>: </Text>
-          <Text color="green">{afterColon.substring(1).trim()}</Text>
-          {line.endsWith(",") && <Text>,</Text>}
-        </Text>
-      );
-    }
-
-    // Type definitions
-    if (trimmedLine.includes('"type":')) {
-      const colonIndex = line.indexOf(":");
-      const beforeColon = line.substring(0, colonIndex);
-      const afterColon = line.substring(colonIndex);
-
-      return (
-        <Text key={originalIndex}>
-          <Text color="blue">{beforeColon}</Text>
-          <Text>: </Text>
-          <Text color="yellow">{afterColon.substring(1).trim()}</Text>
-          {line.endsWith(",") && <Text>,</Text>}
-        </Text>
-      );
-    }
-
-    // Property names (but not special keywords)
-    if (
-      trimmedLine.includes(":") &&
-      !trimmedLine.includes('"$') &&
-      !trimmedLine.includes('"additionalProperties"') &&
-      !trimmedLine.includes('"required"')
-    ) {
-      const colonIndex = line.indexOf(":");
-      const beforeColon = line.substring(0, colonIndex);
-      const afterColon = line.substring(colonIndex);
-
-      const valueMatch = afterColon.match(/:\s*(.+?)(?:,\s*)?$/);
-      const value = valueMatch ? valueMatch[1] : afterColon.substring(1).trim();
-
-      const isStructuralValue = value === "{" || value === "[";
-
-      let valueColor = "white";
-      if (isStructuralValue) {
-        valueColor = value === "{" ? "magenta" : "cyan";
-      } else if (value?.startsWith('"') && value.endsWith('"')) {
-        valueColor = "green";
-      } else if (value === "true" || value === "false") {
-        valueColor = "yellow";
-      } else if (value === "null") {
-        valueColor = "gray";
-      } else if (value && /^\d+(\.\d+)?$/.test(value)) {
-        valueColor = "cyan";
-      }
-
-      return (
-        <Text key={originalIndex}>
-          <Text color="cyan">{beforeColon}</Text>
-          <Text>: </Text>
-          <Text color={valueColor}>{value || ""}</Text>
-          {line.endsWith(",") && <Text>,</Text>}
-        </Text>
-      );
-    }
-
-    // Structural characters (braces, brackets)
-    if (
-      trimmedLine === "{" ||
-      trimmedLine === "}" ||
-      trimmedLine === "[" ||
-      trimmedLine === "]"
-    ) {
-      const isArrayBracket = trimmedLine === "[" || trimmedLine === "]";
-      const color = isArrayBracket ? "cyan" : "magenta";
-
-      return (
-        <Text key={originalIndex} color={color}>
-          {line}
-        </Text>
-      );
-    }
-
-    // Handle lines with closing brackets/braces that might have commas
-    if (trimmedLine === "}," || trimmedLine === "],") {
-      const isArrayBracket = trimmedLine.startsWith("]");
-      const color = isArrayBracket ? "cyan" : "magenta";
-      const bracket = trimmedLine.charAt(0);
-
-      return (
-        <Text key={originalIndex}>
-          <Text>{line.substring(0, line.indexOf(trimmedLine))}</Text>
-          <Text color={color}>{bracket}</Text>
-          <Text>,</Text>
-        </Text>
-      );
-    }
-
-    // Array values (numbers, strings, etc. without keys)
-    if (
-      trimmedLine &&
-      !trimmedLine.includes(":") &&
-      trimmedLine !== "{" &&
-      trimmedLine !== "}" &&
-      trimmedLine !== "[" &&
-      trimmedLine !== "]" &&
-      trimmedLine !== "}," &&
-      trimmedLine !== "],"
-    ) {
-      const cleanValue = trimmedLine.replace(/,$/, "");
-      let valueColor = "white";
-
-      if (cleanValue.startsWith('"') && cleanValue.endsWith('"')) {
-        valueColor = "green";
-      } else if (cleanValue === "true" || cleanValue === "false") {
-        valueColor = "yellow";
-      } else if (cleanValue === "null") {
-        valueColor = "gray";
-      } else if (/^\d+(\.\d+)?$/.test(cleanValue)) {
-        valueColor = "cyan";
-      }
-
-      return (
-        <Text key={originalIndex}>
-          <Text>{line.substring(0, line.indexOf(trimmedLine))}</Text>
-          <Text color={valueColor}>{cleanValue}</Text>
-          {line.endsWith(",") && <Text>,</Text>}
-        </Text>
-      );
-    }
-
-    // Default rendering
-    return <Text key={originalIndex}>{line}</Text>;
+    // Use the new token-based rendering approach for both search and syntax highlighting
+    return renderLineWithHighlighting(
+      line,
+      originalIndex,
+      hasSearchHighlight ? searchTerm : "",
+      isCurrentSearchResult,
+    );
   };
 
   return (
