@@ -5,6 +5,8 @@ import {
   highlightSearchInLine,
   lineContainsSearch,
   searchInJson,
+  searchInJsonSchema,
+  searchInText,
 } from "./searchUtils";
 
 describe("searchUtils", () => {
@@ -161,6 +163,87 @@ describe("searchUtils", () => {
 
     it("should return 'No matches' for empty results", () => {
       expect(getSearchNavigationInfo([], 0)).toBe("No matches");
+    });
+  });
+
+  describe("searchInJsonSchema", () => {
+    const testData: JsonValue = {
+      name: "John Doe",
+      age: 30,
+      active: true,
+    };
+
+    it("should find matches in generated JSON schema", () => {
+      const results = searchInJsonSchema(testData, "string");
+      expect(results.length).toBeGreaterThan(0);
+      expect(
+        results.some((result) => result.contextLine.includes("string")),
+      ).toBe(true);
+    });
+
+    it("should find type matches in schema", () => {
+      const results = searchInJsonSchema(testData, "type");
+      expect(results.length).toBeGreaterThan(0);
+      expect(
+        results.some((result) => result.contextLine.includes("type")),
+      ).toBe(true);
+    });
+
+    it("should be case insensitive for schema search", () => {
+      const results = searchInJsonSchema(testData, "STRING");
+      expect(results.length).toBeGreaterThan(0);
+      expect(
+        results.some((result) =>
+          result.matchText.toLowerCase().includes("string"),
+        ),
+      ).toBe(true);
+    });
+
+    it("should return empty array for invalid data", () => {
+      const results = searchInJsonSchema(null, "test");
+      expect(results).toEqual([]);
+    });
+
+    it("should return empty array for empty search term", () => {
+      const results = searchInJsonSchema(testData, "");
+      expect(results).toEqual([]);
+    });
+  });
+
+  describe("searchInText", () => {
+    const testText = `This is line 1
+This is line 2 with test
+Line 3 has another TEST
+Final line`;
+
+    it("should find matches in text", () => {
+      const results = searchInText(testText, "test");
+      expect(results).toHaveLength(2);
+      expect(results[0]?.lineIndex).toBe(1);
+      expect(results[1]?.lineIndex).toBe(2);
+    });
+
+    it("should be case insensitive", () => {
+      const results = searchInText(testText, "TEST");
+      expect(results).toHaveLength(2);
+    });
+
+    it("should return empty array for empty text", () => {
+      const results = searchInText("", "test");
+      expect(results).toEqual([]);
+    });
+
+    it("should return empty array for empty search term", () => {
+      const results = searchInText(testText, "");
+      expect(results).toEqual([]);
+    });
+
+    it("should find multiple matches in same line", () => {
+      const text = "test and test again";
+      const results = searchInText(text, "test");
+      expect(results).toHaveLength(2);
+      expect(results[0]?.columnStart).toBe(0);
+      expect(results[1]?.columnStart).toBe(9);
     });
   });
 });

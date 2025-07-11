@@ -3,6 +3,7 @@
  */
 
 import type { JsonValue, SearchResult } from "../types/index";
+import { formatJsonSchema, inferJsonSchema } from "./schemaUtils";
 
 /**
  * Search for a term in JSON content and return all matches
@@ -19,9 +20,50 @@ export function searchInJson(
     return [];
   }
 
-  const results: SearchResult[] = [];
   const jsonString = JSON.stringify(data, null, 2);
-  const lines = jsonString.split("\n");
+  return searchInText(jsonString, searchTerm);
+}
+
+/**
+ * Search for a term in JSON schema content and return all matches
+ *
+ * @param data - JSON data to generate schema from and search in
+ * @param searchTerm - Term to search for (case-insensitive)
+ * @returns Array of search results with line and column information
+ */
+export function searchInJsonSchema(
+  data: JsonValue,
+  searchTerm: string,
+): SearchResult[] {
+  if (!data || !searchTerm.trim()) {
+    return [];
+  }
+
+  try {
+    const schema = inferJsonSchema(data, "JSON Schema");
+    const schemaString = formatJsonSchema(schema);
+    return searchInText(schemaString, searchTerm);
+  } catch (error) {
+    // If schema generation fails, return empty results
+    console.warn("Failed to generate schema for search:", error);
+    return [];
+  }
+}
+
+/**
+ * Search for a term in arbitrary text content and return all matches
+ *
+ * @param text - Text content to search in
+ * @param searchTerm - Term to search for (case-insensitive)
+ * @returns Array of search results with line and column information
+ */
+export function searchInText(text: string, searchTerm: string): SearchResult[] {
+  if (!text || !searchTerm.trim()) {
+    return [];
+  }
+
+  const results: SearchResult[] = [];
+  const lines = text.split("\n");
   const searchTermLower = searchTerm.toLowerCase();
 
   lines.forEach((line, lineIndex) => {

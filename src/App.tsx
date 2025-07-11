@@ -8,7 +8,7 @@ import { StatusBar } from "./components/StatusBar";
 import type { AppProps } from "./types/app";
 import type { SearchState } from "./types/index";
 import { formatJsonSchema, inferJsonSchema } from "./utils/schemaUtils";
-import { searchInJson } from "./utils/searchUtils";
+import { searchInJson, searchInJsonSchema } from "./utils/searchUtils";
 
 /**
  * Main application component for the JSON TUI Viewer
@@ -177,10 +177,14 @@ export function App({
     scrollToSearchResult,
   ]);
 
-  // Update search results when search term changes
+  // Update search results when search term or view mode changes
   useEffect(() => {
     if (searchState.searchTerm && initialData) {
-      const results = searchInJson(initialData, searchState.searchTerm);
+      // Use appropriate search function based on current view mode
+      const results = schemaVisible
+        ? searchInJsonSchema(initialData, searchState.searchTerm)
+        : searchInJson(initialData, searchState.searchTerm);
+
       setSearchState((prev) => ({
         ...prev,
         searchResults: results,
@@ -212,6 +216,7 @@ export function App({
     maxScroll,
     maxScrollSearchMode,
     searchState.isSearching,
+    schemaVisible, // Add schemaVisible as dependency to trigger re-search when view changes
   ]);
 
   // Clear timeout when component unmounts or when g sequence is reset
