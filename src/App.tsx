@@ -327,9 +327,6 @@ export function App({
       if (input === "s" && !key.ctrl && !key.meta) {
         // Start search mode
         updateDebugInfo("Start search mode", input);
-        console.error(
-          `[${new Date().toLocaleTimeString()}] [SEARCH] Starting search mode! Setting isSearching to true`,
-        );
         setSearchState((prev) => ({ ...prev, isSearching: true }));
         setSearchInput("");
         setScrollOffset(0);
@@ -508,22 +505,6 @@ export function App({
         delete?: boolean;
       },
     ) => {
-      // DEBUG: Log every single keyboard input with timestamp
-      const timestamp = new Date().toLocaleTimeString();
-      console.error(
-        `[${timestamp}] [KEYBOARD] Input: "${input}" | Key object:`,
-        JSON.stringify(key),
-      );
-      console.error(
-        `[${timestamp}] [KEYBOARD] searchState.isSearching: ${searchState.isSearching}`,
-      );
-      console.error(
-        `[${timestamp}] [KEYBOARD] keyboardEnabled: ${keyboardEnabled}`,
-      );
-      console.error(
-        `[${timestamp}] [KEYBOARD] Conditions for 's': input=="${input}" && !ctrl=${!key.ctrl} && !meta=${!key.meta} && !isSearching=${!searchState.isSearching}`,
-      );
-
       // Always allow exit commands
       if (key.ctrl && input === "c") {
         updateDebugInfo("Exit (Ctrl+C)", input);
@@ -548,7 +529,6 @@ export function App({
       exit,
       searchState.isSearching,
       searchState.searchTerm,
-      keyboardEnabled,
       handleSearchInput,
       handleNavigationInput,
       updateDebugInfo,
@@ -559,13 +539,6 @@ export function App({
   useInput(handleKeyInput, {
     isActive: keyboardEnabled,
   });
-
-  // DEBUG: Log useInput configuration on mount
-  useEffect(() => {
-    console.error(
-      `[DEBUG] useInput configured with keyboardEnabled: ${keyboardEnabled}`,
-    );
-  }, [keyboardEnabled]);
 
   return (
     <Box flexDirection="column" width="100%">

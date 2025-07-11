@@ -210,10 +210,12 @@ describe("collapsibleJson", () => {
 
           // Cursor should be moved to a visible node
           expect(result.newState.cursorPosition).toBeTruthy();
-          const cursorNode = result.newState.nodes.get(
-            result.newState.cursorPosition!.nodeId,
-          );
-          expect(cursorNode).toBeTruthy();
+          if (result.newState.cursorPosition) {
+            const cursorNode = result.newState.nodes.get(
+              result.newState.cursorPosition.nodeId,
+            );
+            expect(cursorNode).toBeTruthy();
+          }
         }
       }
     });
