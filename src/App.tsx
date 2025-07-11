@@ -1,14 +1,16 @@
 import { Box, useApp, useInput } from "ink";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { DebugBar } from "./components/DebugBar";
-import { JsonViewer } from "./components/JsonViewer";
-import { SchemaViewer } from "./components/SchemaViewer";
-import { SearchBar } from "./components/SearchBar";
-import { StatusBar } from "./components/StatusBar";
-import type { AppProps } from "./types/app";
-import type { SearchState } from "./types/index";
-import { formatJsonSchema, inferJsonSchema } from "./utils/schemaUtils";
-import { searchInJson, searchInJsonSchema } from "./utils/searchUtils";
+import { CollapsibleJsonViewer } from "./components/CollapsibleJsonViewer.js";
+import { DebugBar } from "./components/DebugBar.js";
+import { JsonViewer } from "./components/JsonViewer.js";
+import { SchemaViewer } from "./components/SchemaViewer.js";
+import { SearchBar } from "./components/SearchBar.js";
+import { StatusBar } from "./components/StatusBar.js";
+import type { AppProps } from "./types/app.js";
+import type { NavigationAction } from "./types/collapsible.js";
+import type { SearchState } from "./types/index.js";
+import { formatJsonSchema, inferJsonSchema } from "./utils/schemaUtils.js";
+import { searchInJson, searchInJsonSchema } from "./utils/searchUtils.js";
 
 /**
  * Main application component for the JSON TUI Viewer
@@ -45,6 +47,10 @@ export function App({
   const [debugVisible, setDebugVisible] = useState<boolean>(false);
   const [lineNumbersVisible, setLineNumbersVisible] = useState<boolean>(false);
   const [schemaVisible, setSchemaVisible] = useState<boolean>(false);
+  const [collapsibleMode, setCollapsibleMode] = useState<boolean>(false);
+  const collapsibleViewerRef = useRef<{
+    navigate: (action: NavigationAction) => void;
+  } | null>(null);
 
   const { exit } = useApp();
 
@@ -177,6 +183,16 @@ export function App({
     scrollToSearchResult,
   ]);
 
+  // Helper function to handle collapsible navigation
+  const handleCollapsibleNavigation = useCallback(
+    (action: NavigationAction) => {
+      if (collapsibleViewerRef.current?.navigate) {
+        collapsibleViewerRef.current.navigate(action);
+      }
+    },
+    [],
+  );
+
   // Update search results when search term or view mode changes
   useEffect(() => {
     if (searchState.searchTerm && initialData) {
@@ -297,6 +313,7 @@ export function App({
         ctrl?: boolean;
         meta?: boolean;
         escape?: boolean;
+        return?: boolean;
       },
     ) => {
       if (input === "s" && !key.ctrl && !key.meta) {
@@ -319,16 +336,32 @@ export function App({
         setSearchState((prev) => ({ ...prev, isSearching: true }));
         setSearchInput(searchState.searchTerm); // Pre-fill with current search term
       } else if (input === "j" && !key.ctrl) {
-        // Line down
-        updateDebugInfo("Scroll down", input);
-        const currentMaxScroll = searchState.isSearching
-          ? maxScrollSearchMode
-          : maxScroll;
-        setScrollOffset((prev) => Math.min(currentMaxScroll, prev + 1));
+        if (collapsibleMode) {
+          // Cursor down in collapsible mode
+          updateDebugInfo("Cursor down", input);
+          handleCollapsibleNavigation({ type: "move_down" });
+        } else {
+          // Line down in normal mode
+          updateDebugInfo("Scroll down", input);
+          const currentMaxScroll = searchState.isSearching
+            ? maxScrollSearchMode
+            : maxScroll;
+          setScrollOffset((prev) => Math.min(currentMaxScroll, prev + 1));
+        }
       } else if (input === "k" && !key.ctrl) {
-        // Line up
-        updateDebugInfo("Scroll up", input);
-        setScrollOffset((prev) => Math.max(0, prev - 1));
+        if (collapsibleMode) {
+          // Cursor up in collapsible mode
+          updateDebugInfo("Cursor up", input);
+          handleCollapsibleNavigation({ type: "move_up" });
+        } else {
+          // Line up in normal mode
+          updateDebugInfo("Scroll up", input);
+          setScrollOffset((prev) => Math.max(0, prev - 1));
+        }
+      } else if (key.return && !key.ctrl && !key.meta && collapsibleMode) {
+        // Toggle node in collapsible mode
+        updateDebugInfo("Toggle node", input);
+        handleCollapsibleNavigation({ type: "toggle_node" });
       } else if (key.ctrl && input === "f") {
         // Half-page down (Ctrl-f)
         updateDebugInfo("Half-page down", input);
@@ -415,6 +448,13 @@ export function App({
           `Toggle schema view ${schemaVisible ? "OFF" : "ON"}`,
           input,
         );
+      } else if (input === "C" && !key.ctrl && !key.meta) {
+        // Toggle collapsible mode
+        setCollapsibleMode((prev) => !prev);
+        updateDebugInfo(
+          `Toggle collapsible mode ${collapsibleMode ? "OFF" : "ON"}`,
+          input,
+        );
       } else {
         // Any other key resets the 'g' sequence
         updateDebugInfo(`Unhandled key: "${input}"`, input);
@@ -441,6 +481,8 @@ export function App({
       debugVisible,
       lineNumbersVisible,
       schemaVisible,
+      collapsibleMode,
+      handleCollapsibleNavigation,
     ],
   );
 
@@ -520,7 +562,11 @@ export function App({
   return (
     <Box flexDirection="column" width="100%">
       <Box flexShrink={0} width="100%">
-        <StatusBar error={error} keyboardEnabled={keyboardEnabled} />
+        <StatusBar
+          error={error}
+          keyboardEnabled={keyboardEnabled}
+          collapsibleMode={collapsibleMode}
+        />
       </Box>
       {/* Search bar fixed at top when in search mode */}
       {(searchState.isSearching || searchState.searchTerm) && (
@@ -529,7 +575,18 @@ export function App({
         </Box>
       )}
       <Box flexGrow={1} width="100%" minHeight={0}>
-        {schemaVisible ? (
+        {collapsibleMode ? (
+          <CollapsibleJsonViewer
+            ref={collapsibleViewerRef}
+            data={initialData ?? null}
+            scrollOffset={scrollOffset}
+            searchTerm={searchState.searchTerm}
+            searchResults={searchState.searchResults}
+            currentSearchIndex={searchState.currentResultIndex}
+            visibleLines={visibleLines}
+            showLineNumbers={lineNumbersVisible}
+          />
+        ) : schemaVisible ? (
           <SchemaViewer
             data={initialData ?? null}
             scrollOffset={scrollOffset}
