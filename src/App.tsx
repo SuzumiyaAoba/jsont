@@ -49,20 +49,43 @@ export function App({
   const [schemaVisible, setSchemaVisible] = useState<boolean>(false);
   const [collapsibleMode, setCollapsibleMode] = useState<boolean>(false);
   const [helpVisible, setHelpVisible] = useState<boolean>(false);
+  const [terminalSize, setTerminalSize] = useState({
+    width: process.stdout.columns || 80,
+    height: process.stdout.rows || 24,
+  });
   const collapsibleViewerRef = useRef<{
     navigate: (action: NavigationAction) => void;
   } | null>(null);
 
   const { exit } = useApp();
 
+  // Monitor terminal size changes
+  useEffect(() => {
+    const updateTerminalSize = () => {
+      setTerminalSize({
+        width: process.stdout.columns || 80,
+        height: process.stdout.rows || 24,
+      });
+    };
+
+    // Update size on resize if supported
+    if (process.stdout.on) {
+      process.stdout.on("resize", updateTerminalSize);
+      return () => {
+        if (process.stdout.off) {
+          process.stdout.off("resize", updateTerminalSize);
+        }
+      };
+    }
+  }, []);
+
   // Calculate max scroll based on JSON data
   const JSON_INDENT = 2;
-  const DEFAULT_TERMINAL_HEIGHT = 24;
   // Calculate debug bar height dynamically based on content length with memoization
   const debugBarHeight = useMemo(() => {
     if (!debugVisible) return 0; // No debug bar when hidden
 
-    const terminalWidth = process.stdout.columns || 80;
+    const terminalWidth = terminalSize.width;
     let debugContent = `DEBUG: Keyboard: ${keyboardEnabled ? "ON" : "OFF"}`;
 
     if (searchState.isSearching || searchState.searchTerm) {
@@ -91,13 +114,14 @@ export function App({
     searchState.isSearching,
     searchState.searchTerm,
     debugInfo,
+    terminalSize.width,
   ]);
 
   // Calculate status bar height dynamically based on content length
   const statusBarHeight = useMemo(() => {
     if (!helpVisible) return 0;
 
-    const terminalWidth = process.stdout.columns || 80;
+    const terminalWidth = terminalSize.width;
     let statusContent = "";
 
     if (keyboardEnabled) {
@@ -110,12 +134,15 @@ export function App({
       statusContent = `JSON TUI Viewer - Keyboard input not available (try: jsont < file.json in terminal) | ?: Toggle help`;
     }
 
-    // Account for borders and padding: border (2) + padding (2) + content lines
-    const contentLines = Math.ceil(
-      statusContent.length / Math.max(terminalWidth - 4, 20),
-    );
-    return Math.max(3, contentLines + 2); // Minimum 3 lines, add 2 for borders
-  }, [helpVisible, keyboardEnabled, collapsibleMode]);
+    // StatusBar uses borderStyle="single" (2 lines) + padding={1} (2 lines) = 4 lines overhead
+    // Available width = terminalWidth - 2 (left/right borders) - 2 (left/right padding) = terminalWidth - 4
+    const availableWidth = Math.max(terminalWidth - 4, 10); // Minimum 10 chars for safety
+    const contentLines = Math.ceil(statusContent.length / availableWidth);
+
+    // Total height = top border + top padding + content lines + bottom padding + bottom border
+    // But Ink optimizes this to: content lines + 2 (for borders)
+    return Math.max(3, contentLines + 2); // Minimum 3 lines for single-line content
+  }, [helpVisible, keyboardEnabled, collapsibleMode, terminalSize.width]);
 
   // Calculate search bar height - use fixed 3 lines for consistent display
   const searchBarHeight = useMemo(() => {
@@ -147,7 +174,7 @@ export function App({
     return formattedSchema.split("\n").length;
   }, [initialData, schemaVisible]);
 
-  const terminalHeight = process.stdout.rows || DEFAULT_TERMINAL_HEIGHT;
+  const terminalHeight = terminalSize.height;
   const visibleLines = Math.max(1, terminalHeight - UI_RESERVED_LINES);
 
   // Use schema lines for scroll calculation when in schema view
