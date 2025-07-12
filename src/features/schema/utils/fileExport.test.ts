@@ -106,7 +106,10 @@ describe("File Export Utils", () => {
         "utf8",
       );
 
-      const schemaContent = vi.mocked(writeFile).mock.calls[0][1] as string;
+      const firstCall = vi.mocked(writeFile).mock.calls[0];
+      expect(firstCall).toBeDefined();
+      const schemaContent = firstCall?.[1] as string;
+      expect(schemaContent).toBeDefined();
       const schema = JSON.parse(schemaContent);
 
       expect(schema.$schema).toBe(
@@ -127,7 +130,10 @@ describe("File Export Utils", () => {
 
       expect(result.success).toBe(true);
 
-      const schemaContent = vi.mocked(writeFile).mock.calls[0][1] as string;
+      const firstCall = vi.mocked(writeFile).mock.calls[0];
+      expect(firstCall).toBeDefined();
+      const schemaContent = firstCall?.[1] as string;
+      expect(schemaContent).toBeDefined();
       const schema = JSON.parse(schemaContent);
 
       expect(schema.type).toBe("array");
