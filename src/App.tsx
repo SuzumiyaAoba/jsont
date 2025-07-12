@@ -389,7 +389,9 @@ export function App({
 
     try {
       const filename = generateDefaultFilename();
+      console.debug('[App Debug] Starting export with filename:', filename);
       const result = await exportJsonSchemaToFile(initialData, { filename });
+      console.debug('[App Debug] Export result:', result);
 
       if (result.success) {
         setExportStatus({
@@ -405,6 +407,11 @@ export function App({
         });
       }
     } catch (error) {
+      console.error('[App Error] Export error caught:', error);
+      // Also log to file for debugging
+      import('fs/promises').then(fs => {
+        fs.appendFile('export_debug.log', `[${new Date().toISOString()}] Export error: ${error}\n`).catch(console.error);
+      });
       setExportStatus({
         isExporting: false,
         message: error instanceof Error ? error.message : "Export failed",
@@ -412,10 +419,10 @@ export function App({
       });
     }
 
-    // Clear export status after 3 seconds
+    // Clear export status after 10 seconds for debugging
     setTimeout(() => {
       setExportStatus({ isExporting: false });
-    }, 3000);
+    }, 10000);
   }, [initialData]);
 
   // Handle search input mode

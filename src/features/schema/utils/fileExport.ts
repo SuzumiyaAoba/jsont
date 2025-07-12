@@ -33,6 +33,10 @@ export async function exportJsonSchemaToFile(
       format = "json",
     } = options;
 
+    // Debug: Log the current working directory and options
+    console.debug('[Export Debug] Current working directory:', outputDir);
+    console.debug('[Export Debug] Export options:', { filename, outputDir, format });
+
     // Generate JSON Schema
     const schema = inferJsonSchema(data, "Exported Schema");
 
@@ -54,15 +58,19 @@ export async function exportJsonSchemaToFile(
 
     // Construct full file path
     const filePath = join(outputDir, finalFilename);
+    console.debug('[Export Debug] Full file path:', filePath);
+    console.debug('[Export Debug] Content length:', content.length);
 
     // Write file
     await writeFile(filePath, content, "utf8");
+    console.debug('[Export Debug] File written successfully');
 
     return {
       success: true,
       filePath,
     };
   } catch (error) {
+    console.error('[Export Error] Export failed:', error);
     return {
       success: false,
       error: error instanceof Error ? error.message : "Unknown export error",
