@@ -88,7 +88,12 @@ export function searchInJsonWithScope(
 
     const keyPart = keyValueMatch[1];
     const valuePart = keyValueMatch[2];
-    const colonIndex = keyValueMatch[1].length;
+
+    if (!keyPart || valuePart === undefined) {
+      return; // Skip if regex didn't capture expected groups
+    }
+
+    const colonIndex = keyPart.length;
 
     handleKeyValuePair(keyPart, valuePart, line, lineIndex, colonIndex);
   });
@@ -103,11 +108,13 @@ export function searchInJsonWithScope(
   ): void {
     if (searchScope === "keys") {
       // Search only in keys (everything before ":")
-      const keyMatches = findMatchesInText(keyPart, searchTerm, lineIndex, 0);
-      // Fix contextLine to use full line
-      keyMatches.forEach((match) => {
-        match.contextLine = fullLine;
-      });
+      const keyMatches = findMatchesInText(
+        keyPart,
+        searchTerm,
+        lineIndex,
+        0,
+        fullLine,
+      );
       results.push(...keyMatches);
     } else if (searchScope === "values") {
       // Search only in values (everything after ":")
@@ -116,11 +123,8 @@ export function searchInJsonWithScope(
         searchTerm,
         lineIndex,
         colonIndex + 1,
+        fullLine,
       );
-      // Fix contextLine to use full line
-      valueMatches.forEach((match) => {
-        match.contextLine = fullLine;
-      });
       results.push(...valueMatches);
     }
   }
@@ -278,6 +282,7 @@ export function getSearchNavigationInfo(
  * @param searchTerm - Term to search for
  * @param lineIndex - Line number for the results
  * @param columnOffset - Column offset to add to match positions
+ * @param contextLine - Full line context for search results
  * @returns Array of search results
  */
 function findMatchesInText(
@@ -285,6 +290,7 @@ function findMatchesInText(
   searchTerm: string,
   lineIndex: number,
   columnOffset: number,
+  contextLine: string,
 ): SearchResult[] {
   const results: SearchResult[] = [];
   const textLower = text.toLowerCase();
@@ -300,7 +306,7 @@ function findMatchesInText(
       columnStart: foundIndex + columnOffset,
       columnEnd: foundIndex + searchTerm.length + columnOffset,
       matchText: text.substring(foundIndex, foundIndex + searchTerm.length),
-      contextLine: text, // Note: This should be the full line, will be handled by caller
+      contextLine,
     });
 
     startIndex = foundIndex + 1;
