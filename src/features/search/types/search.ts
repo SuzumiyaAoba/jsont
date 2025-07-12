@@ -2,11 +2,14 @@
  * Search functionality type definitions
  */
 
+export type SearchScope = "all" | "keys" | "values";
+
 export interface SearchState {
   isSearching: boolean;
   searchTerm: string;
   searchResults: SearchResult[];
   currentResultIndex: number;
+  searchScope: SearchScope;
 }
 
 export interface SearchResult {
@@ -20,4 +23,5 @@ export interface SearchResult {
 export interface SearchBarProps {
   searchState: SearchState;
   searchInput: string;
+  onScopeChange?: (scope: SearchScope) => void;
 }
