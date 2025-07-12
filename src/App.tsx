@@ -23,7 +23,7 @@ import {
   calculateStatusBarHeight,
   getStatusContent,
 } from "@features/status/utils/statusUtils";
-import { Box, useApp, useInput } from "ink";
+import { Box, Text, useApp, useInput } from "ink";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 /**
@@ -376,10 +376,13 @@ export function App({
 
   // Handle schema export
   const handleExportSchema = useCallback(async () => {
-    console.log('[Export Debug] handleExportSchema called, initialData:', initialData);
-    
+    console.log(
+      "[Export Debug] handleExportSchema called, initialData:",
+      initialData,
+    );
+
     if (!initialData) {
-      console.log('[Export Debug] No initial data available');
+      console.log("[Export Debug] No initial data available");
       setExportStatus({
         isExporting: false,
         message: "No data to export. Please load JSON data first.",
@@ -392,9 +395,9 @@ export function App({
 
     try {
       const filename = generateDefaultFilename();
-      console.debug('[App Debug] Starting export with filename:', filename);
+      console.debug("[App Debug] Starting export with filename:", filename);
       const result = await exportJsonSchemaToFile(initialData, { filename });
-      console.debug('[App Debug] Export result:', result);
+      console.debug("[App Debug] Export result:", result);
 
       if (result.success) {
         setExportStatus({
@@ -410,10 +413,13 @@ export function App({
         });
       }
     } catch (error) {
-      console.error('[App Error] Export error caught:', error);
+      console.error("[App Error] Export error caught:", error);
       // Also log to file for debugging
-      import('fs/promises').then(fs => {
-        fs.appendFile('export_debug.log', `[${new Date().toISOString()}] Export error: ${error}\n`).catch(console.error);
+      import("node:fs/promises").then((fs) => {
+        fs.appendFile(
+          "export_debug.log",
+          `[${new Date().toISOString()}] Export error: ${error}\n`,
+        ).catch(console.error);
       });
       setExportStatus({
         isExporting: false,
@@ -629,7 +635,7 @@ export function App({
         updateDebugInfo(`Toggle help ${helpVisible ? "OFF" : "ON"}`, input);
       } else if (input === "E" && !key.ctrl && !key.meta) {
         // Export JSON Schema to file
-        console.log('[Debug] E key pressed, starting export...');
+        console.log("[Debug] E key pressed, starting export...");
         updateDebugInfo("Export schema", input);
         handleExportSchema();
       } else {
