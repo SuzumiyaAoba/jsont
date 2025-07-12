@@ -13,8 +13,9 @@ import {
   inferJsonSchema,
 } from "@features/schema/utils/schemaUtils";
 import { SearchBar } from "@features/search/components/SearchBar";
-import type { SearchState } from "@features/search/types/search";
+import type { SearchScope, SearchState } from "@features/search/types/search";
 import {
+  getNextSearchScope,
   searchInJson,
   searchInJsonSchema,
 } from "@features/search/utils/searchUtils";
@@ -49,6 +50,7 @@ export function App({
     searchTerm: "",
     searchResults: [],
     currentResultIndex: 0,
+    searchScope: "all",
   });
   const [searchInput, setSearchInput] = useState<string>("");
 
@@ -310,13 +312,29 @@ export function App({
     [],
   );
 
+  // Helper function to handle search scope changes
+  const handleSearchScopeChange = useCallback((newScope: SearchScope) => {
+    setSearchState((prev) => ({
+      ...prev,
+      searchScope: newScope,
+    }));
+  }, []);
+
   // Update search results when search term or view mode changes
   useEffect(() => {
     if (searchState.searchTerm && initialData) {
       // Use appropriate search function based on current view mode
       const results = schemaVisible
-        ? searchInJsonSchema(initialData, searchState.searchTerm)
-        : searchInJson(initialData, searchState.searchTerm);
+        ? searchInJsonSchema(
+            initialData,
+            searchState.searchTerm,
+            searchState.searchScope,
+          )
+        : searchInJson(
+            initialData,
+            searchState.searchTerm,
+            searchState.searchScope,
+          );
 
       setSearchState((prev) => ({
         ...prev,
@@ -344,6 +362,7 @@ export function App({
     }
   }, [
     searchState.searchTerm,
+    searchState.searchScope,
     initialData,
     visibleLines,
     maxScroll,
@@ -429,6 +448,7 @@ export function App({
         delete?: boolean;
         ctrl?: boolean;
         meta?: boolean;
+        tab?: boolean;
       },
     ) => {
       if (key.return) {
@@ -450,11 +470,22 @@ export function App({
           currentResultIndex: 0,
         }));
         setSearchInput("");
+      } else if (key.tab) {
+        // Toggle search scope
+        updateDebugInfo("Toggle search scope", input);
+        const nextScope = getNextSearchScope(searchState.searchScope);
+        handleSearchScopeChange(nextScope);
       } else if (key.backspace || key.delete) {
         // Remove character
         updateDebugInfo("Delete character", input);
         setSearchInput((prev) => prev.slice(0, -1));
-      } else if (input && !key.ctrl && !key.meta && input.length === 1) {
+      } else if (
+        input &&
+        !key.ctrl &&
+        !key.meta &&
+        !key.tab &&
+        input.length === 1
+      ) {
         // Add character
         updateDebugInfo(`Type: "${input}"`, input);
         setSearchInput((prev) => prev + input);
@@ -463,7 +494,12 @@ export function App({
         updateDebugInfo(`Ignored in search mode: "${input}"`, input);
       }
     },
-    [searchInput, updateDebugInfo],
+    [
+      searchInput,
+      updateDebugInfo,
+      searchState.searchScope,
+      handleSearchScopeChange,
+    ],
   );
 
   // Handle navigation input mode
@@ -475,6 +511,7 @@ export function App({
         meta?: boolean;
         escape?: boolean;
         return?: boolean;
+        tab?: boolean;
       },
     ) => {
       if (input === "s" && !key.ctrl && !key.meta) {
@@ -588,6 +625,14 @@ export function App({
           currentResultIndex: 0,
         }));
         setSearchInput("");
+      } else if (
+        key.tab &&
+        (searchState.searchTerm || searchState.isSearching)
+      ) {
+        // Toggle search scope when Tab is pressed and search is active
+        updateDebugInfo("Toggle search scope", input);
+        const nextScope = getNextSearchScope(searchState.searchScope);
+        handleSearchScopeChange(nextScope);
       } else if (input === "D" && !key.ctrl && !key.meta) {
         // Toggle debug visibility
         setDebugVisible((prev) => !prev);
@@ -637,6 +682,7 @@ export function App({
       searchState.isSearching,
       searchState.searchTerm,
       searchState.searchResults.length,
+      searchState.searchScope,
       maxScrollSearchMode,
       maxScroll,
       halfPageLines,
@@ -651,6 +697,7 @@ export function App({
       helpVisible,
       handleCollapsibleNavigation,
       handleExportSchema,
+      handleSearchScopeChange,
     ],
   );
 
@@ -666,6 +713,7 @@ export function App({
         escape?: boolean;
         backspace?: boolean;
         delete?: boolean;
+        tab?: boolean;
       },
     ) => {
       // Always allow exit commands
@@ -718,7 +766,11 @@ export function App({
       {/* Search bar fixed at top when in search mode */}
       {(searchState.isSearching || searchState.searchTerm) && (
         <Box flexShrink={0} width="100%" height={searchBarHeight}>
-          <SearchBar searchState={searchState} searchInput={searchInput} />
+          <SearchBar
+            searchState={searchState}
+            searchInput={searchInput}
+            onScopeChange={handleSearchScopeChange}
+          />
         </Box>
       )}
       {/* Export status bar */}
