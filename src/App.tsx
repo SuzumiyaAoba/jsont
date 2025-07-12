@@ -3,7 +3,9 @@ import { CollapsibleJsonViewer } from "@features/collapsible/components/Collapsi
 import type { NavigationAction } from "@features/collapsible/types/collapsible";
 import { DebugBar } from "@features/debug/components/DebugBar";
 import { JsonViewer } from "@features/json-rendering/components/JsonViewer";
+import { ExportDialog } from "@features/schema/components/ExportDialog";
 import { SchemaViewer } from "@features/schema/components/SchemaViewer";
+import type { ExportDialogState } from "@features/schema/types/export";
 import {
   exportJsonSchemaToFile,
   generateDefaultFilename,
@@ -70,6 +72,10 @@ export function App({
     message?: string;
     type?: "success" | "error";
   }>({ isExporting: false });
+  const [exportDialog, setExportDialog] = useState<ExportDialogState>({
+    isVisible: false,
+    mode: "simple",
+  });
   const [collapsibleMode, setCollapsibleMode] = useState<boolean>(false);
   const [helpVisible, setHelpVisible] = useState<boolean>(false);
   const [terminalSize, setTerminalSize] = useState({
@@ -394,7 +400,7 @@ export function App({
   );
 
   // Handle schema export
-  const handleExportSchema = useCallback(async () => {
+  const handleExportSchema = useCallback(() => {
     if (!initialData) {
       setExportStatus({
         isExporting: false,
@@ -403,39 +409,52 @@ export function App({
       });
       return;
     }
+    // Show export dialog
+    setExportDialog({ isVisible: true, mode: "simple" });
+  }, [initialData]);
 
-    setExportStatus({ isExporting: true });
+  // Handle export dialog confirmation
+  const handleExportConfirm = useCallback(
+    async (options: Parameters<typeof exportJsonSchemaToFile>[1]) => {
+      if (!initialData) return;
 
-    try {
-      const filename = generateDefaultFilename();
-      const result = await exportJsonSchemaToFile(initialData, { filename });
+      setExportDialog({ isVisible: false, mode: "simple" });
+      setExportStatus({ isExporting: true });
 
-      if (result.success) {
+      try {
+        const result = await exportJsonSchemaToFile(initialData, options);
+        if (result.success) {
+          setExportStatus({
+            isExporting: false,
+            message: `Schema exported to ${result.filePath}`,
+            type: "success",
+          });
+        } else {
+          setExportStatus({
+            isExporting: false,
+            message: result.error || "Export failed",
+            type: "error",
+          });
+        }
+      } catch (error) {
         setExportStatus({
           isExporting: false,
-          message: `Schema exported to ${result.filePath}`,
-          type: "success",
-        });
-      } else {
-        setExportStatus({
-          isExporting: false,
-          message: result.error || "Export failed",
+          message: error instanceof Error ? error.message : "Export failed",
           type: "error",
         });
       }
-    } catch (error) {
-      setExportStatus({
-        isExporting: false,
-        message: error instanceof Error ? error.message : "Export failed",
-        type: "error",
-      });
-    }
+      // Clear export status after 3 seconds
+      setTimeout(() => {
+        setExportStatus({ isExporting: false });
+      }, 3000);
+    },
+    [initialData],
+  );
 
-    // Clear export status after 3 seconds
-    setTimeout(() => {
-      setExportStatus({ isExporting: false });
-    }, 3000);
-  }, [initialData]);
+  // Handle export dialog cancellation
+  const handleExportCancel = useCallback(() => {
+    setExportDialog({ isVisible: false, mode: "simple" });
+  }, []);
 
   // Handle search input mode
   const handleSearchInput = useCallback(
@@ -662,10 +681,6 @@ export function App({
         // Toggle help visibility
         setHelpVisible((prev) => !prev);
         updateDebugInfo(`Toggle help ${helpVisible ? "OFF" : "ON"}`, input);
-      } else if (input === "E" && !key.ctrl && !key.meta) {
-        // Export JSON Schema to file
-        updateDebugInfo("Export schema", input);
-        handleExportSchema();
       } else {
         // Any other key resets the 'g' sequence
         updateDebugInfo(`Unhandled key: "${input}"`, input);
@@ -696,7 +711,6 @@ export function App({
       collapsibleMode,
       helpVisible,
       handleCollapsibleNavigation,
-      handleExportSchema,
       handleSearchScopeChange,
     ],
   );
@@ -728,6 +742,10 @@ export function App({
       ) {
         updateDebugInfo("Quit", input);
         exit();
+      } else if (input === "E" && !key.ctrl && !key.meta) {
+        // Export JSON Schema to file - always available regardless of search mode
+        updateDebugInfo("Export schema", input);
+        handleExportSchema();
       } else if (searchState.isSearching) {
         // Handle search input
         handleSearchInput(input, key);
@@ -743,6 +761,7 @@ export function App({
       handleSearchInput,
       handleNavigationInput,
       updateDebugInfo,
+      handleExportSchema,
     ],
   );
 
@@ -800,6 +819,13 @@ export function App({
           </Box>
         </Box>
       )}
+      {/* Export Dialog */}
+      <ExportDialog
+        isVisible={exportDialog.isVisible}
+        onConfirm={handleExportConfirm}
+        onCancel={handleExportCancel}
+        defaultFilename={generateDefaultFilename()}
+      />
       <Box
         flexGrow={1}
         width="100%"
