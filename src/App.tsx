@@ -681,10 +681,6 @@ export function App({
         // Toggle help visibility
         setHelpVisible((prev) => !prev);
         updateDebugInfo(`Toggle help ${helpVisible ? "OFF" : "ON"}`, input);
-      } else if (input === "E" && !key.ctrl && !key.meta) {
-        // Export JSON Schema to file
-        updateDebugInfo("Export schema", input);
-        handleExportSchema();
       } else {
         // Any other key resets the 'g' sequence
         updateDebugInfo(`Unhandled key: "${input}"`, input);
@@ -715,7 +711,6 @@ export function App({
       collapsibleMode,
       helpVisible,
       handleCollapsibleNavigation,
-      handleExportSchema,
       handleSearchScopeChange,
     ],
   );
@@ -747,6 +742,10 @@ export function App({
       ) {
         updateDebugInfo("Quit", input);
         exit();
+      } else if (input === "E" && !key.ctrl && !key.meta) {
+        // Export JSON Schema to file - always available regardless of search mode
+        updateDebugInfo("Export schema", input);
+        handleExportSchema();
       } else if (searchState.isSearching) {
         // Handle search input
         handleSearchInput(input, key);
@@ -762,6 +761,7 @@ export function App({
       handleSearchInput,
       handleNavigationInput,
       updateDebugInfo,
+      handleExportSchema,
     ],
   );
 
