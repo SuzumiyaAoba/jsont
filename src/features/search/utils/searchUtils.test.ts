@@ -106,6 +106,41 @@ describe("searchUtils", () => {
       const results = searchInJsonWithScope(testData, "nonexistent", "keys");
       expect(results).toEqual([]);
     });
+
+    it("should handle JSON values containing colons correctly", () => {
+      const testDataWithColons = {
+        url: "https://example.com:8080/path",
+        message: "Error: connection failed",
+        timestamp: "2024-01-01T10:00:00Z",
+      };
+
+      // Should find 'url' key but not match colons in the URL value
+      const keyResults = searchInJsonWithScope(
+        testDataWithColons,
+        "url",
+        "keys",
+      );
+      expect(keyResults.length).toBe(1);
+      expect(keyResults[0]?.matchText).toBe("url");
+
+      // Should find the URL in values
+      const valueResults = searchInJsonWithScope(
+        testDataWithColons,
+        "https",
+        "values",
+      );
+      expect(valueResults.length).toBe(1);
+      expect(valueResults[0]?.matchText).toBe("https");
+
+      // Should find 'Error' in the message value, not be confused by the colon
+      const errorResults = searchInJsonWithScope(
+        testDataWithColons,
+        "Error",
+        "values",
+      );
+      expect(errorResults.length).toBe(1);
+      expect(errorResults[0]?.matchText).toBe("Error");
+    });
   });
 
   describe("searchInText", () => {

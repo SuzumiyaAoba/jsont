@@ -38,6 +38,13 @@ export function searchInJson(
 /**
  * Search for a term in JSON with specific scope (keys or values only)
  *
+ * This function parses JSON lines to separate keys from values using regex matching.
+ * It handles the standard JSON.stringify(data, null, 2) format and correctly parses
+ * JSON values containing colons (URLs, timestamps, etc.) by matching quoted keys.
+ *
+ * Note: This implementation is optimized for the controlled JSON format produced by
+ * JSON.stringify and may not handle all edge cases of hand-written JSON.
+ *
  * @param data - JSON data to search in
  * @param searchTerm - Term to search for (case-insensitive)
  * @param searchScope - Scope of search: 'keys' or 'values'
@@ -64,19 +71,42 @@ export function searchInJsonWithScope(
       return;
     }
 
-    // Parse line to identify keys and values
-    const colonIndex = line.indexOf(":");
-    if (colonIndex === -1) return;
+    // Use regex to find the first colon that is followed by a space (JSON format)
+    // This avoids breaking on colons within string values like URLs or timestamps
+    const keyValueMatch = line.match(/^(\s*"[^"]*"\s*):\s*(.*)/);
+    if (!keyValueMatch) {
+      // Fallback to simple colon split for non-quoted keys (shouldn't happen in JSON.stringify output)
+      const colonIndex = line.indexOf(":");
+      if (colonIndex === -1) return;
 
-    const keyPart = line.substring(0, colonIndex);
-    const valuePart = line.substring(colonIndex + 1);
+      const keyPart = line.substring(0, colonIndex);
+      const valuePart = line.substring(colonIndex + 1);
 
+      handleKeyValuePair(keyPart, valuePart, line, lineIndex, colonIndex);
+      return;
+    }
+
+    const keyPart = keyValueMatch[1];
+    const valuePart = keyValueMatch[2];
+    const colonIndex = keyValueMatch[1].length;
+
+    handleKeyValuePair(keyPart, valuePart, line, lineIndex, colonIndex);
+  });
+
+  // Helper function to handle key-value pair processing
+  function handleKeyValuePair(
+    keyPart: string,
+    valuePart: string,
+    fullLine: string,
+    lineIndex: number,
+    colonIndex: number,
+  ): void {
     if (searchScope === "keys") {
       // Search only in keys (everything before ":")
       const keyMatches = findMatchesInText(keyPart, searchTerm, lineIndex, 0);
       // Fix contextLine to use full line
       keyMatches.forEach((match) => {
-        match.contextLine = line;
+        match.contextLine = fullLine;
       });
       results.push(...keyMatches);
     } else if (searchScope === "values") {
@@ -89,11 +119,11 @@ export function searchInJsonWithScope(
       );
       // Fix contextLine to use full line
       valueMatches.forEach((match) => {
-        match.contextLine = line;
+        match.contextLine = fullLine;
       });
       results.push(...valueMatches);
     }
-  });
+  }
 
   return results;
 }
