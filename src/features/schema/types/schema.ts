@@ -5,16 +5,8 @@
 import type { JsonValue } from "../../../core/types/index.js";
 import type { SearchResult } from "../../search/types/search.js";
 
-export interface JsonSchema {
+export interface BaseSchemaProperties {
   type: string;
-  properties?: Record<string, JsonSchemaProperty>;
-  items?: JsonSchemaProperty;
-  title?: string;
-  description?: string;
-  required?: string[];
-  additionalProperties?: boolean;
-  minItems?: number;
-  maxItems?: number;
   minimum?: number;
   maximum?: number;
   minLength?: number;
@@ -25,8 +17,18 @@ export interface JsonSchema {
   examples?: JsonValue[];
 }
 
-export interface JsonSchemaProperty {
-  type: string;
+export interface JsonSchema extends BaseSchemaProperties {
+  properties?: Record<string, JsonSchemaProperty>;
+  items?: JsonSchemaProperty;
+  title?: string;
+  description?: string;
+  required?: string[];
+  additionalProperties?: boolean;
+  minItems?: number;
+  maxItems?: number;
+}
+
+export interface JsonSchemaProperty extends BaseSchemaProperties {
   description?: string;
   properties?: Record<string, JsonSchemaProperty>;
   items?: JsonSchemaProperty;
@@ -34,14 +36,6 @@ export interface JsonSchemaProperty {
   additionalProperties?: boolean;
   minItems?: number;
   maxItems?: number;
-  minimum?: number;
-  maximum?: number;
-  minLength?: number;
-  maxLength?: number;
-  pattern?: string;
-  enum?: JsonValue[];
-  const?: JsonValue;
-  examples?: JsonValue[];
 }
 
 export interface SchemaViewerProps {

@@ -61,7 +61,6 @@ export function calculateScrollLimits(
   jsonLines: number,
   visibleLines: number,
   searchModeVisibleLines: number,
-  _isSearchMode: boolean,
 ): { maxScroll: number; maxScrollSearchMode: number } {
   const maxScroll = Math.max(0, jsonLines - visibleLines);
   const maxScrollSearchMode = Math.max(0, jsonLines - searchModeVisibleLines);

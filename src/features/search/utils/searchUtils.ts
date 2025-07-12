@@ -2,11 +2,11 @@
  * Search utilities for JSON content
  */
 
-import type { JsonValue, SearchResult } from "../../../core/types/index";
+import type { JsonValue, SearchResult } from "../../../core/types/index.js";
 import {
   formatJsonSchema,
   inferJsonSchema,
-} from "../../schema/utils/schemaUtils";
+} from "../../schema/utils/schemaUtils.js";
 
 /**
  * Search for a term in JSON content and return all matches

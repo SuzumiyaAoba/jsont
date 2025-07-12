@@ -240,7 +240,7 @@ describe("JSON Processing - Enhanced Parser", () => {
       circularRef["self"] = circularRef;
 
       const result = validateJsonStructure(
-        circularRef as import("../core/types/index").JsonValue,
+        circularRef as import("../../core/types/index").JsonValue,
       );
 
       expect(result.isValid).toBe(false);
