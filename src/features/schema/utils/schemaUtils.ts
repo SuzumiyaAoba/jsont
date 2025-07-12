@@ -2,11 +2,7 @@
  * JSON Schema inference and utilities with Result-based error handling
  */
 
-import type {
-  JsonArray,
-  JsonObject,
-  JsonValue,
-} from "../../../core/types/index";
+import type { JsonArray, JsonObject, JsonValue } from "@core/types/index";
 
 export interface JsonSchemaProperty {
   type: string;

@@ -3,13 +3,16 @@
  * Orchestrates application initialization and lifecycle
  */
 
+import type { JsonValue } from "@core/types/index";
+import { ProcessManager } from "@core/utils/processManager";
+import {
+  readFromFile,
+  readStdinThenReinitialize,
+} from "@core/utils/stdinHandler";
+import { TerminalManager } from "@core/utils/terminal";
 import { type Instance, render } from "ink";
 import React from "react";
-import { App } from "../../App";
-import type { JsonValue } from "../types/index";
-import { ProcessManager } from "../utils/processManager";
-import { readFromFile, readStdinThenReinitialize } from "../utils/stdinHandler";
-import { TerminalManager } from "../utils/terminal";
+import { App } from "@/App";
 
 export class AppService {
   private terminalManager = new TerminalManager();

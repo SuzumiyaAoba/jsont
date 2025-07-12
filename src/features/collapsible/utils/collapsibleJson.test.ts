@@ -1,4 +1,3 @@
-import { describe, expect, it } from "vitest";
 import {
   buildJsonTree,
   flattenNodes,
@@ -9,7 +8,8 @@ import {
   handleNavigation,
   initializeCollapsibleState,
   isCollapsible,
-} from "./collapsibleJson.js";
+} from "@features/collapsible/utils/collapsibleJson.js";
+import { describe, expect, it } from "vitest";
 
 describe("collapsibleJson", () => {
   const testData = {

@@ -1,5 +1,4 @@
-import { describe, expect, it } from "vitest";
-import type { JsonValue } from "../../../core/types/index";
+import type { JsonValue } from "@core/types/index";
 import {
   getSearchNavigationInfo,
   highlightSearchInLine,
@@ -7,7 +6,8 @@ import {
   searchInJson,
   searchInJsonSchema,
   searchInText,
-} from "./searchUtils";
+} from "@features/search/utils/searchUtils";
+import { describe, expect, it } from "vitest";
 
 describe("searchUtils", () => {
   describe("searchInJson", () => {

@@ -1,5 +1,8 @@
+import {
+  formatJsonValue,
+  parseJsonSafely,
+} from "@features/json-rendering/utils/jsonProcessor";
 import { describe, expect, it } from "vitest";
-import { formatJsonValue, parseJsonSafely } from "./jsonProcessor";
 
 describe("parseJsonSafely", () => {
   it("should parse valid JSON", () => {

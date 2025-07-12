@@ -1,10 +1,10 @@
-import { Box, Text } from "ink";
-import type React from "react";
-import type { JsonValue, SearchResult } from "../../../core/types/index";
+import type { JsonValue, SearchResult } from "@core/types/index";
 import {
   applySearchHighlighting,
   tokenizeLine,
-} from "../utils/syntaxHighlight";
+} from "@features/json-rendering/utils/syntaxHighlight";
+import { Box, Text } from "ink";
+import type React from "react";
 
 interface JsonViewerProps {
   data: JsonValue;

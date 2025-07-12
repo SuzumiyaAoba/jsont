@@ -2,7 +2,10 @@
  * Navigation functionality handlers extracted from App.tsx
  */
 
-import type { NavigationHandlers, NavigationState } from "../types/navigation";
+import type {
+  NavigationHandlers,
+  NavigationState,
+} from "@features/navigation/types/navigation";
 
 export function createNavigationHandlers(
   state: NavigationState,

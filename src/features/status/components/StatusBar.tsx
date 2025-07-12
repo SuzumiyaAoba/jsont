@@ -1,5 +1,5 @@
+import { getStatusContent } from "@features/status/utils/statusUtils";
 import { Box, Text } from "ink";
-import { getStatusContent } from "../utils/statusUtils";
 
 interface StatusBarProps {
   error: string | null;

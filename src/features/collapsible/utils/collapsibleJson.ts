@@ -2,7 +2,7 @@
  * Utilities for managing collapsible JSON structure
  */
 
-import type { JsonValue } from "../../../core/types/index";
+import type { JsonValue } from "@core/types/index";
 import type {
   CollapsibleState,
   CursorPosition,
@@ -10,7 +10,7 @@ import type {
   JsonPath,
   NavigationAction,
   NavigationResult,
-} from "../types/collapsible";
+} from "@features/collapsible/types/collapsible";
 
 /**
  * Generate a unique ID for a JSON node based on its path

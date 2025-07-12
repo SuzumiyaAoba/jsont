@@ -3,18 +3,18 @@
  * Provides type-safe alternatives to throwing exceptions
  */
 
-import { err, ok, type Result } from "neverthrow";
+import type {
+  EnhancedParseResult,
+  JsonValue,
+  ValidationResult,
+} from "@core/types";
 import {
   detectJsonFormat,
   parseJsonSafely as legacyParseJsonSafely,
   parseJsonWithValidation as legacyParseJsonWithValidation,
   validateJsonStructure as legacyValidateJsonStructure,
-} from "../../features/json-rendering/utils/jsonProcessor";
-import type {
-  EnhancedParseResult,
-  JsonValue,
-  ValidationResult,
-} from "../types";
+} from "@features/json-rendering/utils/jsonProcessor";
+import { err, ok, type Result } from "neverthrow";
 
 /**
  * Error types for Result-based operations

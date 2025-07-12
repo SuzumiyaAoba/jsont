@@ -1,7 +1,7 @@
+import type { JsonValue } from "@core/types/index";
+import { SchemaViewer } from "@features/schema/components/SchemaViewer";
 import { render } from "ink-testing-library";
 import { describe, expect, it } from "vitest";
-import type { JsonValue } from "../../../core/types/index";
-import { SchemaViewer } from "./SchemaViewer";
 
 describe("SchemaViewer", () => {
   it("should render message when no data is provided", () => {

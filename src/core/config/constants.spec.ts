@@ -2,8 +2,8 @@
  * Tests for application constants
  */
 
+import { CONFIG, DEBUG_PREFIX, MESSAGES } from "@core/config/constants";
 import { describe, expect, it } from "vitest";
-import { CONFIG, DEBUG_PREFIX, MESSAGES } from "./constants";
 
 describe("Application Constants", () => {
   describe("CONFIG object", () => {

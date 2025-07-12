@@ -2,9 +2,9 @@
  * Debug Utilities
  */
 
-import { DEBUG_PREFIX } from "../config/constants";
-import type { JsonValue } from "../types/index";
-import type { StdinReadResult } from "./stdinHandler";
+import { DEBUG_PREFIX } from "@core/config/constants";
+import type { JsonValue } from "@core/types/index";
+import type { StdinReadResult } from "@core/utils/stdinHandler";
 
 export class DebugLogger {
   private readonly isEnabled: boolean;
