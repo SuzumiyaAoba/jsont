@@ -123,8 +123,9 @@ export function searchInJsonSchema(
       return searchInText(schemaString, searchTerm);
     }
 
-    // For schema search with scope, treat as JSON and search with scope
-    return searchInJsonWithScope(schema, searchTerm, searchScope);
+    // For schema search with scope, parse the formatted schema as JSON
+    const parsedSchema = JSON.parse(schemaString);
+    return searchInJsonWithScope(parsedSchema, searchTerm, searchScope);
   } catch (error) {
     // If schema generation fails, return empty results
     console.warn("Failed to generate schema for search:", error);

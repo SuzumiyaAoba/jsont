@@ -55,9 +55,9 @@ export function SearchBar({
           <Text color="cyan">[</Text>
           <Text
             color="white"
-            backgroundColor={
-              searchState.searchScope === "all" ? "blue" : undefined
-            }
+            {...(searchState.searchScope === "all" && {
+              backgroundColor: "blue",
+            })}
           >
             {scopeDisplayName}
           </Text>
