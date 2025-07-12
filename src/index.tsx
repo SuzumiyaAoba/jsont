@@ -3,8 +3,8 @@
  * Refactored for better separation of concerns and maintainability
  */
 
-import { AppService } from "./services/appService";
-import { handleFatalError } from "./utils/errorHandler";
+import { AppService } from "./core/services/appService.js";
+import { handleFatalError } from "./core/utils/errorHandler.js";
 
 async function main(): Promise<void> {
   const appService = new AppService();

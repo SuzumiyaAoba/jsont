@@ -1,0 +1,51 @@
+/**
+ * Utilities for generating status bar content
+ */
+
+interface StatusContentOptions {
+  keyboardEnabled: boolean;
+  collapsibleMode: boolean;
+  error?: string | null;
+}
+
+/**
+ * Generate status content based on application state
+ */
+export function getStatusContent(options: StatusContentOptions): string {
+  const { keyboardEnabled, collapsibleMode, error } = options;
+
+  if (error) {
+    return `Error: ${error}`;
+  }
+
+  if (keyboardEnabled) {
+    if (collapsibleMode) {
+      return `JSON TUI Viewer (Collapsible) - q: Quit | Ctrl+C: Exit | j/k: Move cursor | Enter: Toggle expand/collapse | s: Search | C: Toggle collapsible mode | D: Debug | L: Line numbers | S: Schema | ?: Toggle help`;
+    } else {
+      return `JSON TUI Viewer - q: Quit/Search input | Ctrl+C: Exit | j/k: Line | Ctrl+f/b: Half-page | gg/G: Top/Bottom | s: Search | Esc: Exit search | D: Toggle debug | L: Toggle line numbers | S: Toggle schema | C: Toggle collapsible | ?: Toggle help`;
+    }
+  } else {
+    return `JSON TUI Viewer - Keyboard input not available (try: jsont < file.json in terminal) | ?: Toggle help`;
+  }
+}
+
+/**
+ * Calculate dynamic height for status content based on terminal width
+ */
+export function calculateStatusBarHeight(
+  content: string,
+  terminalWidth: number,
+): number {
+  // StatusBar uses borderStyle="single" (2 lines) + padding={1} (2 lines) = 4 lines overhead
+  // Available width = terminalWidth - 2 (left/right borders) - 2 (left/right padding) = terminalWidth - 4
+  const availableWidth = Math.max(terminalWidth - 4, 20); // Minimum 20 chars for safety
+  const contentLines = Math.ceil(content.length / availableWidth);
+
+  // Total height = top border + top padding + content lines + bottom padding + bottom border
+  // Optimized calculation: contentLines + 3 (Ink typically optimizes border+padding to 3 total overhead)
+  const calculatedHeight = contentLines + 3;
+
+  // For typical 80-char terminal, messages are ~300 chars, so need ~4-5 content lines + overhead = 7-8 total
+  // Use balanced calculation: just enough height without waste
+  return Math.max(5, calculatedHeight); // Minimum 5 lines, rely on calculation
+}

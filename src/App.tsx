@@ -1,16 +1,26 @@
 import { Box, useApp, useInput } from "ink";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { CollapsibleJsonViewer } from "./components/CollapsibleJsonViewer.js";
-import { DebugBar } from "./components/DebugBar.js";
-import { JsonViewer } from "./components/JsonViewer.js";
-import { SchemaViewer } from "./components/SchemaViewer.js";
-import { SearchBar } from "./components/SearchBar.js";
-import { StatusBar } from "./components/StatusBar.js";
-import type { AppProps } from "./types/app.js";
-import type { NavigationAction } from "./types/collapsible.js";
-import type { SearchState } from "./types/index.js";
-import { formatJsonSchema, inferJsonSchema } from "./utils/schemaUtils.js";
-import { searchInJson, searchInJsonSchema } from "./utils/searchUtils.js";
+import type { AppProps } from "./core/types/app";
+import { CollapsibleJsonViewer } from "./features/collapsible/components/CollapsibleJsonViewer";
+import type { NavigationAction } from "./features/collapsible/types/collapsible";
+import { DebugBar } from "./features/debug/components/DebugBar";
+import { JsonViewer } from "./features/json-rendering/components/JsonViewer";
+import { SchemaViewer } from "./features/schema/components/SchemaViewer";
+import {
+  formatJsonSchema,
+  inferJsonSchema,
+} from "./features/schema/utils/schemaUtils";
+import { SearchBar } from "./features/search/components/SearchBar";
+import type { SearchState } from "./features/search/types/search";
+import {
+  searchInJson,
+  searchInJsonSchema,
+} from "./features/search/utils/searchUtils";
+import { StatusBar } from "./features/status/components/StatusBar";
+import {
+  calculateStatusBarHeight,
+  getStatusContent,
+} from "./features/status/utils/statusUtils";
 
 /**
  * Main application component for the JSON TUI Viewer
@@ -127,33 +137,20 @@ export function App({
   const statusBarHeight = useMemo(() => {
     if (!helpVisible) return 0;
 
-    const terminalWidth = terminalSize.width;
-    let statusContent = "";
+    const statusContent = getStatusContent({
+      keyboardEnabled,
+      collapsibleMode,
+      error,
+    });
 
-    if (keyboardEnabled) {
-      if (collapsibleMode) {
-        statusContent = `JSON TUI Viewer (Collapsible) - q: Quit | Ctrl+C: Exit | j/k: Move cursor | Enter: Toggle expand/collapse | s: Search | C: Toggle collapsible mode | D: Debug | L: Line numbers | S: Schema | ?: Toggle help`;
-      } else {
-        statusContent = `JSON TUI Viewer - q: Quit/Search input | Ctrl+C: Exit | j/k: Line | Ctrl+f/b: Half-page | gg/G: Top/Bottom | s: Search | Esc: Exit search | D: Toggle debug | L: Toggle line numbers | S: Toggle schema | C: Toggle collapsible | ?: Toggle help`;
-      }
-    } else {
-      statusContent = `JSON TUI Viewer - Keyboard input not available (try: jsont < file.json in terminal) | ?: Toggle help`;
-    }
-
-    // StatusBar uses borderStyle="single" (2 lines) + padding={1} (2 lines) = 4 lines overhead
-    // Available width = terminalWidth - 2 (left/right borders) - 2 (left/right padding) = terminalWidth - 4
-    const availableWidth = Math.max(terminalWidth - 4, 20); // Minimum 20 chars for safety
-    const contentLines = Math.ceil(statusContent.length / availableWidth);
-
-    // Total height = top border + top padding + content lines + bottom padding + bottom border
-    // Optimized calculation: contentLines + 3 (Ink typically optimizes border+padding to 3 total overhead)
-    const calculatedHeight = contentLines + 3;
-
-    // For typical 80-char terminal, messages are ~300 chars, so need ~4-5 content lines + overhead = 7-8 total
-    // Use balanced calculation: just enough height without waste
-    const finalHeight = Math.max(5, calculatedHeight); // Minimum 5 lines, rely on calculation
-    return finalHeight;
-  }, [helpVisible, keyboardEnabled, collapsibleMode, terminalSize.width]);
+    return calculateStatusBarHeight(statusContent, terminalSize.width);
+  }, [
+    helpVisible,
+    keyboardEnabled,
+    collapsibleMode,
+    error,
+    terminalSize.width,
+  ]);
 
   // Calculate search bar height dynamically based on content
   const searchBarHeight = useMemo(() => {
