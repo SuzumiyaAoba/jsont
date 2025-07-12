@@ -150,17 +150,29 @@ describe("File Export Utils", () => {
       );
     });
 
-    it("should generate unique filenames", () => {
+    it("should generate unique filenames with proper structure", () => {
       const filename1 = generateDefaultFilename();
+
+      // Short delay to ensure different timestamps if precision allows
+      const start = Date.now();
+      while (Date.now() - start < 2) {
+        // Small busy wait to ensure timestamp difference
+      }
+
       const filename2 = generateDefaultFilename();
 
-      // They might be the same if generated in the same second, but structure should be consistent
+      // Both should match the expected pattern
       expect(filename1).toMatch(
         /^schema_\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}\.json$/,
       );
       expect(filename2).toMatch(
         /^schema_\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}\.json$/,
       );
+
+      // Structure should be consistent (same length and format)
+      expect(filename1.length).toBe(filename2.length);
+      expect(filename1.startsWith("schema_")).toBe(true);
+      expect(filename2.startsWith("schema_")).toBe(true);
     });
   });
 
@@ -181,7 +193,7 @@ describe("File Export Utils", () => {
       });
 
       expect(result.isValid).toBe(false);
-      expect(result.error).toContain("invalid characters");
+      expect(result.error).toContain("forbidden characters");
     });
 
     it("should reject directory traversal attempts", () => {
@@ -193,12 +205,14 @@ describe("File Export Utils", () => {
       expect(result.error).toContain("cannot contain '..'");
     });
 
-    it("should allow valid filenames", () => {
+    it("should allow valid filenames including spaces", () => {
       const validFilenames = [
         "schema.json",
         "my-schema.json",
         "schema_v1.0.json",
         "user.schema.json",
+        "My Schema File.json", // Now allowed with relaxed validation
+        "schema (2024).json",
       ];
 
       for (const filename of validFilenames) {

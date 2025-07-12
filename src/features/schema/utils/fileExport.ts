@@ -10,7 +10,7 @@ import { formatJsonSchema, inferJsonSchema } from "./schemaUtils";
 export interface ExportOptions {
   filename?: string;
   outputDir?: string;
-  format?: "json" | "yaml";
+  format?: "json";
 }
 
 export interface ExportResult {
@@ -27,30 +27,16 @@ export async function exportJsonSchemaToFile(
   options: ExportOptions = {},
 ): Promise<ExportResult> {
   try {
-    const {
-      filename = "schema.json",
-      outputDir = process.cwd(),
-      format = "json",
-    } = options;
+    const { filename = "schema.json", outputDir = process.cwd() } = options;
 
     // Generate JSON Schema
     const schema = inferJsonSchema(data, "Exported Schema");
 
-    // Format content based on format type
-    let content: string;
-    let finalFilename: string;
-
-    if (format === "yaml") {
-      // For now, export as JSON even when YAML is requested
-      // Could add yaml library support later
-      content = formatJsonSchema(schema);
-      finalFilename = filename.replace(/\.(json|yaml|yml)$/, ".json");
-    } else {
-      content = formatJsonSchema(schema);
-      finalFilename = filename.endsWith(".json")
-        ? filename
-        : `${filename}.json`;
-    }
+    // Format content as JSON
+    const content = formatJsonSchema(schema);
+    const finalFilename = filename.endsWith(".json")
+      ? filename
+      : `${filename}.json`;
 
     // Construct full file path
     const filePath = join(outputDir, finalFilename);
@@ -92,11 +78,14 @@ export function validateExportOptions(options: ExportOptions): {
 } {
   const { filename, outputDir } = options;
 
-  // Check filename validity (basic check)
-  if (filename && !/^[a-zA-Z0-9._-]+$/.test(filename)) {
+  // Check filename validity - block only problematic characters
+  // Disable biome warning for intentional control character regex
+  // biome-ignore lint/suspicious/noControlCharactersInRegex: Control chars intentionally blocked for security
+  if (filename && /[<>:"|?*\u0000-\u001f]/.test(filename)) {
     return {
       isValid: false,
-      error: "Filename contains invalid characters",
+      error:
+        'Filename contains forbidden characters (<>:"|?* or control chars)',
     };
   }
 
