@@ -2,7 +2,7 @@
  * Types for collapsible JSON viewer functionality
  */
 
-import type { JsonValue } from "./index.js";
+import type { JsonValue } from "../../../core/types/index.js";
 
 export interface JsonPath {
   type: "root" | "object" | "array";

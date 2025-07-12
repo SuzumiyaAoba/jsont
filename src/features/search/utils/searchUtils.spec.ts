@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { JsonValue } from "../types/index";
+import type { JsonValue } from "../../../core/types/index";
 import {
   getSearchNavigationInfo,
   highlightSearchInLine,
