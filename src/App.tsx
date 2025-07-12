@@ -5,6 +5,10 @@ import { DebugBar } from "@features/debug/components/DebugBar";
 import { JsonViewer } from "@features/json-rendering/components/JsonViewer";
 import { SchemaViewer } from "@features/schema/components/SchemaViewer";
 import {
+  exportJsonSchemaToFile,
+  generateDefaultFilename,
+} from "@features/schema/utils/fileExport";
+import {
   formatJsonSchema,
   inferJsonSchema,
 } from "@features/schema/utils/schemaUtils";
@@ -57,6 +61,13 @@ export function App({
   const [debugVisible, setDebugVisible] = useState<boolean>(false);
   const [lineNumbersVisible, setLineNumbersVisible] = useState<boolean>(false);
   const [schemaVisible, setSchemaVisible] = useState<boolean>(false);
+
+  // Export state
+  const [exportStatus, setExportStatus] = useState<{
+    isExporting: boolean;
+    message?: string;
+    type?: "success" | "error";
+  }>({ isExporting: false });
   const [collapsibleMode, setCollapsibleMode] = useState<boolean>(false);
   const [helpVisible, setHelpVisible] = useState<boolean>(false);
   const [terminalSize, setTerminalSize] = useState({
@@ -363,6 +374,50 @@ export function App({
     [searchState.isSearching],
   );
 
+  // Handle schema export
+  const handleExportSchema = useCallback(async () => {
+    if (!initialData) {
+      setExportStatus({
+        isExporting: false,
+        message: "No data to export",
+        type: "error",
+      });
+      return;
+    }
+
+    setExportStatus({ isExporting: true });
+
+    try {
+      const filename = generateDefaultFilename();
+      const result = await exportJsonSchemaToFile(initialData, { filename });
+
+      if (result.success) {
+        setExportStatus({
+          isExporting: false,
+          message: `Schema exported to ${result.filePath}`,
+          type: "success",
+        });
+      } else {
+        setExportStatus({
+          isExporting: false,
+          message: result.error || "Export failed",
+          type: "error",
+        });
+      }
+    } catch (error) {
+      setExportStatus({
+        isExporting: false,
+        message: error instanceof Error ? error.message : "Export failed",
+        type: "error",
+      });
+    }
+
+    // Clear export status after 3 seconds
+    setTimeout(() => {
+      setExportStatus({ isExporting: false });
+    }, 3000);
+  }, [initialData]);
+
   // Handle search input mode
   const handleSearchInput = useCallback(
     (
@@ -562,6 +617,10 @@ export function App({
         // Toggle help visibility
         setHelpVisible((prev) => !prev);
         updateDebugInfo(`Toggle help ${helpVisible ? "OFF" : "ON"}`, input);
+      } else if (input === "E" && !key.ctrl && !key.meta) {
+        // Export JSON Schema to file
+        updateDebugInfo("Export schema", input);
+        handleExportSchema();
       } else {
         // Any other key resets the 'g' sequence
         updateDebugInfo(`Unhandled key: "${input}"`, input);
@@ -591,6 +650,7 @@ export function App({
       collapsibleMode,
       helpVisible,
       handleCollapsibleNavigation,
+      handleExportSchema,
     ],
   );
 
@@ -659,6 +719,33 @@ export function App({
       {(searchState.isSearching || searchState.searchTerm) && (
         <Box flexShrink={0} width="100%" height={searchBarHeight}>
           <SearchBar searchState={searchState} searchInput={searchInput} />
+        </Box>
+      )}
+      {/* Export status bar */}
+      {(exportStatus.isExporting || exportStatus.message) && (
+        <Box flexShrink={0} width="100%" height={1}>
+          <Box
+            borderStyle="single"
+            borderColor={
+              exportStatus.isExporting
+                ? "yellow"
+                : exportStatus.type === "success"
+                  ? "green"
+                  : "red"
+            }
+            padding={0}
+            paddingLeft={1}
+            paddingRight={1}
+            width="100%"
+          >
+            {exportStatus.isExporting ? (
+              <Text color="yellow">Exporting schema...</Text>
+            ) : (
+              <Text color={exportStatus.type === "success" ? "green" : "red"}>
+                {exportStatus.message}
+              </Text>
+            )}
+          </Box>
         </Box>
       )}
       <Box
