@@ -1,9 +1,9 @@
-import { describe, expect, it } from "vitest";
 import {
   formatJsonSchema,
   getSchemaStats,
   inferJsonSchema,
-} from "./schemaUtils";
+} from "@features/schema/utils/schemaUtils";
+import { describe, expect, it } from "vitest";
 
 describe("JSON Schema Utils", () => {
   describe("inferJsonSchema", () => {

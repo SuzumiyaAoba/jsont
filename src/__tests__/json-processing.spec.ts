@@ -3,12 +3,12 @@
  * T2.1: JSON基本処理とパース機能
  */
 
-import { describe, expect, it } from "vitest";
 import {
   parseJsonSafely,
   parseJsonWithValidation,
   validateJsonStructure,
-} from "../features/json-rendering/utils/jsonProcessor";
+} from "@features/json-rendering/utils/jsonProcessor";
+import { describe, expect, it } from "vitest";
 
 describe("JSON Processing - Enhanced Parser", () => {
   describe("parseJsonSafely", () => {

@@ -16,5 +16,11 @@ export default defineConfig({
   esbuildOptions(options) {
     options.jsx = "automatic";
     options.jsxImportSource = "react";
+    // Support for tsconfig path aliases
+    options.alias = {
+      "@": "./src",
+      "@core": "./src/core",
+      "@features": "./src/features",
+    };
   },
 });

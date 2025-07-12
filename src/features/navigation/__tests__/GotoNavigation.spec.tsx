@@ -1,7 +1,7 @@
+import type { JsonValue } from "@core/types/index";
 import { render } from "ink-testing-library";
 import { describe, expect, it, vi } from "vitest";
-import { App } from "../../../App";
-import type { JsonValue } from "../../../core/types/index";
+import { App } from "@/App";
 
 // Mock the useInput hook to simulate keyboard input
 type MockKeyInput = {

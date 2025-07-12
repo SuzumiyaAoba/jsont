@@ -14,7 +14,13 @@
     "declaration": true,
     "jsx": "react-jsx",
     "allowImportingTsExtensions": false,
-    "noEmit": false
+    "noEmit": false,
+    "baseUrl": "./src",
+    "paths": {
+      "@/*": ["./*"],
+      "@core/*": ["core/*"],
+      "@features/*": ["features/*"]
+    }
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist"]

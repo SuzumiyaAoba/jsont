@@ -1,5 +1,8 @@
+import {
+  calculateStatusBarHeight,
+  getStatusContent,
+} from "@features/status/utils/statusUtils.js";
 import { describe, expect, it } from "vitest";
-import { calculateStatusBarHeight, getStatusContent } from "./statusUtils.js";
 
 describe("statusUtils", () => {
   describe("getStatusContent", () => {

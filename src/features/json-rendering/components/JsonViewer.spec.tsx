@@ -1,6 +1,6 @@
+import { JsonViewer } from "@features/json-rendering/components/JsonViewer";
 import { render } from "ink-testing-library";
 import { describe, expect, it } from "vitest";
-import { JsonViewer } from "./JsonViewer";
 
 describe("JsonViewer", () => {
   it("should render null data gracefully", () => {

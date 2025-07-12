@@ -1,4 +1,3 @@
-import { describe, expect, it } from "vitest";
 import {
   applySearchHighlighting,
   DEFAULT_COLOR_SCHEME,
@@ -8,7 +7,8 @@ import {
   isStructuralLine,
   parseKeyValueLine,
   tokenizeLine,
-} from "./syntaxHighlight";
+} from "@features/json-rendering/utils/syntaxHighlight";
+import { describe, expect, it } from "vitest";
 
 describe("syntaxHighlight", () => {
   describe("getJsonValueColor", () => {

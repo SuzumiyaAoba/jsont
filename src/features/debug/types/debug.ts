@@ -2,7 +2,7 @@
  * Debug functionality type definitions
  */
 
-import type { SearchState } from "../../search/types/search.js";
+import type { SearchState } from "@features/search/types/search.js";
 
 export interface DebugInfo {
   lastKey: string;

@@ -1,26 +1,26 @@
-import { Box, useApp, useInput } from "ink";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import type { AppProps } from "./core/types/app";
-import { CollapsibleJsonViewer } from "./features/collapsible/components/CollapsibleJsonViewer";
-import type { NavigationAction } from "./features/collapsible/types/collapsible";
-import { DebugBar } from "./features/debug/components/DebugBar";
-import { JsonViewer } from "./features/json-rendering/components/JsonViewer";
-import { SchemaViewer } from "./features/schema/components/SchemaViewer";
+import type { AppProps } from "@core/types/app";
+import { CollapsibleJsonViewer } from "@features/collapsible/components/CollapsibleJsonViewer";
+import type { NavigationAction } from "@features/collapsible/types/collapsible";
+import { DebugBar } from "@features/debug/components/DebugBar";
+import { JsonViewer } from "@features/json-rendering/components/JsonViewer";
+import { SchemaViewer } from "@features/schema/components/SchemaViewer";
 import {
   formatJsonSchema,
   inferJsonSchema,
-} from "./features/schema/utils/schemaUtils";
-import { SearchBar } from "./features/search/components/SearchBar";
-import type { SearchState } from "./features/search/types/search";
+} from "@features/schema/utils/schemaUtils";
+import { SearchBar } from "@features/search/components/SearchBar";
+import type { SearchState } from "@features/search/types/search";
 import {
   searchInJson,
   searchInJsonSchema,
-} from "./features/search/utils/searchUtils";
-import { StatusBar } from "./features/status/components/StatusBar";
+} from "@features/search/utils/searchUtils";
+import { StatusBar } from "@features/status/components/StatusBar";
 import {
   calculateStatusBarHeight,
   getStatusContent,
-} from "./features/status/utils/statusUtils";
+} from "@features/status/utils/statusUtils";
+import { Box, useApp, useInput } from "ink";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 /**
  * Main application component for the JSON TUI Viewer

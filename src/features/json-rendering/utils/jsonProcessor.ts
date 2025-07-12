@@ -3,14 +3,14 @@
  * T2.1: JSON基本処理とパース機能
  */
 
-import JSON5 from "json5";
 import type {
   EnhancedParseResult,
   JsonStats,
   JsonValue,
   ParseResult,
   ValidationResult,
-} from "../../../core/types/index";
+} from "@core/types/index";
+import JSON5 from "json5";
 
 /**
  * Parse JSON/JSON5 safely with enhanced error handling
