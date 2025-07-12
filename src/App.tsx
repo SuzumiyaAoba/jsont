@@ -48,20 +48,50 @@ export function App({
   const [lineNumbersVisible, setLineNumbersVisible] = useState<boolean>(false);
   const [schemaVisible, setSchemaVisible] = useState<boolean>(false);
   const [collapsibleMode, setCollapsibleMode] = useState<boolean>(false);
+  const [helpVisible, setHelpVisible] = useState<boolean>(false);
+  const [terminalSize, setTerminalSize] = useState({
+    width: process.stdout.columns || 80,
+    height: process.stdout.rows || 24,
+  });
   const collapsibleViewerRef = useRef<{
     navigate: (action: NavigationAction) => void;
   } | null>(null);
 
   const { exit } = useApp();
 
+  // Monitor terminal size changes
+  useEffect(() => {
+    const updateTerminalSize = () => {
+      setTerminalSize({
+        width: process.stdout.columns || 80,
+        height: process.stdout.rows || 24,
+      });
+    };
+
+    // Update size on resize if supported
+    if (process.stdout.on && process.stdout.off) {
+      // Increase max listeners to prevent warnings in tests
+      if (process.stdout.setMaxListeners) {
+        process.stdout.setMaxListeners(20);
+      }
+
+      process.stdout.on("resize", updateTerminalSize);
+      return () => {
+        process.stdout.off("resize", updateTerminalSize);
+      };
+    }
+
+    // Return undefined when process.stdout.on is not available
+    return undefined;
+  }, []);
+
   // Calculate max scroll based on JSON data
   const JSON_INDENT = 2;
-  const DEFAULT_TERMINAL_HEIGHT = 24;
   // Calculate debug bar height dynamically based on content length with memoization
   const debugBarHeight = useMemo(() => {
     if (!debugVisible) return 0; // No debug bar when hidden
 
-    const terminalWidth = process.stdout.columns || 80;
+    const terminalWidth = terminalSize.width;
     let debugContent = `DEBUG: Keyboard: ${keyboardEnabled ? "ON" : "OFF"}`;
 
     if (searchState.isSearching || searchState.searchTerm) {
@@ -90,14 +120,83 @@ export function App({
     searchState.isSearching,
     searchState.searchTerm,
     debugInfo,
+    terminalSize.width,
+  ]);
+
+  // Calculate status bar height dynamically based on content length
+  const statusBarHeight = useMemo(() => {
+    if (!helpVisible) return 0;
+
+    const terminalWidth = terminalSize.width;
+    let statusContent = "";
+
+    if (keyboardEnabled) {
+      if (collapsibleMode) {
+        statusContent = `JSON TUI Viewer (Collapsible) - q: Quit | Ctrl+C: Exit | j/k: Move cursor | Enter: Toggle expand/collapse | s: Search | C: Toggle collapsible mode | D: Debug | L: Line numbers | S: Schema | ?: Toggle help`;
+      } else {
+        statusContent = `JSON TUI Viewer - q: Quit/Search input | Ctrl+C: Exit | j/k: Line | Ctrl+f/b: Half-page | gg/G: Top/Bottom | s: Search | Esc: Exit search | D: Toggle debug | L: Toggle line numbers | S: Toggle schema | C: Toggle collapsible | ?: Toggle help`;
+      }
+    } else {
+      statusContent = `JSON TUI Viewer - Keyboard input not available (try: jsont < file.json in terminal) | ?: Toggle help`;
+    }
+
+    // StatusBar uses borderStyle="single" (2 lines) + padding={1} (2 lines) = 4 lines overhead
+    // Available width = terminalWidth - 2 (left/right borders) - 2 (left/right padding) = terminalWidth - 4
+    const availableWidth = Math.max(terminalWidth - 4, 20); // Minimum 20 chars for safety
+    const contentLines = Math.ceil(statusContent.length / availableWidth);
+
+    // Total height = top border + top padding + content lines + bottom padding + bottom border
+    // Optimized calculation: contentLines + 3 (Ink typically optimizes border+padding to 3 total overhead)
+    const calculatedHeight = contentLines + 3;
+
+    // For typical 80-char terminal, messages are ~300 chars, so need ~4-5 content lines + overhead = 7-8 total
+    // Use balanced calculation: just enough height without waste
+    const finalHeight = Math.max(5, calculatedHeight); // Minimum 5 lines, rely on calculation
+    return finalHeight;
+  }, [helpVisible, keyboardEnabled, collapsibleMode, terminalSize.width]);
+
+  // Calculate search bar height dynamically based on content
+  const searchBarHeight = useMemo(() => {
+    if (!searchState.isSearching && !searchState.searchTerm) return 0;
+
+    const terminalWidth = terminalSize.width;
+    let searchContent = "";
+
+    if (searchState.isSearching) {
+      searchContent = `Search: ${searchInput} (Enter: confirm, Esc: cancel)`;
+    } else {
+      const navigationInfo =
+        searchState.searchResults.length > 0
+          ? `${searchState.currentResultIndex + 1}/${searchState.searchResults.length}`
+          : "0/0";
+      searchContent = `Search: ${searchState.searchTerm} (${navigationInfo}) n: next, N: prev, s: new search`;
+    }
+
+    // SearchBar uses borderStyle="single" + padding={1}
+    // Available width = terminalWidth - 4 (2 borders + 2 padding)
+    const availableWidth = Math.max(terminalWidth - 4, 20);
+    const contentLines = Math.ceil(searchContent.length / availableWidth);
+
+    // Total height = contentLines + 2 (borders) + 2 (padding) = contentLines + 4
+    // But Ink optimizes this, so use conservative calculation
+    const calculatedHeight = contentLines + 3;
+    return Math.max(3, calculatedHeight); // Minimum 3 lines
+  }, [
+    searchState.isSearching,
+    searchState.searchTerm,
+    searchInput,
+    searchState.searchResults.length,
+    searchState.currentResultIndex,
+    terminalSize.width,
   ]);
 
   // Calculate UI reserved lines dynamically
-  const statusBarLines = 3; // Status bar with borders
-  const searchBarLines =
-    searchState.isSearching || searchState.searchTerm ? 3 : 0; // Search bar with borders
+  const statusBarLines = statusBarHeight; // Dynamic status bar height
+  const searchBarLines = searchBarHeight; // Dynamic search bar height
   const debugBarLines = debugBarHeight; // Debug bar height based on content
-  const UI_RESERVED_LINES = statusBarLines + searchBarLines + debugBarLines;
+  const contentPaddingLines = 2; // JsonViewer padding={1} adds 1 line top + 1 line bottom
+  const UI_RESERVED_LINES =
+    statusBarLines + searchBarLines + debugBarLines + contentPaddingLines;
   const G_SEQUENCE_TIMEOUT = 1000;
 
   const jsonLines = initialData
@@ -112,7 +211,7 @@ export function App({
     return formattedSchema.split("\n").length;
   }, [initialData, schemaVisible]);
 
-  const terminalHeight = process.stdout.rows || DEFAULT_TERMINAL_HEIGHT;
+  const terminalHeight = terminalSize.height;
   const visibleLines = Math.max(1, terminalHeight - UI_RESERVED_LINES);
 
   // Use schema lines for scroll calculation when in schema view
@@ -122,8 +221,10 @@ export function App({
   // Calculate max scroll for search mode (when search bar is visible)
   const searchModeVisibleLines = Math.max(
     1,
-    terminalHeight - (statusBarLines + 3 + debugBarLines),
+    terminalHeight -
+      (statusBarLines + searchBarLines + debugBarLines + contentPaddingLines),
   );
+
   const maxScrollSearchMode = Math.max(
     0,
     currentDataLines - searchModeVisibleLines,
@@ -189,6 +290,14 @@ export function App({
       if (collapsibleViewerRef.current?.navigate) {
         collapsibleViewerRef.current.navigate(action);
       }
+    },
+    [],
+  );
+
+  // Helper function to handle scroll changes from collapsible viewer
+  const handleCollapsibleScrollChange = useCallback(
+    (newScrollOffset: number) => {
+      setScrollOffset(newScrollOffset);
     },
     [],
   );
@@ -319,9 +428,6 @@ export function App({
       if (input === "s" && !key.ctrl && !key.meta) {
         // Start search mode
         updateDebugInfo("Start search mode", input);
-        console.error(
-          `[${new Date().toLocaleTimeString()}] [SEARCH] Starting search mode! Setting isSearching to true`,
-        );
         setSearchState((prev) => ({ ...prev, isSearching: true }));
         setSearchInput("");
         setScrollOffset(0);
@@ -455,6 +561,10 @@ export function App({
           `Toggle collapsible mode ${collapsibleMode ? "OFF" : "ON"}`,
           input,
         );
+      } else if (input === "?" && !key.ctrl && !key.meta) {
+        // Toggle help visibility
+        setHelpVisible((prev) => !prev);
+        updateDebugInfo(`Toggle help ${helpVisible ? "OFF" : "ON"}`, input);
       } else {
         // Any other key resets the 'g' sequence
         updateDebugInfo(`Unhandled key: "${input}"`, input);
@@ -482,6 +592,7 @@ export function App({
       lineNumbersVisible,
       schemaVisible,
       collapsibleMode,
+      helpVisible,
       handleCollapsibleNavigation,
     ],
   );
@@ -500,22 +611,6 @@ export function App({
         delete?: boolean;
       },
     ) => {
-      // DEBUG: Log every single keyboard input with timestamp
-      const timestamp = new Date().toLocaleTimeString();
-      console.error(
-        `[${timestamp}] [KEYBOARD] Input: "${input}" | Key object:`,
-        JSON.stringify(key),
-      );
-      console.error(
-        `[${timestamp}] [KEYBOARD] searchState.isSearching: ${searchState.isSearching}`,
-      );
-      console.error(
-        `[${timestamp}] [KEYBOARD] keyboardEnabled: ${keyboardEnabled}`,
-      );
-      console.error(
-        `[${timestamp}] [KEYBOARD] Conditions for 's': input=="${input}" && !ctrl=${!key.ctrl} && !meta=${!key.meta} && !isSearching=${!searchState.isSearching}`,
-      );
-
       // Always allow exit commands
       if (key.ctrl && input === "c") {
         updateDebugInfo("Exit (Ctrl+C)", input);
@@ -540,7 +635,6 @@ export function App({
       exit,
       searchState.isSearching,
       searchState.searchTerm,
-      keyboardEnabled,
       handleSearchInput,
       handleNavigationInput,
       updateDebugInfo,
@@ -552,29 +646,33 @@ export function App({
     isActive: keyboardEnabled,
   });
 
-  // DEBUG: Log useInput configuration on mount
-  useEffect(() => {
-    console.error(
-      `[DEBUG] useInput configured with keyboardEnabled: ${keyboardEnabled}`,
-    );
-  }, [keyboardEnabled]);
-
   return (
     <Box flexDirection="column" width="100%">
-      <Box flexShrink={0} width="100%">
-        <StatusBar
-          error={error}
-          keyboardEnabled={keyboardEnabled}
-          collapsibleMode={collapsibleMode}
-        />
-      </Box>
+      {/* Help bar - only shown when ? key is pressed */}
+      {helpVisible && (
+        <Box flexShrink={0} width="100%" height={statusBarHeight}>
+          <StatusBar
+            error={error}
+            keyboardEnabled={keyboardEnabled}
+            collapsibleMode={collapsibleMode}
+          />
+        </Box>
+      )}
       {/* Search bar fixed at top when in search mode */}
       {(searchState.isSearching || searchState.searchTerm) && (
-        <Box flexShrink={0} width="100%">
+        <Box flexShrink={0} width="100%" height={searchBarHeight}>
           <SearchBar searchState={searchState} searchInput={searchInput} />
         </Box>
       )}
-      <Box flexGrow={1} width="100%" minHeight={0}>
+      <Box
+        flexGrow={1}
+        width="100%"
+        minHeight={
+          searchState.isSearching || searchState.searchTerm
+            ? searchModeVisibleLines
+            : 1
+        }
+      >
         {collapsibleMode ? (
           <CollapsibleJsonViewer
             ref={collapsibleViewerRef}
@@ -583,8 +681,13 @@ export function App({
             searchTerm={searchState.searchTerm}
             searchResults={searchState.searchResults}
             currentSearchIndex={searchState.currentResultIndex}
-            visibleLines={visibleLines}
+            visibleLines={
+              searchState.isSearching || searchState.searchTerm
+                ? searchModeVisibleLines
+                : visibleLines
+            }
             showLineNumbers={lineNumbersVisible}
+            onScrollChange={handleCollapsibleScrollChange}
           />
         ) : schemaVisible ? (
           <SchemaViewer
@@ -593,7 +696,11 @@ export function App({
             searchTerm={searchState.searchTerm}
             searchResults={searchState.searchResults}
             currentSearchIndex={searchState.currentResultIndex}
-            visibleLines={visibleLines}
+            visibleLines={
+              searchState.isSearching || searchState.searchTerm
+                ? searchModeVisibleLines
+                : visibleLines
+            }
             showLineNumbers={lineNumbersVisible}
           />
         ) : (
@@ -603,7 +710,11 @@ export function App({
             searchTerm={searchState.searchTerm}
             searchResults={searchState.searchResults}
             currentSearchIndex={searchState.currentResultIndex}
-            visibleLines={visibleLines}
+            visibleLines={
+              searchState.isSearching || searchState.searchTerm
+                ? searchModeVisibleLines
+                : visibleLines
+            }
             showLineNumbers={lineNumbersVisible}
           />
         )}

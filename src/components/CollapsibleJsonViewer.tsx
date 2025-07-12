@@ -31,6 +31,7 @@ interface CollapsibleJsonViewerProps {
   visibleLines?: number;
   showLineNumbers?: boolean;
   onNavigate?: (action: NavigationAction) => void;
+  onScrollChange?: (newScrollOffset: number) => void;
 }
 
 export const CollapsibleJsonViewer = forwardRef<
@@ -46,6 +47,7 @@ export const CollapsibleJsonViewer = forwardRef<
     visibleLines,
     showLineNumbers = false,
     onNavigate,
+    onScrollChange,
   },
   ref,
 ) {
@@ -97,11 +99,28 @@ export const CollapsibleJsonViewer = forwardRef<
       const result = handleNavigation(collapsibleState, action);
       setCollapsibleState(result.newState);
 
+      // Handle scroll adjustment for height changes
+      if (result.scrollToLine !== undefined && onScrollChange) {
+        // Calculate optimal scroll position to keep cursor visible
+        const targetScrollOffset = Math.max(
+          0,
+          Math.min(
+            result.scrollToLine - Math.floor(effectiveVisibleLines / 2),
+            Math.max(
+              0,
+              result.newState.flattenedNodes.length - effectiveVisibleLines,
+            ),
+          ),
+        );
+
+        onScrollChange(targetScrollOffset);
+      }
+
       if (onNavigate) {
         onNavigate(action);
       }
     },
-    [collapsibleState, onNavigate],
+    [collapsibleState, onNavigate, onScrollChange, effectiveVisibleLines],
   );
 
   // Create search results map for O(1) lookup

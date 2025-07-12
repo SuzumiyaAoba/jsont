@@ -126,7 +126,7 @@ export function flattenNodes(
           level: node.level,
           isCollapsible: false,
           isCollapsed: false,
-          ...(node.parent && { parent: node.parent }),
+          parent: node, // The closing bracket's parent is the node itself
         };
         result.push(closingNode);
       }
@@ -186,10 +186,12 @@ export function handleNavigation(
 
   switch (action.type) {
     case "move_up": {
-      if (!newState.cursorPosition) break;
+      if (!newState.cursorPosition || newState.flattenedNodes.length === 0)
+        break;
 
-      const currentIndex = newState.flattenedNodes.findIndex(
-        (node) => node.id === newState.cursorPosition?.nodeId,
+      const currentIndex = findCursorIndex(
+        newState.cursorPosition,
+        newState.flattenedNodes,
       );
 
       if (currentIndex > 0) {
@@ -201,18 +203,29 @@ export function handleNavigation(
           };
           scrollToLine = currentIndex - 1;
         }
+      } else if (currentIndex === -1) {
+        // Cursor position is invalid, reset to first node
+        const resetResult = resetCursorToFirstNode(newState);
+        if (resetResult.scrollToLine !== undefined) {
+          scrollToLine = resetResult.scrollToLine;
+        }
       }
       break;
     }
 
     case "move_down": {
-      if (!newState.cursorPosition) break;
+      if (!newState.cursorPosition || newState.flattenedNodes.length === 0)
+        break;
 
-      const currentIndex = newState.flattenedNodes.findIndex(
-        (node) => node.id === newState.cursorPosition?.nodeId,
+      const currentIndex = findCursorIndex(
+        newState.cursorPosition,
+        newState.flattenedNodes,
       );
 
-      if (currentIndex < newState.flattenedNodes.length - 1) {
+      if (
+        currentIndex >= 0 &&
+        currentIndex < newState.flattenedNodes.length - 1
+      ) {
         const newNode = newState.flattenedNodes[currentIndex + 1];
         if (newNode) {
           newState.cursorPosition = {
@@ -220,6 +233,12 @@ export function handleNavigation(
             lineIndex: currentIndex + 1,
           };
           scrollToLine = currentIndex + 1;
+        }
+      } else if (currentIndex === -1) {
+        // Cursor position is invalid, reset to first node
+        const resetResult = resetCursorToFirstNode(newState);
+        if (resetResult.scrollToLine !== undefined) {
+          scrollToLine = resetResult.scrollToLine;
         }
       }
       break;
@@ -247,13 +266,49 @@ export function handleNavigation(
           newState.expandedNodes,
         );
 
-        // Update cursor line index
-        const newIndex = newState.flattenedNodes.findIndex(
-          (node) => node.id === newState.cursorPosition?.nodeId,
+        // Update cursor line index and handle scroll adjustment
+        const newIndex = findCursorIndex(
+          newState.cursorPosition,
+          newState.flattenedNodes,
         );
         if (newIndex >= 0) {
+          const oldLineIndex = newState.cursorPosition.lineIndex;
           newState.cursorPosition.lineIndex = newIndex;
-          scrollToLine = newIndex;
+
+          // If the cursor moved significantly due to collapse/expand,
+          // set scroll to keep cursor visible
+          const lineDelta = Math.abs(newIndex - oldLineIndex);
+          if (lineDelta > 0) {
+            scrollToLine = newIndex;
+          }
+        } else if (newState.flattenedNodes.length > 0) {
+          // Cursor node is no longer visible (collapsed), move to parent or first available node
+          const parentNode = currentNode.parent;
+          let targetNode = null;
+
+          if (parentNode) {
+            targetNode = newState.flattenedNodes.find(
+              (node) => node.id === parentNode.id,
+            );
+          }
+
+          if (!targetNode) {
+            // Fall back to first available node
+            const resetResult = resetCursorToFirstNode(newState);
+            if (resetResult.scrollToLine !== undefined) {
+              scrollToLine = resetResult.scrollToLine;
+            }
+          } else {
+            const targetIndex = findCursorIndex(
+              { nodeId: targetNode.id, lineIndex: 0 },
+              newState.flattenedNodes,
+            );
+            newState.cursorPosition = {
+              nodeId: targetNode.id,
+              lineIndex: targetIndex,
+            };
+            scrollToLine = targetIndex;
+          }
         }
       }
       break;
@@ -276,8 +331,9 @@ export function handleNavigation(
 
         // Update cursor position
         if (newState.cursorPosition) {
-          const newIndex = newState.flattenedNodes.findIndex(
-            (node) => node.id === newState.cursorPosition?.nodeId,
+          const newIndex = findCursorIndex(
+            newState.cursorPosition,
+            newState.flattenedNodes,
           );
           if (newIndex >= 0) {
             newState.cursorPosition.lineIndex = newIndex;
@@ -310,8 +366,9 @@ export function handleNavigation(
             };
             scrollToLine = 0;
           } else {
-            const newIndex = newState.flattenedNodes.findIndex(
-              (node) => node.id === newState.cursorPosition?.nodeId,
+            const newIndex = findCursorIndex(
+              newState.cursorPosition,
+              newState.flattenedNodes,
             );
             if (newIndex >= 0) {
               newState.cursorPosition.lineIndex = newIndex;
@@ -365,10 +422,30 @@ export function getNodeDisplayText(
   const indent = "  ".repeat(node.level);
   let prefix = "";
   let suffix = "";
+  let comma = "";
 
   // Handle closing bracket nodes specially
   if (node.id.endsWith("_closing")) {
-    return `${indent}${node.value}`;
+    // For closing brackets, check if the node that is being closed needs a comma
+    // The parent of closing node is the node being closed
+    const originalNode = node.parent;
+
+    if (originalNode?.parent && originalNode.path.key !== undefined) {
+      // Check if this is the last element in its parent
+      const isLastElement = (() => {
+        if (!originalNode.parent.children) return true;
+        const siblingIndex = originalNode.parent.children.findIndex(
+          (child) => child.id === originalNode.id,
+        );
+        return siblingIndex === originalNode.parent.children.length - 1;
+      })();
+
+      if (!isLastElement) {
+        comma = ",";
+      }
+    }
+
+    return `${indent}${node.value}${comma}`;
   }
 
   // Add key for object properties and array indices
@@ -403,7 +480,28 @@ export function getNodeDisplayText(
     }
   }
 
-  return `${indent}${prefix}${suffix}`;
+  // Add comma if this is not the last element in an array or object
+  // Only add comma for non-expanded collapsible nodes or primitive nodes
+  if (
+    node.parent &&
+    node.path.key !== undefined &&
+    (node.type === "primitive" || (node.isCollapsible && !isExpanded))
+  ) {
+    const isLastElement = (() => {
+      if (!node.parent.children) return true;
+
+      const siblingIndex = node.parent.children.findIndex(
+        (child) => child.id === node.id,
+      );
+      return siblingIndex === node.parent.children.length - 1;
+    })();
+
+    if (!isLastElement) {
+      comma = ",";
+    }
+  }
+
+  return `${indent}${prefix}${suffix}${comma}`;
 }
 
 /**
@@ -423,4 +521,34 @@ export function canToggleNode(
 export function getCurrentCursorNode(state: CollapsibleState) {
   if (!state.cursorPosition) return null;
   return state.nodes.get(state.cursorPosition.nodeId) || null;
+}
+
+/**
+ * Helper function to find cursor index in flattened nodes
+ */
+export function findCursorIndex(
+  cursorPosition: CursorPosition | null,
+  flattenedNodes: JsonNode[],
+): number {
+  if (!cursorPosition) return -1;
+  return flattenedNodes.findIndex((node) => node.id === cursorPosition.nodeId);
+}
+
+/**
+ * Helper function to reset cursor to first available node when current position is invalid
+ */
+export function resetCursorToFirstNode(state: CollapsibleState): {
+  scrollToLine?: number;
+} {
+  if (state.flattenedNodes.length > 0) {
+    const firstNode = state.flattenedNodes[0];
+    if (firstNode) {
+      state.cursorPosition = {
+        nodeId: firstNode.id,
+        lineIndex: 0,
+      };
+      return { scrollToLine: 0 };
+    }
+  }
+  return {};
 }

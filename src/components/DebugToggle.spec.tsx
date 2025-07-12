@@ -1,6 +1,6 @@
 import { render } from "ink-testing-library";
 import { describe, expect, it, vi } from "vitest";
-import { App } from "../App";
+import { App } from "../App.js";
 
 // Mock the useInput hook to simulate keyboard input
 type MockKeyInput = {
@@ -83,9 +83,15 @@ describe("Debug Toggle Functionality", () => {
 
   it("should show toggle debug help in status bar", () => {
     const data = { name: "test", value: 123 };
-    const { lastFrame } = render(
+    const { lastFrame, rerender } = render(
       <App initialData={data} keyboardEnabled={true} />,
     );
+
+    // Press '?' to show help
+    if (mockInputHandler) {
+      mockInputHandler("?", {});
+      rerender(<App initialData={data} keyboardEnabled={true} />);
+    }
 
     const output = lastFrame();
     expect(output).toContain("D: Toggle debug");

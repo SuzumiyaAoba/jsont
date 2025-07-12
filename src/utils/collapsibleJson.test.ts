@@ -167,6 +167,58 @@ describe("collapsibleJson", () => {
         );
       }
     });
+
+    it("should provide scroll adjustment for height changes", () => {
+      const state = initializeCollapsibleState(testData);
+
+      // Find a collapsible node and position cursor on it
+      const collapsibleNode = Array.from(state.nodes.values()).find(
+        (node) => node.isCollapsible,
+      );
+      if (collapsibleNode) {
+        state.cursorPosition = { nodeId: collapsibleNode.id, lineIndex: 5 };
+
+        const result = handleNavigation(state, { type: "toggle_node" });
+
+        // Should provide scroll line when height changes
+        expect(result.scrollToLine).toBeDefined();
+        expect(typeof result.scrollToLine).toBe("number");
+      }
+    });
+
+    it("should handle cursor position when node becomes invisible", () => {
+      const complexData = {
+        root: {
+          child1: { nested: "value1" },
+          child2: { nested: "value2" },
+        },
+      };
+      const state = initializeCollapsibleState(complexData);
+
+      // Position cursor on a nested node
+      const nestedNode = Array.from(state.nodes.values()).find(
+        (node) => node.path.path.length > 1,
+      );
+      if (nestedNode) {
+        state.cursorPosition = { nodeId: nestedNode.id, lineIndex: 3 };
+
+        // Collapse the parent to make nested node invisible
+        const parentNode = nestedNode.parent;
+        if (parentNode) {
+          state.cursorPosition = { nodeId: parentNode.id, lineIndex: 2 };
+          const result = handleNavigation(state, { type: "toggle_node" });
+
+          // Cursor should be moved to a visible node
+          expect(result.newState.cursorPosition).toBeTruthy();
+          if (result.newState.cursorPosition) {
+            const cursorNode = result.newState.nodes.get(
+              result.newState.cursorPosition.nodeId,
+            );
+            expect(cursorNode).toBeTruthy();
+          }
+        }
+      }
+    });
   });
 
   describe("formatCollapsedNode", () => {
@@ -222,6 +274,87 @@ describe("collapsibleJson", () => {
 
       const displayText = getNodeDisplayText(closingNode, true);
       expect(displayText).toBe("}");
+    });
+
+    it("should add commas for non-last elements", () => {
+      const tree = buildJsonTree({ a: 1, b: 2, c: 3 });
+
+      if (tree.children) {
+        // First element should have comma
+        const firstChild = tree.children[0];
+        if (firstChild) {
+          const displayText = getNodeDisplayText(firstChild, true);
+          expect(displayText).toBe('  "a": 1,');
+        }
+
+        // Last element should not have comma
+        const lastChild = tree.children[tree.children.length - 1];
+        if (lastChild) {
+          const displayText = getNodeDisplayText(lastChild, true);
+          expect(displayText).toBe('  "c": 3');
+        }
+      }
+    });
+
+    it("should handle commas in arrays correctly", () => {
+      const tree = buildJsonTree([1, 2, 3]);
+
+      if (tree.children) {
+        // First element should have comma
+        const firstChild = tree.children[0];
+        if (firstChild) {
+          const displayText = getNodeDisplayText(firstChild, true);
+          expect(displayText).toBe("  1,");
+        }
+
+        // Last element should not have comma
+        const lastChild = tree.children[tree.children.length - 1];
+        if (lastChild) {
+          const displayText = getNodeDisplayText(lastChild, true);
+          expect(displayText).toBe("  3");
+        }
+      }
+    });
+
+    it("should handle comma placement correctly for closing brackets", () => {
+      const nestedData = {
+        first: { a: 1, b: 2 },
+        second: [1, 2, 3],
+        third: "value",
+      };
+
+      const state = initializeCollapsibleState(nestedData);
+      const flattenedNodes = state.flattenedNodes;
+
+      // Find closing bracket for first object
+      const firstClosingNode = flattenedNodes.find(
+        (node) => node.id === "first_closing",
+      );
+
+      if (firstClosingNode) {
+        // Should have comma since it's not the last element
+        expect(getNodeDisplayText(firstClosingNode, false)).toBe("  },");
+      }
+
+      // Find closing bracket for second array
+      const secondClosingNode = flattenedNodes.find(
+        (node) => node.id === "second_closing",
+      );
+
+      if (secondClosingNode) {
+        // Should have comma since it's not the last element
+        expect(getNodeDisplayText(secondClosingNode, false)).toBe("  ],");
+      }
+
+      // Find last element (third)
+      const thirdNode = flattenedNodes.find(
+        (node) => node.path.key === "third",
+      );
+
+      if (thirdNode) {
+        // Should NOT have comma since it's the last element
+        expect(getNodeDisplayText(thirdNode, false)).toBe('  "third": "value"');
+      }
     });
   });
 });
