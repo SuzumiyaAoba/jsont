@@ -1,16 +1,16 @@
-import { Box, Text } from "ink";
-import type React from "react";
-import type { JsonValue, SearchResult } from "../../../core/types/index";
+import type { JsonValue, SearchResult } from "@core/types/index";
 import {
   applySearchHighlighting,
   DEFAULT_COLOR_SCHEME,
   tokenizeLine,
-} from "../../json-rendering/utils/syntaxHighlight";
+} from "@features/json-rendering/utils/syntaxHighlight";
 import {
   formatJsonSchema,
   handleSchemaError,
   inferJsonSchema,
-} from "../utils/schemaUtils";
+} from "@features/schema/utils/schemaUtils";
+import { Box, Text } from "ink";
+import type React from "react";
 
 interface SchemaViewerProps {
   data: JsonValue;

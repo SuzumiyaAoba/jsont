@@ -2,7 +2,7 @@
  * Centralized Error Handling
  */
 
-import { CONFIG, MESSAGES } from "../config/constants";
+import { CONFIG, MESSAGES } from "@core/config/constants";
 
 /**
  * Handle fatal errors that should terminate the process

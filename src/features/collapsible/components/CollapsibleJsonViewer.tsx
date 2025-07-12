@@ -1,3 +1,17 @@
+import type { JsonValue, SearchResult } from "@core/types/index";
+import type {
+  CollapsibleState,
+  NavigationAction,
+} from "@features/collapsible/types/collapsible";
+import {
+  getNodeDisplayText,
+  handleNavigation,
+  initializeCollapsibleState,
+} from "@features/collapsible/utils/collapsibleJson";
+import {
+  applySearchHighlighting,
+  tokenizeLine,
+} from "@features/json-rendering/utils/syntaxHighlight";
 import { Box, Text } from "ink";
 import {
   forwardRef,
@@ -7,17 +21,6 @@ import {
   useMemo,
   useState,
 } from "react";
-import type { JsonValue, SearchResult } from "../../../core/types/index";
-import {
-  applySearchHighlighting,
-  tokenizeLine,
-} from "../../json-rendering/utils/syntaxHighlight";
-import type { CollapsibleState, NavigationAction } from "../types/collapsible";
-import {
-  getNodeDisplayText,
-  handleNavigation,
-  initializeCollapsibleState,
-} from "../utils/collapsibleJson";
 
 interface CollapsibleJsonViewerProps {
   data: JsonValue;

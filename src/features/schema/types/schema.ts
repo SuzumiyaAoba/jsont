@@ -2,8 +2,8 @@
  * JSON Schema functionality type definitions
  */
 
-import type { JsonValue } from "../../../core/types/index.js";
-import type { SearchResult } from "../../search/types/search.js";
+import type { JsonValue } from "@core/types/index.js";
+import type { SearchResult } from "@features/search/types/search.js";
 
 export interface BaseSchemaProperties {
   type: string;
