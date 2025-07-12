@@ -376,10 +376,13 @@ export function App({
 
   // Handle schema export
   const handleExportSchema = useCallback(async () => {
+    console.log('[Export Debug] handleExportSchema called, initialData:', initialData);
+    
     if (!initialData) {
+      console.log('[Export Debug] No initial data available');
       setExportStatus({
         isExporting: false,
-        message: "No data to export",
+        message: "No data to export. Please load JSON data first.",
         type: "error",
       });
       return;
@@ -626,6 +629,7 @@ export function App({
         updateDebugInfo(`Toggle help ${helpVisible ? "OFF" : "ON"}`, input);
       } else if (input === "E" && !key.ctrl && !key.meta) {
         // Export JSON Schema to file
+        console.log('[Debug] E key pressed, starting export...');
         updateDebugInfo("Export schema", input);
         handleExportSchema();
       } else {
