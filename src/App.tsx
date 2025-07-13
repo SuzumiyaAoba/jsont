@@ -92,6 +92,18 @@ export function App({
 
   const { exit } = useApp();
 
+  // Enable mouse tracking in terminal
+  useEffect(() => {
+    if (keyboardEnabled && !isTestEnvironment) {
+      // Enable mouse tracking
+      process.stdout.write("\x1b[?1003h");
+      return () => {
+        // Disable mouse tracking on cleanup
+        process.stdout.write("\x1b[?1003l");
+      };
+    }
+  }, [keyboardEnabled, isTestEnvironment]);
+
   // Monitor terminal size changes
   useEffect(() => {
     const updateTerminalSize = () => {
@@ -737,6 +749,24 @@ export function App({
     ],
   );
 
+  // Handle mouse events - memoized to prevent unnecessary re-renders
+  const handleMouseEvent = useCallback(
+    (mouse: { x: number; y: number; action: string; button: string }) => {
+      // Only handle left mouse button clicks in collapsible mode
+      if (mouse.button === "left" && collapsibleMode) {
+        // Pass mouse coordinates to collapsible viewer for handling
+        if (collapsibleViewerRef.current?.navigate) {
+          // Create a special navigation action for mouse clicks
+          handleCollapsibleNavigation({
+            type: "toggle_node",
+            mouseClick: { x: mouse.x, y: mouse.y },
+          });
+        }
+      }
+    },
+    [collapsibleMode, handleCollapsibleNavigation],
+  );
+
   // Handle keyboard input function - memoized to prevent unnecessary re-renders
   const handleKeyInput = useCallback(
     (
@@ -835,14 +865,18 @@ export function App({
     );
   }
 
-  // Test basic input detection
+  // Handle keyboard input and mouse events
   useInput(
     (input, key) => {
-      if (!isTestEnvironment && !exportDialog.isVisible) {
-        console.log("🚨 [RAW-INPUT] ANY key detected:", input, key);
+      // Mouse movement events are filtered out to prevent screen flickering
+
+      // Handle mouse events - only process clicks, ignore movement
+      if (key.mouse && key.mouse.action === "down") {
+        handleMouseEvent(key.mouse);
+      } else if (!key.mouse) {
+        // Handle keyboard input
+        handleKeyInput(input, key);
       }
-      // Call the actual handler
-      handleKeyInput(input, key);
     },
     {
       isActive: keyboardEnabled && !exportDialog.isVisible,

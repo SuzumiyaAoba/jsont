@@ -486,18 +486,11 @@ export function getNodeDisplayText(
   isExpanded: boolean,
 ): string {
   const indent = "  ".repeat(node.level);
-  let expandIndicator = "";
   let prefix = "";
   let suffix = "";
   let comma = "";
 
-  // Add expand/collapse indicator for collapsible nodes
-  if (node.isCollapsible && !node.id.endsWith("_closing")) {
-    expandIndicator = isExpanded ? "▼ " : "▶ ";
-  } else if (!node.id.endsWith("_closing")) {
-    // Add spacing for non-collapsible nodes to align with collapsible ones
-    expandIndicator = "  ";
-  }
+  // No visual indicators needed
 
   // Handle closing bracket nodes specially
   if (node.id.endsWith("_closing")) {
@@ -576,7 +569,7 @@ export function getNodeDisplayText(
     }
   }
 
-  return `${indent}${expandIndicator}${prefix}${suffix}${comma}`;
+  return `${indent}${prefix}${suffix}${comma}`;
 }
 
 /**

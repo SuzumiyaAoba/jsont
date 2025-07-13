@@ -96,6 +96,65 @@ export const CollapsibleJsonViewer = forwardRef<
   // Handle navigation actions
   const handleNavigationAction = useCallback(
     (action: NavigationAction) => {
+      // Handle mouse click - find which node was clicked
+      if (action.mouseClick && action.type === "toggle_node") {
+        const clickY = action.mouseClick.y;
+        // Convert screen coordinates to line index relative to JSON content
+        // Account for any UI elements above the JSON viewer
+        const relativeY = clickY - 1; // Adjust for potential header/status bars
+        const clickedLineIndex = startLine + relativeY;
+
+        if (
+          clickedLineIndex >= 0 &&
+          clickedLineIndex < collapsibleState.flattenedNodes.length
+        ) {
+          const clickedNode = collapsibleState.flattenedNodes[clickedLineIndex];
+          if (clickedNode?.isCollapsible) {
+            // Create a new action targeting the specific clicked node
+            const nodeAction: NavigationAction = {
+              type: "toggle_node",
+              nodeId: clickedNode.id,
+            };
+
+            // Update cursor position to clicked node
+            const newState = {
+              ...collapsibleState,
+              cursorPosition: {
+                nodeId: clickedNode.id,
+                lineIndex: clickedLineIndex,
+              },
+            };
+            setCollapsibleState(newState);
+
+            // Process the toggle action
+            const result = handleNavigation(newState, nodeAction);
+            setCollapsibleState(result.newState);
+
+            // Handle scroll adjustment
+            if (result.scrollToLine !== undefined && onScrollChange) {
+              const targetScrollOffset = Math.max(
+                0,
+                Math.min(
+                  result.scrollToLine - Math.floor(effectiveVisibleLines / 2),
+                  Math.max(
+                    0,
+                    result.newState.flattenedNodes.length -
+                      effectiveVisibleLines,
+                  ),
+                ),
+              );
+              onScrollChange(targetScrollOffset);
+            }
+
+            if (onNavigate) {
+              onNavigate(nodeAction);
+            }
+            return;
+          }
+        }
+      }
+
+      // Handle regular navigation actions
       const result = handleNavigation(collapsibleState, action);
       setCollapsibleState(result.newState);
 
@@ -120,7 +179,13 @@ export const CollapsibleJsonViewer = forwardRef<
         onNavigate(action);
       }
     },
-    [collapsibleState, onNavigate, onScrollChange, effectiveVisibleLines],
+    [
+      collapsibleState,
+      onNavigate,
+      onScrollChange,
+      effectiveVisibleLines,
+      startLine,
+    ],
   );
 
   // Create search results map for O(1) lookup

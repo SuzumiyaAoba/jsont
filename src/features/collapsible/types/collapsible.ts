@@ -44,6 +44,10 @@ export interface NavigationAction {
     | "expand_all"
     | "collapse_all";
   nodeId?: string;
+  mouseClick?: {
+    x: number;
+    y: number;
+  };
 }
 
 /**
