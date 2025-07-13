@@ -35,7 +35,14 @@ export interface CollapsibleState {
 }
 
 export interface NavigationAction {
-  type: "move_up" | "move_down" | "toggle_node" | "expand_all" | "collapse_all";
+  type:
+    | "move_up"
+    | "move_down"
+    | "toggle_node"
+    | "expand_node"
+    | "collapse_node"
+    | "expand_all"
+    | "collapse_all";
   nodeId?: string;
 }
 

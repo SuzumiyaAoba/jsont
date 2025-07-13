@@ -96,6 +96,7 @@ export const CollapsibleJsonViewer = forwardRef<
   // Handle navigation actions
   const handleNavigationAction = useCallback(
     (action: NavigationAction) => {
+      // Handle regular navigation actions
       const result = handleNavigation(collapsibleState, action);
       setCollapsibleState(result.newState);
 
@@ -163,7 +164,7 @@ export const CollapsibleJsonViewer = forwardRef<
           key={originalIndex}
           {...(isCurrentResult ? { backgroundColor: "blue" } : {})}
           {...(isCursorLine && !isCurrentResult
-            ? { backgroundColor: "gray", dimColor: true }
+            ? { backgroundColor: "blue", bold: true }
             : {})}
         >
           {highlightedTokens.map((token, tokenIndex) => {

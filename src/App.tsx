@@ -582,6 +582,22 @@ export function App({
         // Toggle node in collapsible mode
         updateDebugInfo("Toggle node", input);
         handleCollapsibleNavigation({ type: "toggle_node" });
+      } else if (input === " " && !key.ctrl && !key.meta && collapsibleMode) {
+        // Space: Alternative toggle for collapsible nodes
+        updateDebugInfo("Toggle node (Space)", input);
+        handleCollapsibleNavigation({ type: "toggle_node" });
+      } else if (input === "o" && !key.ctrl && !key.meta && collapsibleMode) {
+        // 'o': Open/expand current node
+        updateDebugInfo("Expand node", input);
+        handleCollapsibleNavigation({ type: "expand_node" });
+      } else if (input === "c" && !key.ctrl && !key.meta && collapsibleMode) {
+        // 'c': Close/collapse current node
+        updateDebugInfo("Collapse node", input);
+        handleCollapsibleNavigation({ type: "collapse_node" });
+      } else if (input === "O" && !key.ctrl && !key.meta && collapsibleMode) {
+        // 'O': Expand all nodes (capital O)
+        updateDebugInfo("Expand all", input);
+        handleCollapsibleNavigation({ type: "expand_all" });
       } else if (key.ctrl && input === "f") {
         // Half-page down (Ctrl-f)
         updateDebugInfo("Half-page down", input);
@@ -763,25 +779,10 @@ export function App({
       } else if (input === "E" && !key.ctrl && !key.meta) {
         // Export JSON Schema to file - always available regardless of search mode
         updateDebugInfo("Export schema", input);
-        if (!isTestEnvironment && !exportDialog.isVisible) {
-          console.log(
-            "🚀 [E-KEY] E key pressed! Calling handleExportSchema...",
-          );
-          console.log("🚀 [E-KEY] initialData exists:", !!initialData);
-        }
         handleExportSchema();
-        if (!isTestEnvironment && !exportDialog.isVisible) {
-          console.log("🚀 [E-KEY] handleExportSchema completed");
-        }
       } else if (searchState.isSearching) {
-        if (!isTestEnvironment && !exportDialog.isVisible) {
-          console.log("🔍 [ROUTE] Routing to handleSearchInput");
-        }
         handleSearchInput(input, key);
       } else {
-        if (!isTestEnvironment && !exportDialog.isVisible) {
-          console.log("🧭 [ROUTE] Routing to handleNavigationInput");
-        }
         // Handle navigation input
         handleNavigationInput(input, key);
       }
@@ -794,38 +795,17 @@ export function App({
       handleNavigationInput,
       updateDebugInfo,
       handleExportSchema,
-      initialData,
       isTestEnvironment,
       exportDialog.isVisible,
     ],
   );
 
   // Use Ink's useInput hook for keyboard handling
-  if (!isTestEnvironment) {
-    console.log(
-      "🎮 [INPUT] useInput setup - keyboardEnabled:",
-      keyboardEnabled,
-      "exportDialog.isVisible:",
-      exportDialog.isVisible,
-    );
-    console.log("🎮 [INPUT] Initial searchState:", {
-      isSearching: searchState.isSearching,
-      searchTerm: searchState.searchTerm,
-      resultsCount: searchState.searchResults.length,
-    });
-    console.log(
-      "🎮 [INPUT] Main app useInput isActive:",
-      keyboardEnabled && !exportDialog.isVisible,
-    );
-  }
 
-  // Test basic input detection
+  // Handle keyboard input only (mouse events handled separately via stdin)
   useInput(
     (input, key) => {
-      if (!isTestEnvironment && !exportDialog.isVisible) {
-        console.log("🚨 [RAW-INPUT] ANY key detected:", input, key);
-      }
-      // Call the actual handler
+      // Handle keyboard input
       handleKeyInput(input, key);
     },
     {

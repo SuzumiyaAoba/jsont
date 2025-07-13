@@ -284,14 +284,14 @@ describe("collapsibleJson", () => {
         const firstChild = tree.children[0];
         if (firstChild) {
           const displayText = getNodeDisplayText(firstChild, true);
-          expect(displayText).toBe('  "a": 1,');
+          expect(displayText).toBe('  "a": 1,'); // Standard indentation
         }
 
         // Last element should not have comma
         const lastChild = tree.children[tree.children.length - 1];
         if (lastChild) {
           const displayText = getNodeDisplayText(lastChild, true);
-          expect(displayText).toBe('  "c": 3');
+          expect(displayText).toBe('  "c": 3'); // Standard indentation
         }
       }
     });
@@ -304,14 +304,14 @@ describe("collapsibleJson", () => {
         const firstChild = tree.children[0];
         if (firstChild) {
           const displayText = getNodeDisplayText(firstChild, true);
-          expect(displayText).toBe("  1,");
+          expect(displayText).toBe("  1,"); // Standard indentation
         }
 
         // Last element should not have comma
         const lastChild = tree.children[tree.children.length - 1];
         if (lastChild) {
           const displayText = getNodeDisplayText(lastChild, true);
-          expect(displayText).toBe("  3");
+          expect(displayText).toBe("  3"); // Standard indentation
         }
       }
     });
@@ -353,7 +353,7 @@ describe("collapsibleJson", () => {
 
       if (thirdNode) {
         // Should NOT have comma since it's the last element
-        expect(getNodeDisplayText(thirdNode, false)).toBe('  "third": "value"');
+        expect(getNodeDisplayText(thirdNode, false)).toBe('  "third": "value"'); // Standard indentation
       }
     });
   });
