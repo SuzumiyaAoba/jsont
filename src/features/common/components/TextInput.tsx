@@ -3,7 +3,7 @@
  */
 
 import { Box, Text } from "ink";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 export interface TextInputProps {
   value: string;
@@ -278,14 +278,18 @@ export function TextInput({
   const { state, setValue, getDisplayText } = useTextInput(value);
 
   // Sync external value changes
-  if (state.value !== value) {
-    setValue(value);
-  }
+  useEffect(() => {
+    if (state.value !== value) {
+      setValue(value);
+    }
+  }, [value, state.value, setValue]);
 
   // Notify parent of changes
-  if (state.value !== value && onChange) {
-    onChange(state.value);
-  }
+  useEffect(() => {
+    if (onChange && state.value !== value) {
+      onChange(state.value);
+    }
+  }, [state.value, value, onChange]);
 
   const { beforeCursor, atCursor, afterCursor } = getDisplayText(
     isActive,
