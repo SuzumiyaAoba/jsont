@@ -46,13 +46,13 @@ export async function readStdinThenReinitialize(): Promise<StdinReadResult> {
     const parseResult = parseJsonWithValidation(inputData);
 
     // Now try to reinitialize stdin for keyboard input
-    await reinitializeStdinForKeyboard();
+    const keyboardAvailable = await reinitializeStdinForKeyboard();
 
     return {
       success: parseResult.success,
       data: parseResult.data,
       error: parseResult.error,
-      canUseKeyboard: true, // Always enable keyboard for piped input
+      canUseKeyboard: keyboardAvailable, // Use actual keyboard availability
     };
   } catch (error) {
     return {
@@ -98,7 +98,7 @@ async function reinitializeStdinForKeyboard(): Promise<boolean> {
   try {
     // For Windows, use minimal setup
     if (process.platform === "win32") {
-      return setupMinimalStdin();
+      return await setupMinimalStdin();
     }
 
     // Try to open the controlling terminal directly
@@ -140,9 +140,17 @@ async function reinitializeStdinForKeyboard(): Promise<boolean> {
       });
 
       return true;
-    } catch {
+    } catch (error) {
+      const isTestEnvironment =
+        process.env["NODE_ENV"] === "test" || process.env["VITEST"] === "true";
+      if (!isTestEnvironment) {
+        console.log(
+          "🔧 [STDIN] /dev/tty access failed:",
+          error instanceof Error ? error.message : String(error),
+        );
+      }
       // TTY access failed, try alternative approach
-      return setupEnhancedStdin();
+      return await setupEnhancedStdin();
     }
   } catch {
     return false;
@@ -151,47 +159,169 @@ async function reinitializeStdinForKeyboard(): Promise<boolean> {
 
 /**
  * Enhanced stdin setup that works better after reading from pipes
+ * Uses a more direct approach that tries to access the controlling terminal
  */
-function setupEnhancedStdin(): boolean {
+async function setupEnhancedStdin(): Promise<boolean> {
   try {
-    // Clean up existing stdin listeners
-    process.stdin.removeAllListeners();
+    const isTestEnvironment =
+      process.env["NODE_ENV"] === "test" || process.env["VITEST"] === "true";
+    if (!isTestEnvironment) {
+      console.log("🔧 [STDIN] Setting up enhanced stdin for keyboard input");
+    }
 
-    // Force TTY properties for better Ink compatibility
-    Object.defineProperty(process.stdin, "isTTY", {
+    const fs = await import("node:fs");
+
+    // First, try to access the controlling terminal through various paths
+    const terminalPaths = [
+      "/dev/tty", // Standard controlling terminal (most reliable)
+      "/dev/console", // System console
+    ];
+
+    for (const termPath of terminalPaths) {
+      try {
+        if (!isTestEnvironment) {
+          console.log(`🔧 [STDIN] Trying terminal path: ${termPath}`);
+        }
+
+        // Check if this path exists and is accessible
+        fs.accessSync(termPath, fs.constants.R_OK | fs.constants.W_OK);
+
+        // Open the terminal device for both reading and writing
+        const termFd = fs.openSync(termPath, "r+");
+        const termStream = new ReadStream(termFd);
+
+        // Test if this is actually a TTY that supports raw mode
+        try {
+          if (termStream.setRawMode) {
+            termStream.setRawMode(true);
+            termStream.setRawMode(false);
+            if (!isTestEnvironment) {
+              console.log(`✅ [STDIN] ${termPath} supports raw mode`);
+            }
+          } else {
+            throw new Error("No setRawMode function");
+          }
+        } catch (rawModeError) {
+          if (!isTestEnvironment) {
+            console.log(
+              `❌ [STDIN] ${termPath} doesn't support raw mode:`,
+              rawModeError instanceof Error
+                ? rawModeError.message
+                : String(rawModeError),
+            );
+          }
+          fs.closeSync(termFd);
+          continue;
+        }
+
+        // Set up TTY properties
+        Object.defineProperty(termStream, "isTTY", {
+          value: true,
+          writable: false,
+          configurable: true,
+        });
+
+        // Add ref/unref functions if missing
+        if (!termStream.ref) {
+          Object.defineProperty(termStream, "ref", {
+            value: function () {
+              return this;
+            },
+            writable: true,
+            configurable: true,
+          });
+        }
+
+        if (!termStream.unref) {
+          Object.defineProperty(termStream, "unref", {
+            value: function () {
+              return this;
+            },
+            writable: true,
+            configurable: true,
+          });
+        }
+
+        // Clean up existing stdin and replace
+        process.stdin.removeAllListeners();
+        Object.defineProperty(process, "stdin", {
+          value: termStream,
+          writable: true,
+          configurable: true,
+        });
+
+        if (!isTestEnvironment) {
+          console.log(
+            `✅ [STDIN] Successfully using ${termPath} for keyboard input`,
+          );
+        }
+        return true;
+      } catch (pathError) {
+        if (!isTestEnvironment) {
+          console.log(
+            `❌ [STDIN] ${termPath} failed:`,
+            pathError instanceof Error ? pathError.message : String(pathError),
+          );
+        }
+      }
+    }
+
+    // If all terminal device approaches failed, try creating a mock stdin that
+    // can work with Ink but doesn't provide actual keyboard input
+    if (!isTestEnvironment) {
+      console.log(
+        "🔧 [STDIN] No terminal devices available, setting up mock stdin",
+      );
+    }
+    return await setupMockStdinForInk();
+  } catch (error) {
+    const isTestEnvironment =
+      process.env["NODE_ENV"] === "test" || process.env["VITEST"] === "true";
+    if (!isTestEnvironment) {
+      console.log(
+        "🔧 [STDIN] Enhanced stdin setup failed:",
+        error instanceof Error ? error.message : String(error),
+      );
+    }
+    return await setupMinimalStdin();
+  }
+}
+
+/**
+ * Set up a mock stdin that works with Ink but indicates keyboard is not available
+ * This allows the app to run but disables keyboard functionality gracefully
+ */
+async function setupMockStdinForInk(): Promise<boolean> {
+  try {
+    const isTestEnvironment =
+      process.env["NODE_ENV"] === "test" || process.env["VITEST"] === "true";
+    if (!isTestEnvironment) {
+      console.log("🔧 [STDIN] Setting up mock stdin for Ink compatibility");
+    }
+
+    const { Readable } = await import("node:stream");
+
+    // Create a readable stream that satisfies Ink's requirements but doesn't receive input
+    const mockStdin = new Readable({
+      read() {
+        // Do nothing - this stream won't receive actual input
+      },
+    });
+
+    // Add TTY properties to satisfy Ink
+    Object.defineProperty(mockStdin, "isTTY", {
       value: true,
-      writable: true,
+      writable: false,
       configurable: true,
     });
 
-    // Store original setRawMode if it exists
-    const originalSetRawMode = process.stdin.setRawMode;
-
-    // Set up enhanced setRawMode that works with TTY reinitialization
-    Object.defineProperty(process.stdin, "setRawMode", {
+    // Add a setRawMode function that doesn't do anything
+    Object.defineProperty(mockStdin, "setRawMode", {
       value: function (mode: boolean) {
-        try {
-          // First try the original setRawMode
-          if (originalSetRawMode && typeof originalSetRawMode === "function") {
-            return originalSetRawMode.call(this, mode);
-          }
-          // If no original, try accessing /dev/tty directly for raw mode
-          if (process.platform !== "win32" && mode) {
-            const fs = require("node:fs");
-            const termios = require("node:tty");
-            // Try to enable raw mode on the controlling terminal
-            try {
-              const ttyFd = fs.openSync("/dev/tty", "r+");
-              const ttyStream = new termios.ReadStream(ttyFd);
-              if (ttyStream.setRawMode) {
-                ttyStream.setRawMode(mode);
-              }
-            } catch {
-              // Ignore errors, fallback to no raw mode
-            }
-          }
-        } catch {
-          // Silently handle setRawMode errors
+        if (!isTestEnvironment) {
+          console.log(
+            `🔧 [STDIN] Mock setRawMode(${mode}) - no actual raw mode available`,
+          );
         }
         return this;
       },
@@ -199,19 +329,54 @@ function setupEnhancedStdin(): boolean {
       configurable: true,
     });
 
-    // Force resume stdin to make sure it's ready
-    process.stdin.resume();
+    // Add ref/unref functions
+    Object.defineProperty(mockStdin, "ref", {
+      value: function () {
+        return this;
+      },
+      writable: true,
+      configurable: true,
+    });
 
-    return true; // Indicate enhanced keyboard support
-  } catch {
-    return setupMinimalStdin();
+    Object.defineProperty(mockStdin, "unref", {
+      value: function () {
+        return this;
+      },
+      writable: true,
+      configurable: true,
+    });
+
+    // Replace process.stdin
+    process.stdin.removeAllListeners();
+    Object.defineProperty(process, "stdin", {
+      value: mockStdin,
+      writable: true,
+      configurable: true,
+    });
+
+    if (!isTestEnvironment) {
+      console.log(
+        "⚠️  [STDIN] Mock stdin setup complete - keyboard input not available",
+      );
+    }
+    return false; // Indicate that keyboard input is not actually available
+  } catch (error) {
+    const isTestEnvironment =
+      process.env["NODE_ENV"] === "test" || process.env["VITEST"] === "true";
+    if (!isTestEnvironment) {
+      console.log(
+        "❌ [STDIN] Mock stdin setup failed:",
+        error instanceof Error ? error.message : String(error),
+      );
+    }
+    return await setupMinimalStdin();
   }
 }
 
 /**
  * Set up minimal stdin interface for Ink compatibility
  */
-function setupMinimalStdin(): boolean {
+async function setupMinimalStdin(): Promise<boolean> {
   try {
     // Clean up existing stdin listeners
     process.stdin.removeAllListeners();

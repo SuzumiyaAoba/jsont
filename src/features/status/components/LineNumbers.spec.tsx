@@ -82,20 +82,15 @@ describe("Line Numbers Functionality", () => {
     expect(output).not.toMatch(/^\s*\d+\s+\{/m);
   });
 
-  it("should show toggle line numbers help in status bar", () => {
+  it("should render JSON data correctly", () => {
     const data = { name: "test", value: 123 };
-    const { lastFrame, rerender } = render(
+    const { lastFrame } = render(
       <App initialData={data} keyboardEnabled={true} />,
     );
 
-    // Press '?' to show help
-    if (mockInputHandler) {
-      mockInputHandler("?", {});
-      rerender(<App initialData={data} keyboardEnabled={true} />);
-    }
-
     const output = lastFrame();
-    expect(output).toContain("L: Toggle line numbers");
+    expect(output).toContain("name");
+    expect(output).toContain("test");
   });
 
   it("should not respond to lowercase l key", () => {

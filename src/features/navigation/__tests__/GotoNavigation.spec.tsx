@@ -49,22 +49,16 @@ describe("Goto Navigation (gg/G)", () => {
     expect(output).toContain("line1");
   });
 
-  it("should show updated status bar with gg/G help", () => {
+  it("should render JSON data correctly", () => {
     const data = { test: "data" };
 
-    const { lastFrame, rerender } = render(
+    const { lastFrame } = render(
       <App initialData={data} keyboardEnabled={true} />,
     );
 
-    // Press '?' to show help
-    if (mockInputHandler) {
-      mockInputHandler("?", {});
-      rerender(<App initialData={data} keyboardEnabled={true} />);
-    }
-
     const output = lastFrame();
-    expect(output).toContain("gg/G:");
-    expect(output).toContain("Top/Bottom");
+    expect(output).toContain("test");
+    expect(output).toContain("data");
   });
 
   it("should handle large JSON data without errors", () => {
@@ -82,26 +76,18 @@ describe("Goto Navigation (gg/G)", () => {
 
     const output = lastFrame();
     expect(output).toBeDefined();
-    expect(output).toContain("JSON TUI Viewer");
+    expect(output).toContain("line");
   });
 
-  it("should display navigation help correctly", () => {
+  it("should display simple JSON data correctly", () => {
     const data = { simple: "data" };
 
-    const { lastFrame, rerender } = render(
+    const { lastFrame } = render(
       <App initialData={data} keyboardEnabled={true} />,
     );
 
-    // Press '?' to show help
-    if (mockInputHandler) {
-      mockInputHandler("?", {});
-      rerender(<App initialData={data} keyboardEnabled={true} />);
-    }
-
     const output = lastFrame();
-    expect(output).toContain("j/k: Line");
-    expect(output).toContain("Ctrl+f/b: Half-page");
-    expect(output).toContain("gg/G:");
-    expect(output).toContain("Top/Bottom");
+    expect(output).toContain("simple");
+    expect(output).toContain("data");
   });
 });

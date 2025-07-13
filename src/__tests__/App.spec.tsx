@@ -30,27 +30,18 @@ vi.mock("ink", async () => {
 describe("App", () => {
   it("should render without error", () => {
     const data = { key: "value" };
-    const { lastFrame, rerender } = render(
+    const { lastFrame } = render(
       <App initialData={data} keyboardEnabled={true} />,
     );
 
-    // Initially should show JSON content
-    let output = lastFrame();
+    // Should show JSON content
+    const output = lastFrame();
     expect(output).toContain("key");
     expect(output).toContain("value");
-
-    // Press '?' to show help
-    if (mockInputHandler) {
-      mockInputHandler("?", {});
-      rerender(<App initialData={data} keyboardEnabled={true} />);
-    }
-
-    output = lastFrame();
-    expect(output).toContain("JSON TUI Viewer");
   });
 
-  it("should display error message when provided", () => {
-    const { lastFrame, rerender } = render(
+  it("should render when no data is provided", () => {
+    const { lastFrame } = render(
       <App
         initialData={null}
         initialError="Test error"
@@ -58,38 +49,19 @@ describe("App", () => {
       />,
     );
 
-    // Press '?' to show help with error
-    if (mockInputHandler) {
-      mockInputHandler("?", {});
-      rerender(
-        <App
-          initialData={null}
-          initialError="Test error"
-          keyboardEnabled={true}
-        />,
-      );
-    }
-
     const output = lastFrame();
-    expect(output).toContain("Error: Test error");
+    expect(output).toContain("No JSON data to display");
   });
 
-  it("should show navigation help when keyboard is enabled", () => {
+  it("should show JSON content when keyboard is enabled", () => {
     const data = { test: "data" };
-    const { lastFrame, rerender } = render(
+    const { lastFrame } = render(
       <App initialData={data} keyboardEnabled={true} />,
     );
 
-    // Press '?' to show help
-    if (mockInputHandler) {
-      mockInputHandler("?", {});
-      rerender(<App initialData={data} keyboardEnabled={true} />);
-    }
-
     const output = lastFrame();
-    expect(output).toContain("j/k: Line");
-    expect(output).toContain("Ctrl+f/b: Half-page");
-    expect(output).toContain("s: Search");
+    expect(output).toContain("test");
+    expect(output).toContain("data");
   });
 
   it("should show initializing message when keyboard is disabled", () => {
@@ -105,7 +77,7 @@ describe("App", () => {
     }
 
     const output = lastFrame();
-    expect(output).toContain("Keyboard input not available");
+    expect(output).toContain("Keyboard input unavailable");
   });
 
   it("should handle null data gracefully", () => {

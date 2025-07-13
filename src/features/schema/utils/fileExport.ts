@@ -11,6 +11,7 @@ export interface ExportOptions {
   filename?: string;
   outputDir?: string;
   format?: "json";
+  baseUrl?: string;
 }
 
 export interface ExportResult {
@@ -27,10 +28,14 @@ export async function exportJsonSchemaToFile(
   options: ExportOptions = {},
 ): Promise<ExportResult> {
   try {
-    const { filename = "schema.json", outputDir = process.cwd() } = options;
+    const {
+      filename = "schema.json",
+      outputDir = process.cwd(),
+      baseUrl,
+    } = options;
 
     // Generate JSON Schema
-    const schema = inferJsonSchema(data, "Exported Schema");
+    const schema = inferJsonSchema(data, "Exported Schema", baseUrl);
 
     // Format content as JSON
     const content = formatJsonSchema(schema);
