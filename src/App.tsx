@@ -41,6 +41,10 @@ export function App({
   initialError,
   keyboardEnabled = false,
 }: AppProps) {
+  // Check if we're in test environment - moved to top to avoid dependency issues
+  const isTestEnvironment =
+    process.env.NODE_ENV === "test" || process.env.VITEST === "true";
+
   const [error] = useState<string | null>(initialError ?? null);
   const [scrollOffset, setScrollOffset] = useState<number>(0);
   const [waitingForSecondG, setWaitingForSecondG] = useState<boolean>(false);
@@ -730,6 +734,18 @@ export function App({
         tab?: boolean;
       },
     ) => {
+      if (!isTestEnvironment && !exportDialog.isVisible) {
+        console.log(
+          `⌨️  [KEY] Key pressed: "${input}" (length: ${input?.length}) (ctrl: ${key.ctrl}, meta: ${key.meta})`,
+        );
+        console.log(
+          `📊 [STATE] searchState.isSearching: ${searchState.isSearching}, searchTerm: "${searchState.searchTerm}"`,
+        );
+        console.log(
+          `🎯 [CHECK] input === "E": ${input === "E"}, !key.ctrl: ${!key.ctrl}, !key.meta: ${!key.meta}`,
+        );
+      }
+
       // Always allow exit commands
       if (key.ctrl && input === "c") {
         updateDebugInfo("Exit (Ctrl+C)", input);
@@ -745,11 +761,25 @@ export function App({
       } else if (input === "E" && !key.ctrl && !key.meta) {
         // Export JSON Schema to file - always available regardless of search mode
         updateDebugInfo("Export schema", input);
+        if (!isTestEnvironment && !exportDialog.isVisible) {
+          console.log(
+            "🚀 [E-KEY] E key pressed! Calling handleExportSchema...",
+          );
+          console.log("🚀 [E-KEY] initialData exists:", !!initialData);
+        }
         handleExportSchema();
+        if (!isTestEnvironment && !exportDialog.isVisible) {
+          console.log("🚀 [E-KEY] handleExportSchema completed");
+        }
       } else if (searchState.isSearching) {
-        // Handle search input
+        if (!isTestEnvironment && !exportDialog.isVisible) {
+          console.log("🔍 [ROUTE] Routing to handleSearchInput");
+        }
         handleSearchInput(input, key);
       } else {
+        if (!isTestEnvironment && !exportDialog.isVisible) {
+          console.log("🧭 [ROUTE] Routing to handleNavigationInput");
+        }
         // Handle navigation input
         handleNavigationInput(input, key);
       }
@@ -762,18 +792,49 @@ export function App({
       handleNavigationInput,
       updateDebugInfo,
       handleExportSchema,
+      initialData,
+      isTestEnvironment,
+      exportDialog.isVisible,
     ],
   );
 
   // Use Ink's useInput hook for keyboard handling
-  useInput(handleKeyInput, {
-    isActive: keyboardEnabled,
-  });
+  if (!isTestEnvironment) {
+    console.log(
+      "🎮 [INPUT] useInput setup - keyboardEnabled:",
+      keyboardEnabled,
+      "exportDialog.isVisible:",
+      exportDialog.isVisible,
+    );
+    console.log("🎮 [INPUT] Initial searchState:", {
+      isSearching: searchState.isSearching,
+      searchTerm: searchState.searchTerm,
+      resultsCount: searchState.searchResults.length,
+    });
+    console.log(
+      "🎮 [INPUT] Main app useInput isActive:",
+      keyboardEnabled && !exportDialog.isVisible,
+    );
+  }
+
+  // Test basic input detection
+  useInput(
+    (input, key) => {
+      if (!isTestEnvironment && !exportDialog.isVisible) {
+        console.log("🚨 [RAW-INPUT] ANY key detected:", input, key);
+      }
+      // Call the actual handler
+      handleKeyInput(input, key);
+    },
+    {
+      isActive: keyboardEnabled && !exportDialog.isVisible,
+    },
+  );
 
   return (
     <Box flexDirection="column" width="100%">
       {/* Help bar - only shown when ? key is pressed */}
-      {helpVisible && (
+      {helpVisible && !exportDialog.isVisible && (
         <Box flexShrink={0} width="100%" height={statusBarHeight}>
           <StatusBar
             error={error}
@@ -783,111 +844,145 @@ export function App({
         </Box>
       )}
       {/* Search bar fixed at top when in search mode */}
-      {(searchState.isSearching || searchState.searchTerm) && (
-        <Box flexShrink={0} width="100%" height={searchBarHeight}>
-          <SearchBar
-            searchState={searchState}
-            searchInput={searchInput}
-            onScopeChange={handleSearchScopeChange}
-          />
-        </Box>
-      )}
-      {/* Export status bar */}
-      {(exportStatus.isExporting || exportStatus.message) && (
+      {(searchState.isSearching || searchState.searchTerm) &&
+        !exportDialog.isVisible && (
+          <Box flexShrink={0} width="100%" height={searchBarHeight}>
+            <SearchBar
+              searchState={searchState}
+              searchInput={searchInput}
+              onScopeChange={handleSearchScopeChange}
+            />
+          </Box>
+        )}
+      {/* Keyboard unavailable warning */}
+      {!keyboardEnabled && !exportDialog.isVisible && (
         <Box flexShrink={0} width="100%" height={1}>
           <Box
             borderStyle="single"
-            borderColor={
-              exportStatus.isExporting
-                ? "yellow"
-                : exportStatus.type === "success"
-                  ? "green"
-                  : "red"
-            }
+            borderColor="yellow"
             padding={0}
             paddingLeft={1}
             paddingRight={1}
             width="100%"
           >
-            {exportStatus.isExporting ? (
-              <Text color="yellow">Exporting schema...</Text>
-            ) : (
-              <Text color={exportStatus.type === "success" ? "green" : "red"}>
-                {exportStatus.message}
-              </Text>
-            )}
+            <Text color="yellow" dimColor>
+              ⚠️ Keyboard input unavailable (terminal access failed). Use file
+              input: jsont file.json
+            </Text>
           </Box>
         </Box>
       )}
-      {/* Export Dialog */}
-      <ExportDialog
-        isVisible={exportDialog.isVisible}
-        onConfirm={handleExportConfirm}
-        onCancel={handleExportCancel}
-        defaultFilename={generateDefaultFilename()}
-      />
-      <Box
-        flexGrow={1}
-        width="100%"
-        minHeight={
-          searchState.isSearching || searchState.searchTerm
-            ? searchModeVisibleLines
-            : 1
-        }
-      >
-        {collapsibleMode ? (
-          <CollapsibleJsonViewer
-            ref={collapsibleViewerRef}
-            data={initialData ?? null}
-            scrollOffset={scrollOffset}
-            searchTerm={searchState.searchTerm}
-            searchResults={searchState.searchResults}
-            currentSearchIndex={searchState.currentResultIndex}
-            visibleLines={
-              searchState.isSearching || searchState.searchTerm
-                ? searchModeVisibleLines
-                : visibleLines
-            }
-            showLineNumbers={lineNumbersVisible}
-            onScrollChange={handleCollapsibleScrollChange}
-          />
-        ) : schemaVisible ? (
-          <SchemaViewer
-            data={initialData ?? null}
-            scrollOffset={scrollOffset}
-            searchTerm={searchState.searchTerm}
-            searchResults={searchState.searchResults}
-            currentSearchIndex={searchState.currentResultIndex}
-            visibleLines={
-              searchState.isSearching || searchState.searchTerm
-                ? searchModeVisibleLines
-                : visibleLines
-            }
-            showLineNumbers={lineNumbersVisible}
-          />
-        ) : (
-          <JsonViewer
-            data={initialData ?? null}
-            scrollOffset={scrollOffset}
-            searchTerm={searchState.searchTerm}
-            searchResults={searchState.searchResults}
-            currentSearchIndex={searchState.currentResultIndex}
-            visibleLines={
-              searchState.isSearching || searchState.searchTerm
-                ? searchModeVisibleLines
-                : visibleLines
-            }
-            showLineNumbers={lineNumbersVisible}
-          />
+      {/* Export status bar */}
+      {(exportStatus.isExporting || exportStatus.message) &&
+        !exportDialog.isVisible && (
+          <Box flexShrink={0} width="100%" height={1}>
+            <Box
+              borderStyle="single"
+              borderColor={
+                exportStatus.isExporting
+                  ? "yellow"
+                  : exportStatus.type === "success"
+                    ? "green"
+                    : "red"
+              }
+              padding={0}
+              paddingLeft={1}
+              paddingRight={1}
+              width="100%"
+            >
+              {exportStatus.isExporting ? (
+                <Text color="yellow">Exporting schema...</Text>
+              ) : (
+                <Text color={exportStatus.type === "success" ? "green" : "red"}>
+                  {exportStatus.message}
+                </Text>
+              )}
+            </Box>
+          </Box>
         )}
-      </Box>
+      {!exportDialog.isVisible && (
+        <Box
+          flexGrow={1}
+          width="100%"
+          minHeight={
+            searchState.isSearching || searchState.searchTerm
+              ? searchModeVisibleLines
+              : 1
+          }
+        >
+          {collapsibleMode ? (
+            <CollapsibleJsonViewer
+              ref={collapsibleViewerRef}
+              data={initialData ?? null}
+              scrollOffset={scrollOffset}
+              searchTerm={searchState.searchTerm}
+              searchResults={searchState.searchResults}
+              currentSearchIndex={searchState.currentResultIndex}
+              visibleLines={
+                searchState.isSearching || searchState.searchTerm
+                  ? searchModeVisibleLines
+                  : visibleLines
+              }
+              showLineNumbers={lineNumbersVisible}
+              onScrollChange={handleCollapsibleScrollChange}
+            />
+          ) : schemaVisible ? (
+            <SchemaViewer
+              data={initialData ?? null}
+              scrollOffset={scrollOffset}
+              searchTerm={searchState.searchTerm}
+              searchResults={searchState.searchResults}
+              currentSearchIndex={searchState.currentResultIndex}
+              visibleLines={
+                searchState.isSearching || searchState.searchTerm
+                  ? searchModeVisibleLines
+                  : visibleLines
+              }
+              showLineNumbers={lineNumbersVisible}
+            />
+          ) : (
+            <JsonViewer
+              data={initialData ?? null}
+              scrollOffset={scrollOffset}
+              searchTerm={searchState.searchTerm}
+              searchResults={searchState.searchResults}
+              currentSearchIndex={searchState.currentResultIndex}
+              visibleLines={
+                searchState.isSearching || searchState.searchTerm
+                  ? searchModeVisibleLines
+                  : visibleLines
+              }
+              showLineNumbers={lineNumbersVisible}
+            />
+          )}
+        </Box>
+      )}
       {/* Debug bar - conditionally rendered based on debugVisible */}
-      {debugVisible && (
+      {debugVisible && !exportDialog.isVisible && (
         <Box flexShrink={0} width="100%">
           <DebugBar
             debugInfo={debugInfo}
             keyboardEnabled={keyboardEnabled}
             searchState={searchState}
+          />
+        </Box>
+      )}
+
+      {/* Export Dialog - fullscreen modal overlay */}
+      {exportDialog.isVisible && (
+        <Box
+          flexGrow={1}
+          width="100%"
+          justifyContent="center"
+          alignItems="center"
+          paddingX={2}
+          paddingY={2}
+        >
+          <ExportDialog
+            isVisible={exportDialog.isVisible}
+            onConfirm={handleExportConfirm}
+            onCancel={handleExportCancel}
+            defaultFilename={generateDefaultFilename()}
           />
         </Box>
       )}

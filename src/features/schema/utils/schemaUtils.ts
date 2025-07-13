@@ -36,11 +36,15 @@ export interface JsonSchema {
 /**
  * Infer JSON Schema from a JSON value (legacy function)
  */
-export function inferJsonSchema(data: JsonValue, title?: string): JsonSchema {
+export function inferJsonSchema(
+  data: JsonValue,
+  title?: string,
+  baseUrl?: string,
+): JsonSchema {
   const schema = inferType(data);
 
   return {
-    $schema: "https://json-schema.org/draft/2020-12/schema",
+    $schema: baseUrl || "https://json-schema.org/draft/2020-12/schema",
     title: title || "Generated Schema",
     description: `Auto-generated schema from JSON data`,
     ...schema,

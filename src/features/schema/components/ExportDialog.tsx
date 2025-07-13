@@ -4,8 +4,9 @@
 
 import { homedir } from "node:os";
 import { join } from "node:path";
+import { useTextInput } from "@features/common/components/TextInput";
 import { Box, Text, useInput } from "ink";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import type { ExportOptions } from "../utils/fileExport";
 
 export interface ExportDialogProps {
@@ -19,6 +20,7 @@ interface ExportConfig {
   filename: string;
   outputDir: string;
   format: "json";
+  baseUrl?: string;
 }
 
 export function ExportDialog({
@@ -31,13 +33,19 @@ export function ExportDialog({
     filename: defaultFilename,
     outputDir: process.cwd(),
     format: "json",
+    baseUrl: "https://json-schema.org/draft/2020-12/schema",
   });
 
-  const [inputMode, setInputMode] = useState<"filename" | "directory">(
-    "filename",
+  const [inputMode, setInputMode] = useState<
+    "filename" | "directory" | "baseUrl" | "quickDir" | null
+  >(null);
+
+  // Use TextInput hooks for filename, directory, and baseUrl inputs
+  const filenameInput = useTextInput(defaultFilename);
+  const directoryInput = useTextInput(process.cwd());
+  const baseUrlInput = useTextInput(
+    "https://json-schema.org/draft/2020-12/schema",
   );
-  const [filenameInput, setFilenameInput] = useState(defaultFilename);
-  const [directoryInput, setDirectoryInput] = useState(process.cwd());
 
   // Predefined directories for quick selection
   const quickDirectories = useMemo(
@@ -53,92 +61,171 @@ export function ExportDialog({
 
   const [selectedDirIndex, setSelectedDirIndex] = useState(0);
 
-  const handleConfirm = useCallback(() => {
-    const finalFilename =
-      inputMode === "filename" ? filenameInput : config.filename;
-    const finalDirectory =
-      inputMode === "directory" ? directoryInput : config.outputDir;
-
-    onConfirm({
-      filename: finalFilename,
-      outputDir: finalDirectory,
-      format: config.format,
-    });
-  }, [config, filenameInput, directoryInput, inputMode, onConfirm]);
-
   const updateConfigFromQuickDir = useCallback(
     (index: number) => {
       const selectedDir = quickDirectories[index];
       if (selectedDir) {
+        // Update both config and directoryInput to ensure sync
         setConfig((prev) => ({ ...prev, outputDir: selectedDir.path }));
-        setDirectoryInput(selectedDir.path);
+        directoryInput.setValue(selectedDir.path);
       }
     },
-    [quickDirectories],
+    [quickDirectories, directoryInput],
   );
 
-  useInput((input, key) => {
-    if (!isVisible) return;
-
-    if (key.escape) {
-      onCancel();
-      return;
+  // Ensure directoryInput stays in sync with config changes
+  useEffect(() => {
+    if (directoryInput.state.value !== config.outputDir) {
+      directoryInput.setValue(config.outputDir);
     }
+  }, [config.outputDir, directoryInput]);
 
-    if (key.return) {
-      if (inputMode === "filename" || inputMode === "directory") {
-        // Finish editing current field
-        if (inputMode === "filename") {
-          setConfig((prev) => ({ ...prev, filename: filenameInput }));
+  const handleInput = useCallback(
+    (input, key) => {
+      // Suppress all debug logs when modal is visible to prevent interference
+      if (!isVisible) return;
+
+      if (key.escape) {
+        if (inputMode !== null) {
+          // Exit input mode first
+          setInputMode(null);
         } else {
-          setConfig((prev) => ({ ...prev, outputDir: directoryInput }));
+          // Cancel dialog
+          onCancel();
         }
-        setInputMode("filename"); // Reset to default mode
-      } else {
-        handleConfirm();
+        return;
       }
-      return;
-    }
 
-    if (key.tab) {
-      // Toggle between filename and directory input
+      if (key.return) {
+        // Update config with current input values before confirming
+        if (inputMode === "filename") {
+          setConfig((prev) => ({
+            ...prev,
+            filename: filenameInput.state.value,
+          }));
+        } else if (inputMode === "directory") {
+          setConfig((prev) => ({
+            ...prev,
+            outputDir: directoryInput.state.value,
+          }));
+        } else if (inputMode === "baseUrl") {
+          setConfig((prev) => ({
+            ...prev,
+            baseUrl: baseUrlInput.state.value,
+          }));
+        }
+
+        // Always confirm export when Enter is pressed using current values
+        const finalFilename =
+          inputMode === "filename"
+            ? filenameInput.state.value
+            : config.filename;
+        const finalDirectory =
+          inputMode === "directory"
+            ? directoryInput.state.value
+            : config.outputDir;
+        const finalBaseUrl =
+          inputMode === "baseUrl" ? baseUrlInput.state.value : config.baseUrl;
+
+        onConfirm({
+          filename: finalFilename,
+          outputDir: finalDirectory,
+          format: config.format,
+          baseUrl: finalBaseUrl,
+        });
+        return;
+      }
+
+      // Quick directory selection (1-5) - available when not in text input mode or in quickDir mode
+      if (
+        input >= "1" &&
+        input <= "5" &&
+        (inputMode === null || inputMode === "quickDir")
+      ) {
+        const index = parseInt(input, 10) - 1;
+        if (index < quickDirectories.length) {
+          setSelectedDirIndex(index);
+          updateConfigFromQuickDir(index);
+        }
+        return;
+      }
+
+      if (key.tab) {
+        // Cycle through filename, directory, baseUrl, and quickDir input modes
+        if (inputMode === null) {
+          setInputMode("filename");
+        } else if (inputMode === "filename") {
+          setInputMode("directory");
+        } else if (inputMode === "directory") {
+          setInputMode("baseUrl");
+        } else if (inputMode === "baseUrl") {
+          setInputMode("quickDir");
+        } else {
+          setInputMode("filename");
+        }
+        return;
+      }
+
+      // Text input handling using TextInput hooks
       if (inputMode === "filename") {
-        setInputMode("directory");
-      } else {
-        setInputMode("filename");
+        filenameInput.handleKeyInput(input, key);
+        return;
       }
-      return;
-    }
 
-    // Quick directory selection (1-5)
-    if (
-      input >= "1" &&
-      input <= "5" &&
-      inputMode !== "filename" &&
-      inputMode !== "directory"
-    ) {
-      const index = parseInt(input, 10) - 1;
-      if (index < quickDirectories.length) {
-        setSelectedDirIndex(index);
-        updateConfigFromQuickDir(index);
+      if (inputMode === "directory") {
+        directoryInput.handleKeyInput(input, key);
+        return;
       }
-      return;
-    }
 
-    // Text input handling
-    if (inputMode === "filename") {
-      if (key.backspace || key.delete) {
-        setFilenameInput((prev) => prev.slice(0, -1));
-      } else if (input && input.length === 1 && !key.ctrl && !key.meta) {
-        setFilenameInput((prev) => prev + input);
+      if (inputMode === "baseUrl") {
+        baseUrlInput.handleKeyInput(input, key);
+        return;
       }
-    } else if (inputMode === "directory") {
-      if (key.backspace || key.delete) {
-        setDirectoryInput((prev) => prev.slice(0, -1));
-      } else if (input && input.length === 1 && !key.ctrl && !key.meta) {
-        setDirectoryInput((prev) => prev + input);
+
+      // Quick directory navigation mode
+      if (inputMode === "quickDir") {
+        if (input === "j" && !key.ctrl) {
+          // Move down in quick directories and update directory
+          const newIndex = Math.min(
+            selectedDirIndex + 1,
+            quickDirectories.length - 1,
+          );
+          setSelectedDirIndex(newIndex);
+          updateConfigFromQuickDir(newIndex);
+          return;
+        }
+        if (input === "k" && !key.ctrl) {
+          // Move up in quick directories and update directory
+          const newIndex = Math.max(selectedDirIndex - 1, 0);
+          setSelectedDirIndex(newIndex);
+          updateConfigFromQuickDir(newIndex);
+          return;
+        }
+        if (key.return) {
+          // Select current directory (already updated by j/k)
+          updateConfigFromQuickDir(selectedDirIndex);
+          return;
+        }
+        return;
       }
-    }
+    },
+    [
+      isVisible,
+      inputMode,
+      onCancel,
+      onConfirm,
+      config,
+      filenameInput,
+      directoryInput,
+      baseUrlInput,
+      quickDirectories,
+      selectedDirIndex,
+      updateConfigFromQuickDir,
+    ],
+  );
+
+  useInput(handleInput, {
+    isActive: isVisible,
   });
 
   if (!isVisible) {
@@ -146,10 +233,20 @@ export function ExportDialog({
   }
 
   const currentFilename =
-    inputMode === "filename" ? filenameInput : config.filename;
-  const currentDirectory =
-    inputMode === "directory" ? directoryInput : config.outputDir;
+    inputMode === "filename" ? filenameInput.state.value : config.filename;
+  const currentDirectory = directoryInput.state.value || config.outputDir;
+  const currentBaseUrl =
+    inputMode === "baseUrl" ? baseUrlInput.state.value : config.baseUrl;
   const fullPath = join(currentDirectory, currentFilename);
+
+  // Get display text with cursor for active input
+  const filenameDisplay = filenameInput.getDisplayText(
+    inputMode === "filename",
+  );
+  const directoryDisplay = directoryInput.getDisplayText(
+    inputMode === "directory",
+  );
+  const baseUrlDisplay = baseUrlInput.getDisplayText(inputMode === "baseUrl");
 
   return (
     <Box
@@ -170,25 +267,49 @@ export function ExportDialog({
         {/* Filename Input */}
         <Box>
           <Text color="cyan">Filename: </Text>
-          <Text
-            color={inputMode === "filename" ? "white" : "gray"}
-            {...(inputMode === "filename" && { backgroundColor: "blue" })}
-          >
-            {currentFilename}
-          </Text>
-          {inputMode === "filename" && <Text color="yellow">█</Text>}
+          {inputMode === "filename" ? (
+            <Box>
+              <Text color="white">{filenameDisplay.beforeCursor}</Text>
+              <Text color="white" backgroundColor="blue">
+                {filenameDisplay.atCursor}
+              </Text>
+              <Text color="white">{filenameDisplay.afterCursor}</Text>
+            </Box>
+          ) : (
+            <Text color="gray">{currentFilename}</Text>
+          )}
         </Box>
 
         {/* Directory Input */}
         <Box>
           <Text color="cyan">Directory: </Text>
-          <Text
-            color={inputMode === "directory" ? "white" : "gray"}
-            {...(inputMode === "directory" && { backgroundColor: "blue" })}
-          >
-            {currentDirectory}
-          </Text>
-          {inputMode === "directory" && <Text color="yellow">█</Text>}
+          {inputMode === "directory" ? (
+            <Box>
+              <Text color="white">{directoryDisplay.beforeCursor}</Text>
+              <Text color="white" backgroundColor="blue">
+                {directoryDisplay.atCursor}
+              </Text>
+              <Text color="white">{directoryDisplay.afterCursor}</Text>
+            </Box>
+          ) : (
+            <Text color="gray">{currentDirectory}</Text>
+          )}
+        </Box>
+
+        {/* Base URL Input */}
+        <Box>
+          <Text color="cyan">Base URL: </Text>
+          {inputMode === "baseUrl" ? (
+            <Box>
+              <Text color="white">{baseUrlDisplay.beforeCursor}</Text>
+              <Text color="white" backgroundColor="blue">
+                {baseUrlDisplay.atCursor}
+              </Text>
+              <Text color="white">{baseUrlDisplay.afterCursor}</Text>
+            </Box>
+          ) : (
+            <Text color="gray">{currentBaseUrl || "Not set"}</Text>
+          )}
         </Box>
 
         {/* Full Path Preview */}
@@ -201,14 +322,14 @@ export function ExportDialog({
 
         {/* Quick Directory Selection */}
         <Box flexDirection="column" marginTop={1}>
-          <Text color="yellow">Quick Directories:</Text>
+          <Text color="yellow">
+            Quick Directories
+            {inputMode === "quickDir" ? " (j/k: navigate, Enter: select)" : ":"}
+          </Text>
           {quickDirectories.map((dir, index) => (
             <Box key={dir.name}>
               <Text color="cyan">{index + 1}. </Text>
-              <Text
-                color={selectedDirIndex === index ? "white" : "gray"}
-                {...(selectedDirIndex === index && { backgroundColor: "blue" })}
-              >
+              <Text color={selectedDirIndex === index ? "yellow" : "gray"}>
                 {dir.name}: {dir.path}
               </Text>
             </Box>
@@ -219,11 +340,18 @@ export function ExportDialog({
         <Box marginTop={1} borderStyle="single" borderColor="gray" padding={1}>
           <Box flexDirection="column">
             <Text color="gray" dimColor>
-              Tab: Switch field | 1-5: Quick directory | Enter: Confirm | Esc:
-              Cancel
+              Tab: Switch field | 1-5: Quick directory | j/k: Navigate dirs |
+              Enter: Confirm/Select | Esc: Exit/Cancel
             </Text>
             <Text color="gray" dimColor>
-              Type to edit filename/directory | Backspace: Delete character
+              Type to edit | C-a: Start | C-e: End | C-f: Forward | C-b: Back
+            </Text>
+            <Text color="gray" dimColor>
+              C-k: Kill to end | C-u: Kill to start | C-w: Kill word | C-d:
+              Delete char
+            </Text>
+            <Text color="gray" dimColor>
+              Backspace/Del: Delete left/right
             </Text>
           </Box>
         </Box>
