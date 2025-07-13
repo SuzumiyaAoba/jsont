@@ -19,7 +19,7 @@ export interface ExportDialogProps {
 interface ExportConfig {
   filename: string;
   outputDir: string;
-  format: "json";
+  format: "json" | "schema";
   baseUrl?: string;
 }
 
@@ -37,7 +37,7 @@ export function ExportDialog({
   });
 
   const [inputMode, setInputMode] = useState<
-    "filename" | "directory" | "baseUrl" | "quickDir" | null
+    "filename" | "directory" | "baseUrl" | "format" | "quickDir" | null
   >("filename");
 
   // Use TextInput hooks for filename, directory, and baseUrl inputs
@@ -199,6 +199,19 @@ export function ExportDialog({
           exportOptions.baseUrl = finalBaseUrl;
         }
         onConfirm(exportOptions);
+        return;
+      }
+
+      // Format selection (j/s) - available when not in text input mode or in format mode
+      if (
+        (input === "j" || input === "s") &&
+        (inputMode === null || inputMode === "format")
+      ) {
+        if (input === "j") {
+          setConfig((prev) => ({ ...prev, format: "json" }));
+        } else if (input === "s") {
+          setConfig((prev) => ({ ...prev, format: "schema" }));
+        }
         return;
       }
 
