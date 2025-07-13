@@ -7,7 +7,7 @@ import { ExportDialog } from "@features/schema/components/ExportDialog";
 import { SchemaViewer } from "@features/schema/components/SchemaViewer";
 import type { ExportDialogState } from "@features/schema/types/export";
 import {
-  exportJsonSchemaToFile,
+  exportToFile,
   generateDefaultFilename,
 } from "@features/schema/utils/fileExport";
 import {
@@ -419,18 +419,20 @@ export function App({
 
   // Handle export dialog confirmation
   const handleExportConfirm = useCallback(
-    async (options: Parameters<typeof exportJsonSchemaToFile>[1]) => {
+    async (options: Parameters<typeof exportToFile>[1]) => {
       if (!initialData) return;
 
       setExportDialog({ isVisible: false, mode: "simple" });
       setExportStatus({ isExporting: true });
 
       try {
-        const result = await exportJsonSchemaToFile(initialData, options);
+        const result = await exportToFile(initialData, options);
         if (result.success) {
+          const exportType =
+            options?.format === "json" ? "JSON data" : "JSON Schema";
           setExportStatus({
             isExporting: false,
-            message: `Schema exported to ${result.filePath}`,
+            message: `${exportType} exported to ${result.filePath}`,
             type: "success",
           });
         } else {
@@ -891,7 +893,7 @@ export function App({
               width="100%"
             >
               {exportStatus.isExporting ? (
-                <Text color="yellow">Exporting schema...</Text>
+                <Text color="yellow">Exporting...</Text>
               ) : (
                 <Text color={exportStatus.type === "success" ? "green" : "red"}>
                   {exportStatus.message}

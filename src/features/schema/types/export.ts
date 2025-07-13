@@ -10,6 +10,6 @@ export interface ExportDialogState {
 export interface ExportPreferences {
   lastDirectory: string;
   defaultFilename: string;
-  format: "json";
+  format: "json" | "schema";
   rememberLocation: boolean;
 }
