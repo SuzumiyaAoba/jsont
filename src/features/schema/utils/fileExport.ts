@@ -22,6 +22,14 @@ export interface ExportResult {
 
 /**
  * Export JSON or JSON Schema to a file
+ *
+ * @param data - The JSON data to export
+ * @param options - Export configuration options
+ * @param options.filename - Output filename (defaults to "export.json")
+ * @param options.outputDir - Output directory (defaults to current working directory)
+ * @param options.format - Export format: "json" for data, "schema" for JSON Schema (defaults to "json")
+ * @param options.baseUrl - Base URL for JSON Schema (only used when format is "schema")
+ * @returns Promise resolving to export result with success status and file path
  */
 export async function exportToFile(
   data: JsonValue,
@@ -35,23 +43,14 @@ export async function exportToFile(
       baseUrl,
     } = options;
 
-    let content: string;
-    let defaultExtension: string;
-
-    if (format === "schema") {
-      // Generate JSON Schema
-      const schema = inferJsonSchema(data, "Exported Schema", baseUrl);
-      content = formatJsonSchema(schema);
-      defaultExtension = ".json";
-    } else {
-      // Export original JSON data
-      content = JSON.stringify(data, null, 2);
-      defaultExtension = ".json";
-    }
+    const content =
+      format === "schema"
+        ? formatJsonSchema(inferJsonSchema(data, "Exported Schema", baseUrl))
+        : JSON.stringify(data, null, 2);
 
     const finalFilename = filename.endsWith(".json")
       ? filename
-      : `${filename}${defaultExtension}`;
+      : `${filename}.json`;
 
     // Construct full file path
     const filePath = join(outputDir, finalFilename);
@@ -83,6 +82,9 @@ export async function exportJsonSchemaToFile(
 
 /**
  * Generate a safe filename from current timestamp
+ *
+ * @param format - Export format to determine filename prefix ("json" | "schema")
+ * @returns Generated filename with timestamp and appropriate prefix
  */
 export function generateDefaultFilename(
   format: "json" | "schema" = "json",
