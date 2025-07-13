@@ -38,7 +38,7 @@ export function ExportDialog({
 
   const [inputMode, setInputMode] = useState<
     "filename" | "directory" | "baseUrl" | "quickDir" | null
-  >(null);
+  >("filename");
 
   // Use TextInput hooks for filename, directory, and baseUrl inputs
   const filenameInput = useTextInput(defaultFilename);
@@ -47,19 +47,64 @@ export function ExportDialog({
     "https://json-schema.org/draft/2020-12/schema",
   );
 
+  // Keep track of custom directory path (persists even when not currently selected)
+  const [customDirectoryPath, setCustomDirectoryPath] = useState<string | null>(
+    null,
+  );
+
+  // Check if directory input is a custom path (not one of the predefined ones)
+  const isCustomDirectory = useMemo(() => {
+    const currentPath = directoryInput.state.value;
+    const predefinedPaths = [
+      process.cwd(),
+      homedir(),
+      join(homedir(), "Desktop"),
+      join(homedir(), "Documents"),
+      join(homedir(), "Downloads"),
+    ];
+    return !predefinedPaths.includes(currentPath);
+  }, [directoryInput.state.value]);
+
+  // Update custom directory path when a custom path is set
+  useEffect(() => {
+    if (isCustomDirectory) {
+      setCustomDirectoryPath(directoryInput.state.value);
+    }
+  }, [isCustomDirectory, directoryInput.state.value]);
+
   // Predefined directories for quick selection
-  const quickDirectories = useMemo(
-    () => [
+  const quickDirectories = useMemo(() => {
+    const baseDirectories = [
       { name: "Current Directory", path: process.cwd() },
       { name: "Home Directory", path: homedir() },
       { name: "Desktop", path: join(homedir(), "Desktop") },
       { name: "Documents", path: join(homedir(), "Documents") },
       { name: "Downloads", path: join(homedir(), "Downloads") },
-    ],
-    [],
-  );
+    ];
+
+    // Add custom directory if one has been set (show it even if not currently selected)
+    if (customDirectoryPath) {
+      baseDirectories.push({
+        name: "Custom",
+        path: customDirectoryPath,
+      });
+    }
+
+    return baseDirectories;
+  }, [customDirectoryPath]);
 
   const [selectedDirIndex, setSelectedDirIndex] = useState(0);
+
+  // Update selectedDirIndex when current directory matches one of the quick directories
+  useEffect(() => {
+    const currentPath = directoryInput.state.value;
+    const matchingIndex = quickDirectories.findIndex(
+      (dir) => dir.path === currentPath,
+    );
+    if (matchingIndex !== -1 && matchingIndex !== selectedDirIndex) {
+      setSelectedDirIndex(matchingIndex);
+    }
+  }, [directoryInput.state.value, quickDirectories, selectedDirIndex]);
 
   const updateConfigFromQuickDir = useCallback(
     (index: number) => {
@@ -73,15 +118,33 @@ export function ExportDialog({
     [quickDirectories, directoryInput],
   );
 
-  // Ensure directoryInput stays in sync with config changes
+  // Ensure directoryInput stays in sync with config changes, but only when not in directory edit mode
   useEffect(() => {
-    if (directoryInput.state.value !== config.outputDir) {
+    if (
+      inputMode !== "directory" &&
+      directoryInput.state.value !== config.outputDir
+    ) {
       directoryInput.setValue(config.outputDir);
     }
-  }, [config.outputDir, directoryInput]);
+  }, [config.outputDir, directoryInput, inputMode]);
+
+  // Update config when directory input changes (for real-time sync)
+  useEffect(() => {
+    if (directoryInput.state.value !== config.outputDir) {
+      setConfig((prev) => ({ ...prev, outputDir: directoryInput.state.value }));
+    }
+  }, [directoryInput.state.value, config.outputDir]);
 
   const handleInput = useCallback(
-    (input, key) => {
+    (
+      input: string,
+      key: {
+        escape?: boolean;
+        return?: boolean;
+        tab?: boolean;
+        ctrl?: boolean;
+      },
+    ) => {
       // Suppress all debug logs when modal is visible to prevent interference
       if (!isVisible) return;
 
@@ -127,19 +190,22 @@ export function ExportDialog({
         const finalBaseUrl =
           inputMode === "baseUrl" ? baseUrlInput.state.value : config.baseUrl;
 
-        onConfirm({
+        const exportOptions: ExportOptions = {
           filename: finalFilename,
           outputDir: finalDirectory,
           format: config.format,
-          baseUrl: finalBaseUrl,
-        });
+        };
+        if (finalBaseUrl) {
+          exportOptions.baseUrl = finalBaseUrl;
+        }
+        onConfirm(exportOptions);
         return;
       }
 
-      // Quick directory selection (1-5) - available when not in text input mode or in quickDir mode
+      // Quick directory selection (1-6) - available when not in text input mode or in quickDir mode
       if (
         input >= "1" &&
-        input <= "5" &&
+        input <= "6" &&
         (inputMode === null || inputMode === "quickDir")
       ) {
         const index = parseInt(input, 10) - 1;
@@ -340,7 +406,7 @@ export function ExportDialog({
         <Box marginTop={1} borderStyle="single" borderColor="gray" padding={1}>
           <Box flexDirection="column">
             <Text color="gray" dimColor>
-              Tab: Switch field | 1-5: Quick directory | j/k: Navigate dirs |
+              Tab: Switch field | 1-6: Quick directory | j/k: Navigate dirs |
               Enter: Confirm/Select | Esc: Exit/Cancel
             </Text>
             <Text color="gray" dimColor>

@@ -136,7 +136,7 @@ export function useTextInput(initialValue: string = ""): {
             // Skip trailing whitespace first
             while (
               newCursorPosition > 0 &&
-              /\s/.test(beforeCursor[newCursorPosition - 1])
+              /\s/.test(beforeCursor[newCursorPosition - 1] || "")
             ) {
               newCursorPosition--;
             }
@@ -144,7 +144,7 @@ export function useTextInput(initialValue: string = ""): {
             // Then skip the word characters
             while (
               newCursorPosition > 0 &&
-              !/\s/.test(beforeCursor[newCursorPosition - 1])
+              !/\s/.test(beforeCursor[newCursorPosition - 1] || "")
             ) {
               newCursorPosition--;
             }

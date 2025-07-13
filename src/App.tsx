@@ -43,7 +43,7 @@ export function App({
 }: AppProps) {
   // Check if we're in test environment - moved to top to avoid dependency issues
   const isTestEnvironment =
-    process.env.NODE_ENV === "test" || process.env.VITEST === "true";
+    process.env["NODE_ENV"] === "test" || process.env["VITEST"] === "true";
 
   const [error] = useState<string | null>(initialError ?? null);
   const [scrollOffset, setScrollOffset] = useState<number>(0);

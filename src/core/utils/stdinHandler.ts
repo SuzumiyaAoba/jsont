@@ -142,9 +142,12 @@ async function reinitializeStdinForKeyboard(): Promise<boolean> {
       return true;
     } catch (error) {
       const isTestEnvironment =
-        process.env.NODE_ENV === "test" || process.env.VITEST === "true";
+        process.env["NODE_ENV"] === "test" || process.env["VITEST"] === "true";
       if (!isTestEnvironment) {
-        console.log("🔧 [STDIN] /dev/tty access failed:", error.message);
+        console.log(
+          "🔧 [STDIN] /dev/tty access failed:",
+          error instanceof Error ? error.message : String(error),
+        );
       }
       // TTY access failed, try alternative approach
       return await setupEnhancedStdin();
@@ -161,7 +164,7 @@ async function reinitializeStdinForKeyboard(): Promise<boolean> {
 async function setupEnhancedStdin(): Promise<boolean> {
   try {
     const isTestEnvironment =
-      process.env.NODE_ENV === "test" || process.env.VITEST === "true";
+      process.env["NODE_ENV"] === "test" || process.env["VITEST"] === "true";
     if (!isTestEnvironment) {
       console.log("🔧 [STDIN] Setting up enhanced stdin for keyboard input");
     }
@@ -202,7 +205,9 @@ async function setupEnhancedStdin(): Promise<boolean> {
           if (!isTestEnvironment) {
             console.log(
               `❌ [STDIN] ${termPath} doesn't support raw mode:`,
-              rawModeError.message,
+              rawModeError instanceof Error
+                ? rawModeError.message
+                : String(rawModeError),
             );
           }
           fs.closeSync(termFd);
@@ -253,7 +258,10 @@ async function setupEnhancedStdin(): Promise<boolean> {
         return true;
       } catch (pathError) {
         if (!isTestEnvironment) {
-          console.log(`❌ [STDIN] ${termPath} failed:`, pathError.message);
+          console.log(
+            `❌ [STDIN] ${termPath} failed:`,
+            pathError instanceof Error ? pathError.message : String(pathError),
+          );
         }
       }
     }
@@ -267,8 +275,13 @@ async function setupEnhancedStdin(): Promise<boolean> {
     }
     return await setupMockStdinForInk();
   } catch (error) {
+    const isTestEnvironment =
+      process.env["NODE_ENV"] === "test" || process.env["VITEST"] === "true";
     if (!isTestEnvironment) {
-      console.log("🔧 [STDIN] Enhanced stdin setup failed:", error.message);
+      console.log(
+        "🔧 [STDIN] Enhanced stdin setup failed:",
+        error instanceof Error ? error.message : String(error),
+      );
     }
     return await setupMinimalStdin();
   }
@@ -281,7 +294,7 @@ async function setupEnhancedStdin(): Promise<boolean> {
 async function setupMockStdinForInk(): Promise<boolean> {
   try {
     const isTestEnvironment =
-      process.env.NODE_ENV === "test" || process.env.VITEST === "true";
+      process.env["NODE_ENV"] === "test" || process.env["VITEST"] === "true";
     if (!isTestEnvironment) {
       console.log("🔧 [STDIN] Setting up mock stdin for Ink compatibility");
     }
@@ -348,8 +361,13 @@ async function setupMockStdinForInk(): Promise<boolean> {
     }
     return false; // Indicate that keyboard input is not actually available
   } catch (error) {
+    const isTestEnvironment =
+      process.env["NODE_ENV"] === "test" || process.env["VITEST"] === "true";
     if (!isTestEnvironment) {
-      console.log("❌ [STDIN] Mock stdin setup failed:", error.message);
+      console.log(
+        "❌ [STDIN] Mock stdin setup failed:",
+        error instanceof Error ? error.message : String(error),
+      );
     }
     return await setupMinimalStdin();
   }

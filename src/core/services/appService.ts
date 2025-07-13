@@ -80,7 +80,7 @@ export class AppService {
 
     // Check if we're in test environment
     const isTestEnvironment =
-      process.env.NODE_ENV === "test" || process.env.VITEST === "true";
+      process.env["NODE_ENV"] === "test" || process.env["VITEST"] === "true";
 
     // Check if raw mode is supported manually
     const rawModeSupported = await this.checkRawModeSupport();

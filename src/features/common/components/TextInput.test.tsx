@@ -121,7 +121,7 @@ describe("TextInput Component", () => {
     // Skip trailing whitespace first
     while (
       newCursorPosition > 0 &&
-      /\s/.test(beforeCursor[newCursorPosition - 1])
+      /\s/.test(beforeCursor[newCursorPosition - 1] || "")
     ) {
       newCursorPosition--;
     }
@@ -129,7 +129,7 @@ describe("TextInput Component", () => {
     // Then skip the word characters
     while (
       newCursorPosition > 0 &&
-      !/\s/.test(beforeCursor[newCursorPosition - 1])
+      !/\s/.test(beforeCursor[newCursorPosition - 1] || "")
     ) {
       newCursorPosition--;
     }
@@ -154,7 +154,7 @@ describe("TextInput Component", () => {
     // Skip trailing whitespace first
     while (
       newCursorPosition > 0 &&
-      /\s/.test(beforeCursor[newCursorPosition - 1])
+      /\s/.test(beforeCursor[newCursorPosition - 1] || "")
     ) {
       newCursorPosition--;
     }
@@ -162,7 +162,7 @@ describe("TextInput Component", () => {
     // Then skip the word characters
     while (
       newCursorPosition > 0 &&
-      !/\s/.test(beforeCursor[newCursorPosition - 1])
+      !/\s/.test(beforeCursor[newCursorPosition - 1] || "")
     ) {
       newCursorPosition--;
     }
@@ -187,7 +187,7 @@ describe("TextInput Component", () => {
     // Skip trailing whitespace first (none in this case)
     while (
       newCursorPosition > 0 &&
-      /\s/.test(beforeCursor[newCursorPosition - 1])
+      /\s/.test(beforeCursor[newCursorPosition - 1] || "")
     ) {
       newCursorPosition--;
     }
@@ -195,7 +195,7 @@ describe("TextInput Component", () => {
     // Then skip the word characters
     while (
       newCursorPosition > 0 &&
-      !/\s/.test(beforeCursor[newCursorPosition - 1])
+      !/\s/.test(beforeCursor[newCursorPosition - 1] || "")
     ) {
       newCursorPosition--;
     }

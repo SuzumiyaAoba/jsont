@@ -108,7 +108,7 @@ describe("ExportDialog Props and Logic", () => {
     };
 
     expect(propsWithDefault.defaultFilename).toBe("with-default.json");
-    expect(propsWithoutDefault.defaultFilename).toBeUndefined();
+    expect("defaultFilename" in propsWithoutDefault).toBe(false);
   });
 
   it("should support various filename patterns", () => {
@@ -139,7 +139,7 @@ describe("ExportDialog Props and Logic", () => {
 
 describe("ExportDialog Callback Integration", () => {
   it("should properly type export options in onConfirm", () => {
-    const mockOnConfirm = vi.fn<[ExportOptions], void>();
+    const mockOnConfirm = vi.fn<(options: ExportOptions) => void>();
     const mockOnCancel = vi.fn();
 
     const props: ExportDialogProps = {
@@ -162,9 +162,11 @@ describe("ExportDialog Callback Integration", () => {
 
   it("should handle different export options", () => {
     const capturedOptions: ExportOptions[] = [];
-    const mockOnConfirm = vi.fn<[ExportOptions], void>((options) => {
-      capturedOptions.push(options);
-    });
+    const mockOnConfirm = vi.fn<(options: ExportOptions) => void>(
+      (options: ExportOptions) => {
+        capturedOptions.push(options);
+      },
+    );
 
     const props: ExportDialogProps = {
       isVisible: true,
