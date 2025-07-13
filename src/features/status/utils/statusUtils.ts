@@ -9,7 +9,7 @@ interface StatusContentOptions {
 }
 
 const STATUS_MESSAGES = {
-  COLLAPSIBLE: `JSON TUI Viewer (Collapsible) - q: Quit | Ctrl+C: Exit | j/k: Move cursor | Enter: Toggle expand/collapse | s: Search | C: Toggle collapsible mode | D: Debug | L: Line numbers | S: Schema | E: Export schema | ?: Toggle help`,
+  COLLAPSIBLE: `JSON TUI Viewer (Collapsible) - q: Quit | Ctrl+C: Exit | j/k: Move cursor | Enter/Space: Toggle | o: Expand | c: Collapse | O: Expand all | s: Search | C: Normal mode | D: Debug | L: Line numbers | S: Schema | E: Export | ?: Help`,
   NORMAL: `JSON TUI Viewer - q: Quit/Search input | Ctrl+C: Exit | j/k: Line | Ctrl+f/b: Half-page | gg/G: Top/Bottom | s: Search | Esc: Exit search | D: Toggle debug | L: Toggle line numbers | S: Toggle schema | C: Toggle collapsible | E: Export schema | ?: Toggle help`,
   NO_KEYBOARD: `JSON TUI Viewer - Keyboard input not available (try: jsont < file.json in terminal) | ?: Toggle help`,
 } as const;

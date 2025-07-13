@@ -24,7 +24,7 @@ describe("statusUtils", () => {
 
       expect(result).toContain("JSON TUI Viewer (Collapsible)");
       expect(result).toContain("j/k: Move cursor");
-      expect(result).toContain("Enter: Toggle expand/collapse");
+      expect(result).toContain("Enter/Space: Toggle");
     });
 
     it("should return normal mode message when keyboard enabled and collapsible mode is false", () => {

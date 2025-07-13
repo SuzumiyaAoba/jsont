@@ -314,6 +314,72 @@ export function handleNavigation(
       break;
     }
 
+    case "expand_node": {
+      if (!newState.cursorPosition) break;
+
+      const currentNode = newState.nodes.get(newState.cursorPosition.nodeId);
+      if (!currentNode || !currentNode.isCollapsible) break;
+
+      // Only expand if not already expanded
+      newState.expandedNodes = new Set(state.expandedNodes);
+      if (!newState.expandedNodes.has(currentNode.id)) {
+        newState.expandedNodes.add(currentNode.id);
+
+        // Rebuild flattened nodes
+        const rootNode = newState.nodes.get("root");
+        if (rootNode) {
+          newState.flattenedNodes = flattenNodes(
+            rootNode,
+            newState.expandedNodes,
+          );
+
+          // Update cursor line index
+          const newIndex = findCursorIndex(
+            newState.cursorPosition,
+            newState.flattenedNodes,
+          );
+          if (newIndex >= 0) {
+            newState.cursorPosition.lineIndex = newIndex;
+            scrollToLine = newIndex;
+          }
+        }
+      }
+      break;
+    }
+
+    case "collapse_node": {
+      if (!newState.cursorPosition) break;
+
+      const currentNode = newState.nodes.get(newState.cursorPosition.nodeId);
+      if (!currentNode || !currentNode.isCollapsible) break;
+
+      // Only collapse if currently expanded
+      newState.expandedNodes = new Set(state.expandedNodes);
+      if (newState.expandedNodes.has(currentNode.id)) {
+        newState.expandedNodes.delete(currentNode.id);
+
+        // Rebuild flattened nodes
+        const rootNode = newState.nodes.get("root");
+        if (rootNode) {
+          newState.flattenedNodes = flattenNodes(
+            rootNode,
+            newState.expandedNodes,
+          );
+
+          // Update cursor line index
+          const newIndex = findCursorIndex(
+            newState.cursorPosition,
+            newState.flattenedNodes,
+          );
+          if (newIndex >= 0) {
+            newState.cursorPosition.lineIndex = newIndex;
+            scrollToLine = newIndex;
+          }
+        }
+      }
+      break;
+    }
+
     case "expand_all": {
       newState.expandedNodes = new Set();
       for (const node of newState.nodes.values()) {
@@ -420,9 +486,18 @@ export function getNodeDisplayText(
   isExpanded: boolean,
 ): string {
   const indent = "  ".repeat(node.level);
+  let expandIndicator = "";
   let prefix = "";
   let suffix = "";
   let comma = "";
+
+  // Add expand/collapse indicator for collapsible nodes
+  if (node.isCollapsible && !node.id.endsWith("_closing")) {
+    expandIndicator = isExpanded ? "▼ " : "▶ ";
+  } else if (!node.id.endsWith("_closing")) {
+    // Add spacing for non-collapsible nodes to align with collapsible ones
+    expandIndicator = "  ";
+  }
 
   // Handle closing bracket nodes specially
   if (node.id.endsWith("_closing")) {
@@ -501,7 +576,7 @@ export function getNodeDisplayText(
     }
   }
 
-  return `${indent}${prefix}${suffix}${comma}`;
+  return `${indent}${expandIndicator}${prefix}${suffix}${comma}`;
 }
 
 /**

@@ -239,14 +239,14 @@ describe("collapsibleJson", () => {
       const tree = buildJsonTree(testData);
       const displayText = getNodeDisplayText(tree, true);
 
-      expect(displayText).toBe("{"); // Root object opening
+      expect(displayText).toBe("▼ {"); // Root object opening with expand indicator
     });
 
     it("should generate correct display text for collapsed nodes", () => {
       const tree = buildJsonTree(testData);
       const displayText = getNodeDisplayText(tree, false);
 
-      expect(displayText).toBe("{...}"); // Collapsed object
+      expect(displayText).toBe("▶ {...}"); // Collapsed object with collapse indicator
     });
 
     it("should generate correct display text for primitive values", () => {
@@ -284,14 +284,14 @@ describe("collapsibleJson", () => {
         const firstChild = tree.children[0];
         if (firstChild) {
           const displayText = getNodeDisplayText(firstChild, true);
-          expect(displayText).toBe('  "a": 1,');
+          expect(displayText).toBe('    "a": 1,'); // Extra spacing for expand indicator
         }
 
         // Last element should not have comma
         const lastChild = tree.children[tree.children.length - 1];
         if (lastChild) {
           const displayText = getNodeDisplayText(lastChild, true);
-          expect(displayText).toBe('  "c": 3');
+          expect(displayText).toBe('    "c": 3'); // Extra spacing for expand indicator
         }
       }
     });
@@ -304,14 +304,14 @@ describe("collapsibleJson", () => {
         const firstChild = tree.children[0];
         if (firstChild) {
           const displayText = getNodeDisplayText(firstChild, true);
-          expect(displayText).toBe("  1,");
+          expect(displayText).toBe("    1,"); // Extra spacing for expand indicator
         }
 
         // Last element should not have comma
         const lastChild = tree.children[tree.children.length - 1];
         if (lastChild) {
           const displayText = getNodeDisplayText(lastChild, true);
-          expect(displayText).toBe("  3");
+          expect(displayText).toBe("    3"); // Extra spacing for expand indicator
         }
       }
     });
@@ -353,7 +353,9 @@ describe("collapsibleJson", () => {
 
       if (thirdNode) {
         // Should NOT have comma since it's the last element
-        expect(getNodeDisplayText(thirdNode, false)).toBe('  "third": "value"');
+        expect(getNodeDisplayText(thirdNode, false)).toBe(
+          '    "third": "value"',
+        ); // Extra spacing for expand indicator
       }
     });
   });

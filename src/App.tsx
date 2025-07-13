@@ -582,6 +582,22 @@ export function App({
         // Toggle node in collapsible mode
         updateDebugInfo("Toggle node", input);
         handleCollapsibleNavigation({ type: "toggle_node" });
+      } else if (input === " " && !key.ctrl && !key.meta && collapsibleMode) {
+        // Space: Alternative toggle for collapsible nodes
+        updateDebugInfo("Toggle node (Space)", input);
+        handleCollapsibleNavigation({ type: "toggle_node" });
+      } else if (input === "o" && !key.ctrl && !key.meta && collapsibleMode) {
+        // 'o': Open/expand current node
+        updateDebugInfo("Expand node", input);
+        handleCollapsibleNavigation({ type: "expand_node" });
+      } else if (input === "c" && !key.ctrl && !key.meta && collapsibleMode) {
+        // 'c': Close/collapse current node
+        updateDebugInfo("Collapse node", input);
+        handleCollapsibleNavigation({ type: "collapse_node" });
+      } else if (input === "O" && !key.ctrl && !key.meta && collapsibleMode) {
+        // 'O': Expand all nodes (capital O)
+        updateDebugInfo("Expand all", input);
+        handleCollapsibleNavigation({ type: "expand_all" });
       } else if (key.ctrl && input === "f") {
         // Half-page down (Ctrl-f)
         updateDebugInfo("Half-page down", input);
