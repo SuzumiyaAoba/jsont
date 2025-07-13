@@ -83,12 +83,9 @@ export async function exportJsonSchemaToFile(
 /**
  * Generate a safe filename from current timestamp
  *
- * @param format - Export format to determine filename prefix ("json" | "schema")
- * @returns Generated filename with timestamp and appropriate prefix
+ * @returns Generated filename with timestamp
  */
-export function generateDefaultFilename(
-  format: "json" | "schema" = "json",
-): string {
+export function generateDefaultFilename(): string {
   const now = new Date();
   const timestamp = now
     .toISOString()
@@ -96,8 +93,7 @@ export function generateDefaultFilename(
     .replace(/T/, "_")
     .slice(0, 19); // Remove milliseconds and timezone
 
-  const prefix = format === "schema" ? "schema" : "export";
-  return `${prefix}_${timestamp}.json`;
+  return `export_${timestamp}.json`;
 }
 
 /**

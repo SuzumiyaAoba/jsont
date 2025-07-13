@@ -984,7 +984,7 @@ export function App({
             isVisible={exportDialog.isVisible}
             onConfirm={handleExportConfirm}
             onCancel={handleExportCancel}
-            defaultFilename={generateDefaultFilename("schema")}
+            defaultFilename={generateDefaultFilename()}
           />
         </Box>
       )}

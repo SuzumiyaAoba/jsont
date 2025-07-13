@@ -200,24 +200,8 @@ describe("File Export Utils", () => {
   });
 
   describe("generateDefaultFilename", () => {
-    it("should generate filename with timestamp for default format", () => {
+    it("should generate filename with timestamp", () => {
       const filename = generateDefaultFilename();
-
-      expect(filename).toMatch(
-        /^export_\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}\.json$/,
-      );
-    });
-
-    it("should generate schema filename when format is 'schema'", () => {
-      const filename = generateDefaultFilename("schema");
-
-      expect(filename).toMatch(
-        /^schema_\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}\.json$/,
-      );
-    });
-
-    it("should generate json filename when format is 'json'", () => {
-      const filename = generateDefaultFilename("json");
 
       expect(filename).toMatch(
         /^export_\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}\.json$/,
