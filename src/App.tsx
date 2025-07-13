@@ -92,18 +92,6 @@ export function App({
 
   const { exit } = useApp();
 
-  // Enable mouse tracking in terminal
-  useEffect(() => {
-    if (keyboardEnabled && !isTestEnvironment) {
-      // Enable mouse tracking
-      process.stdout.write("\x1b[?1003h");
-      return () => {
-        // Disable mouse tracking on cleanup
-        process.stdout.write("\x1b[?1003l");
-      };
-    }
-  }, [keyboardEnabled, isTestEnvironment]);
-
   // Monitor terminal size changes
   useEffect(() => {
     const updateTerminalSize = () => {
@@ -749,24 +737,6 @@ export function App({
     ],
   );
 
-  // Handle mouse events - memoized to prevent unnecessary re-renders
-  const handleMouseEvent = useCallback(
-    (mouse: { x: number; y: number; action: string; button: string }) => {
-      // Only handle left mouse button clicks in collapsible mode
-      if (mouse.button === "left" && collapsibleMode) {
-        // Pass mouse coordinates to collapsible viewer for handling
-        if (collapsibleViewerRef.current?.navigate) {
-          // Create a special navigation action for mouse clicks
-          handleCollapsibleNavigation({
-            type: "toggle_node",
-            mouseClick: { x: mouse.x, y: mouse.y },
-          });
-        }
-      }
-    },
-    [collapsibleMode, handleCollapsibleNavigation],
-  );
-
   // Handle keyboard input function - memoized to prevent unnecessary re-renders
   const handleKeyInput = useCallback(
     (
@@ -809,25 +779,10 @@ export function App({
       } else if (input === "E" && !key.ctrl && !key.meta) {
         // Export JSON Schema to file - always available regardless of search mode
         updateDebugInfo("Export schema", input);
-        if (!isTestEnvironment && !exportDialog.isVisible) {
-          console.log(
-            "🚀 [E-KEY] E key pressed! Calling handleExportSchema...",
-          );
-          console.log("🚀 [E-KEY] initialData exists:", !!initialData);
-        }
         handleExportSchema();
-        if (!isTestEnvironment && !exportDialog.isVisible) {
-          console.log("🚀 [E-KEY] handleExportSchema completed");
-        }
       } else if (searchState.isSearching) {
-        if (!isTestEnvironment && !exportDialog.isVisible) {
-          console.log("🔍 [ROUTE] Routing to handleSearchInput");
-        }
         handleSearchInput(input, key);
       } else {
-        if (!isTestEnvironment && !exportDialog.isVisible) {
-          console.log("🧭 [ROUTE] Routing to handleNavigationInput");
-        }
         // Handle navigation input
         handleNavigationInput(input, key);
       }
@@ -840,43 +795,18 @@ export function App({
       handleNavigationInput,
       updateDebugInfo,
       handleExportSchema,
-      initialData,
       isTestEnvironment,
       exportDialog.isVisible,
     ],
   );
 
   // Use Ink's useInput hook for keyboard handling
-  if (!isTestEnvironment) {
-    console.log(
-      "🎮 [INPUT] useInput setup - keyboardEnabled:",
-      keyboardEnabled,
-      "exportDialog.isVisible:",
-      exportDialog.isVisible,
-    );
-    console.log("🎮 [INPUT] Initial searchState:", {
-      isSearching: searchState.isSearching,
-      searchTerm: searchState.searchTerm,
-      resultsCount: searchState.searchResults.length,
-    });
-    console.log(
-      "🎮 [INPUT] Main app useInput isActive:",
-      keyboardEnabled && !exportDialog.isVisible,
-    );
-  }
 
-  // Handle keyboard input and mouse events
+  // Handle keyboard input only (mouse events handled separately via stdin)
   useInput(
     (input, key) => {
-      // Mouse movement events are filtered out to prevent screen flickering
-
-      // Handle mouse events - only process clicks, ignore movement
-      if (key.mouse && key.mouse.action === "down") {
-        handleMouseEvent(key.mouse);
-      } else if (!key.mouse) {
-        // Handle keyboard input
-        handleKeyInput(input, key);
-      }
+      // Handle keyboard input
+      handleKeyInput(input, key);
     },
     {
       isActive: keyboardEnabled && !exportDialog.isVisible,
