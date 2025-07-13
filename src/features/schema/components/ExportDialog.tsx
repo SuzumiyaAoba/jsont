@@ -217,13 +217,20 @@ export function ExportDialog({
       }
 
       if (key.tab) {
-        // Cycle through filename, directory, baseUrl, and quickDir input modes
+        // Cycle through filename, directory, format, baseUrl (only for schema), and quickDir input modes
         if (inputMode === null) {
           setInputMode("filename");
         } else if (inputMode === "filename") {
           setInputMode("directory");
         } else if (inputMode === "directory") {
-          setInputMode("baseUrl");
+          setInputMode("format");
+        } else if (inputMode === "format") {
+          // Skip baseUrl if format is not schema
+          if (config.format === "schema") {
+            setInputMode("baseUrl");
+          } else {
+            setInputMode("quickDir");
+          }
         } else if (inputMode === "baseUrl") {
           setInputMode("quickDir");
         } else {
@@ -325,7 +332,7 @@ export function ExportDialog({
     >
       <Box marginBottom={1}>
         <Text color="yellow" bold>
-          📁 Export JSON Schema
+          📁 Export {config.format === "json" ? "JSON Data" : "JSON Schema"}
         </Text>
       </Box>
 
@@ -362,21 +369,32 @@ export function ExportDialog({
           )}
         </Box>
 
-        {/* Base URL Input */}
+        {/* Format Selection */}
         <Box>
-          <Text color="cyan">Base URL: </Text>
-          {inputMode === "baseUrl" ? (
-            <Box>
-              <Text color="white">{baseUrlDisplay.beforeCursor}</Text>
-              <Text color="white" backgroundColor="blue">
-                {baseUrlDisplay.atCursor}
-              </Text>
-              <Text color="white">{baseUrlDisplay.afterCursor}</Text>
-            </Box>
-          ) : (
-            <Text color="gray">{currentBaseUrl || "Not set"}</Text>
-          )}
+          <Text color="cyan">Format: </Text>
+          <Text color={inputMode === "format" ? "yellow" : "gray"}>
+            {config.format === "json" ? "JSON Data" : "JSON Schema"}
+            {inputMode === "format" ? " (j: JSON, s: Schema)" : ""}
+          </Text>
         </Box>
+
+        {/* Base URL Input - only show for schema format */}
+        {config.format === "schema" && (
+          <Box>
+            <Text color="cyan">Base URL: </Text>
+            {inputMode === "baseUrl" ? (
+              <Box>
+                <Text color="white">{baseUrlDisplay.beforeCursor}</Text>
+                <Text color="white" backgroundColor="blue">
+                  {baseUrlDisplay.atCursor}
+                </Text>
+                <Text color="white">{baseUrlDisplay.afterCursor}</Text>
+              </Box>
+            ) : (
+              <Text color="gray">{currentBaseUrl || "Not set"}</Text>
+            )}
+          </Box>
+        )}
 
         {/* Full Path Preview */}
         <Box marginTop={1}>
@@ -406,8 +424,8 @@ export function ExportDialog({
         <Box marginTop={1} borderStyle="single" borderColor="gray" padding={1}>
           <Box flexDirection="column">
             <Text color="gray" dimColor>
-              Tab: Switch field | 1-6: Quick directory | j/k: Navigate dirs |
-              Enter: Confirm/Select | Esc: Exit/Cancel
+              Tab: Switch field | j/s: Format | 1-6: Quick directory | j/k:
+              Navigate dirs | Enter: Confirm/Select | Esc: Exit/Cancel
             </Text>
             <Text color="gray" dimColor>
               Type to edit | C-a: Start | C-e: End | C-f: Forward | C-b: Back

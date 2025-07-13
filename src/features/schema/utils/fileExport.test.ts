@@ -7,6 +7,7 @@ import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   exportJsonSchemaToFile,
+  exportToFile,
   generateDefaultFilename,
   validateExportOptions,
 } from "./fileExport";
@@ -31,7 +32,64 @@ describe("File Export Utils", () => {
     vi.restoreAllMocks();
   });
 
-  describe("exportJsonSchemaToFile", () => {
+  describe("exportToFile", () => {
+    it("should export JSON data when format is 'json'", async () => {
+      const testData = { name: "test", value: 42 };
+      vi.mocked(writeFile).mockResolvedValue(undefined);
+
+      const result = await exportToFile(testData, {
+        filename: "test-data.json",
+        outputDir: "/tmp",
+        format: "json",
+      });
+
+      expect(result.success).toBe(true);
+      expect(result.filePath).toBe("/tmp/test-data.json");
+      expect(writeFile).toHaveBeenCalledWith(
+        "/tmp/test-data.json",
+        JSON.stringify(testData, null, 2),
+        "utf8",
+      );
+    });
+
+    it("should export JSON Schema when format is 'schema'", async () => {
+      const testData = { name: "test", value: 42 };
+      vi.mocked(writeFile).mockResolvedValue(undefined);
+
+      const result = await exportToFile(testData, {
+        filename: "test-schema.json",
+        outputDir: "/tmp",
+        format: "schema",
+      });
+
+      expect(result.success).toBe(true);
+      expect(result.filePath).toBe("/tmp/test-schema.json");
+      expect(writeFile).toHaveBeenCalledWith(
+        "/tmp/test-schema.json",
+        expect.stringContaining('"type": "object"'),
+        "utf8",
+      );
+    });
+
+    it("should default to JSON export when format is not specified", async () => {
+      const testData = { name: "test", value: 42 };
+      vi.mocked(writeFile).mockResolvedValue(undefined);
+
+      const result = await exportToFile(testData, {
+        filename: "test.json",
+        outputDir: "/tmp",
+      });
+
+      expect(result.success).toBe(true);
+      expect(writeFile).toHaveBeenCalledWith(
+        "/tmp/test.json",
+        JSON.stringify(testData, null, 2),
+        "utf8",
+      );
+    });
+  });
+
+  describe("exportJsonSchemaToFile (backward compatibility)", () => {
     it("should export simple JSON data to schema file", async () => {
       const testData = { name: "test", value: 42 };
       vi.mocked(writeFile).mockResolvedValue(undefined);
@@ -57,7 +115,7 @@ describe("File Export Utils", () => {
       const result = await exportJsonSchemaToFile(testData);
 
       expect(result.success).toBe(true);
-      expect(result.filePath).toMatch(/schema\.json$/);
+      expect(result.filePath).toMatch(/export\.json$/); // Now defaults to export
     });
 
     it("should add .json extension if missing", async () => {
@@ -142,11 +200,27 @@ describe("File Export Utils", () => {
   });
 
   describe("generateDefaultFilename", () => {
-    it("should generate filename with timestamp", () => {
+    it("should generate filename with timestamp for default format", () => {
       const filename = generateDefaultFilename();
 
       expect(filename).toMatch(
+        /^export_\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}\.json$/,
+      );
+    });
+
+    it("should generate schema filename when format is 'schema'", () => {
+      const filename = generateDefaultFilename("schema");
+
+      expect(filename).toMatch(
         /^schema_\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}\.json$/,
+      );
+    });
+
+    it("should generate json filename when format is 'json'", () => {
+      const filename = generateDefaultFilename("json");
+
+      expect(filename).toMatch(
+        /^export_\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}\.json$/,
       );
     });
 
@@ -161,18 +235,18 @@ describe("File Export Utils", () => {
 
       const filename2 = generateDefaultFilename();
 
-      // Both should match the expected pattern
+      // Both should match the expected pattern (defaults to export format)
       expect(filename1).toMatch(
-        /^schema_\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}\.json$/,
+        /^export_\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}\.json$/,
       );
       expect(filename2).toMatch(
-        /^schema_\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}\.json$/,
+        /^export_\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}\.json$/,
       );
 
       // Structure should be consistent (same length and format)
       expect(filename1.length).toBe(filename2.length);
-      expect(filename1.startsWith("schema_")).toBe(true);
-      expect(filename2.startsWith("schema_")).toBe(true);
+      expect(filename1.startsWith("export_")).toBe(true);
+      expect(filename2.startsWith("export_")).toBe(true);
     });
   });
 

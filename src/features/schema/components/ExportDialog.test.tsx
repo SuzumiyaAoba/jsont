@@ -31,7 +31,7 @@ describe("ExportDialog Props and Logic", () => {
     const exportOptions: ExportOptions = {
       filename: "custom-schema.json",
       outputDir: "/custom/path",
-      format: "json",
+      format: "schema",
     };
 
     const props: ExportDialogProps = {
@@ -152,7 +152,7 @@ describe("ExportDialog Callback Integration", () => {
     const testOptions: ExportOptions = {
       filename: "test-export.json",
       outputDir: process.cwd(),
-      format: "json",
+      format: "schema",
     };
 
     props.onConfirm(testOptions);
@@ -178,11 +178,11 @@ describe("ExportDialog Callback Integration", () => {
     const options1: ExportOptions = {
       filename: "schema1.json",
       outputDir: "/path1",
-      format: "json",
+      format: "schema",
     };
 
     const options2: ExportOptions = {
-      filename: "schema2.json",
+      filename: "data.json",
       outputDir: "/path2",
       format: "json",
     };

@@ -1,5 +1,5 @@
 /**
- * File export utilities for JSON Schema
+ * File export utilities for JSON and JSON Schema
  */
 
 import { writeFile } from "node:fs/promises";
@@ -10,7 +10,7 @@ import { formatJsonSchema, inferJsonSchema } from "./schemaUtils";
 export interface ExportOptions {
   filename?: string;
   outputDir?: string;
-  format?: "json";
+  format?: "json" | "schema";
   baseUrl?: string;
 }
 
@@ -21,27 +21,37 @@ export interface ExportResult {
 }
 
 /**
- * Export JSON Schema to a file
+ * Export JSON or JSON Schema to a file
  */
-export async function exportJsonSchemaToFile(
+export async function exportToFile(
   data: JsonValue,
   options: ExportOptions = {},
 ): Promise<ExportResult> {
   try {
     const {
-      filename = "schema.json",
+      filename = "export.json",
       outputDir = process.cwd(),
+      format = "json",
       baseUrl,
     } = options;
 
-    // Generate JSON Schema
-    const schema = inferJsonSchema(data, "Exported Schema", baseUrl);
+    let content: string;
+    let defaultExtension: string;
 
-    // Format content as JSON
-    const content = formatJsonSchema(schema);
+    if (format === "schema") {
+      // Generate JSON Schema
+      const schema = inferJsonSchema(data, "Exported Schema", baseUrl);
+      content = formatJsonSchema(schema);
+      defaultExtension = ".json";
+    } else {
+      // Export original JSON data
+      content = JSON.stringify(data, null, 2);
+      defaultExtension = ".json";
+    }
+
     const finalFilename = filename.endsWith(".json")
       ? filename
-      : `${filename}.json`;
+      : `${filename}${defaultExtension}`;
 
     // Construct full file path
     const filePath = join(outputDir, finalFilename);
@@ -61,9 +71,22 @@ export async function exportJsonSchemaToFile(
 }
 
 /**
+ * Export JSON Schema to a file (backward compatibility)
+ * @deprecated Use exportToFile with format: "schema" instead
+ */
+export async function exportJsonSchemaToFile(
+  data: JsonValue,
+  options: ExportOptions = {},
+): Promise<ExportResult> {
+  return exportToFile(data, { ...options, format: "schema" });
+}
+
+/**
  * Generate a safe filename from current timestamp
  */
-export function generateDefaultFilename(): string {
+export function generateDefaultFilename(
+  format: "json" | "schema" = "json",
+): string {
   const now = new Date();
   const timestamp = now
     .toISOString()
@@ -71,7 +94,8 @@ export function generateDefaultFilename(): string {
     .replace(/T/, "_")
     .slice(0, 19); // Remove milliseconds and timezone
 
-  return `schema_${timestamp}.json`;
+  const prefix = format === "schema" ? "schema" : "export";
+  return `${prefix}_${timestamp}.json`;
 }
 
 /**
