@@ -1,25 +1,18 @@
-import type {
-  Highlighter,
-  HighlightToken,
-} from "@features/common/types/viewer";
+import type { Highlighter } from "@features/common/types/viewer";
 import {
   applySearchHighlighting,
+  type HighlightToken,
   tokenizeLine,
 } from "@features/json-rendering/utils/syntaxHighlight";
 
 /**
  * JSON-specific highlighter implementation
- * Adapts existing syntax highlighting for BaseViewer interface
+ * Uses existing syntax highlighting utilities directly
  */
 export class JsonHighlighter implements Highlighter {
   tokenizeLine(line: string): HighlightToken[] {
-    // Use existing tokenizeLine function and adapt to HighlightToken interface
-    const tokens = tokenizeLine(line, "");
-    return tokens.map((token) => ({
-      text: token.text,
-      color: token.color,
-      isMatch: token.isMatch,
-    }));
+    // Use existing tokenizeLine function directly
+    return tokenizeLine(line, "");
   }
 
   applySearchHighlighting(
@@ -27,17 +20,8 @@ export class JsonHighlighter implements Highlighter {
     searchTerm: string,
     isCurrentResult: boolean = false,
   ): HighlightToken[] {
-    // Use existing search highlighting function
-    const highlightedTokens = applySearchHighlighting(
-      tokens,
-      searchTerm,
-      isCurrentResult,
-    );
-    return highlightedTokens.map((token) => ({
-      text: token.text,
-      color: token.color,
-      isMatch: token.isMatch,
-    }));
+    // Use existing search highlighting function directly
+    return applySearchHighlighting(tokens, searchTerm, isCurrentResult);
   }
 }
 

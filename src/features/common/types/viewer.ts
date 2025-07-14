@@ -70,14 +70,12 @@ export interface EmptyStateConfig {
   color?: string;
 }
 
+import type { HighlightToken } from "@features/json-rendering/utils/syntaxHighlight";
+
 /**
- * Token for syntax and search highlighting
+ * Re-export HighlightToken from syntax highlighting utilities
  */
-export interface HighlightToken {
-  text: string;
-  color: string;
-  isMatch?: boolean;
-}
+export type { HighlightToken };
 
 /**
  * Highlighter interface for injecting highlighting logic
