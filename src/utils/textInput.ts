@@ -77,6 +77,23 @@ export function handleTextInput(
     return true;
   }
 
+  // Text deletion
+  if (key.ctrl && input === "k") {
+    // Ctrl-k: Delete from cursor to end of line
+    const newText = text.slice(0, cursorPosition);
+    setText(newText);
+    // Cursor position stays the same (now at end of remaining text)
+    return true;
+  }
+
+  if (key.ctrl && input === "u") {
+    // Ctrl-u: Delete from beginning to cursor
+    const newText = text.slice(cursorPosition);
+    setText(newText);
+    setCursorPosition(0);
+    return true;
+  }
+
   // Text editing (macOS style)
   if (key.backspace || key.delete) {
     // On macOS, both backspace and delete remove character before cursor
