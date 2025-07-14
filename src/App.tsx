@@ -1,4 +1,5 @@
 import type { AppProps } from "@core/types/app";
+import type { JsonValue } from "@core/types/index";
 import { CollapsibleJsonViewer } from "@features/collapsible/components/CollapsibleJsonViewer";
 import type { NavigationAction } from "@features/collapsible/types/collapsible";
 import { DebugBar } from "@features/debug/components/DebugBar";
@@ -1122,7 +1123,7 @@ export function App({
           {collapsibleMode ? (
             <CollapsibleJsonViewer
               ref={collapsibleViewerRef}
-              data={displayData as any}
+              data={displayData as JsonValue | null}
               scrollOffset={scrollOffset}
               searchTerm={searchState.searchTerm}
               searchResults={searchState.searchResults}
@@ -1137,7 +1138,7 @@ export function App({
             />
           ) : schemaVisible ? (
             <SchemaViewer
-              data={displayData as any}
+              data={displayData as JsonValue | null}
               scrollOffset={scrollOffset}
               searchTerm={searchState.searchTerm}
               searchResults={searchState.searchResults}
@@ -1151,7 +1152,7 @@ export function App({
             />
           ) : (
             <JsonViewer
-              data={displayData as any}
+              data={displayData as JsonValue | null}
               scrollOffset={scrollOffset}
               searchTerm={searchState.searchTerm}
               searchResults={searchState.searchResults}
