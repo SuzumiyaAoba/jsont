@@ -444,6 +444,89 @@ export function handleNavigation(
       }
       break;
     }
+
+    case "page_up": {
+      if (!newState.cursorPosition || newState.flattenedNodes.length === 0)
+        break;
+
+      const currentIndex = findCursorIndex(
+        newState.cursorPosition,
+        newState.flattenedNodes,
+      );
+      const pageSize = action.count || 10; // Default page size
+      const newIndex = Math.max(0, currentIndex - pageSize);
+
+      if (newIndex !== currentIndex && newIndex >= 0) {
+        const newNode = newState.flattenedNodes[newIndex];
+        if (newNode) {
+          newState.cursorPosition = {
+            nodeId: newNode.id,
+            lineIndex: newIndex,
+          };
+          scrollToLine = newIndex;
+        }
+      }
+      break;
+    }
+
+    case "page_down": {
+      if (!newState.cursorPosition || newState.flattenedNodes.length === 0)
+        break;
+
+      const currentIndex = findCursorIndex(
+        newState.cursorPosition,
+        newState.flattenedNodes,
+      );
+      const pageSize = action.count || 10; // Default page size
+      const newIndex = Math.min(
+        newState.flattenedNodes.length - 1,
+        currentIndex + pageSize,
+      );
+
+      if (
+        newIndex !== currentIndex &&
+        newIndex < newState.flattenedNodes.length
+      ) {
+        const newNode = newState.flattenedNodes[newIndex];
+        if (newNode) {
+          newState.cursorPosition = {
+            nodeId: newNode.id,
+            lineIndex: newIndex,
+          };
+          scrollToLine = newIndex;
+        }
+      }
+      break;
+    }
+
+    case "goto_top": {
+      if (newState.flattenedNodes.length === 0) break;
+
+      const firstNode = newState.flattenedNodes[0];
+      if (firstNode) {
+        newState.cursorPosition = {
+          nodeId: firstNode.id,
+          lineIndex: 0,
+        };
+        scrollToLine = 0;
+      }
+      break;
+    }
+
+    case "goto_bottom": {
+      if (newState.flattenedNodes.length === 0) break;
+
+      const lastIndex = newState.flattenedNodes.length - 1;
+      const lastNode = newState.flattenedNodes[lastIndex];
+      if (lastNode) {
+        newState.cursorPosition = {
+          nodeId: lastNode.id,
+          lineIndex: lastIndex,
+        };
+        scrollToLine = lastIndex;
+      }
+      break;
+    }
   }
 
   return { newState, ...(scrollToLine !== undefined && { scrollToLine }) };
