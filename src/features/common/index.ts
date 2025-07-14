@@ -12,6 +12,8 @@ export type {
   ContentRenderer,
   DataProcessor,
   EmptyStateConfig,
+  Highlighter,
+  HighlightToken,
   LineNumberProps,
   NavigatableProps,
   SearchableProps,

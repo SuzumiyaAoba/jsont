@@ -69,3 +69,31 @@ export interface EmptyStateConfig {
   message: string;
   color?: string;
 }
+
+/**
+ * Token for syntax and search highlighting
+ */
+export interface HighlightToken {
+  text: string;
+  color: string;
+  isMatch?: boolean;
+}
+
+/**
+ * Highlighter interface for injecting highlighting logic
+ */
+export interface Highlighter {
+  /**
+   * Tokenize a line for syntax highlighting
+   */
+  tokenizeLine: (line: string) => HighlightToken[];
+
+  /**
+   * Apply search highlighting to existing tokens
+   */
+  applySearchHighlighting: (
+    tokens: HighlightToken[],
+    searchTerm: string,
+    isCurrentResult?: boolean,
+  ) => HighlightToken[];
+}

@@ -6,11 +6,9 @@ import type {
   ContentRenderer,
   DataProcessor,
   EmptyStateConfig,
+  Highlighter,
+  HighlightToken,
 } from "@features/common/types/viewer";
-import {
-  applySearchHighlighting,
-  tokenizeLine,
-} from "@features/json-rendering/utils/syntaxHighlight";
 import { Box, Text } from "ink";
 import type React from "react";
 
@@ -19,6 +17,11 @@ interface BaseViewerComponentProps extends BaseViewerProps {
    * Function to process raw data into displayable lines
    */
   dataProcessor: DataProcessor;
+
+  /**
+   * Highlighter for syntax and search highlighting
+   */
+  highlighter: Highlighter;
 
   /**
    * Function to render the content area
@@ -45,6 +48,7 @@ export function BaseViewer({
   visibleLines,
   showLineNumbers = false,
   dataProcessor,
+  highlighter,
   contentRenderer,
   emptyStateConfig,
 }: BaseViewerComponentProps) {
@@ -60,7 +64,7 @@ export function BaseViewer({
 
   const { formatLineNumber } = useLineFormatting(lines?.length || 0);
 
-  useSearchResults(searchResults); // Call hook even if not used to maintain hook order
+  const { searchResultsByLine } = useSearchResults(searchResults);
 
   // Handle empty data state
   if (!data) {
@@ -89,7 +93,12 @@ export function BaseViewer({
     return currentResult ? currentResult.lineIndex === lineIndex : false;
   };
 
-  // Render line with combined syntax and search highlighting
+  // Check if a line has any search results using pre-computed results
+  const hasSearchResults = (lineIndex: number): boolean => {
+    return searchResultsByLine.has(lineIndex);
+  };
+
+  // Render line with combined syntax and search highlighting using pre-computed search results
   const renderLineWithHighlighting = (
     line: string,
     originalIndex: number,
@@ -97,14 +106,20 @@ export function BaseViewer({
     isCurrentResult: boolean,
   ): React.ReactNode => {
     // First tokenize the line for syntax highlighting
-    const syntaxTokens = tokenizeLine(line, "");
+    const syntaxTokens = highlighter.tokenizeLine(line);
 
-    // Then apply search highlighting to the tokens
-    const highlightedTokens = applySearchHighlighting(
-      syntaxTokens,
-      searchTerm,
-      isCurrentResult,
-    );
+    // Only apply search highlighting if this line has search results or searchTerm is provided
+    const shouldHighlightSearch =
+      searchTerm &&
+      (hasSearchResults(originalIndex) || searchTerm.trim().length > 0);
+
+    const highlightedTokens = shouldHighlightSearch
+      ? highlighter.applySearchHighlighting(
+          syntaxTokens,
+          searchTerm,
+          isCurrentResult,
+        )
+      : syntaxTokens;
 
     // Render the tokens
     return (
@@ -112,7 +127,7 @@ export function BaseViewer({
         key={originalIndex}
         {...(isCurrentResult ? { backgroundColor: "blue" } : {})}
       >
-        {highlightedTokens.map((token, tokenIndex) => {
+        {highlightedTokens.map((token: HighlightToken, tokenIndex: number) => {
           const key = `${originalIndex}-${tokenIndex}-${token.text}`;
 
           if (token.isMatch) {

@@ -4,6 +4,7 @@ import type {
   BaseViewerProps,
   DataProcessor,
 } from "@features/common/types/viewer";
+import { jsonHighlighter } from "@features/json-rendering/utils/jsonHighlighter";
 
 // Define the data processor for JSON formatting
 const jsonDataProcessor: DataProcessor = (data: JsonValue | null) => {
@@ -23,6 +24,7 @@ export function JsonViewer(props: BaseViewerProps) {
     <BaseViewer
       {...props}
       dataProcessor={jsonDataProcessor}
+      highlighter={jsonHighlighter}
       emptyStateConfig={{
         message: "No JSON data to display",
         color: "gray",

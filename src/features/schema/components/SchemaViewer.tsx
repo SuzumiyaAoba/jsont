@@ -4,6 +4,7 @@ import type {
   BaseViewerProps,
   DataProcessor,
 } from "@features/common/types/viewer";
+import { jsonHighlighter } from "@features/json-rendering/utils/jsonHighlighter";
 import {
   formatJsonSchema,
   handleSchemaError,
@@ -33,6 +34,7 @@ export function SchemaViewer(props: BaseViewerProps) {
     <BaseViewer
       {...props}
       dataProcessor={schemaDataProcessor}
+      highlighter={jsonHighlighter}
       emptyStateConfig={{
         message: "No JSON data to generate schema",
         color: "gray",
