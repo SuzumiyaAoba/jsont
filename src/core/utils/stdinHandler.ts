@@ -140,15 +140,9 @@ async function reinitializeStdinForKeyboard(): Promise<boolean> {
       });
 
       return true;
-    } catch (error) {
-      const isTestEnvironment =
+    } catch (_error) {
+      const _isTestEnvironment =
         process.env["NODE_ENV"] === "test" || process.env["VITEST"] === "true";
-      if (!isTestEnvironment) {
-        console.log(
-          "🔧 [STDIN] /dev/tty access failed:",
-          error instanceof Error ? error.message : String(error),
-        );
-      }
       // TTY access failed, try alternative approach
       return await setupEnhancedStdin();
     }
@@ -163,11 +157,8 @@ async function reinitializeStdinForKeyboard(): Promise<boolean> {
  */
 async function setupEnhancedStdin(): Promise<boolean> {
   try {
-    const isTestEnvironment =
+    const _isTestEnvironment =
       process.env["NODE_ENV"] === "test" || process.env["VITEST"] === "true";
-    if (!isTestEnvironment) {
-      console.log("🔧 [STDIN] Setting up enhanced stdin for keyboard input");
-    }
 
     const fs = await import("node:fs");
 
@@ -179,10 +170,6 @@ async function setupEnhancedStdin(): Promise<boolean> {
 
     for (const termPath of terminalPaths) {
       try {
-        if (!isTestEnvironment) {
-          console.log(`🔧 [STDIN] Trying terminal path: ${termPath}`);
-        }
-
         // Check if this path exists and is accessible
         fs.accessSync(termPath, fs.constants.R_OK | fs.constants.W_OK);
 
@@ -195,21 +182,10 @@ async function setupEnhancedStdin(): Promise<boolean> {
           if (termStream.setRawMode) {
             termStream.setRawMode(true);
             termStream.setRawMode(false);
-            if (!isTestEnvironment) {
-              console.log(`✅ [STDIN] ${termPath} supports raw mode`);
-            }
           } else {
             throw new Error("No setRawMode function");
           }
-        } catch (rawModeError) {
-          if (!isTestEnvironment) {
-            console.log(
-              `❌ [STDIN] ${termPath} doesn't support raw mode:`,
-              rawModeError instanceof Error
-                ? rawModeError.message
-                : String(rawModeError),
-            );
-          }
+        } catch (_rawModeError) {
           fs.closeSync(termFd);
           continue;
         }
@@ -250,39 +226,16 @@ async function setupEnhancedStdin(): Promise<boolean> {
           configurable: true,
         });
 
-        if (!isTestEnvironment) {
-          console.log(
-            `✅ [STDIN] Successfully using ${termPath} for keyboard input`,
-          );
-        }
         return true;
-      } catch (pathError) {
-        if (!isTestEnvironment) {
-          console.log(
-            `❌ [STDIN] ${termPath} failed:`,
-            pathError instanceof Error ? pathError.message : String(pathError),
-          );
-        }
-      }
+      } catch (_pathError) {}
     }
 
     // If all terminal device approaches failed, try creating a mock stdin that
     // can work with Ink but doesn't provide actual keyboard input
-    if (!isTestEnvironment) {
-      console.log(
-        "🔧 [STDIN] No terminal devices available, setting up mock stdin",
-      );
-    }
     return await setupMockStdinForInk();
-  } catch (error) {
-    const isTestEnvironment =
+  } catch (_error) {
+    const _isTestEnvironment =
       process.env["NODE_ENV"] === "test" || process.env["VITEST"] === "true";
-    if (!isTestEnvironment) {
-      console.log(
-        "🔧 [STDIN] Enhanced stdin setup failed:",
-        error instanceof Error ? error.message : String(error),
-      );
-    }
     return await setupMinimalStdin();
   }
 }
@@ -293,11 +246,8 @@ async function setupEnhancedStdin(): Promise<boolean> {
  */
 async function setupMockStdinForInk(): Promise<boolean> {
   try {
-    const isTestEnvironment =
+    const _isTestEnvironment =
       process.env["NODE_ENV"] === "test" || process.env["VITEST"] === "true";
-    if (!isTestEnvironment) {
-      console.log("🔧 [STDIN] Setting up mock stdin for Ink compatibility");
-    }
 
     const { Readable } = await import("node:stream");
 
@@ -317,12 +267,7 @@ async function setupMockStdinForInk(): Promise<boolean> {
 
     // Add a setRawMode function that doesn't do anything
     Object.defineProperty(mockStdin, "setRawMode", {
-      value: function (mode: boolean) {
-        if (!isTestEnvironment) {
-          console.log(
-            `🔧 [STDIN] Mock setRawMode(${mode}) - no actual raw mode available`,
-          );
-        }
+      value: function (_mode: boolean) {
         return this;
       },
       writable: true,
@@ -354,21 +299,10 @@ async function setupMockStdinForInk(): Promise<boolean> {
       configurable: true,
     });
 
-    if (!isTestEnvironment) {
-      console.log(
-        "⚠️  [STDIN] Mock stdin setup complete - keyboard input not available",
-      );
-    }
     return false; // Indicate that keyboard input is not actually available
-  } catch (error) {
-    const isTestEnvironment =
+  } catch (_error) {
+    const _isTestEnvironment =
       process.env["NODE_ENV"] === "test" || process.env["VITEST"] === "true";
-    if (!isTestEnvironment) {
-      console.log(
-        "❌ [STDIN] Mock stdin setup failed:",
-        error instanceof Error ? error.message : String(error),
-      );
-    }
     return await setupMinimalStdin();
   }
 }

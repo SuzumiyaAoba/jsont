@@ -88,42 +88,19 @@ export class AppService {
       ? enableKeyboard
       : enableKeyboard && rawModeSupported;
 
-    if (!isTestEnvironment) {
-      console.log("🔧 [AppService] enableKeyboard:", enableKeyboard);
-      console.log("🔧 [AppService] rawModeSupported:", rawModeSupported);
-      console.log(
-        "🔧 [AppService] actualKeyboardEnabled:",
-        actualKeyboardEnabled,
-      );
-      console.log("🔧 [AppService] process.stdin.isTTY:", process.stdin.isTTY);
-    }
-
     // Provide stdin for keyboard input
     if (actualKeyboardEnabled) {
       renderOptions.stdin = process.stdin;
-      if (!isTestEnvironment) {
-        console.log("🔧 [AppService] stdin assigned to renderOptions");
-      }
 
       // Force stdin to be available for reading
       if (process.stdin.readable === false) {
-        if (!isTestEnvironment) {
-          console.log("🔧 [AppService] Forcing stdin to be readable");
-        }
         Object.defineProperty(process.stdin, "readable", { value: true });
       }
 
       if (process.stdin.readableHighWaterMark === 0) {
-        if (!isTestEnvironment) {
-          console.log("🔧 [AppService] Adjusting stdin highWaterMark");
-        }
         Object.defineProperty(process.stdin, "readableHighWaterMark", {
           value: 16384,
         });
-      }
-    } else {
-      if (!isTestEnvironment) {
-        console.log("🔧 [AppService] stdin NOT assigned - keyboard disabled");
       }
     }
 
