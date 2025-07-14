@@ -7,16 +7,19 @@ import {
   getSearchScopeDisplayName,
 } from "@features/search/utils/searchUtils.js";
 import { Box, Text } from "ink";
+import { renderTextWithCursor } from "../../../utils/textInput";
 
 interface SearchBarProps {
   searchState: SearchState;
   searchInput: string;
+  searchCursorPosition?: number;
   onScopeChange?: (scope: SearchScope) => void;
 }
 
 export function SearchBar({
   searchState,
   searchInput,
+  searchCursorPosition = 0,
   onScopeChange: _onScopeChange,
 }: SearchBarProps) {
   const navigationInfo = getSearchNavigationInfo(
@@ -26,6 +29,12 @@ export function SearchBar({
 
   const scopeDisplayName = getSearchScopeDisplayName(searchState.searchScope);
 
+  // Render search input with cursor
+  const { beforeCursor, atCursor, afterCursor } = renderTextWithCursor(
+    searchInput,
+    searchCursorPosition,
+  );
+
   return (
     <Box borderStyle="single" borderColor="yellow" padding={1} width="100%">
       <Box flexDirection="row" width="100%">
@@ -33,8 +42,13 @@ export function SearchBar({
           {searchState.isSearching ? (
             <>
               <Text color="yellow">Search: </Text>
-              <Text color="white">{searchInput}</Text>
-              <Text color="yellow">█</Text>
+              <Text color="white">
+                {beforeCursor}
+                <Text color="black" backgroundColor="yellow">
+                  {atCursor}
+                </Text>
+                {afterCursor}
+              </Text>
               <Text color="gray" dimColor>
                 {" "}
                 (Enter: confirm, Esc: cancel, Tab: scope)

@@ -23,7 +23,7 @@ import {
 } from "react";
 
 interface CollapsibleJsonViewerProps {
-  data: JsonValue;
+  data: JsonValue | null;
   scrollOffset?: number;
   searchTerm?: string;
   searchResults?: SearchResult[];
