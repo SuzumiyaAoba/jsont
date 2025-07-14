@@ -577,15 +577,18 @@ export function App({
         setJqFocusMode((prev) => (prev === "input" ? "json" : "input"));
       } else if (jqFocusMode === "json") {
         // Handle JSON navigation when focus is on JSON result
+        // Get the currently displayed data (respecting showOriginal flag)
+        const currentDisplayData =
+          jqState.showOriginal || !jqState.transformedData
+            ? initialData
+            : jqState.transformedData;
+
         if (input === "j" && !key.ctrl) {
           // Scroll down
           const currentMaxScroll = Math.max(
             0,
-            JSON.stringify(
-              jqState.transformedData || initialData,
-              null,
-              2,
-            ).split("\n").length - visibleLines,
+            JSON.stringify(currentDisplayData, null, 2).split("\n").length -
+              visibleLines,
           );
           setScrollOffset((prev) => Math.min(currentMaxScroll, prev + 1));
         } else if (input === "k" && !key.ctrl) {
@@ -595,11 +598,8 @@ export function App({
           // Half-page down
           const currentMaxScroll = Math.max(
             0,
-            JSON.stringify(
-              jqState.transformedData || initialData,
-              null,
-              2,
-            ).split("\n").length - visibleLines,
+            JSON.stringify(currentDisplayData, null, 2).split("\n").length -
+              visibleLines,
           );
           setScrollOffset((prev) =>
             Math.min(currentMaxScroll, prev + halfPageLines),
@@ -621,11 +621,8 @@ export function App({
           // Go to bottom
           const currentMaxScroll = Math.max(
             0,
-            JSON.stringify(
-              jqState.transformedData || initialData,
-              null,
-              2,
-            ).split("\n").length - visibleLines,
+            JSON.stringify(currentDisplayData, null, 2).split("\n").length -
+              visibleLines,
           );
           setScrollOffset(currentMaxScroll);
         } else if (input === "i" && !key.ctrl && !key.meta) {
@@ -639,6 +636,10 @@ export function App({
         ) {
           // Toggle between original and transformed JSON view
           setJqState((prev) => ({ ...prev, showOriginal: !prev.showOriginal }));
+
+          // Reset scroll position when switching views to ensure proper navigation
+          setScrollOffset(0);
+
           updateDebugInfo(
             `Show ${jqState.showOriginal ? "transformed" : "original"} JSON`,
             input,
