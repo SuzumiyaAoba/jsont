@@ -99,6 +99,7 @@ export function App({
     transformedData: null,
     error: null,
     isProcessing: false,
+    showOriginal: false,
   });
   const [jqInput, setJqInput] = useState<string>("");
   const [jqCursorPosition, setJqCursorPosition] = useState<number>(0);
@@ -264,11 +265,20 @@ export function App({
 
   // Determine which data to display
   const displayData = useMemo((): unknown => {
-    if (jqState.isActive && jqState.transformedData !== null) {
+    if (
+      jqState.isActive &&
+      jqState.transformedData !== null &&
+      !jqState.showOriginal
+    ) {
       return jqState.transformedData;
     }
     return initialData ?? null;
-  }, [jqState.isActive, jqState.transformedData, initialData]);
+  }, [
+    jqState.isActive,
+    jqState.transformedData,
+    jqState.showOriginal,
+    initialData,
+  ]);
 
   // Use schema lines for scroll calculation when in schema view
   const currentDataLines = schemaVisible ? schemaLines : jsonLines;
@@ -621,6 +631,18 @@ export function App({
         } else if (input === "i" && !key.ctrl && !key.meta) {
           // Return to input mode
           setJqFocusMode("input");
+        } else if (
+          input === "o" &&
+          !key.ctrl &&
+          !key.meta &&
+          jqState.transformedData !== null
+        ) {
+          // Toggle between original and transformed JSON view
+          setJqState((prev) => ({ ...prev, showOriginal: !prev.showOriginal }));
+          updateDebugInfo(
+            `Show ${jqState.showOriginal ? "transformed" : "original"} JSON`,
+            input,
+          );
         }
       } else if (
         jqFocusMode === "input" &&
@@ -649,6 +671,7 @@ export function App({
           isActive: false,
           transformedData: null,
           error: null,
+          showOriginal: false,
         }));
         setJqInput("");
         setJqCursorPosition(0);
@@ -666,9 +689,11 @@ export function App({
       halfPageLines,
       initialData,
       jqState.transformedData,
+      jqState.showOriginal,
       waitingForSecondG,
       handleJqTransformation,
       jqState.error,
+      updateDebugInfo,
     ],
   );
 
@@ -943,7 +968,11 @@ export function App({
         updateDebugInfo(`Toggle help ${helpVisible ? "OFF" : "ON"}`, input);
       } else if (input === "J" && !key.ctrl && !key.meta) {
         // Toggle jq mode
-        setJqState((prev) => ({ ...prev, isActive: !prev.isActive }));
+        setJqState((prev) => ({
+          ...prev,
+          isActive: !prev.isActive,
+          showOriginal: false, // Reset to show transformed data when entering jq mode
+        }));
         updateDebugInfo(
           `Toggle jq mode ${jqState.isActive ? "OFF" : "ON"}`,
           input,
