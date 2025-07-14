@@ -63,8 +63,9 @@ export function getJsonValueColor(
     return colorScheme.nullValue;
   }
 
-  // Numeric values
-  if (/^\d+(\.\d+)?$/.test(cleanValue)) {
+  // Numeric values (JSON RFC 8259 compliant)
+  // Supports: integers, decimals, negative numbers, scientific notation
+  if (/^-?(0|[1-9]\d*)(\.\d+)?([eE][+-]?\d+)?$/.test(cleanValue)) {
     return colorScheme.numberValue;
   }
 
@@ -72,11 +73,48 @@ export function getJsonValueColor(
 }
 
 /**
+ * Finds the colon that separates JSON key from value, ignoring colons inside quoted strings
+ */
+function findKeyValueSeparatorColon(line: string): number {
+  let inQuotes = false;
+  let escapeNext = false;
+
+  for (let i = 0; i < line.length; i++) {
+    const char = line[i];
+
+    if (escapeNext) {
+      escapeNext = false;
+      continue;
+    }
+
+    if (char === "\\") {
+      escapeNext = true;
+      continue;
+    }
+
+    if (char === '"') {
+      inQuotes = !inQuotes;
+      continue;
+    }
+
+    // Found colon outside of quotes
+    if (char === ":" && !inQuotes) {
+      return i;
+    }
+  }
+
+  return -1; // No valid colon found
+}
+
+/**
  * Determines if a line contains a JSON key-value pair
  */
 export function isKeyValueLine(line: string): boolean {
   const trimmedLine = line.trim();
-  return trimmedLine.includes(":") && !isStructuralLine(trimmedLine);
+  return (
+    findKeyValueSeparatorColon(trimmedLine) !== -1 &&
+    !isStructuralLine(trimmedLine)
+  );
 }
 
 /**
@@ -116,7 +154,18 @@ export function parseKeyValueLine(line: string): {
   value: string;
   isStructuralValue: boolean;
 } {
-  const colonIndex = line.indexOf(":");
+  const colonIndex = findKeyValueSeparatorColon(line);
+
+  if (colonIndex === -1) {
+    // Fallback: treat entire line as key if no valid colon found
+    return {
+      beforeColon: line,
+      afterColon: "",
+      value: "",
+      isStructuralValue: false,
+    };
+  }
+
   const beforeColon = line.substring(0, colonIndex);
   const afterColon = line.substring(colonIndex);
 
