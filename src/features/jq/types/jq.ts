@@ -8,6 +8,7 @@ export interface JqState {
   transformedData: unknown | null;
   error: string | null;
   isProcessing: boolean;
+  showOriginal: boolean; // Toggle between original and transformed data view
 }
 
 export interface JqTransformationResult {

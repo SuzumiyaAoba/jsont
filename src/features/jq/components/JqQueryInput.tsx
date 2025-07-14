@@ -31,7 +31,10 @@ export function JqQueryInput({
 
   const getStatusText = () => {
     if (jqState.isProcessing) return "Processing...";
-    if (jqState.transformedData !== null) return "Transformed";
+    if (jqState.transformedData !== null) {
+      const viewType = jqState.showOriginal ? "Original" : "Transformed";
+      return `${viewType} JSON`;
+    }
     return "Ready";
   };
 
@@ -64,7 +67,9 @@ export function JqQueryInput({
         <Text color="gray">
           {focusMode === "input"
             ? " (Enter: apply, Esc: exit, Tab: view result)"
-            : " (i: edit query, Tab: edit mode, j/k: scroll, gg/G: goto)"}
+            : jqState.transformedData !== null
+              ? " (i: edit query, Tab: edit mode, o: toggle original/transformed, j/k: scroll, gg/G: goto)"
+              : " (i: edit query, Tab: edit mode, j/k: scroll, gg/G: goto)"}
         </Text>
       </Box>
 
