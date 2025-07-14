@@ -2,6 +2,9 @@ import type { AppProps } from "@core/types/app";
 import { CollapsibleJsonViewer } from "@features/collapsible/components/CollapsibleJsonViewer";
 import type { NavigationAction } from "@features/collapsible/types/collapsible";
 import { DebugBar } from "@features/debug/components/DebugBar";
+import { JqQueryInput } from "@features/jq/components/JqQueryInput";
+import type { JqState } from "@features/jq/types/jq";
+import { transformWithJq } from "@features/jq/utils/jqTransform";
 import { JsonViewer } from "@features/json-rendering/components/JsonViewer";
 import { ExportDialog } from "@features/schema/components/ExportDialog";
 import { SchemaViewer } from "@features/schema/components/SchemaViewer";
@@ -28,6 +31,7 @@ import {
 } from "@features/status/utils/statusUtils";
 import { Box, Text, useApp, useInput } from "ink";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { handleTextInput } from "./utils/textInput";
 
 /**
  * Main application component for the JSON TUI Viewer
@@ -42,7 +46,7 @@ export function App({
   keyboardEnabled = false,
 }: AppProps) {
   // Check if we're in test environment - moved to top to avoid dependency issues
-  const isTestEnvironment =
+  const _isTestEnvironment =
     process.env["NODE_ENV"] === "test" || process.env["VITEST"] === "true";
 
   const [error] = useState<string | null>(initialError ?? null);
@@ -59,6 +63,7 @@ export function App({
     searchScope: "all",
   });
   const [searchInput, setSearchInput] = useState<string>("");
+  const [searchCursorPosition, setSearchCursorPosition] = useState<number>(0);
 
   // Debug state for keyboard input
   const [debugInfo, setDebugInfo] = useState<{
@@ -82,6 +87,20 @@ export function App({
   });
   const [collapsibleMode, setCollapsibleMode] = useState<boolean>(false);
   const [helpVisible, setHelpVisible] = useState<boolean>(false);
+
+  // jq transformation state
+  const [jqState, setJqState] = useState<JqState>({
+    isActive: false,
+    query: "",
+    transformedData: null,
+    error: null,
+    isProcessing: false,
+  });
+  const [jqInput, setJqInput] = useState<string>("");
+  const [jqCursorPosition, setJqCursorPosition] = useState<number>(0);
+  const [jqErrorScrollOffset, setJqErrorScrollOffset] = useState<number>(0);
+  const [jqFocusMode, setJqFocusMode] = useState<"input" | "json">("input"); // 'input' for query input, 'json' for result viewing
+
   const [terminalSize, setTerminalSize] = useState({
     width: process.stdout.columns || 80,
     height: process.stdout.rows || 24,
@@ -214,9 +233,14 @@ export function App({
   const statusBarLines = statusBarHeight; // Dynamic status bar height
   const searchBarLines = searchBarHeight; // Dynamic search bar height
   const debugBarLines = debugBarHeight; // Debug bar height based on content
+  const jqBarLines = jqState.isActive ? (jqState.error ? 12 : 7) : 0; // jq query input height (with error box)
   const contentPaddingLines = 2; // JsonViewer padding={1} adds 1 line top + 1 line bottom
   const UI_RESERVED_LINES =
-    statusBarLines + searchBarLines + debugBarLines + contentPaddingLines;
+    statusBarLines +
+    searchBarLines +
+    debugBarLines +
+    jqBarLines +
+    contentPaddingLines;
   const G_SEQUENCE_TIMEOUT = 1000;
 
   const jsonLines = initialData
@@ -233,6 +257,14 @@ export function App({
 
   const terminalHeight = terminalSize.height;
   const visibleLines = Math.max(1, terminalHeight - UI_RESERVED_LINES);
+
+  // Determine which data to display
+  const displayData = useMemo(() => {
+    if (jqState.isActive && jqState.transformedData !== null) {
+      return jqState.transformedData;
+    }
+    return initialData;
+  }, [jqState.isActive, jqState.transformedData, initialData]);
 
   // Use schema lines for scroll calculation when in schema view
   const currentDataLines = schemaVisible ? schemaLines : jsonLines;
@@ -352,17 +384,8 @@ export function App({
         currentResultIndex: 0,
       }));
 
-      // Auto-scroll to first result
-      if (results.length > 0 && results[0]) {
-        const targetLine = Math.max(
-          0,
-          results[0].lineIndex - Math.floor(visibleLines / 2),
-        );
-        const currentMaxScroll = searchState.isSearching
-          ? maxScrollSearchMode
-          : maxScroll;
-        setScrollOffset(Math.min(currentMaxScroll, targetLine));
-      }
+      // Reset scroll to top after search
+      setScrollOffset(0);
     } else {
       setSearchState((prev) => ({
         ...prev,
@@ -374,11 +397,7 @@ export function App({
     searchState.searchTerm,
     searchState.searchScope,
     initialData,
-    visibleLines,
-    maxScroll,
-    maxScrollSearchMode,
-    searchState.isSearching,
-    schemaVisible, // Add schemaVisible as dependency to trigger re-search when view changes
+    schemaVisible,
   ]);
 
   // Clear timeout when component unmounts or when g sequence is reset
@@ -388,6 +407,11 @@ export function App({
         clearTimeout(gTimeoutRef.current);
       }
     };
+  }, []);
+
+  // Reset error scroll offset when error changes
+  useEffect(() => {
+    setJqErrorScrollOffset(0);
   }, []);
 
   // Helper function to update debug info
@@ -462,6 +486,188 @@ export function App({
     setExportDialog({ isVisible: false, mode: "simple" });
   }, []);
 
+  // Handle jq transformation
+  const handleJqTransformation = useCallback(
+    async (query: string) => {
+      if (!initialData) return;
+
+      setJqState((prev) => ({ ...prev, isProcessing: true, error: null }));
+
+      try {
+        const result = await transformWithJq(initialData, query);
+
+        if (result.success) {
+          setJqState((prev) => ({
+            ...prev,
+            transformedData: result.data,
+            error: null,
+            isProcessing: false,
+            query: query,
+          }));
+        } else {
+          setJqState((prev) => ({
+            ...prev,
+            transformedData: null,
+            error: result.error || "Transformation failed",
+            isProcessing: false,
+          }));
+        }
+      } catch (error) {
+        setJqState((prev) => ({
+          ...prev,
+          transformedData: null,
+          error: error instanceof Error ? error.message : "Unknown error",
+          isProcessing: false,
+        }));
+      }
+    },
+    [initialData],
+  );
+
+  // Handle jq input mode
+  const handleJqInput = useCallback(
+    (
+      input: string,
+      key: {
+        return?: boolean;
+        escape?: boolean;
+        backspace?: boolean;
+        delete?: boolean;
+        ctrl?: boolean;
+        meta?: boolean;
+        tab?: boolean;
+        upArrow?: boolean;
+        downArrow?: boolean;
+        leftArrow?: boolean;
+        rightArrow?: boolean;
+        shift?: boolean;
+      },
+    ) => {
+      if (key.return) {
+        // Apply jq transformation
+        handleJqTransformation(jqInput);
+        // Keep focus in edit mode after transformation
+      } else if (key.escape) {
+        // Exit jq mode
+        setJqState((prev) => ({
+          ...prev,
+          isActive: false,
+          transformedData: null,
+          error: null,
+        }));
+        setJqInput("");
+        setJqCursorPosition(0);
+        setJqFocusMode("input");
+      } else if (key.tab) {
+        // Toggle focus between input and JSON (Tab or Ctrl+Tab)
+        setJqFocusMode((prev) => (prev === "input" ? "json" : "input"));
+      } else if (jqFocusMode === "json") {
+        // Handle JSON navigation when focus is on JSON result
+        if (input === "j" && !key.ctrl) {
+          // Scroll down
+          const currentMaxScroll = Math.max(
+            0,
+            JSON.stringify(
+              jqState.transformedData || initialData,
+              null,
+              2,
+            ).split("\n").length - visibleLines,
+          );
+          setScrollOffset((prev) => Math.min(currentMaxScroll, prev + 1));
+        } else if (input === "k" && !key.ctrl) {
+          // Scroll up
+          setScrollOffset((prev) => Math.max(0, prev - 1));
+        } else if (key.ctrl && input === "f") {
+          // Half-page down
+          const currentMaxScroll = Math.max(
+            0,
+            JSON.stringify(
+              jqState.transformedData || initialData,
+              null,
+              2,
+            ).split("\n").length - visibleLines,
+          );
+          setScrollOffset((prev) =>
+            Math.min(currentMaxScroll, prev + halfPageLines),
+          );
+        } else if (key.ctrl && input === "b") {
+          // Half-page up
+          setScrollOffset((prev) => Math.max(0, prev - halfPageLines));
+        } else if (input === "g" && !key.ctrl && !key.meta) {
+          if (waitingForSecondG) {
+            // Go to top (gg)
+            setScrollOffset(0);
+            setWaitingForSecondG(false);
+          } else {
+            // First 'g' pressed
+            setWaitingForSecondG(true);
+            setTimeout(() => setWaitingForSecondG(false), 1000);
+          }
+        } else if (input === "G" && !key.ctrl && !key.meta) {
+          // Go to bottom
+          const currentMaxScroll = Math.max(
+            0,
+            JSON.stringify(
+              jqState.transformedData || initialData,
+              null,
+              2,
+            ).split("\n").length - visibleLines,
+          );
+          setScrollOffset(currentMaxScroll);
+        } else if (input === "i" && !key.ctrl && !key.meta) {
+          // Return to input mode
+          setJqFocusMode("input");
+        }
+      } else if (
+        jqFocusMode === "input" &&
+        handleTextInput(
+          { text: jqInput, cursorPosition: jqCursorPosition },
+          { setText: setJqInput, setCursorPosition: setJqCursorPosition },
+          key,
+          input,
+        )
+      ) {
+        // Text input handled by utility
+      } else if (jqState.error && key.upArrow && key.shift) {
+        // Scroll error message up
+        setJqErrorScrollOffset((prev) => Math.max(0, prev - 1));
+      } else if (jqState.error && key.downArrow && key.shift) {
+        // Scroll error message down
+        const errorLines = jqState.error.split("\n");
+        const maxErrorLines = 2;
+        setJqErrorScrollOffset((prev) =>
+          Math.min(Math.max(0, errorLines.length - maxErrorLines), prev + 1),
+        );
+      } else if (input === "J" && !key.ctrl && !key.meta) {
+        // Toggle jq mode (exit when in jq mode)
+        setJqState((prev) => ({
+          ...prev,
+          isActive: false,
+          transformedData: null,
+          error: null,
+        }));
+        setJqInput("");
+        setJqCursorPosition(0);
+        setJqErrorScrollOffset(0);
+        setJqFocusMode("input");
+      } else {
+        // In jq mode, ignore other keys
+      }
+    },
+    [
+      jqInput,
+      jqCursorPosition,
+      jqFocusMode,
+      visibleLines,
+      halfPageLines,
+      initialData,
+      jqState.transformedData,
+      waitingForSecondG,
+      handleJqTransformation,
+      jqState.error,
+    ],
+  );
+
   // Handle search input mode
   const handleSearchInput = useCallback(
     (
@@ -484,6 +690,7 @@ export function App({
           isSearching: false,
           searchTerm: searchInput,
         }));
+        setScrollOffset(0); // Reset scroll to top after search
       } else if (key.escape) {
         // Cancel search - exit search mode entirely and clear all search state
         updateDebugInfo("Cancel search", input);
@@ -495,25 +702,25 @@ export function App({
           currentResultIndex: 0,
         }));
         setSearchInput("");
+        setSearchCursorPosition(0);
+        setScrollOffset(0); // Reset scroll to top after canceling search
       } else if (key.tab) {
         // Toggle search scope
         updateDebugInfo("Toggle search scope", input);
         const nextScope = getNextSearchScope(searchState.searchScope);
         handleSearchScopeChange(nextScope);
-      } else if (key.backspace || key.delete) {
-        // Remove character
-        updateDebugInfo("Delete character", input);
-        setSearchInput((prev) => prev.slice(0, -1));
       } else if (
-        input &&
-        !key.ctrl &&
-        !key.meta &&
-        !key.tab &&
-        input.length === 1
+        handleTextInput(
+          { text: searchInput, cursorPosition: searchCursorPosition },
+          {
+            setText: setSearchInput,
+            setCursorPosition: setSearchCursorPosition,
+          },
+          key,
+          input,
+        )
       ) {
-        // Add character
-        updateDebugInfo(`Type: "${input}"`, input);
-        setSearchInput((prev) => prev + input);
+        // Text input handled by utility
       } else {
         // In search mode, ignore other keys
         updateDebugInfo(`Ignored in search mode: "${input}"`, input);
@@ -521,6 +728,7 @@ export function App({
     },
     [
       searchInput,
+      searchCursorPosition,
       updateDebugInfo,
       searchState.searchScope,
       handleSearchScopeChange,
@@ -544,6 +752,7 @@ export function App({
         updateDebugInfo("Start search mode", input);
         setSearchState((prev) => ({ ...prev, isSearching: true }));
         setSearchInput("");
+        setSearchCursorPosition(0);
         setScrollOffset(0);
       } else if (
         input === "q" &&
@@ -555,6 +764,7 @@ export function App({
         updateDebugInfo("Return to search input", input);
         setSearchState((prev) => ({ ...prev, isSearching: true }));
         setSearchInput(searchState.searchTerm); // Pre-fill with current search term
+        setSearchCursorPosition(searchState.searchTerm.length);
       } else if (input === "j" && !key.ctrl) {
         if (collapsibleMode) {
           // Cursor down in collapsible mode
@@ -703,6 +913,16 @@ export function App({
         // Toggle help visibility
         setHelpVisible((prev) => !prev);
         updateDebugInfo(`Toggle help ${helpVisible ? "OFF" : "ON"}`, input);
+      } else if (input === "J" && !key.ctrl && !key.meta) {
+        // Toggle jq mode
+        setJqState((prev) => ({ ...prev, isActive: !prev.isActive }));
+        updateDebugInfo(
+          `Toggle jq mode ${jqState.isActive ? "OFF" : "ON"}`,
+          input,
+        );
+        if (!jqState.isActive) {
+          setJqInput("");
+        }
       } else {
         // Any other key resets the 'g' sequence
         updateDebugInfo(`Unhandled key: "${input}"`, input);
@@ -734,6 +954,7 @@ export function App({
       helpVisible,
       handleCollapsibleNavigation,
       handleSearchScopeChange,
+      jqState.isActive,
     ],
   );
 
@@ -752,18 +973,6 @@ export function App({
         tab?: boolean;
       },
     ) => {
-      if (!isTestEnvironment && !exportDialog.isVisible) {
-        console.log(
-          `⌨️  [KEY] Key pressed: "${input}" (length: ${input?.length}) (ctrl: ${key.ctrl}, meta: ${key.meta})`,
-        );
-        console.log(
-          `📊 [STATE] searchState.isSearching: ${searchState.isSearching}, searchTerm: "${searchState.searchTerm}"`,
-        );
-        console.log(
-          `🎯 [CHECK] input === "E": ${input === "E"}, !key.ctrl: ${!key.ctrl}, !key.meta: ${!key.meta}`,
-        );
-      }
-
       // Always allow exit commands
       if (key.ctrl && input === "c") {
         updateDebugInfo("Exit (Ctrl+C)", input);
@@ -782,6 +991,8 @@ export function App({
         handleExportSchema();
       } else if (searchState.isSearching) {
         handleSearchInput(input, key);
+      } else if (jqState.isActive) {
+        handleJqInput(input, key);
       } else {
         // Handle navigation input
         handleNavigationInput(input, key);
@@ -791,12 +1002,12 @@ export function App({
       exit,
       searchState.isSearching,
       searchState.searchTerm,
+      jqState.isActive,
       handleSearchInput,
+      handleJqInput,
       handleNavigationInput,
       updateDebugInfo,
       handleExportSchema,
-      isTestEnvironment,
-      exportDialog.isVisible,
     ],
   );
 
@@ -832,10 +1043,23 @@ export function App({
             <SearchBar
               searchState={searchState}
               searchInput={searchInput}
+              searchCursorPosition={searchCursorPosition}
               onScopeChange={handleSearchScopeChange}
             />
           </Box>
         )}
+      {/* jq transformation bar */}
+      {jqState.isActive && !exportDialog.isVisible && (
+        <Box flexShrink={0} width="100%" height={jqState.error ? 12 : 7}>
+          <JqQueryInput
+            jqState={jqState}
+            queryInput={jqInput}
+            cursorPosition={jqCursorPosition}
+            errorScrollOffset={jqErrorScrollOffset}
+            focusMode={jqFocusMode}
+          />
+        </Box>
+      )}
       {/* Keyboard unavailable warning */}
       {!keyboardEnabled && !exportDialog.isVisible && (
         <Box flexShrink={0} width="100%" height={1}>
@@ -895,7 +1119,7 @@ export function App({
           {collapsibleMode ? (
             <CollapsibleJsonViewer
               ref={collapsibleViewerRef}
-              data={initialData ?? null}
+              data={displayData ?? null}
               scrollOffset={scrollOffset}
               searchTerm={searchState.searchTerm}
               searchResults={searchState.searchResults}
@@ -910,7 +1134,7 @@ export function App({
             />
           ) : schemaVisible ? (
             <SchemaViewer
-              data={initialData ?? null}
+              data={displayData ?? null}
               scrollOffset={scrollOffset}
               searchTerm={searchState.searchTerm}
               searchResults={searchState.searchResults}
@@ -924,7 +1148,7 @@ export function App({
             />
           ) : (
             <JsonViewer
-              data={initialData ?? null}
+              data={displayData ?? null}
               scrollOffset={scrollOffset}
               searchTerm={searchState.searchTerm}
               searchResults={searchState.searchResults}
