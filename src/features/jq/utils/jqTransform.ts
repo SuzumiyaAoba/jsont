@@ -42,7 +42,7 @@ export async function transformWithJq(
     }
 
     // Run jq transformation with better error handling
-    let result: string;
+    let result: string | object;
     try {
       result = await jq.run(cleanQuery, jsonString, {
         input: "string",
@@ -69,11 +69,16 @@ export async function transformWithJq(
 
     // Parse result back to JSON if possible
     let transformedData: unknown;
-    try {
-      transformedData = JSON.parse(result);
-    } catch {
-      // If result is not valid JSON, return as string (for raw output)
-      transformedData = result.trim();
+    if (typeof result === "string") {
+      try {
+        transformedData = JSON.parse(result);
+      } catch {
+        // If result is not valid JSON, return as string (for raw output)
+        transformedData = result.trim();
+      }
+    } else {
+      // Result is already an object
+      transformedData = result;
     }
 
     return {

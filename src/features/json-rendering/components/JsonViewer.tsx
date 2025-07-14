@@ -7,7 +7,7 @@ import { Box, Text } from "ink";
 import type React from "react";
 
 interface JsonViewerProps {
-  data: JsonValue;
+  data: JsonValue | null;
   scrollOffset?: number;
   searchTerm?: string;
   searchResults?: SearchResult[];

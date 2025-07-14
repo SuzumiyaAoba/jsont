@@ -46,8 +46,11 @@ export function App({
   keyboardEnabled = false,
 }: AppProps) {
   // Check if we're in test environment - moved to top to avoid dependency issues
-  const _isTestEnvironment =
+  const isTestEnvironment =
     process.env["NODE_ENV"] === "test" || process.env["VITEST"] === "true";
+
+  // Avoid unused variable warning
+  void isTestEnvironment;
 
   const [error] = useState<string | null>(initialError ?? null);
   const [scrollOffset, setScrollOffset] = useState<number>(0);
@@ -259,11 +262,11 @@ export function App({
   const visibleLines = Math.max(1, terminalHeight - UI_RESERVED_LINES);
 
   // Determine which data to display
-  const displayData = useMemo(() => {
+  const displayData = useMemo((): unknown => {
     if (jqState.isActive && jqState.transformedData !== null) {
       return jqState.transformedData;
     }
-    return initialData;
+    return initialData ?? null;
   }, [jqState.isActive, jqState.transformedData, initialData]);
 
   // Use schema lines for scroll calculation when in schema view
@@ -1119,7 +1122,7 @@ export function App({
           {collapsibleMode ? (
             <CollapsibleJsonViewer
               ref={collapsibleViewerRef}
-              data={displayData ?? null}
+              data={displayData as any}
               scrollOffset={scrollOffset}
               searchTerm={searchState.searchTerm}
               searchResults={searchState.searchResults}
@@ -1134,7 +1137,7 @@ export function App({
             />
           ) : schemaVisible ? (
             <SchemaViewer
-              data={displayData ?? null}
+              data={displayData as any}
               scrollOffset={scrollOffset}
               searchTerm={searchState.searchTerm}
               searchResults={searchState.searchResults}
@@ -1148,7 +1151,7 @@ export function App({
             />
           ) : (
             <JsonViewer
-              data={displayData ?? null}
+              data={displayData as any}
               scrollOffset={scrollOffset}
               searchTerm={searchState.searchTerm}
               searchResults={searchState.searchResults}

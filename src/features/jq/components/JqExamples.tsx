@@ -35,7 +35,7 @@ export function JqExamples({ selectedIndex, isVisible }: JqExamplesProps) {
           <Box key={example}>
             <Text
               color={index === selectedIndex ? "black" : "white"}
-              backgroundColor={index === selectedIndex ? "cyan" : undefined}
+              {...(index === selectedIndex && { backgroundColor: "cyan" })}
             >
               {example}
             </Text>
