@@ -141,8 +141,6 @@ async function reinitializeStdinForKeyboard(): Promise<boolean> {
 
       return true;
     } catch (_error) {
-      const _isTestEnvironment =
-        process.env["NODE_ENV"] === "test" || process.env["VITEST"] === "true";
       // TTY access failed, try alternative approach
       return await setupEnhancedStdin();
     }
@@ -157,9 +155,6 @@ async function reinitializeStdinForKeyboard(): Promise<boolean> {
  */
 async function setupEnhancedStdin(): Promise<boolean> {
   try {
-    const _isTestEnvironment =
-      process.env["NODE_ENV"] === "test" || process.env["VITEST"] === "true";
-
     const fs = await import("node:fs");
 
     // First, try to access the controlling terminal through various paths
@@ -234,8 +229,6 @@ async function setupEnhancedStdin(): Promise<boolean> {
     // can work with Ink but doesn't provide actual keyboard input
     return await setupMockStdinForInk();
   } catch (_error) {
-    const _isTestEnvironment =
-      process.env["NODE_ENV"] === "test" || process.env["VITEST"] === "true";
     return await setupMinimalStdin();
   }
 }
@@ -246,9 +239,6 @@ async function setupEnhancedStdin(): Promise<boolean> {
  */
 async function setupMockStdinForInk(): Promise<boolean> {
   try {
-    const _isTestEnvironment =
-      process.env["NODE_ENV"] === "test" || process.env["VITEST"] === "true";
-
     const { Readable } = await import("node:stream");
 
     // Create a readable stream that satisfies Ink's requirements but doesn't receive input
@@ -301,8 +291,6 @@ async function setupMockStdinForInk(): Promise<boolean> {
 
     return false; // Indicate that keyboard input is not actually available
   } catch (_error) {
-    const _isTestEnvironment =
-      process.env["NODE_ENV"] === "test" || process.env["VITEST"] === "true";
     return await setupMinimalStdin();
   }
 }
