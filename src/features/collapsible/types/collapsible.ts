@@ -38,12 +38,17 @@ export interface NavigationAction {
   type:
     | "move_up"
     | "move_down"
+    | "page_up"
+    | "page_down"
+    | "goto_top"
+    | "goto_bottom"
     | "toggle_node"
     | "expand_node"
     | "collapse_node"
     | "expand_all"
     | "collapse_all";
   nodeId?: string;
+  count?: number; // For page movements (number of lines to move)
 }
 
 /**

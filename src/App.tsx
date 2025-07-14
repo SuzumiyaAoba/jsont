@@ -814,22 +814,42 @@ export function App({
         handleCollapsibleNavigation({ type: "expand_all" });
       } else if (key.ctrl && input === "f") {
         // Half-page down (Ctrl-f)
-        updateDebugInfo("Half-page down", input);
-        const currentMaxScroll = searchState.isSearching
-          ? maxScrollSearchMode
-          : maxScroll;
-        setScrollOffset((prev) =>
-          Math.min(currentMaxScroll, prev + halfPageLines),
-        );
+        if (collapsibleMode) {
+          updateDebugInfo("Page down (Ctrl-f)", input);
+          handleCollapsibleNavigation({
+            type: "page_down",
+            count: halfPageLines,
+          });
+        } else {
+          updateDebugInfo("Half-page down", input);
+          const currentMaxScroll = searchState.isSearching
+            ? maxScrollSearchMode
+            : maxScroll;
+          setScrollOffset((prev) =>
+            Math.min(currentMaxScroll, prev + halfPageLines),
+          );
+        }
       } else if (key.ctrl && input === "b") {
         // Half-page up (Ctrl-b)
-        updateDebugInfo("Half-page up", input);
-        setScrollOffset((prev) => Math.max(0, prev - halfPageLines));
+        if (collapsibleMode) {
+          updateDebugInfo("Page up (Ctrl-b)", input);
+          handleCollapsibleNavigation({
+            type: "page_up",
+            count: halfPageLines,
+          });
+        } else {
+          updateDebugInfo("Half-page up", input);
+          setScrollOffset((prev) => Math.max(0, prev - halfPageLines));
+        }
       } else if (input === "g" && !key.ctrl && !key.meta) {
         if (waitingForSecondG) {
           // Second 'g' pressed - goto top (gg)
           updateDebugInfo("Go to top (gg)", input);
-          setScrollOffset(0);
+          if (collapsibleMode) {
+            handleCollapsibleNavigation({ type: "goto_top" });
+          } else {
+            setScrollOffset(0);
+          }
           setWaitingForSecondG(false);
           if (gTimeoutRef.current) {
             clearTimeout(gTimeoutRef.current);
@@ -847,10 +867,14 @@ export function App({
       } else if (input === "G" && !key.ctrl && !key.meta) {
         // Goto bottom (G)
         updateDebugInfo("Go to bottom (G)", input);
-        const currentMaxScroll = searchState.isSearching
-          ? maxScrollSearchMode
-          : maxScroll;
-        setScrollOffset(currentMaxScroll);
+        if (collapsibleMode) {
+          handleCollapsibleNavigation({ type: "goto_bottom" });
+        } else {
+          const currentMaxScroll = searchState.isSearching
+            ? maxScrollSearchMode
+            : maxScroll;
+          setScrollOffset(currentMaxScroll);
+        }
       } else if (
         input === "n" &&
         !key.ctrl &&
