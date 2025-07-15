@@ -2,6 +2,7 @@ import type { AppProps } from "@core/types/app";
 import type { JsonValue } from "@core/types/index";
 import { CollapsibleJsonViewer } from "@features/collapsible/components/CollapsibleJsonViewer";
 import type { NavigationAction } from "@features/collapsible/types/collapsible";
+import { handleTextInput } from "@features/common/components/TextInput";
 import { DebugBar } from "@features/debug/components/DebugBar";
 import { JqQueryInput } from "@features/jq/components/JqQueryInput";
 import type { JqState } from "@features/jq/types/jq";
@@ -32,7 +33,6 @@ import {
 } from "@features/status/utils/statusUtils";
 import { Box, Text, useApp, useInput } from "ink";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { handleTextInput } from "./utils/textInput";
 
 /**
  * Main application component for the JSON TUI Viewer

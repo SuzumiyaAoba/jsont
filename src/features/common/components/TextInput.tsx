@@ -1,9 +1,49 @@
 /**
- * Text input component with cursor movement and basic editing functionality
+ * Unified Text Input Component and Utilities
+ * Consolidated from utils/textInput.ts and features/common/components/TextInput.tsx
  */
 
 import { Box, Text } from "ink";
 import { useCallback, useEffect, useState } from "react";
+
+// ============================================================================
+// Core Types and Interfaces
+// ============================================================================
+
+export interface TextInputState {
+  text: string;
+  cursorPosition: number;
+}
+
+export interface KeyboardEvent {
+  input?: string;
+  ctrl?: boolean;
+  meta?: boolean;
+  shift?: boolean;
+  leftArrow?: boolean;
+  rightArrow?: boolean;
+  upArrow?: boolean;
+  downArrow?: boolean;
+  backspace?: boolean;
+  delete?: boolean;
+  return?: boolean;
+  escape?: boolean;
+  tab?: boolean;
+  left?: boolean;
+  right?: boolean;
+  home?: boolean;
+  end?: boolean;
+}
+
+export interface TextInputActions {
+  setText: (text: string) => void;
+  setCursorPosition: (position: number) => void;
+}
+
+export type TextInputKeyHandler = (
+  input: string,
+  key: KeyboardEvent,
+) => boolean; // Returns true if the key was handled
 
 export interface TextInputProps {
   value: string;
@@ -16,30 +56,218 @@ export interface TextInputProps {
   width?: number;
 }
 
-export interface TextInputState {
-  value: string;
-  cursorPosition: number;
-}
-
-export type TextInputKeyHandler = (
-  input: string,
-  key: {
-    ctrl?: boolean;
-    meta?: boolean;
-    shift?: boolean;
-    return?: boolean;
-    escape?: boolean;
-    backspace?: boolean;
-    delete?: boolean;
-    left?: boolean;
-    right?: boolean;
-    home?: boolean;
-    end?: boolean;
-  },
-) => boolean; // Returns true if the key was handled
+// ============================================================================
+// Core Text Input Logic (Unified)
+// ============================================================================
 
 /**
- * Custom hook for text input state management with cursor movement
+ * Unified text input handler with comprehensive keyboard shortcuts
+ * Combines all functionality from utils/textInput.ts and useTextInput hook
+ */
+export function handleTextInput(
+  state: TextInputState,
+  actions: TextInputActions,
+  key: KeyboardEvent,
+  input?: string,
+): boolean {
+  const { text, cursorPosition } = state;
+  const { setText, setCursorPosition } = actions;
+
+  // Normalize key properties for consistency
+  const normalizedKey = {
+    ...key,
+    leftArrow: key.leftArrow || key.left,
+    rightArrow: key.rightArrow || key.right,
+  };
+
+  // ========================================
+  // Cursor Movement
+  // ========================================
+
+  // Arrow key navigation
+  if (normalizedKey.leftArrow && !normalizedKey.shift) {
+    setCursorPosition(Math.max(0, cursorPosition - 1));
+    return true;
+  }
+
+  if (normalizedKey.rightArrow && !normalizedKey.shift) {
+    setCursorPosition(Math.min(text.length, cursorPosition + 1));
+    return true;
+  }
+
+  // Emacs-style cursor movement and editing shortcuts
+  if (normalizedKey.ctrl) {
+    // Movement commands
+    if (input === "f" || normalizedKey.rightArrow) {
+      // Ctrl+F or Ctrl+Right: Move cursor right
+      setCursorPosition(Math.min(text.length, cursorPosition + 1));
+      return true;
+    }
+
+    if (input === "b" || normalizedKey.leftArrow) {
+      // Ctrl+B or Ctrl+Left: Move cursor left
+      setCursorPosition(Math.max(0, cursorPosition - 1));
+      return true;
+    }
+
+    if (input === "a" || normalizedKey.home) {
+      // Ctrl+A or Home: Move to beginning of line
+      setCursorPosition(0);
+      return true;
+    }
+
+    if (input === "e" || normalizedKey.end) {
+      // Ctrl+E or End: Move to end of line
+      setCursorPosition(text.length);
+      return true;
+    }
+
+    // ========================================
+    // Text Deletion Commands
+    // ========================================
+
+    if (input === "k") {
+      // Ctrl+K: Delete from cursor to end of line (kill-line)
+      const newText = text.slice(0, cursorPosition);
+      setText(newText);
+      return true;
+    }
+
+    if (input === "u") {
+      // Ctrl+U: Delete from beginning to cursor (unix-line-discard)
+      const newText = text.slice(cursorPosition);
+      setText(newText);
+      if (cursorPosition !== 0) {
+        setCursorPosition(0);
+      }
+      return true;
+    }
+
+    if (input === "w") {
+      // Ctrl+W: Delete word backward (backward-kill-word)
+      const beforeCursor = text.substring(0, cursorPosition);
+      const afterCursor = text.substring(cursorPosition);
+
+      // Find the start of the current word by looking backward for whitespace
+      let newCursorPosition = cursorPosition;
+
+      // Skip trailing whitespace first
+      while (
+        newCursorPosition > 0 &&
+        /\s/.test(beforeCursor[newCursorPosition - 1] || "")
+      ) {
+        newCursorPosition--;
+      }
+
+      // Then skip the word characters
+      while (
+        newCursorPosition > 0 &&
+        !/\s/.test(beforeCursor[newCursorPosition - 1] || "")
+      ) {
+        newCursorPosition--;
+      }
+
+      const newText =
+        beforeCursor.substring(0, newCursorPosition) + afterCursor;
+      setText(newText);
+      setCursorPosition(newCursorPosition);
+      return true;
+    }
+
+    if (input === "d") {
+      // Ctrl+D: Delete character at cursor (delete-char)
+      if (cursorPosition < text.length) {
+        const newText =
+          text.substring(0, cursorPosition) +
+          text.substring(cursorPosition + 1);
+        setText(newText);
+      }
+      return true;
+    }
+  }
+
+  // ========================================
+  // Standard Delete/Backspace
+  // ========================================
+
+  const isMacOS = process.platform === "darwin";
+
+  // Handle delete key with platform-specific behavior
+  if (normalizedKey.delete) {
+    if (isMacOS) {
+      // On macOS: delete key deletes left (like backspace on other platforms)
+      if (cursorPosition > 0) {
+        const newText =
+          text.slice(0, cursorPosition - 1) + text.slice(cursorPosition);
+        setText(newText);
+        setCursorPosition(cursorPosition - 1);
+      }
+    } else {
+      // On other platforms: delete key deletes right
+      if (cursorPosition < text.length) {
+        const newText =
+          text.substring(0, cursorPosition) +
+          text.substring(cursorPosition + 1);
+        setText(newText);
+      }
+    }
+    return true;
+  }
+
+  // Backspace key (deletes left on all platforms)
+  if (normalizedKey.backspace && cursorPosition > 0) {
+    const newText =
+      text.slice(0, cursorPosition - 1) + text.slice(cursorPosition);
+    setText(newText);
+    setCursorPosition(cursorPosition - 1);
+    return true;
+  }
+
+  // ========================================
+  // Regular Character Input
+  // ========================================
+
+  if (
+    input &&
+    input.length === 1 &&
+    !normalizedKey.ctrl &&
+    !normalizedKey.meta &&
+    !normalizedKey.tab
+  ) {
+    const newText =
+      text.slice(0, cursorPosition) + input + text.slice(cursorPosition);
+    setText(newText);
+    setCursorPosition(cursorPosition + 1);
+    return true;
+  }
+
+  return false; // Event not handled
+}
+
+/**
+ * Create cursor-aware text display for Ink rendering
+ */
+export function renderTextWithCursor(
+  text: string,
+  cursorPosition: number,
+): {
+  beforeCursor: string;
+  atCursor: string;
+  afterCursor: string;
+} {
+  return {
+    beforeCursor: text.slice(0, cursorPosition),
+    atCursor: text[cursorPosition] || " ",
+    afterCursor: text.slice(cursorPosition + 1),
+  };
+}
+
+// ============================================================================
+// React Hook Implementation
+// ============================================================================
+
+/**
+ * Unified text input hook with comprehensive keyboard handling
  */
 export function useTextInput(initialValue: string = ""): {
   state: TextInputState;
@@ -57,190 +285,57 @@ export function useTextInput(initialValue: string = ""): {
   };
 } {
   const [state, setState] = useState<TextInputState>({
-    value: initialValue,
+    text: initialValue,
     cursorPosition: initialValue.length,
   });
 
-  const setValue = useCallback((value: string) => {
+  const setValue = useCallback((text: string) => {
     setState((prev) => ({
-      value,
-      cursorPosition: Math.min(prev.cursorPosition, value.length),
+      text,
+      cursorPosition: Math.min(prev.cursorPosition, text.length),
     }));
   }, []);
 
   const setCursorPosition = useCallback((position: number) => {
     setState((prev) => ({
       ...prev,
-      cursorPosition: Math.max(0, Math.min(position, prev.value.length)),
+      cursorPosition: Math.max(0, Math.min(position, prev.text.length)),
     }));
   }, []);
 
   const handleKeyInput = useCallback<TextInputKeyHandler>(
     (input, key) => {
-      if (key.ctrl) {
-        // Ctrl key combinations for cursor movement
-        if (input === "a" || key.home) {
-          // Ctrl+A or Home: Move cursor to beginning
-          setCursorPosition(0);
-          return true;
-        }
-        if (input === "e" || key.end) {
-          // Ctrl+E or End: Move cursor to end
-          setState((prev) => ({ ...prev, cursorPosition: prev.value.length }));
-          return true;
-        }
-        if (input === "f" || key.right) {
-          // Ctrl+F or Right arrow: Move cursor forward
+      const actions: TextInputActions = {
+        setText: (newText: string) => {
+          setState((prev) => ({
+            text: newText,
+            cursorPosition: Math.min(prev.cursorPosition, newText.length),
+          }));
+        },
+        setCursorPosition: (newPosition: number) => {
           setState((prev) => ({
             ...prev,
-            cursorPosition: Math.min(
-              prev.cursorPosition + 1,
-              prev.value.length,
+            cursorPosition: Math.max(
+              0,
+              Math.min(newPosition, prev.text.length),
             ),
           }));
-          return true;
-        }
-        if (input === "b" || key.left) {
-          // Ctrl+B or Left arrow: Move cursor backward
-          setState((prev) => ({
-            ...prev,
-            cursorPosition: Math.max(prev.cursorPosition - 1, 0),
-          }));
-          return true;
-        }
-        if (input === "k") {
-          // Ctrl+K: Delete from cursor to end of line
-          setState((prev) => ({
-            value: prev.value.substring(0, prev.cursorPosition),
-            cursorPosition: prev.cursorPosition,
-          }));
-          return true;
-        }
-        if (input === "u") {
-          // Ctrl+U: Delete from beginning to cursor
-          setState((prev) => ({
-            value: prev.value.substring(prev.cursorPosition),
-            cursorPosition: 0,
-          }));
-          return true;
-        }
-        if (input === "w") {
-          // Ctrl+W: Delete word backward (more Emacs-like behavior)
-          setState((prev) => {
-            const beforeCursor = prev.value.substring(0, prev.cursorPosition);
-            const afterCursor = prev.value.substring(prev.cursorPosition);
+        },
+      };
 
-            // Find the start of the current word by looking backward for whitespace
-            let newCursorPosition = prev.cursorPosition;
-
-            // Skip trailing whitespace first
-            while (
-              newCursorPosition > 0 &&
-              /\s/.test(beforeCursor[newCursorPosition - 1] || "")
-            ) {
-              newCursorPosition--;
-            }
-
-            // Then skip the word characters
-            while (
-              newCursorPosition > 0 &&
-              !/\s/.test(beforeCursor[newCursorPosition - 1] || "")
-            ) {
-              newCursorPosition--;
-            }
-
-            const newBeforeCursor = beforeCursor.substring(
-              0,
-              newCursorPosition,
-            );
-
-            return {
-              value: newBeforeCursor + afterCursor,
-              cursorPosition: newCursorPosition,
-            };
-          });
-          return true;
-        }
-        if (input === "d") {
-          // Ctrl+D: Delete character at cursor (forward delete)
-          if (state.cursorPosition < state.value.length) {
-            setState((prev) => ({
-              value:
-                prev.value.substring(0, prev.cursorPosition) +
-                prev.value.substring(prev.cursorPosition + 1),
-              cursorPosition: prev.cursorPosition,
-            }));
-          }
-          return true;
-        }
-      }
-
-      // Regular character input
-      if (input && input.length === 1 && !key.ctrl && !key.meta) {
-        setState((prev) => ({
-          value:
-            prev.value.substring(0, prev.cursorPosition) +
-            input +
-            prev.value.substring(prev.cursorPosition),
-          cursorPosition: prev.cursorPosition + 1,
-        }));
-        return true;
-      }
-
-      // Handle delete/backspace keys - macOS has different behavior
-      const isMacOS = process.platform === "darwin";
-
-      // Delete key behavior
-      if (key.delete) {
-        if (isMacOS) {
-          // On macOS: delete key deletes left (like backspace on other platforms)
-          if (state.cursorPosition > 0) {
-            setState((prev) => ({
-              value:
-                prev.value.substring(0, prev.cursorPosition - 1) +
-                prev.value.substring(prev.cursorPosition),
-              cursorPosition: prev.cursorPosition - 1,
-            }));
-          }
-        } else {
-          // On other platforms: delete key deletes right
-          if (state.cursorPosition < state.value.length) {
-            setState((prev) => ({
-              value:
-                prev.value.substring(0, prev.cursorPosition) +
-                prev.value.substring(prev.cursorPosition + 1),
-              cursorPosition: prev.cursorPosition,
-            }));
-          }
-        }
-        return true;
-      }
-
-      // Backspace key behavior (deletes left on all platforms)
-      if (key.backspace && state.cursorPosition > 0) {
-        setState((prev) => ({
-          value:
-            prev.value.substring(0, prev.cursorPosition - 1) +
-            prev.value.substring(prev.cursorPosition),
-          cursorPosition: prev.cursorPosition - 1,
-        }));
-        return true;
-      }
-
-      return false;
+      return handleTextInput(state, actions, key, input);
     },
-    [state.cursorPosition, state.value, setCursorPosition],
+    [state],
   );
 
   const getDisplayText = useCallback(
     (isActive: boolean, placeholder?: string) => {
-      const text = state.value || (placeholder && !isActive ? placeholder : "");
+      const text = state.text || (placeholder && !isActive ? placeholder : "");
       const cursorPos = isActive ? state.cursorPosition : text.length;
 
-      const beforeCursor = text.substring(0, cursorPos);
-      const atCursor = cursorPos < text.length ? text.charAt(cursorPos) : " ";
-      const afterCursor = text.substring(
-        cursorPos + (cursorPos < text.length ? 1 : 0),
+      const { beforeCursor, atCursor, afterCursor } = renderTextWithCursor(
+        text,
+        cursorPos,
       );
 
       return {
@@ -250,7 +345,7 @@ export function useTextInput(initialValue: string = ""): {
         displayText: text,
       };
     },
-    [state.value, state.cursorPosition],
+    [state.text, state.cursorPosition],
   );
 
   return {
@@ -262,8 +357,12 @@ export function useTextInput(initialValue: string = ""): {
   };
 }
 
+// ============================================================================
+// React Component Implementation
+// ============================================================================
+
 /**
- * TextInput component with cursor movement support
+ * Unified TextInput component with comprehensive keyboard shortcuts
  */
 export function TextInput({
   value,
@@ -279,17 +378,17 @@ export function TextInput({
 
   // Sync external value changes
   useEffect(() => {
-    if (state.value !== value) {
+    if (state.text !== value) {
       setValue(value);
     }
-  }, [value, state.value, setValue]);
+  }, [value, state.text, setValue]);
 
   // Notify parent of changes
   useEffect(() => {
-    if (onChange && state.value !== value) {
-      onChange(state.value);
+    if (onChange && state.text !== value) {
+      onChange(state.text);
     }
-  }, [state.value, value, onChange]);
+  }, [state.text, value, onChange]);
 
   const { beforeCursor, atCursor, afterCursor } = getDisplayText(
     isActive,
@@ -321,4 +420,43 @@ export function TextInput({
       </Text>
     </Box>
   );
+}
+
+// ============================================================================
+// Type Compatibility Exports
+// ============================================================================
+
+// Export aliases for backward compatibility
+export type { TextInputState as LegacyTextInputState };
+export type { KeyboardEvent as LegacyKeyboardEvent };
+export type { TextInputActions as LegacyTextInputActions };
+
+/**
+ * Backward compatibility wrapper for the old TextInputState interface
+ * @deprecated Use TextInputState instead
+ */
+export interface LegacyTextInputStateCompat {
+  value: string;
+  cursorPosition: number;
+}
+
+/**
+ * Convert between legacy and new state formats
+ */
+export function convertLegacyState(
+  legacy: LegacyTextInputStateCompat,
+): TextInputState {
+  return {
+    text: legacy.value,
+    cursorPosition: legacy.cursorPosition,
+  };
+}
+
+export function convertToLegacyState(
+  state: TextInputState,
+): LegacyTextInputStateCompat {
+  return {
+    value: state.text,
+    cursorPosition: state.cursorPosition,
+  };
 }

@@ -7,7 +7,7 @@ import {
   getSearchScopeDisplayName,
 } from "@features/search/utils/searchUtils.js";
 import { Box, Text } from "ink";
-import { renderTextWithCursor } from "../../../utils/textInput";
+import { renderTextWithCursor } from "../../common/components/TextInput";
 
 interface SearchBarProps {
   searchState: SearchState;

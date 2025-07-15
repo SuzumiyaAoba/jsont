@@ -1,312 +1,418 @@
-import { describe, expect, it } from "vitest";
+/**
+ * Comprehensive test suite for unified TextInput component and utilities
+ */
 
-// Simple unit tests for the cursor movement and text input logic
-describe("TextInput Component", () => {
-  it("should handle character insertion at cursor position", () => {
-    const initialValue = "hello";
-    const cursorPosition = 2;
-    const newChar = "x";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import type {
+  KeyboardEvent,
+  TextInputActions,
+  TextInputState,
+} from "./TextInput";
+import {
+  convertLegacyState,
+  convertToLegacyState,
+  handleTextInput,
+  renderTextWithCursor,
+} from "./TextInput";
 
-    const result =
-      initialValue.substring(0, cursorPosition) +
-      newChar +
-      initialValue.substring(cursorPosition);
-    expect(result).toBe("hexllo");
+describe("Unified TextInput System", () => {
+  let mockSetText: ReturnType<typeof vi.fn>;
+  let mockSetCursorPosition: ReturnType<typeof vi.fn>;
+  let actions: TextInputActions;
+
+  beforeEach(() => {
+    mockSetText = vi.fn();
+    mockSetCursorPosition = vi.fn();
+    actions = {
+      setText: mockSetText,
+      setCursorPosition: mockSetCursorPosition,
+    };
   });
 
-  it("should handle backspace operation", () => {
-    const initialValue = "hello";
-    const cursorPosition = 5;
+  describe("handleTextInput utility", () => {
+    describe("Cursor Movement", () => {
+      it("should handle left arrow key", () => {
+        const state: TextInputState = {
+          text: "hello",
+          cursorPosition: 3,
+        };
+        const key: KeyboardEvent = { leftArrow: true };
 
-    if (cursorPosition > 0) {
-      const result =
-        initialValue.substring(0, cursorPosition - 1) +
-        initialValue.substring(cursorPosition);
-      expect(result).toBe("hell");
-    }
+        const result = handleTextInput(state, actions, key);
+
+        expect(result).toBe(true);
+        expect(mockSetCursorPosition).toHaveBeenCalledWith(2);
+      });
+
+      it("should handle right arrow key", () => {
+        const state: TextInputState = {
+          text: "hello",
+          cursorPosition: 2,
+        };
+        const key: KeyboardEvent = { rightArrow: true };
+
+        const result = handleTextInput(state, actions, key);
+
+        expect(result).toBe(true);
+        expect(mockSetCursorPosition).toHaveBeenCalledWith(3);
+      });
+
+      it("should handle Ctrl+A (move to beginning)", () => {
+        const state: TextInputState = {
+          text: "hello world",
+          cursorPosition: 5,
+        };
+        const key: KeyboardEvent = { ctrl: true };
+
+        const result = handleTextInput(state, actions, key, "a");
+
+        expect(result).toBe(true);
+        expect(mockSetCursorPosition).toHaveBeenCalledWith(0);
+      });
+
+      it("should handle Ctrl+E (move to end)", () => {
+        const state: TextInputState = {
+          text: "hello world",
+          cursorPosition: 0,
+        };
+        const key: KeyboardEvent = { ctrl: true };
+
+        const result = handleTextInput(state, actions, key, "e");
+
+        expect(result).toBe(true);
+        expect(mockSetCursorPosition).toHaveBeenCalledWith(11);
+      });
+
+      it("should handle Ctrl+F (move forward)", () => {
+        const state: TextInputState = {
+          text: "hello",
+          cursorPosition: 2,
+        };
+        const key: KeyboardEvent = { ctrl: true };
+
+        const result = handleTextInput(state, actions, key, "f");
+
+        expect(result).toBe(true);
+        expect(mockSetCursorPosition).toHaveBeenCalledWith(3);
+      });
+
+      it("should handle Ctrl+B (move backward)", () => {
+        const state: TextInputState = {
+          text: "hello",
+          cursorPosition: 3,
+        };
+        const key: KeyboardEvent = { ctrl: true };
+
+        const result = handleTextInput(state, actions, key, "b");
+
+        expect(result).toBe(true);
+        expect(mockSetCursorPosition).toHaveBeenCalledWith(2);
+      });
+    });
+
+    describe("Text Deletion", () => {
+      it("should handle Ctrl+K (delete to end of line)", () => {
+        const state: TextInputState = {
+          text: "hello world",
+          cursorPosition: 5,
+        };
+        const key: KeyboardEvent = { ctrl: true };
+
+        const result = handleTextInput(state, actions, key, "k");
+
+        expect(result).toBe(true);
+        expect(mockSetText).toHaveBeenCalledWith("hello");
+      });
+
+      it("should handle Ctrl+U (delete to beginning)", () => {
+        const state: TextInputState = {
+          text: "hello world",
+          cursorPosition: 6,
+        };
+        const key: KeyboardEvent = { ctrl: true };
+
+        const result = handleTextInput(state, actions, key, "u");
+
+        expect(result).toBe(true);
+        expect(mockSetText).toHaveBeenCalledWith("world");
+        expect(mockSetCursorPosition).toHaveBeenCalledWith(0);
+      });
+
+      it("should handle Ctrl+U optimization when cursor is at beginning", () => {
+        const state: TextInputState = {
+          text: "hello world",
+          cursorPosition: 0,
+        };
+        const key: KeyboardEvent = { ctrl: true };
+
+        const result = handleTextInput(state, actions, key, "u");
+
+        expect(result).toBe(true);
+        expect(mockSetText).toHaveBeenCalledWith("hello world");
+        expect(mockSetCursorPosition).not.toHaveBeenCalled();
+      });
+
+      it("should handle Ctrl+W (delete word backward)", () => {
+        const state: TextInputState = {
+          text: "hello world test",
+          cursorPosition: 16,
+        };
+        const key: KeyboardEvent = { ctrl: true };
+
+        const result = handleTextInput(state, actions, key, "w");
+
+        expect(result).toBe(true);
+        expect(mockSetText).toHaveBeenCalledWith("hello world ");
+        expect(mockSetCursorPosition).toHaveBeenCalledWith(12);
+      });
+
+      it("should handle Ctrl+D (forward delete)", () => {
+        const state: TextInputState = {
+          text: "hello world",
+          cursorPosition: 5,
+        };
+        const key: KeyboardEvent = { ctrl: true };
+
+        const result = handleTextInput(state, actions, key, "d");
+
+        expect(result).toBe(true);
+        expect(mockSetText).toHaveBeenCalledWith("helloworld");
+      });
+
+      it("should handle backspace", () => {
+        const state: TextInputState = {
+          text: "hello",
+          cursorPosition: 3,
+        };
+        const key: KeyboardEvent = { backspace: true };
+
+        const result = handleTextInput(state, actions, key);
+
+        expect(result).toBe(true);
+        expect(mockSetText).toHaveBeenCalledWith("helo");
+        expect(mockSetCursorPosition).toHaveBeenCalledWith(2);
+      });
+    });
+
+    describe("Platform-specific delete behavior", () => {
+      it("should handle delete key on macOS (deletes left)", () => {
+        // Mock macOS
+        const originalPlatform = process.platform;
+        Object.defineProperty(process, "platform", { value: "darwin" });
+
+        const state: TextInputState = {
+          text: "hello",
+          cursorPosition: 3,
+        };
+        const key: KeyboardEvent = { delete: true };
+
+        const result = handleTextInput(state, actions, key);
+
+        expect(result).toBe(true);
+        expect(mockSetText).toHaveBeenCalledWith("helo");
+        expect(mockSetCursorPosition).toHaveBeenCalledWith(2);
+
+        // Restore original platform
+        Object.defineProperty(process, "platform", { value: originalPlatform });
+      });
+
+      it("should handle delete key on non-macOS (deletes right)", () => {
+        // Mock non-macOS
+        const originalPlatform = process.platform;
+        Object.defineProperty(process, "platform", { value: "linux" });
+
+        const state: TextInputState = {
+          text: "hello",
+          cursorPosition: 2,
+        };
+        const key: KeyboardEvent = { delete: true };
+
+        const result = handleTextInput(state, actions, key);
+
+        expect(result).toBe(true);
+        expect(mockSetText).toHaveBeenCalledWith("helo");
+
+        // Restore original platform
+        Object.defineProperty(process, "platform", { value: originalPlatform });
+      });
+    });
+
+    describe("Regular character input", () => {
+      it("should insert character at cursor position", () => {
+        const state: TextInputState = {
+          text: "hello",
+          cursorPosition: 2,
+        };
+        const key: KeyboardEvent = {};
+
+        const result = handleTextInput(state, actions, key, "x");
+
+        expect(result).toBe(true);
+        expect(mockSetText).toHaveBeenCalledWith("hexllo");
+        expect(mockSetCursorPosition).toHaveBeenCalledWith(3);
+      });
+
+      it("should ignore ctrl key combinations for regular characters", () => {
+        const state: TextInputState = {
+          text: "hello",
+          cursorPosition: 2,
+        };
+        const key: KeyboardEvent = { ctrl: true };
+
+        const result = handleTextInput(state, actions, key, "z");
+
+        expect(result).toBe(false);
+        expect(mockSetText).not.toHaveBeenCalled();
+        expect(mockSetCursorPosition).not.toHaveBeenCalled();
+      });
+    });
+
+    describe("Key normalization", () => {
+      it("should normalize left/leftArrow keys", () => {
+        const state: TextInputState = {
+          text: "hello",
+          cursorPosition: 3,
+        };
+        const key: KeyboardEvent = { left: true }; // Using legacy 'left' instead of 'leftArrow'
+
+        const result = handleTextInput(state, actions, key);
+
+        expect(result).toBe(true);
+        expect(mockSetCursorPosition).toHaveBeenCalledWith(2);
+      });
+
+      it("should normalize right/rightArrow keys", () => {
+        const state: TextInputState = {
+          text: "hello",
+          cursorPosition: 2,
+        };
+        const key: KeyboardEvent = { right: true }; // Using legacy 'right' instead of 'rightArrow'
+
+        const result = handleTextInput(state, actions, key);
+
+        expect(result).toBe(true);
+        expect(mockSetCursorPosition).toHaveBeenCalledWith(3);
+      });
+    });
   });
 
-  it("should handle backspace at different cursor positions", () => {
-    // Test backspace at beginning (should do nothing)
-    const value1 = "hello";
-    const cursor1 = 0;
-    if (cursor1 > 0) {
-      const result1 =
-        value1.substring(0, cursor1 - 1) + value1.substring(cursor1);
-      expect(result1).toBe("ello"); // This test won't run due to cursor1 > 0 check
-    } else {
-      expect(value1).toBe("hello"); // No change when cursor is at beginning
-    }
+  describe("renderTextWithCursor utility", () => {
+    it("should split text correctly with cursor in middle", () => {
+      const result = renderTextWithCursor("hello world", 5);
 
-    // Test backspace in middle
-    const value2 = "hello";
-    const cursor2 = 3; // Between 'l' and 'l'
-    const result2 =
-      value2.substring(0, cursor2 - 1) + value2.substring(cursor2);
-    expect(result2).toBe("helo"); // Should delete the first 'l'
+      expect(result).toEqual({
+        beforeCursor: "hello",
+        atCursor: " ",
+        afterCursor: "world",
+      });
+    });
 
-    // Test backspace at end
-    const value3 = "hello";
-    const cursor3 = 5; // At end
-    const result3 =
-      value3.substring(0, cursor3 - 1) + value3.substring(cursor3);
-    expect(result3).toBe("hell"); // Should delete 'o'
+    it("should handle cursor at beginning", () => {
+      const result = renderTextWithCursor("hello", 0);
+
+      expect(result).toEqual({
+        beforeCursor: "",
+        atCursor: "h",
+        afterCursor: "ello",
+      });
+    });
+
+    it("should handle cursor at end", () => {
+      const result = renderTextWithCursor("hello", 5);
+
+      expect(result).toEqual({
+        beforeCursor: "hello",
+        atCursor: " ",
+        afterCursor: "",
+      });
+    });
+
+    it("should handle empty string", () => {
+      const result = renderTextWithCursor("", 0);
+
+      expect(result).toEqual({
+        beforeCursor: "",
+        atCursor: " ",
+        afterCursor: "",
+      });
+    });
   });
 
-  it("should handle delete operation on macOS (deletes left)", () => {
-    // Simulate macOS behavior
-    const isMacOS = process.platform === "darwin";
-    const initialValue = "hello";
-    const cursorPosition = 2;
+  describe("Legacy compatibility", () => {
+    it("should convert legacy state to new format", () => {
+      const legacy = { value: "hello", cursorPosition: 3 };
+      const result = convertLegacyState(legacy);
 
-    if (isMacOS) {
-      // On macOS: delete key deletes left
-      if (cursorPosition > 0) {
-        const result =
-          initialValue.substring(0, cursorPosition - 1) +
-          initialValue.substring(cursorPosition);
-        expect(result).toBe("hllo"); // Deleted 'e'
-      }
-    } else {
-      // On other platforms: delete key deletes right
-      if (cursorPosition < initialValue.length) {
-        const result =
-          initialValue.substring(0, cursorPosition) +
-          initialValue.substring(cursorPosition + 1);
-        expect(result).toBe("helo"); // Deleted 'l'
-      }
-    }
+      expect(result).toEqual({
+        text: "hello",
+        cursorPosition: 3,
+      });
+    });
+
+    it("should convert new state to legacy format", () => {
+      const state = { text: "hello", cursorPosition: 3 };
+      const result = convertToLegacyState(state);
+
+      expect(result).toEqual({
+        value: "hello",
+        cursorPosition: 3,
+      });
+    });
   });
 
-  it("should handle delete operation on non-macOS (deletes right)", () => {
-    // Simulate non-macOS behavior
-    const initialValue = "hello";
-    const cursorPosition = 2;
+  describe("Edge cases and boundary conditions", () => {
+    it("should handle cursor position beyond text length", () => {
+      const state: TextInputState = {
+        text: "hello",
+        cursorPosition: 2,
+      };
+      const key: KeyboardEvent = { rightArrow: true };
 
-    // On non-macOS platforms: delete key deletes right
-    if (cursorPosition < initialValue.length) {
-      const result =
-        initialValue.substring(0, cursorPosition) +
-        initialValue.substring(cursorPosition + 1);
-      expect(result).toBe("helo"); // Deleted 'l'
-    }
-  });
+      // Move cursor multiple times to test boundary
+      handleTextInput(state, actions, key);
+      handleTextInput(state, actions, key);
+      handleTextInput(state, actions, key);
+      handleTextInput(state, actions, key);
 
-  it("should handle Ctrl+K (kill to end) operation", () => {
-    const initialValue = "hello world";
-    const cursorPosition = 5;
+      // Should not go beyond text length
+      const lastCall =
+        mockSetCursorPosition.mock.calls[
+          mockSetCursorPosition.mock.calls.length - 1
+        ];
+      expect(lastCall[0]).toBeLessThanOrEqual(5);
+    });
 
-    const result = initialValue.substring(0, cursorPosition);
-    expect(result).toBe("hello");
-  });
+    it("should handle cursor position below zero", () => {
+      const state: TextInputState = {
+        text: "hello",
+        cursorPosition: 2,
+      };
+      const key: KeyboardEvent = { leftArrow: true };
 
-  it("should handle Ctrl+U (kill to beginning) operation", () => {
-    const initialValue = "hello world";
-    const cursorPosition = 6;
+      // Move cursor multiple times to test boundary
+      handleTextInput(state, actions, key);
+      handleTextInput(state, actions, key);
+      handleTextInput(state, actions, key);
 
-    const result = initialValue.substring(cursorPosition);
-    expect(result).toBe("world");
-  });
+      // Should not go below zero
+      const lastCall =
+        mockSetCursorPosition.mock.calls[
+          mockSetCursorPosition.mock.calls.length - 1
+        ];
+      expect(lastCall[0]).toBeGreaterThanOrEqual(0);
+    });
 
-  it("should handle Ctrl+W (kill word backward) operation", () => {
-    const initialValue = "hello world test";
-    const cursorPosition = 17; // At end of string
+    it("should handle empty text operations", () => {
+      const state: TextInputState = {
+        text: "",
+        cursorPosition: 0,
+      };
+      const key: KeyboardEvent = { ctrl: true };
 
-    const beforeCursor = initialValue.substring(0, cursorPosition);
-    const afterCursor = initialValue.substring(cursorPosition);
+      const result = handleTextInput(state, actions, key, "k");
 
-    // Find the start of the current word by looking backward for whitespace
-    let newCursorPosition = cursorPosition;
-
-    // Skip trailing whitespace first
-    while (
-      newCursorPosition > 0 &&
-      /\s/.test(beforeCursor[newCursorPosition - 1] || "")
-    ) {
-      newCursorPosition--;
-    }
-
-    // Then skip the word characters
-    while (
-      newCursorPosition > 0 &&
-      !/\s/.test(beforeCursor[newCursorPosition - 1] || "")
-    ) {
-      newCursorPosition--;
-    }
-
-    const newBeforeCursor = beforeCursor.substring(0, newCursorPosition);
-    const result = newBeforeCursor + afterCursor;
-
-    expect(result).toBe("hello world ");
-    expect(newCursorPosition).toBe(12); // Should be at position after "hello world "
-  });
-
-  it("should handle Ctrl+W with whitespace at cursor", () => {
-    const initialValue = "hello world   ";
-    const cursorPosition = 14; // At end of trailing spaces
-
-    const beforeCursor = initialValue.substring(0, cursorPosition);
-    const afterCursor = initialValue.substring(cursorPosition);
-
-    // Find the start of the current word by looking backward for whitespace
-    let newCursorPosition = cursorPosition;
-
-    // Skip trailing whitespace first
-    while (
-      newCursorPosition > 0 &&
-      /\s/.test(beforeCursor[newCursorPosition - 1] || "")
-    ) {
-      newCursorPosition--;
-    }
-
-    // Then skip the word characters
-    while (
-      newCursorPosition > 0 &&
-      !/\s/.test(beforeCursor[newCursorPosition - 1] || "")
-    ) {
-      newCursorPosition--;
-    }
-
-    const newBeforeCursor = beforeCursor.substring(0, newCursorPosition);
-    const result = newBeforeCursor + afterCursor;
-
-    expect(result).toBe("hello ");
-    expect(newCursorPosition).toBe(6); // Should be at position after "hello "
-  });
-
-  it("should handle Ctrl+W in middle of word", () => {
-    const initialValue = "hello world test";
-    const cursorPosition = 9; // In middle of "world" (between "wo" and "rld")
-
-    const beforeCursor = initialValue.substring(0, cursorPosition);
-    const afterCursor = initialValue.substring(cursorPosition);
-
-    // Find the start of the current word by looking backward for whitespace
-    let newCursorPosition = cursorPosition;
-
-    // Skip trailing whitespace first (none in this case)
-    while (
-      newCursorPosition > 0 &&
-      /\s/.test(beforeCursor[newCursorPosition - 1] || "")
-    ) {
-      newCursorPosition--;
-    }
-
-    // Then skip the word characters
-    while (
-      newCursorPosition > 0 &&
-      !/\s/.test(beforeCursor[newCursorPosition - 1] || "")
-    ) {
-      newCursorPosition--;
-    }
-
-    const newBeforeCursor = beforeCursor.substring(0, newCursorPosition);
-    const result = newBeforeCursor + afterCursor;
-
-    expect(result).toBe("hello ld test"); // "wo" was deleted, leaving "rld" -> "ld"
-    expect(newCursorPosition).toBe(6); // Should be at position after "hello "
-  });
-
-  it("should handle Ctrl+D (forward delete) operation", () => {
-    const initialValue = "hello world";
-    const cursorPosition = 5; // At the space between "hello" and "world"
-
-    if (cursorPosition < initialValue.length) {
-      const result =
-        initialValue.substring(0, cursorPosition) +
-        initialValue.substring(cursorPosition + 1);
-      expect(result).toBe("helloworld"); // Space was deleted
-    }
-  });
-
-  it("should handle Ctrl+D at end of string", () => {
-    const initialValue = "hello";
-    const cursorPosition = 5; // At end
-
-    if (cursorPosition < initialValue.length) {
-      const result =
-        initialValue.substring(0, cursorPosition) +
-        initialValue.substring(cursorPosition + 1);
-      expect(result).toBe("hello"); // This won't run because cursor is at end
-    } else {
-      expect(initialValue).toBe("hello"); // No change when cursor is at end
-    }
-  });
-
-  it("should handle Ctrl+D in middle of text", () => {
-    const initialValue = "hello";
-    const cursorPosition = 2; // Between "he" and "llo"
-
-    if (cursorPosition < initialValue.length) {
-      const result =
-        initialValue.substring(0, cursorPosition) +
-        initialValue.substring(cursorPosition + 1);
-      expect(result).toBe("helo"); // "l" was deleted
-    }
-  });
-
-  it("should handle cursor boundary checks", () => {
-    const valueLength = 5;
-
-    // Test cursor position beyond end
-    const beyondEnd = Math.min(10, valueLength);
-    expect(beyondEnd).toBe(5);
-
-    // Test cursor position before beginning
-    const beforeBeginning = Math.max(0, -5);
-    expect(beforeBeginning).toBe(0);
-  });
-
-  it("should generate correct display text components", () => {
-    const value = "hello";
-    const cursorPosition = 2;
-
-    const beforeCursor = value.substring(0, cursorPosition);
-    const atCursor =
-      cursorPosition < value.length ? value.charAt(cursorPosition) : " ";
-    const afterCursor = value.substring(
-      cursorPosition + (cursorPosition < value.length ? 1 : 0),
-    );
-
-    expect(beforeCursor).toBe("he");
-    expect(atCursor).toBe("l");
-    expect(afterCursor).toBe("lo");
-  });
-
-  it("should handle empty string with cursor", () => {
-    const value = "";
-    const cursorPosition = 0;
-
-    const beforeCursor = value.substring(0, cursorPosition);
-    const atCursor =
-      cursorPosition < value.length ? value.charAt(cursorPosition) : " ";
-    const afterCursor = value.substring(
-      cursorPosition + (cursorPosition < value.length ? 1 : 0),
-    );
-
-    expect(beforeCursor).toBe("");
-    expect(atCursor).toBe(" ");
-    expect(afterCursor).toBe("");
-  });
-
-  it("should validate cursor movement operations", () => {
-    const value = "hello";
-    let cursorPosition = 2;
-
-    // Forward movement
-    cursorPosition = Math.min(cursorPosition + 1, value.length);
-    expect(cursorPosition).toBe(3);
-
-    // Backward movement
-    cursorPosition = Math.max(cursorPosition - 1, 0);
-    expect(cursorPosition).toBe(2);
-
-    // Move to beginning
-    cursorPosition = 0;
-    expect(cursorPosition).toBe(0);
-
-    // Move to end
-    cursorPosition = value.length;
-    expect(cursorPosition).toBe(5);
+      expect(result).toBe(true);
+      expect(mockSetText).toHaveBeenCalledWith("");
+    });
   });
 });
