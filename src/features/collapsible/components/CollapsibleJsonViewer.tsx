@@ -162,9 +162,8 @@ export const CollapsibleJsonViewer = forwardRef<
       return (
         <Text
           key={originalIndex}
-          {...(isCurrentResult ? { backgroundColor: "blue" } : {})}
           {...(isCursorLine && !isCurrentResult
-            ? { backgroundColor: "blue", bold: true }
+            ? { backgroundColor: "gray", bold: true }
             : {})}
         >
           {highlightedTokens.map((token, tokenIndex) => {
@@ -174,8 +173,8 @@ export const CollapsibleJsonViewer = forwardRef<
               return (
                 <Text
                   key={key}
-                  color={token.color}
-                  backgroundColor={isCurrentResult ? "magenta" : "yellow"}
+                  color={isCurrentResult ? "black" : "white"}
+                  backgroundColor={isCurrentResult ? "yellow" : "blue"}
                   bold={isCurrentResult}
                 >
                   {token.text}

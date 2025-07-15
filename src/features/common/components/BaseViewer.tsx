@@ -123,10 +123,7 @@ export function BaseViewer({
 
     // Render the tokens
     return (
-      <Text
-        key={originalIndex}
-        {...(isCurrentResult ? { backgroundColor: "blue" } : {})}
-      >
+      <Text key={originalIndex}>
         {highlightedTokens.map((token: HighlightToken, tokenIndex: number) => {
           const key = `${originalIndex}-${tokenIndex}-${token.text}`;
 
@@ -134,8 +131,8 @@ export function BaseViewer({
             return (
               <Text
                 key={key}
-                color={token.color}
-                backgroundColor={isCurrentResult ? "blue" : "yellow"}
+                color={isCurrentResult ? "black" : "white"}
+                backgroundColor={isCurrentResult ? "yellow" : "blue"}
               >
                 {token.text}
               </Text>
