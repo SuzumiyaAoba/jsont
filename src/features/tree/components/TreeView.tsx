@@ -194,6 +194,13 @@ export function TreeView({
 
   return (
     <Box flexDirection="column" width={width} height={height}>
+      {/* TreeView identification header */}
+      <Box width={width}>
+        <Text color="blue" bold>
+          TREE VIEW MODE (j/k: navigate, Space: toggle)
+        </Text>
+      </Box>
+
       {visibleLines.map((line, index) => {
         const lineIndex = scrollOffset + index;
         const isSelected = lineIndex === selectedLineIndex;
