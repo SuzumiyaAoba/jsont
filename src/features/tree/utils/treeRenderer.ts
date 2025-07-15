@@ -7,7 +7,7 @@ import type {
   TreeLine,
   TreeNode,
   TreeViewState,
-} from "../types/tree.js";
+} from "../types/tree";
 
 const TREE_SYMBOLS = {
   unicode: {

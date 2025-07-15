@@ -31,6 +31,7 @@ import {
   calculateStatusBarHeight,
   getStatusContent,
 } from "@features/status/utils/statusUtils";
+import { TreeView } from "@features/tree/components/TreeView";
 import { Box, Text, useApp, useInput } from "ink";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
@@ -90,7 +91,11 @@ export function App({
     mode: "simple",
   });
   const [collapsibleMode, setCollapsibleMode] = useState<boolean>(false);
+  const [treeViewMode, setTreeViewMode] = useState<boolean>(false);
   const [helpVisible, setHelpVisible] = useState<boolean>(false);
+  const [treeViewKeyboardHandler, setTreeViewKeyboardHandler] = useState<
+    ((input: string, key: any) => boolean) | null
+  >(null);
 
   // jq transformation state
   const [jqState, setJqState] = useState<JqState>({
@@ -777,6 +782,13 @@ export function App({
         tab?: boolean;
       },
     ) => {
+      // Handle TreeView keyboard input first if in tree view mode
+      if (treeViewMode && treeViewKeyboardHandler) {
+        if (treeViewKeyboardHandler(input, key)) {
+          return; // Input was handled by TreeView
+        }
+      }
+
       if (input === "s" && !key.ctrl && !key.meta) {
         // Start search mode
         updateDebugInfo("Start search mode", input);
@@ -963,6 +975,13 @@ export function App({
           `Toggle collapsible mode ${collapsibleMode ? "OFF" : "ON"}`,
           input,
         );
+      } else if (input === "T" && !key.ctrl && !key.meta) {
+        // Toggle tree view mode
+        setTreeViewMode((prev) => !prev);
+        updateDebugInfo(
+          `Toggle tree view mode ${treeViewMode ? "OFF" : "ON"}`,
+          input,
+        );
       } else if (input === "?" && !key.ctrl && !key.meta) {
         // Toggle help visibility
         setHelpVisible((prev) => !prev);
@@ -1013,6 +1032,8 @@ export function App({
       handleCollapsibleNavigation,
       handleSearchScopeChange,
       jqState.isActive,
+      treeViewMode,
+      treeViewKeyboardHandler,
     ],
   );
 
@@ -1174,7 +1195,24 @@ export function App({
               : 1
           }
         >
-          {collapsibleMode ? (
+          {treeViewMode ? (
+            <TreeView
+              data={displayData as JsonValue | null}
+              height={
+                searchState.isSearching || searchState.searchTerm
+                  ? searchModeVisibleLines
+                  : visibleLines
+              }
+              searchTerm={searchState.searchTerm}
+              options={{
+                showArrayIndices: true,
+                showPrimitiveValues: true,
+                maxValueLength: 50,
+                useUnicodeTree: true,
+              }}
+              onKeyboardHandlerReady={setTreeViewKeyboardHandler}
+            />
+          ) : collapsibleMode ? (
             <CollapsibleJsonViewer
               ref={collapsibleViewerRef}
               data={displayData as JsonValue | null}
