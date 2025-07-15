@@ -181,17 +181,7 @@ export function TreeView({
     ? searchTreeNodes(treeState, searchTerm, { searchValues: true })
     : new Set<string>();
 
-  // Handle null data case
-  if (!data) {
-    return (
-      <Box flexDirection="column" width={width} height={height}>
-        <Box justifyContent="center" alignItems="center" height={height}>
-          <Text color="gray">No data to display</Text>
-        </Box>
-      </Box>
-    );
-  }
-
+  // Simplified TreeView implementation
   return (
     <Box flexDirection="column" width={width} height={height}>
       {/* TreeView identification header */}
@@ -201,34 +191,12 @@ export function TreeView({
         </Text>
       </Box>
 
-      {visibleLines.map((line, index) => {
-        const lineIndex = scrollOffset + index;
-        const isSelected = lineIndex === selectedLineIndex;
-        const isMatched = matchingNodes.has(line.id);
-        const text = getTreeLineText(line);
-
-        return (
-          <Box key={line.id} width={width}>
-            <Text
-              color={getLineColor(line, isMatched)}
-              {...(isSelected ? { backgroundColor: "gray" } : {})}
-              bold={isSelected}
-              wrap="truncate"
-            >
-              {text}
-            </Text>
-          </Box>
-        );
-      })}
-
-      {/* Show help text if no lines */}
-      {filteredLines.length === 0 && (
-        <Box justifyContent="center" alignItems="center" height={height}>
-          <Text color="gray">
-            {searchTerm ? "No matches found" : "No data to display"}
-          </Text>
-        </Box>
-      )}
+      {/* Simple data display */}
+      <Box width={width}>
+        <Text color="white">
+          {data ? JSON.stringify(data, null, 2) : "No data"}
+        </Text>
+      </Box>
     </Box>
   );
 }
