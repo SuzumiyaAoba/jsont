@@ -54,7 +54,7 @@ export function ExportDialog({
 
   // Check if directory input is a custom path (not one of the predefined ones)
   const isCustomDirectory = useMemo(() => {
-    const currentPath = directoryInput.state.value;
+    const currentPath = directoryInput.state.text;
     const predefinedPaths = [
       process.cwd(),
       homedir(),
@@ -63,14 +63,14 @@ export function ExportDialog({
       join(homedir(), "Downloads"),
     ];
     return !predefinedPaths.includes(currentPath);
-  }, [directoryInput.state.value]);
+  }, [directoryInput.state.text]);
 
   // Update custom directory path when a custom path is set
   useEffect(() => {
     if (isCustomDirectory) {
-      setCustomDirectoryPath(directoryInput.state.value);
+      setCustomDirectoryPath(directoryInput.state.text);
     }
-  }, [isCustomDirectory, directoryInput.state.value]);
+  }, [isCustomDirectory, directoryInput.state.text]);
 
   // Predefined directories for quick selection
   const quickDirectories = useMemo(() => {
@@ -97,14 +97,14 @@ export function ExportDialog({
 
   // Update selectedDirIndex when current directory matches one of the quick directories
   useEffect(() => {
-    const currentPath = directoryInput.state.value;
+    const currentPath = directoryInput.state.text;
     const matchingIndex = quickDirectories.findIndex(
       (dir) => dir.path === currentPath,
     );
     if (matchingIndex !== -1 && matchingIndex !== selectedDirIndex) {
       setSelectedDirIndex(matchingIndex);
     }
-  }, [directoryInput.state.value, quickDirectories, selectedDirIndex]);
+  }, [directoryInput.state.text, quickDirectories, selectedDirIndex]);
 
   const updateConfigFromQuickDir = useCallback(
     (index: number) => {
@@ -122,7 +122,7 @@ export function ExportDialog({
   useEffect(() => {
     if (
       inputMode !== "directory" &&
-      directoryInput.state.value !== config.outputDir
+      directoryInput.state.text !== config.outputDir
     ) {
       directoryInput.setValue(config.outputDir);
     }
@@ -130,10 +130,10 @@ export function ExportDialog({
 
   // Update config when directory input changes (for real-time sync)
   useEffect(() => {
-    if (directoryInput.state.value !== config.outputDir) {
-      setConfig((prev) => ({ ...prev, outputDir: directoryInput.state.value }));
+    if (directoryInput.state.text !== config.outputDir) {
+      setConfig((prev) => ({ ...prev, outputDir: directoryInput.state.text }));
     }
-  }, [directoryInput.state.value, config.outputDir]);
+  }, [directoryInput.state.text, config.outputDir]);
 
   const handleInput = useCallback(
     (
@@ -164,31 +164,29 @@ export function ExportDialog({
         if (inputMode === "filename") {
           setConfig((prev) => ({
             ...prev,
-            filename: filenameInput.state.value,
+            filename: filenameInput.state.text,
           }));
         } else if (inputMode === "directory") {
           setConfig((prev) => ({
             ...prev,
-            outputDir: directoryInput.state.value,
+            outputDir: directoryInput.state.text,
           }));
         } else if (inputMode === "baseUrl") {
           setConfig((prev) => ({
             ...prev,
-            baseUrl: baseUrlInput.state.value,
+            baseUrl: baseUrlInput.state.text,
           }));
         }
 
         // Always confirm export when Enter is pressed using current values
         const finalFilename =
-          inputMode === "filename"
-            ? filenameInput.state.value
-            : config.filename;
+          inputMode === "filename" ? filenameInput.state.text : config.filename;
         const finalDirectory =
           inputMode === "directory"
-            ? directoryInput.state.value
+            ? directoryInput.state.text
             : config.outputDir;
         const finalBaseUrl =
-          inputMode === "baseUrl" ? baseUrlInput.state.value : config.baseUrl;
+          inputMode === "baseUrl" ? baseUrlInput.state.text : config.baseUrl;
 
         const exportOptions: ExportOptions = {
           filename: finalFilename,
@@ -319,10 +317,10 @@ export function ExportDialog({
   }
 
   const currentFilename =
-    inputMode === "filename" ? filenameInput.state.value : config.filename;
-  const currentDirectory = directoryInput.state.value || config.outputDir;
+    inputMode === "filename" ? filenameInput.state.text : config.filename;
+  const currentDirectory = directoryInput.state.text || config.outputDir;
   const currentBaseUrl =
-    inputMode === "baseUrl" ? baseUrlInput.state.value : config.baseUrl;
+    inputMode === "baseUrl" ? baseUrlInput.state.text : config.baseUrl;
   const fullPath = join(currentDirectory, currentFilename);
 
   // Get display text with cursor for active input

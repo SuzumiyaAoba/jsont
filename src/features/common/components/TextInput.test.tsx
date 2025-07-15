@@ -375,11 +375,13 @@ describe("Unified TextInput System", () => {
       handleTextInput(state, actions, key);
 
       // Should not go beyond text length
+      expect(mockSetCursorPosition).toHaveBeenCalled();
       const lastCall =
         mockSetCursorPosition.mock.calls[
           mockSetCursorPosition.mock.calls.length - 1
         ];
-      expect(lastCall[0]).toBeLessThanOrEqual(5);
+      expect(lastCall).toBeDefined();
+      expect(lastCall?.[0]).toBeLessThanOrEqual(5);
     });
 
     it("should handle cursor position below zero", () => {
@@ -395,11 +397,13 @@ describe("Unified TextInput System", () => {
       handleTextInput(state, actions, key);
 
       // Should not go below zero
+      expect(mockSetCursorPosition).toHaveBeenCalled();
       const lastCall =
         mockSetCursorPosition.mock.calls[
           mockSetCursorPosition.mock.calls.length - 1
         ];
-      expect(lastCall[0]).toBeGreaterThanOrEqual(0);
+      expect(lastCall).toBeDefined();
+      expect(lastCall?.[0]).toBeGreaterThanOrEqual(0);
     });
 
     it("should handle empty text operations", () => {
