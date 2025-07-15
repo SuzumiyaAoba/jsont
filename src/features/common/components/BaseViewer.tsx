@@ -134,8 +134,8 @@ export function BaseViewer({
             return (
               <Text
                 key={key}
-                color={isCurrentResult ? "yellow" : "yellow"}
-                backgroundColor={isCurrentResult ? "red" : "black"}
+                color={isCurrentResult ? "black" : "white"}
+                backgroundColor={isCurrentResult ? "yellow" : "blue"}
               >
                 {token.text}
               </Text>
