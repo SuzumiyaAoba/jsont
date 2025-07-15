@@ -162,7 +162,6 @@ export const CollapsibleJsonViewer = forwardRef<
       return (
         <Text
           key={originalIndex}
-          {...(isCurrentResult ? { backgroundColor: "cyan" } : {})}
           {...(isCursorLine && !isCurrentResult
             ? { backgroundColor: "gray", bold: true }
             : {})}
