@@ -88,7 +88,7 @@ describe("handleTextInput utility", () => {
 
       expect(result).toBe(true);
       expect(mockSetText).toHaveBeenCalledWith("hello world");
-      expect(mockSetCursorPosition).toHaveBeenCalledWith(0);
+      expect(mockSetCursorPosition).not.toHaveBeenCalled(); // Cursor stays in place when already at beginning
     });
 
     it("should delete entire line when cursor is at end", () => {

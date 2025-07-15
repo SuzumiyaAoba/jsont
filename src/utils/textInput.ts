@@ -90,7 +90,9 @@ export function handleTextInput(
     // Ctrl-u: Delete from beginning to cursor
     const newText = text.slice(cursorPosition);
     setText(newText);
-    setCursorPosition(0);
+    if (cursorPosition !== 0) {
+      setCursorPosition(0);
+    }
     return true;
   }
 
