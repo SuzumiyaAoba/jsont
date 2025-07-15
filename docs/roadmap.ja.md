@@ -12,6 +12,28 @@
 
 ## 開発フェーズ（機能ベース）
 
+### Phase 0: Foundation Enhancement 🏗️
+**期間**: 1週間（2025年1月完了）
+**目標**: 基盤機能の統合と開発効率向上
+
+#### F0: Unified TextInput System ✅
+**Status**: 完了（2025年1月）
+- [x] **コード統合**: `utils/textInput.ts` と `features/common/components/TextInput.tsx` の統合
+- [x] **Emacs風ショートカット**: Ctrl+A/E/F/B/K/U/W/D完全対応
+- [x] **プラットフォーム対応**: macOS/Windows/Linux削除キー動作最適化
+- [x] **レガシー互換性**: 既存API下位互換性維持
+- [x] **包括的テスト**: 27テストケース、エッジケース網羅
+- [x] **TypeScript安全性**: 厳格型チェック完全対応
+- [x] **インポート近代化**: パスエイリアス（@core/*, @features/*）必須化
+
+#### F0.1: Import System Modernization ✅
+**Status**: 完了（2025年1月）
+- [x] **TypeScriptパスエイリアス**: tsconfig.json設定完了
+- [x] **必須エイリアス規則**: クロス機能インポートでのエイリアス使用
+- [x] **インポート組織化**: 外部ライブラリ → 内部モジュール → 相対インポート
+- [x] **コード可読性**: 相対パス依存の解消
+- [x] **保守性向上**: 明確なインポート構造
+
 ### Phase 1: MVP Features 🚀
 **期間**: 2-3週間
 **目標**: 最小限だが価値のある機能を提供

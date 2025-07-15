@@ -440,6 +440,126 @@ export function formatForExport(data: unknown, options: ExportOptions): string;
 export function getJsonPath(data: unknown, path: JSONPath): string;
 ```
 
+## 統合TextInputシステム（2025年版）
+
+### TextInput アーキテクチャの統合
+
+2025年初頭に実施された大規模リファクタリングにより、従来の分散していたテキスト入力ロジックが統一されました：
+
+#### 統合前の構造
+- `utils/textInput.ts`: 低レベルのテキスト入力ユーティリティ
+- `features/common/components/TextInput.tsx`: React コンポーネント実装
+- 各コンポーネント: 独自のテキスト入力ロジック
+
+#### 統合後の統一アーキテクチャ
+```typescript
+// src/features/common/components/TextInput.tsx
+export interface TextInputState {
+  text: string;
+  cursorPosition: number;
+}
+
+export interface TextInputActions {
+  setText: (text: string) => void;
+  setCursorPosition: (position: number) => void;
+}
+
+// 統一されたテキスト入力ハンドラー
+export function handleTextInput(
+  state: TextInputState,
+  actions: TextInputActions,
+  key: KeyboardEvent,
+  input?: string,
+): boolean;
+
+// React フック統合
+export function useTextInput(initialValue: string): {
+  state: TextInputState;
+  setValue: (value: string) => void;
+  setCursorPosition: (position: number) => void;
+  handleKeyInput: TextInputKeyHandler;
+  getDisplayText: (isActive: boolean, placeholder?: string) => DisplayText;
+};
+```
+
+#### 強化されたキーボードショートカット
+
+**Emacs風ショートカット**:
+- **Ctrl+A**: 行の先頭に移動 (Beginning of line)
+- **Ctrl+E**: 行の末尾に移動 (End of line)
+- **Ctrl+F**: カーソルを右に移動 (Forward char)
+- **Ctrl+B**: カーソルを左に移動 (Backward char)
+- **Ctrl+K**: カーソルから行末まで削除 (Kill line)
+- **Ctrl+U**: 行の先頭からカーソルまで削除 (Unix line discard)
+- **Ctrl+W**: 単語を後方削除 (Backward kill word)
+- **Ctrl+D**: カーソル位置の文字を削除 (Delete char)
+
+**プラットフォーム対応**:
+- **macOS**: Delete キーは Backspace として動作
+- **その他**: Delete キーは前方削除として動作
+
+#### レガシー互換性
+
+統合プロセスでは既存のAPIとの互換性を維持：
+
+```typescript
+// レガシー状態フォーマットのサポート
+export interface LegacyTextInputStateCompat {
+  value: string;  // 旧: value → 新: text
+  cursorPosition: number;
+}
+
+export function convertLegacyState(legacy: LegacyTextInputStateCompat): TextInputState;
+export function convertToLegacyState(state: TextInputState): LegacyTextInputStateCompat;
+```
+
+## インポートシステム近代化
+
+### TypeScript パスエイリアス導入
+
+#### 必須エイリアス使用規則
+```typescript
+// ✅ 必須: クロス機能インポートでのエイリアス使用
+import { JsonViewer } from "@features/json-rendering/components/JsonViewer";
+import { SearchBar } from "@features/search/components/SearchBar";
+import { TextInput } from "@features/common/components/TextInput";
+
+// ❌ 禁止: クロス機能での相対パス
+import { JsonViewer } from "../../../features/json-rendering/components/JsonViewer";
+```
+
+#### エイリアス構成
+```typescript
+// tsconfig.json
+{
+  "compilerOptions": {
+    "baseUrl": "./src",
+    "paths": {
+      "@core/*": ["core/*"],
+      "@features/*": ["features/*"],
+      "@utils/*": ["utils/*"]
+    }
+  }
+}
+```
+
+#### インポート組織化ルール
+1. **外部ライブラリ**: React, Ink, その他のnpmパッケージ
+2. **内部モジュール**: @core, @features エイリアス
+3. **相対インポート**: 同一機能内での ./relative パス
+
+```typescript
+// 推奨インポート順序
+import { Box, Text, useInput } from "ink";
+import { useCallback, useState } from "react";
+
+import type { AppProps } from "@core/types/app";
+import { handleTextInput } from "@features/common/components/TextInput";
+import { JsonViewer } from "@features/json-rendering/components/JsonViewer";
+
+import { localHelper } from "./helpers";
+```
+
 ## データフロー
 
 ### 1. 初期化フロー
@@ -449,12 +569,19 @@ stdin → JSON Parser → Validation → App State → Initial Render
 
 ### 2. フィルタリングフロー
 ```
-User Input → Filter State → jq Processor → Filtered Data → Re-render
+User Input → TextInput System → Filter State → jq Processor → Filtered Data → Re-render
 ```
 
 ### 3. ナビゲーションフロー
 ```
-Keyboard Event → Event Handler → State Update → Component Update
+Keyboard Event → TextInput Handler → Event Handler → State Update → Component Update
+```
+
+### 4. TextInput統合フロー（新規）
+```
+Keyboard Input → handleTextInput() → TextInputActions → State Update → Display Refresh
+                     ↑
+            Emacs shortcuts + Platform detection
 ```
 
 ## モジュール分割戦略

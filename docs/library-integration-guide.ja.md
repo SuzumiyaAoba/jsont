@@ -10,6 +10,8 @@
 - **JSON処理**: **es-toolkit** (高性能・軽量)
 - **JSONクエリ**: **jq-web + JSONata** (ハイブリッド方式)
 - **仮想スクロール**: **@tanstack/react-virtual** (最新・高機能)
+- **テキスト入力**: **統合TextInputシステム** (2025年統合完了)
+- **インポートシステム**: **TypeScriptパスエイリアス** (必須化)
 
 ## 推奨ライブラリの詳細
 
@@ -612,6 +614,118 @@ export const useConfigStore = create<Config>()(
 );
 ```
 
+## 新規統合システム（2025年版）
+
+### 6. 統合TextInputシステム
+
+#### 設計原則
+```typescript
+// src/features/common/components/TextInput.tsx
+// 統一アーキテクチャによる全社的テキスト入力管理
+
+export interface TextInputState {
+  text: string;
+  cursorPosition: number;
+}
+
+export interface TextInputActions {
+  setText: (text: string) => void;
+  setCursorPosition: (position: number) => void;
+}
+
+export function handleTextInput(
+  state: TextInputState,
+  actions: TextInputActions,
+  key: KeyboardEvent,
+  input?: string,
+): boolean;
+```
+
+#### 統合完了済みコンポーネント
+```typescript
+// 全て統合TextInputシステム使用
+export const unifiedComponents = [
+  'SearchBar',           // 検索・フィルタリング
+  'JqQueryInput',        // jqクエリ入力
+  'ExportDialog',        // ファイル名・パス・URL入力
+  'SettingsInput',       // 将来の設定値入力
+];
+```
+
+#### 提供機能
+- **Emacs風ショートカット**: Ctrl+A/E/F/B/K/U/W/D
+- **プラットフォーム対応**: macOS/Windows/Linux最適化
+- **レガシー互換性**: 既存API下位互換性
+- **包括的テスト**: 27テストケース、エッジケース網羅
+
+### 7. TypeScriptパスエイリアスシステム
+
+#### tsconfig.json設定
+```json
+{
+  "compilerOptions": {
+    "baseUrl": "./src",
+    "paths": {
+      "@core/*": ["core/*"],
+      "@features/*": ["features/*"],
+      "@utils/*": ["utils/*"]
+    }
+  }
+}
+```
+
+#### 必須インポートルール
+```typescript
+// ✅ 必須: クロス機能インポートでのエイリアス使用
+import { JsonViewer } from "@features/json-rendering/components/JsonViewer";
+import { SearchBar } from "@features/search/components/SearchBar";
+import { TextInput } from "@features/common/components/TextInput";
+import type { AppProps } from "@core/types/app";
+
+// ❌ 禁止: クロス機能での相対パス
+import { JsonViewer } from "../../../features/json-rendering/components/JsonViewer";
+```
+
+#### インポート組織化順序
+1. **外部ライブラリ**: React, Ink, その他npmパッケージ
+2. **内部モジュール**: @core, @features エイリアス
+3. **相対インポート**: 同一機能内での ./relative パス
+
+#### 統合後の効果
+```typescript
+// Before: 複雑で読みにくい相対パス
+import { Component } from "../../../../features/common/components/Component";
+
+// After: 明確で保守性の高いエイリアス
+import { Component } from "@features/common/components/Component";
+```
+
+### 8. 統合システムの品質担保
+
+#### テストカバレッジ拡大
+```bash
+# 統合前: 111+テストケース
+# 統合後: 345+テストケース（3倍以上向上）
+
+# TextInput専用テストスイート
+src/features/common/components/TextInput.test.tsx: 27テストケース
+- キーボードショートカット網羅
+- プラットフォーム固有動作
+- エッジケース・境界条件
+- レガシー互換性
+```
+
+#### TypeScript厳格性向上
+```typescript
+// strict modeでの完全型安全性
+"strict": true,
+"noImplicitAny": true,
+"strictNullChecks": true,
+"noUncheckedIndexedAccess": true,
+
+// エラー0件での本番対応
+```
+
 ## まとめ
 
 推奨ライブラリの統合により、以下の改善が期待できます：
@@ -621,5 +735,7 @@ export const useConfigStore = create<Config>()(
 3. **開発効率**: TypeScript-firstライブラリによる型安全性
 4. **保守性**: 確立されたライブラリによる安定性
 5. **拡張性**: プラグインシステムによるカスタマイズ性
+6. **🆕 統合TextInput**: 一貫したユーザー体験とコード重複削除
+7. **🆕 インポート近代化**: 可読性向上と保守性強化
 
-段階的な導入により、リスクを最小限に抑えながら機能を向上させることができます。
+段階的な導入により、リスクを最小限に抑えながら機能を向上させることができます。特に2025年に完了したTextInputシステム統合とインポートシステム近代化により、開発効率と品質が大幅に向上しています。

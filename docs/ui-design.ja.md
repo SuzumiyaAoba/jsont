@@ -96,6 +96,77 @@ $success: #107c10;
 
 ## コンポーネント設計
 
+### 統合TextInput Component（2025年版）
+**目的**: 統一されたテキスト入力体験の提供
+
+#### 設計仕様
+```typescript
+interface TextInputProps {
+  value: string;
+  onChange: (value: string) => void;
+  placeholder?: string;
+  isActive?: boolean;
+  color?: string;
+  backgroundColor?: string;
+  prefix?: string;
+  width?: number;
+}
+```
+
+#### 視覚的設計
+```
+┌─────────────────────────────────────────────────────────────┐
+│ > jq query: .users[] | select(.age > 25)█                 │ アクティブ状態
+│ > jq query: .users[] | select(.age > 25)                  │ 非アクティブ状態
+│ > jq query: [placeholder text]                            │ プレースホルダー
+└─────────────────────────────────────────────────────────────┘
+```
+
+#### 状態表示
+- **アクティブ**: 青色背景のカーソル、白色テキスト
+- **非アクティブ**: グレー色テキスト、カーソルなし
+- **プレースホルダー**: 薄いグレー色の説明文
+
+#### カーソル動作
+```typescript
+// カーソル位置計算
+const cursorPosition = {
+  beforeCursor: text.slice(0, position),
+  atCursor: text[position] || " ",
+  afterCursor: text.slice(position + 1)
+};
+```
+
+#### キーボードショートカット表示
+```
+┌─────────────────────────────────────────────────────────────┐
+│ Text Input Help:                                           │
+│ Ctrl+A: Beginning  Ctrl+E: End      Ctrl+F: Forward       │
+│ Ctrl+B: Backward   Ctrl+K: Kill     Ctrl+U: Unix discard  │
+│ Ctrl+W: Kill word  Ctrl+D: Delete   Backspace: Delete     │
+│ Delete: Platform-specific behavior (macOS: left, other: right) │
+└─────────────────────────────────────────────────────────────┘
+```
+
+#### 適用コンポーネント
+- **SearchBar**: JSON検索・フィルタリング
+- **JqQueryInput**: jqクエリ入力
+- **ExportDialog**: ファイル名・パス・URL入力
+- **SettingsInput**: 設定値入力（将来実装）
+
+#### レガシー互換性
+```typescript
+// 旧API対応
+interface LegacyTextInputStateCompat {
+  value: string;  // 新: text
+  cursorPosition: number;
+}
+
+// 自動変換機能
+convertLegacyState(legacy) → TextInputState
+convertToLegacyState(state) → LegacyTextInputStateCompat
+```
+
 ### StatusBar Component
 **目的**: アプリケーション状態とナビゲーション情報の表示
 
