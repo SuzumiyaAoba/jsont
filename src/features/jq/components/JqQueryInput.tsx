@@ -3,7 +3,7 @@
  */
 
 import { Box, Text } from "ink";
-import { renderTextWithCursor } from "../../../utils/textInput";
+import { renderTextWithCursor } from "../../common/components/TextInput";
 import type { JqState } from "../types/jq";
 
 interface JqQueryInputProps {
