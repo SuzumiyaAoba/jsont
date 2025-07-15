@@ -49,4 +49,23 @@ TDD-based task breakdown with ~500 lines per PR implementation plan.
 
 ---
 
-This documentation suite reflects the latest 2024 technology trends and serves as a crucial asset for maintaining consistent quality and direction in jsont development.
+## Recent Updates (2025)
+
+### 🎯 TextInput System Unification
+The application has undergone a major architectural improvement with the consolidation of text input handling logic:
+
+- **Eliminated Code Duplication**: Merged `utils/textInput.ts` into unified `@features/common/components/TextInput`
+- **Enhanced Keyboard Shortcuts**: Comprehensive Emacs-style shortcuts (Ctrl+K/U/W/D/A/E/F/B)
+- **Platform Awareness**: Smart delete key behavior for macOS vs other platforms
+- **Test Coverage**: Expanded to 345+ tests with 27 dedicated TextInput test cases
+- **Type Safety**: Enhanced TypeScript interfaces with legacy compatibility
+
+### 🏗️ Import System Modernization
+Updated import guidelines to use TypeScript path aliases:
+- **Mandatory Aliases**: `@core/*`, `@features/*` for all cross-feature imports
+- **Improved Readability**: Cleaner, more maintainable import statements
+- **Better Organization**: Structured import ordering by functionality
+
+---
+
+This documentation suite reflects the latest 2024-2025 technology trends and serves as a crucial asset for maintaining consistent quality and direction in jsont development.

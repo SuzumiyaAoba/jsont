@@ -84,6 +84,14 @@ The application implements sophisticated stdin handling to enable keyboard navig
 - **DebugLogger** (`src/utils/debug.ts`): Structured debug logging
 - **StdinHandler** (`src/utils/stdinHandler.ts`): Advanced stdin/pipe processing with TTY reinitialization
 
+#### Common Components Layer (**Unified Architecture**)
+- **TextInput** (`src/features/common/components/TextInput.tsx`): **Unified text input system**
+  - Single source of truth for all text input handling
+  - Comprehensive Emacs-style keyboard shortcuts (Ctrl+K/U/W/D/A/E/F/B)
+  - Platform-aware delete behavior (macOS vs other platforms)
+  - Legacy compatibility layer for backward compatibility
+  - Consolidated from previous `utils/textInput.ts` duplication
+
 #### Configuration
 - **Constants** (`src/config/constants.ts`): All magic numbers, strings, and configuration
 - **Types** (`src/types/app.ts`): Application-specific type definitions
@@ -233,10 +241,11 @@ The JsonViewer component provides comprehensive syntax highlighting:
 
 ### Testing
 - Vitest for unit testing with TypeScript support
-- Tests focus on utility functions (JSON parsing, formatting)
-- Component testing for JsonViewer and App functionality
+- Tests focus on utility functions (JSON parsing, formatting, text input)
+- Component testing for JsonViewer, App, and TextInput functionality
 - Test files use `.test.ts` suffix and are co-located with source
-- Current test coverage: 111+ tests across 10 test suites
+- **Current test coverage: 345+ tests across 25 test suites**
+- **Comprehensive TextInput testing**: 27 test cases covering all keyboard shortcuts, edge cases, and platform behavior
 
 ### Development Tools
 - Biome for linting and formatting (recommended rules only)
@@ -245,26 +254,93 @@ The JsonViewer component provides comprehensive syntax highlighting:
 
 ## Coding Guidelines
 
-### Import Standards
+### Import Standards (Updated 2025)
 - **ALWAYS use extensionless imports** for TypeScript files
-- **Correct**: `import { JsonValue } from "../types"`
+- **ALWAYS use TypeScript path aliases** for cross-feature imports
+- **Correct**: `import { JsonValue } from "@core/types"`
+- **Correct**: `import { TextInput } from "@features/common/components/TextInput"`
 - **Incorrect**: `import { JsonValue } from "../types/index.ts"`
-- **Rationale**: 
-  - Modern bundler (tsup) handles extension resolution automatically
-  - Better compatibility across different module systems
-  - Cleaner code and consistent with modern TypeScript practices
-  - Avoids potential issues with different build tools
+- **Incorrect**: `import { TextInput } from "../../../features/common/components/TextInput"`
 
 ### File Organization
 - Use descriptive filenames without unnecessary extensions in imports
-- Organize imports by: external libraries → internal modules → relative imports
+- **Organize imports by priority**: external libraries → @aliases → relative imports
+- **Group by functionality**, not alphabetically
 - Use barrel exports (`index.ts`) for clean module interfaces
+
+### Import Organization Best Practices
+```typescript
+// 1. External libraries (React, Ink, etc.)
+import { Box, Text, useInput } from "ink";
+import { useCallback, useEffect, useState } from "react";
+
+// 2. Core aliases (@core/*)
+import type { AppProps } from "@core/types/app";
+
+// 3. Feature aliases (@features/*) - grouped by functionality
+import { JsonViewer } from "@features/json-rendering/components/JsonViewer";
+import { handleTextInput } from "@features/common/components/TextInput";
+import { SearchBar } from "@features/search/components/SearchBar";
+
+// 4. Relative imports (within same feature only)
+import { formatData } from "./utils/formatter";
+```
 
 ### TypeScript Best Practices
 - Leverage strict mode configuration for maximum type safety
 - Use optional chaining (`?.`) instead of non-null assertions (`!`) for better safety
 - Define proper type interfaces instead of using `any` type
 - Utilize modern ES Module syntax consistently
+
+### Text Input System (Unified Architecture)
+
+**Location**: `@features/common/components/TextInput`
+
+The TextInput system provides a unified, comprehensive solution for all text input handling across the application.
+
+#### Key Components
+```typescript
+// Core functions
+handleTextInput()           // Unified keyboard event handler
+renderTextWithCursor()      // Display utility for cursor rendering
+useTextInput()              // React hook for text input state
+TextInput                   // Complete UI component
+
+// Compatibility layer
+convertLegacyState()        // Legacy → new state format
+convertToLegacyState()      // New → legacy state format
+```
+
+#### Keyboard Shortcuts (Emacs-style)
+```typescript
+// Cursor Movement
+Ctrl+A, Home    // Move to beginning of line
+Ctrl+E, End     // Move to end of line  
+Ctrl+F, →       // Move cursor forward
+Ctrl+B, ←       // Move cursor backward
+
+// Text Deletion
+Ctrl+K          // Delete from cursor to end of line (kill-line)
+Ctrl+U          // Delete from beginning to cursor (unix-line-discard)
+Ctrl+W          // Delete word backward (backward-kill-word)
+Ctrl+D          // Delete character at cursor (delete-char)
+
+// Standard Operations
+Backspace       // Delete character before cursor
+Delete          // Platform-aware deletion (macOS vs others)
+```
+
+#### Usage Examples
+```typescript
+// In React components
+import { useTextInput, TextInputProps } from "@features/common/components/TextInput";
+
+// For custom input handling
+import { handleTextInput, TextInputState, TextInputActions } from "@features/common/components/TextInput";
+
+// For display utilities
+import { renderTextWithCursor } from "@features/common/components/TextInput";
+```
 
 ### Error Handling with neverthrow
 - **Result Type Pattern**: Use `Result<T, E>` for safe error handling instead of throwing exceptions
@@ -445,12 +521,77 @@ ALWAYS prefer editing an existing file to creating a new one.
 NEVER proactively create documentation files (*.md) or README files. Only create documentation files if explicitly requested by the User.
 
 ## 🚨 Critical Import Guidelines
+
+### 📁 Import Path Standards
+
 **MANDATORY**: Always use extensionless imports for TypeScript files
 - ✅ Correct: `import { Component } from "./components/Component"`
 - ❌ Wrong: `import { Component } from "./components/Component.ts"`
 - ❌ Wrong: `import { Component } from "./components/Component.tsx"`
 
+**MANDATORY**: Always use TypeScript path aliases for cleaner imports
+- ✅ Correct: `import { JsonViewer } from "@features/json-rendering/components/JsonViewer"`
+- ✅ Correct: `import { AppProps } from "@core/types/app"`
+- ❌ Wrong: `import { JsonViewer } from "../../../features/json-rendering/components/JsonViewer"`
+- ❌ Wrong: `import { AppProps } from "../../core/types/app"`
+
+### 🗂️ Available Path Aliases
+```typescript
+// Core aliases
+@core/*           → src/core/*
+@features/*       → src/features/*
+
+// Specific feature aliases (examples)
+@features/json-rendering/*  → src/features/json-rendering/*
+@features/collapsible/*     → src/features/collapsible/*
+@features/search/*          → src/features/search/*
+@features/jq/*              → src/features/jq/*
+@features/schema/*          → src/features/schema/*
+@features/status/*          → src/features/status/*
+@features/debug/*           → src/features/debug/*
+@features/common/*          → src/features/common/*
+```
+
+### 📋 Import Best Practices
+1. **Use aliases for all cross-feature imports**
+2. **Use relative imports only within the same feature directory**
+3. **Organize imports by: external → aliases → relative**
+4. **Group by functionality, not alphabetically**
+
+### ✅ Example of Proper Import Structure
+```typescript
+// External libraries first
+import { Box, Text, useInput } from "ink";
+import { useCallback, useEffect, useState } from "react";
+
+// Core aliases
+import type { AppProps } from "@core/types/app";
+
+// Feature aliases (organized by functionality)
+import { JsonViewer } from "@features/json-rendering/components/JsonViewer";
+import { SearchBar } from "@features/search/components/SearchBar";
+import { handleTextInput } from "@features/common/components/TextInput";
+
+// Relative imports last (within same feature)
+import { formatJsonSchema } from "./utils/schemaUtils";
+```
+
+### 🚫 Import Anti-patterns
+```typescript
+// ❌ DON'T: Mix aliases with relative paths
+import { JsonViewer } from "@features/json-rendering/components/JsonViewer";
+import { SearchBar } from "../../../search/components/SearchBar";
+
+// ❌ DON'T: Use relative paths for cross-feature imports
+import { handleTextInput } from "../../../common/components/TextInput";
+
+// ❌ DON'T: Use file extensions
+import { JsonViewer } from "@features/json-rendering/components/JsonViewer.tsx";
+```
+
 This is essential for:
 - Modern bundler compatibility (tsup)
 - Consistent code style across the project
 - Avoiding build issues and import resolution problems
+- Better code readability and maintainability
+- Easier refactoring and code organization
