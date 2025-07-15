@@ -160,12 +160,7 @@ export const CollapsibleJsonViewer = forwardRef<
 
       // Render the tokens with cursor highlighting
       return (
-        <Text
-          key={originalIndex}
-          {...(isCursorLine && !isCurrentResult
-            ? { backgroundColor: "gray", bold: true }
-            : {})}
-        >
+        <Text key={originalIndex}>
           {highlightedTokens.map((token, tokenIndex) => {
             const key = `${originalIndex}-${tokenIndex}-${token.text}`;
 
@@ -182,7 +177,13 @@ export const CollapsibleJsonViewer = forwardRef<
               );
             } else {
               return (
-                <Text key={key} color={token.color}>
+                <Text
+                  key={key}
+                  color={token.color}
+                  {...(isCursorLine && !isCurrentResult
+                    ? { backgroundColor: "blue", color: "white", bold: true }
+                    : {})}
+                >
                   {token.text}
                 </Text>
               );
