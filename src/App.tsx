@@ -91,11 +91,19 @@ export function App({
     mode: "simple",
   });
   const [collapsibleMode, setCollapsibleMode] = useState<boolean>(false);
-  const [treeViewMode, setTreeViewMode] = useState<boolean>(true);
+  const [treeViewMode, setTreeViewMode] = useState<boolean>(false);
   const [helpVisible, setHelpVisible] = useState<boolean>(false);
   const [treeViewKeyboardHandler, setTreeViewKeyboardHandler] = useState<
     ((input: string, key: KeyboardInput) => boolean) | null
   >(null);
+
+  // Prevent invalid calls to TreeView handler during registration
+  const safeSetTreeViewKeyboardHandler = useCallback(
+    (handler: ((input: string, key: KeyboardInput) => boolean) | null) => {
+      setTreeViewKeyboardHandler(() => handler); // Use function form to ensure handler is set correctly
+    },
+    [],
+  );
 
   // jq transformation state
   const [jqState, setJqState] = useState<JqState>({
@@ -791,15 +799,6 @@ export function App({
         delete?: boolean;
       },
     ) => {
-      console.log(
-        "App.tsx: handleNavigationInput called with input:",
-        JSON.stringify(input),
-        "key:",
-        JSON.stringify(key),
-        "key is undefined:",
-        key === undefined,
-      );
-
       // Handle T key for mode switching even in TreeView mode
       if (input === "T" && !key?.ctrl && !key?.meta) {
         // Toggle tree view mode
@@ -813,25 +812,11 @@ export function App({
 
       // Safety check for undefined key
       if (!key) {
-        console.log(
-          "App.tsx: handleNavigationInput received undefined key, ignoring input:",
-          JSON.stringify(input),
-        );
         return;
       }
 
       // Handle TreeView keyboard input first if in tree view mode
       if (treeViewMode && treeViewKeyboardHandler) {
-        console.log(
-          "App.tsx: TreeView mode - delegating input:",
-          JSON.stringify(input),
-          "keys:",
-          JSON.stringify(key),
-          "active keys:",
-          Object.keys(key || {}).filter((k) => key && key[k]),
-          "to TreeView handler",
-        );
-
         // Convert key object to match KeyboardInput interface
         const keyboardInput: KeyboardInput = {
           upArrow: key?.upArrow || false,
@@ -850,25 +835,9 @@ export function App({
           meta: key?.meta || false,
         };
 
-        console.log(
-          "App.tsx: Converted keyboardInput:",
-          JSON.stringify(keyboardInput),
-          "active keys:",
-          Object.keys(keyboardInput).filter((k) => keyboardInput[k]),
-        );
-
         if (treeViewKeyboardHandler(input, keyboardInput)) {
-          console.log("App.tsx: TreeView handled input successfully");
           return; // Input was handled by TreeView
         }
-        console.log(
-          "App.tsx: TreeView did not handle input, continuing to App handlers",
-        );
-      } else if (treeViewMode) {
-        console.log(
-          "App.tsx: TreeView mode active but no handler available - treeViewKeyboardHandler is:",
-          treeViewKeyboardHandler,
-        );
       }
 
       if (input === "s" && !key.ctrl && !key.meta) {
@@ -1155,10 +1124,6 @@ export function App({
         handleJqInput(input, key);
       } else {
         // Handle navigation input
-        console.log(
-          "App.tsx: Delegating to handleNavigationInput with key:",
-          JSON.stringify(key),
-        );
         handleNavigationInput(input, key);
       }
     },
@@ -1177,75 +1142,12 @@ export function App({
 
   // Use Ink's useInput hook for keyboard handling
 
-  // Handle keyboard input only (mouse events handled separately via stdin)
-  console.log(
-    "\n=== App.tsx: useInput setup ===",
-    "\nkeyboardEnabled:",
-    keyboardEnabled,
-    "\nexportDialog.isVisible:",
-    exportDialog.isVisible,
-    "\nisActive:",
-    keyboardEnabled && !exportDialog.isVisible,
-  );
-  console.log(
-    "\n=== App.tsx: stdin properties ===",
-    "\nprocess.stdin.isTTY:",
-    process.stdin.isTTY,
-    "\nprocess.stdin.readable:",
-    process.stdin.readable,
-    "\nprocess.stdin.hasSetRawMode:",
-    !!process.stdin.setRawMode,
-    "\nprocess.stdin.listenerCount('data'):",
-    process.stdin.listenerCount("data"),
-  );
+  // Handle keyboard input via useInput hook from Ink
 
-  // Critical fix: Force stdin to be in proper state for useInput
-  console.log(
-    "\n=== App.tsx: About to setup useInput ===",
-    "\nsetup conditions:",
-    "\n  keyboardEnabled:",
-    keyboardEnabled,
-    "\n  !exportDialog.isVisible:",
-    !exportDialog.isVisible,
-    "\n  isActive:",
-    keyboardEnabled && !exportDialog.isVisible,
-    "\n  process.stdin.isTTY:",
-    process.stdin.isTTY,
-    "\n  process.stdin.readable:",
-    process.stdin.readable,
-  );
-
-  // Force stdin to be in a state that useInput can use
-  if (keyboardEnabled && process.stdin.isTTY && process.stdin.setRawMode) {
-    try {
-      // Ensure stdin is in raw mode for proper keyboard handling
-      process.stdin.setRawMode(true);
-      process.stdin.resume();
-      console.log("\nApp.tsx: Forced stdin to raw mode for useInput");
-    } catch (error) {
-      console.log("\nApp.tsx: Failed to set stdin to raw mode:", error);
-    }
-  }
+  // No manual stdin handling - let useInput handle everything
 
   useInput(
     (input, key) => {
-      console.log(
-        "\n=== App.tsx useInput received ===",
-        "\ninput:",
-        JSON.stringify(input),
-        "\nkey:",
-        JSON.stringify(key),
-        "\nactive keys:",
-        Object.keys(key).filter((k) => key[k]),
-        "\ntreeViewMode:",
-        treeViewMode,
-        "\ntreeViewKeyboardHandler available:",
-        !!treeViewKeyboardHandler,
-        "\nkeyboardEnabled:",
-        keyboardEnabled,
-        "\nexportDialog.isVisible:",
-        exportDialog.isVisible,
-      );
       // Handle keyboard input
       handleKeyInput(input, key);
     },
@@ -1253,8 +1155,6 @@ export function App({
       isActive: keyboardEnabled && !exportDialog.isVisible,
     },
   );
-
-  console.log("\n=== App.tsx: useInput setup complete ===");
 
   return (
     <Box flexDirection="column" width="100%">
@@ -1363,13 +1263,7 @@ export function App({
                 maxValueLength: 50,
                 useUnicodeTree: true,
               }}
-              onKeyboardHandlerReady={(handler) => {
-                console.log(
-                  "App.tsx: setTreeViewKeyboardHandler called with:",
-                  typeof handler,
-                );
-                setTreeViewKeyboardHandler(handler);
-              }}
+              onKeyboardHandlerReady={safeSetTreeViewKeyboardHandler}
             />
           ) : collapsibleMode ? (
             <CollapsibleJsonViewer

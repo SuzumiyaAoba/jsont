@@ -50,9 +50,7 @@ describe("App", () => {
     );
 
     const output = lastFrame();
-    // In TreeView mode, null data shows as "null" instead of "No JSON data to display"
-    expect(output).toContain("TREE VIEW MODE");
-    expect(output).toContain("null");
+    expect(output).toContain("No JSON data to display");
   });
 
   it("should show JSON content when keyboard is enabled", () => {
@@ -89,8 +87,6 @@ describe("App", () => {
     );
 
     const output = lastFrame();
-    // In TreeView mode, null data shows as "null" instead of "No JSON data to display"
-    expect(output).toContain("TREE VIEW MODE");
-    expect(output).toContain("null");
+    expect(output).toContain("No JSON data to display");
   });
 });

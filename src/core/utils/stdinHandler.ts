@@ -71,22 +71,50 @@ export async function readStdinThenReinitialize(): Promise<StdinReadResult> {
 async function readAllStdinData(): Promise<string> {
   return new Promise((resolve, reject) => {
     const chunks: Buffer[] = [];
+    let hasEnded = false;
 
-    process.stdin.on("data", (chunk: Buffer) => {
+    const onData = (chunk: Buffer) => {
       chunks.push(chunk);
-    });
+    };
 
-    process.stdin.on("end", () => {
-      const data = Buffer.concat(chunks).toString("utf8");
-      resolve(data);
-    });
+    const onEnd = () => {
+      if (!hasEnded) {
+        hasEnded = true;
+        cleanup();
+        const data = Buffer.concat(chunks).toString("utf8");
+        resolve(data);
+      }
+    };
 
-    process.stdin.on("error", (error) => {
-      reject(error);
-    });
+    const onError = (error: Error) => {
+      if (!hasEnded) {
+        hasEnded = true;
+        cleanup();
+        reject(error);
+      }
+    };
+
+    const cleanup = () => {
+      process.stdin.removeListener("data", onData);
+      process.stdin.removeListener("end", onEnd);
+      process.stdin.removeListener("error", onError);
+    };
+
+    process.stdin.on("data", onData);
+    process.stdin.on("end", onEnd);
+    process.stdin.on("error", onError);
 
     // Resume stdin to start reading
     process.stdin.resume();
+
+    // Set a timeout to prevent hanging if no data is available
+    setTimeout(() => {
+      if (!hasEnded) {
+        hasEnded = true;
+        cleanup();
+        reject(new Error("Timeout: No data received from stdin"));
+      }
+    }, 5000); // 5 second timeout
   });
 }
 

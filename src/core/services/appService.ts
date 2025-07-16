@@ -119,8 +119,8 @@ export class AppService {
       this.processManager.cleanup();
     });
 
-    // In CI environments, auto-exit after a short delay
-    if (this.isCIEnvironment()) {
+    // In CI environments or non-TTY environments, auto-exit after a short delay
+    if (this.isCIEnvironment() || !process.stdin.isTTY) {
       setTimeout(() => {
         app.unmount();
         this.processManager.cleanup();

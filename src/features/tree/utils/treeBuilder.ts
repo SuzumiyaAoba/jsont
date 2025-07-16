@@ -36,7 +36,7 @@ export function buildTreeFromJson(
     path: (string | number)[] = [],
     parent?: TreeNode,
   ): TreeNode {
-    const id = path.length === 0 ? "root" : path.join(".");
+    const id = path.length === 0 ? "__root__" : path.join(".");
     const type = getValueType(value);
     const hasChildren = type === "object" || type === "array";
 
@@ -138,10 +138,36 @@ export function toggleNodeExpansion(
     newExpandedNodes.delete(nodeId);
   }
 
+  // Update all nodes to use the latest state from the nodes map
+  const updatedRootNodes = state.rootNodes.map((rootNode) =>
+    updateNodeFromMap(rootNode, newNodes),
+  );
+
   return {
     ...state,
     nodes: newNodes,
+    rootNodes: updatedRootNodes,
     expandedNodes: newExpandedNodes,
+  };
+}
+
+/**
+ * Updates a node tree recursively using the latest state from the nodes map
+ */
+function updateNodeFromMap(
+  node: TreeNode,
+  nodesMap: Map<string, TreeNode>,
+): TreeNode {
+  const updatedNode = nodesMap.get(node.id) || node;
+
+  // Update children recursively
+  const updatedChildren = updatedNode.children.map((child) =>
+    updateNodeFromMap(child, nodesMap),
+  );
+
+  return {
+    ...updatedNode,
+    children: updatedChildren,
   };
 }
 
@@ -183,9 +209,15 @@ export function collapseAll(state: TreeViewState): TreeViewState {
     newNodes.set(nodeId, updatedNode);
   }
 
+  // Update all nodes to use the latest state from the nodes map
+  const updatedRootNodes = state.rootNodes.map((rootNode) =>
+    updateNodeFromMap(rootNode, newNodes),
+  );
+
   return {
     ...state,
     nodes: newNodes,
+    rootNodes: updatedRootNodes,
     expandedNodes: new Set(),
   };
 }
@@ -206,9 +238,15 @@ export function expandAll(state: TreeViewState): TreeViewState {
     }
   }
 
+  // Update all nodes to use the latest state from the nodes map
+  const updatedRootNodes = state.rootNodes.map((rootNode) =>
+    updateNodeFromMap(rootNode, newNodes),
+  );
+
   return {
     ...state,
     nodes: newNodes,
+    rootNodes: updatedRootNodes,
     expandedNodes: newExpandedNodes,
   };
 }

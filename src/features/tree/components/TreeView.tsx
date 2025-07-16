@@ -110,21 +110,8 @@ export function TreeView({
   const handleTreeKeyboardInput = useCallback(
     (input: string, key: KeyboardInput): boolean => {
       if (!key) {
-        console.log(
-          "TreeView: handleTreeKeyboardInput called with undefined key",
-        );
-        console.log("TreeView: Call stack:", new Error().stack);
         return false; // Safety check for undefined key
       }
-
-      console.log(
-        "TreeView: handleTreeKeyboardInput called with:",
-        JSON.stringify(input),
-        "key:",
-        JSON.stringify(key),
-        "active keys:",
-        Object.keys(key).filter((k) => key[k]),
-      );
 
       const {
         selectedLineIndex,
@@ -135,12 +122,6 @@ export function TreeView({
       } = stateRef.current;
 
       if (key.upArrow || (input === "k" && !key.ctrl)) {
-        console.log(
-          "TreeView: Up/k key - moving from index",
-          selectedLineIndex,
-          "to",
-          Math.max(0, selectedLineIndex - 1),
-        );
         const newIndex = Math.max(0, selectedLineIndex - 1);
         setSelectedLineIndex(newIndex);
         if (newIndex <= scrollOffset) {
@@ -148,12 +129,6 @@ export function TreeView({
         }
         return true;
       } else if (key.downArrow || (input === "j" && !key.ctrl)) {
-        console.log(
-          "TreeView: Down/j key - moving from index",
-          selectedLineIndex,
-          "to",
-          Math.min(filteredLines.length - 1, selectedLineIndex + 1),
-        );
         const newIndex = Math.min(
           filteredLines.length - 1,
           selectedLineIndex + 1,
@@ -183,48 +158,12 @@ export function TreeView({
         return true;
       } else if (key.return || input === " ") {
         // Toggle expansion of selected node
-        console.log(
-          "TreeView: Space/Enter pressed for toggle. Input:",
-          JSON.stringify(input),
-          "Return key:",
-          key.return,
-          "filteredLines length:",
-          filteredLines.length,
-          "selectedLineIndex:",
-          selectedLineIndex,
-        );
         const selectedLine = filteredLines[selectedLineIndex];
-        console.log(
-          "TreeView: selectedLine:",
-          selectedLine
-            ? {
-                id: selectedLine.id,
-                key: selectedLine.key,
-                hasChildren: selectedLine.hasChildren,
-                isExpanded: selectedLine.isExpanded,
-                type: selectedLine.type,
-              }
-            : "undefined",
-        );
         if (selectedLine?.hasChildren) {
-          console.log(
-            "TreeView: Toggling node expansion for:",
-            selectedLine.id,
-          );
           setTreeState((prev) => {
-            console.log(
-              "TreeView: Before toggle - expanded nodes:",
-              Array.from(prev.expandedNodes),
-            );
             const newState = toggleNodeExpansion(prev, selectedLine.id);
-            console.log(
-              "TreeView: After toggle - expanded nodes:",
-              Array.from(newState.expandedNodes),
-            );
             return newState;
           });
-        } else {
-          console.log("TreeView: Selected line has no children to toggle");
         }
         return true;
       } else if (input === "e") {
@@ -260,26 +199,19 @@ export function TreeView({
   // Register keyboard handler with parent
   useEffect(() => {
     if (onKeyboardHandlerReady) {
-      console.log("TreeView: Registering keyboard handler with parent");
       // Create a wrapper function that prevents invalid calls
       const wrappedHandler = (input: string, key: KeyboardInput): boolean => {
-        if (typeof input !== "string" || !key) {
-          console.log(
-            "TreeView: Invalid handler call - input:",
-            typeof input,
-            "key:",
-            key,
-          );
+        if (
+          typeof input !== "string" ||
+          !key ||
+          input === null ||
+          input === undefined
+        ) {
           return false;
         }
         return handleTreeKeyboardInput(input, key);
       };
       onKeyboardHandlerReady(wrappedHandler);
-    } else {
-      console.log(
-        "TreeView: onKeyboardHandlerReady is not available:",
-        onKeyboardHandlerReady,
-      );
     }
   }, [onKeyboardHandlerReady, handleTreeKeyboardInput]);
 
