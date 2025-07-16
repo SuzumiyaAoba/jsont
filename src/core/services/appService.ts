@@ -79,14 +79,10 @@ export class AppService {
       ? enableKeyboard
       : enableKeyboard && rawModeSupported;
 
-    const renderOptions: {
-      stdout: NodeJS.WriteStream;
-      stderr: NodeJS.WriteStream;
-      stdin?: NodeJS.ReadStream;
-    } = {
+    const renderOptions = {
       stdout: process.stdout,
       stderr: process.stderr,
-      stdin: actualKeyboardEnabled ? process.stdin : undefined,
+      ...(actualKeyboardEnabled ? { stdin: process.stdin } : {}),
     };
 
     // Provide stdin for keyboard input if enabled

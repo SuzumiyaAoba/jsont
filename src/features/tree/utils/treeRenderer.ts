@@ -3,7 +3,6 @@
  */
 
 import type { JsonValue } from "@core/types/index";
-import type { JsonSchemaProperty } from "@features/schema/utils/schemaUtils";
 import type {
   TreeDisplayOptions,
   TreeLine,
@@ -114,8 +113,8 @@ export function renderTreeLines(
  */
 function formatKey(
   key: string | number | null,
-  type: "object" | "array" | "primitive",
-  options: TreeDisplayOptions,
+  _type: "object" | "array" | "primitive",
+  _options: TreeDisplayOptions,
 ): string {
   if (key === null) return ""; // Root node
 

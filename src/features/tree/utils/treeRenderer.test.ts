@@ -20,6 +20,7 @@ describe("treeRenderer", () => {
         showPrimitiveValues: true,
         maxValueLength: 50,
         useUnicodeTree: true,
+        showSchemaTypes: false,
       };
 
       const lines = renderTreeLines(tree, options);
@@ -45,6 +46,7 @@ describe("treeRenderer", () => {
         showPrimitiveValues: true,
         maxValueLength: 50,
         useUnicodeTree: true,
+        showSchemaTypes: false,
       };
 
       const lines = renderTreeLines(tree, options);
@@ -76,6 +78,7 @@ describe("treeRenderer", () => {
         showPrimitiveValues: true,
         maxValueLength: 50,
         useUnicodeTree: true,
+        showSchemaTypes: false,
       };
 
       const lines = renderTreeLines(tree, options);
@@ -103,6 +106,7 @@ describe("treeRenderer", () => {
         showPrimitiveValues: true,
         maxValueLength: 50,
         useUnicodeTree: false,
+        showSchemaTypes: false,
       };
 
       const lines = renderTreeLines(tree, options);
@@ -119,6 +123,7 @@ describe("treeRenderer", () => {
         showPrimitiveValues: true,
         maxValueLength: 10,
         useUnicodeTree: true,
+        showSchemaTypes: false,
       };
 
       const lines = renderTreeLines(tree, options);
@@ -137,6 +142,7 @@ describe("treeRenderer", () => {
         showPrimitiveValues: false,
         maxValueLength: 50,
         useUnicodeTree: true,
+        showSchemaTypes: false,
       };
 
       const lines = renderTreeLines(tree, options);
