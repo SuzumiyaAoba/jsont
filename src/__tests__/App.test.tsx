@@ -50,7 +50,9 @@ describe("App", () => {
     );
 
     const output = lastFrame();
-    expect(output).toContain("No JSON data to display");
+    // In TreeView mode, null data shows as "null" instead of "No JSON data to display"
+    expect(output).toContain("TREE VIEW MODE");
+    expect(output).toContain("null");
   });
 
   it("should show JSON content when keyboard is enabled", () => {
@@ -77,7 +79,8 @@ describe("App", () => {
     }
 
     const output = lastFrame();
-    expect(output).toContain("Keyboard input unavailable");
+    // The keyboard unavailable message should still be present
+    expect(output).toContain("Keyboard input not available");
   });
 
   it("should handle null data gracefully", () => {
@@ -86,6 +89,8 @@ describe("App", () => {
     );
 
     const output = lastFrame();
-    expect(output).toContain("No JSON data to display");
+    // In TreeView mode, null data shows as "null" instead of "No JSON data to display"
+    expect(output).toContain("TREE VIEW MODE");
+    expect(output).toContain("null");
   });
 });

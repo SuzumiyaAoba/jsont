@@ -29,6 +29,7 @@ export interface TreeDisplayOptions {
   showPrimitiveValues: boolean;
   maxValueLength: number;
   useUnicodeTree: boolean;
+  showSchemaTypes: boolean; // Toggle for JSON Schema type display
 }
 
 export interface TreeLine {
@@ -40,4 +41,5 @@ export interface TreeLine {
   type: "object" | "array" | "primitive";
   isExpanded?: boolean;
   hasChildren: boolean;
+  schemaType?: string; // JSON Schema type (string, number, boolean, etc.)
 }

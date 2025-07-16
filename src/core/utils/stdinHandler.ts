@@ -296,6 +296,77 @@ async function setupMockStdinForInk(): Promise<boolean> {
 }
 
 /**
+ * Set up stdin for Ink compatibility in file mode
+ * This is simpler than the full reinitialize process since stdin hasn't been consumed
+ */
+async function setupStdinForInkCompatibility(): Promise<boolean> {
+  try {
+    // Force TTY properties for Ink compatibility
+    Object.defineProperty(process.stdin, "isTTY", {
+      value: true,
+      writable: true,
+      configurable: true,
+    });
+
+    // Provide a working setRawMode function
+    if (!process.stdin.setRawMode) {
+      Object.defineProperty(process.stdin, "setRawMode", {
+        value: function (mode: boolean) {
+          try {
+            // Try to actually set raw mode if possible
+            if (this.isTTY && typeof this.setRawMode === "function") {
+              return this.setRawMode(mode);
+            }
+          } catch {
+            // Silently handle setRawMode errors
+          }
+          return this;
+        },
+        writable: true,
+        configurable: true,
+      });
+    }
+
+    // Provide required ref/unref functions for Ink
+    if (!process.stdin.ref) {
+      Object.defineProperty(process.stdin, "ref", {
+        value: function () {
+          return this;
+        },
+        writable: true,
+        configurable: true,
+      });
+    }
+
+    if (!process.stdin.unref) {
+      Object.defineProperty(process.stdin, "unref", {
+        value: function () {
+          return this;
+        },
+        writable: true,
+        configurable: true,
+      });
+    }
+
+    // Ensure stdin is readable and resumed
+    Object.defineProperty(process.stdin, "readable", {
+      value: true,
+      writable: true,
+      configurable: true,
+    });
+
+    // Resume stdin to make it available for reading
+    if (process.stdin.resume) {
+      process.stdin.resume();
+    }
+
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/**
  * Set up minimal stdin interface for Ink compatibility
  */
 async function setupMinimalStdin(): Promise<boolean> {
@@ -353,14 +424,15 @@ export async function readFromFile(filePath: string): Promise<StdinReadResult> {
 
     const parseResult = parseJsonWithValidation(inputData);
 
-    // For file input, we don't need to reinitialize stdin
-    // It should be available for keyboard input as-is
+    // For file input, we still need to ensure stdin is properly set up for Ink
+    // Even though we didn't consume stdin, it might need TTY setup for useInput to work
+    const keyboardAvailable = await setupStdinForInkCompatibility();
 
     return {
       success: parseResult.success,
       data: parseResult.data,
       error: parseResult.error,
-      canUseKeyboard: true, // Always enable keyboard for file input
+      canUseKeyboard: keyboardAvailable, // Use actual keyboard setup result
     };
   } catch (error) {
     return {

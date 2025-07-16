@@ -2,6 +2,8 @@
  * Tree rendering utilities
  */
 
+import type { JsonValue } from "@core/types/index";
+import type { JsonSchemaProperty } from "@features/schema/utils/schemaUtils";
 import type {
   TreeDisplayOptions,
   TreeLine,
@@ -11,18 +13,33 @@ import type {
 
 const TREE_SYMBOLS = {
   unicode: {
-    branch: "├── ",
-    lastBranch: "└── ",
-    vertical: "│   ",
-    space: "    ",
+    branch: "├─ ",
+    lastBranch: "└─ ",
+    vertical: "│  ",
+    space: "   ",
   },
   ascii: {
     branch: "|-- ",
     lastBranch: "`-- ",
-    vertical: "|   ",
-    space: "    ",
+    vertical: "|  ",
+    space: "   ",
   },
 };
+
+/**
+ * Infer JSON Schema type for a value
+ */
+function inferSchemaType(value: JsonValue | null): string {
+  if (value === null) return "null";
+  if (typeof value === "boolean") return "boolean";
+  if (typeof value === "number") {
+    return Number.isInteger(value) ? "integer" : "number";
+  }
+  if (typeof value === "string") return "string";
+  if (Array.isArray(value)) return "array";
+  if (typeof value === "object") return "object";
+  return "unknown";
+}
 
 /**
  * Renders tree state to display lines
@@ -51,14 +68,19 @@ export function renderTreeLines(
       type: node.type,
       isExpanded: node.isExpanded,
       hasChildren: node.hasChildren,
+      schemaType: inferSchemaType(node.value),
     };
 
     lines.push(line);
 
     // Render children if expanded
     if (node.isExpanded && node.children.length > 0) {
+      // For root node (level 0), don't add any prefix before the branch symbol
+      const basePrefix = ancestorPrefixes.join("");
       const childPrefix =
-        ancestorPrefixes.join("") + (isLast ? symbols.space : symbols.vertical);
+        node.level === 0
+          ? ""
+          : basePrefix + (isLast ? symbols.space : symbols.vertical);
 
       node.children.forEach((child, index) => {
         const isLastChild = index === node.children.length - 1;
@@ -67,10 +89,13 @@ export function renderTreeLines(
           : symbols.branch;
         const fullChildPrefix = childPrefix + childPrefixSymbol;
 
-        renderNode(child, fullChildPrefix, isLastChild, [
-          ...ancestorPrefixes,
-          isLast ? symbols.space : symbols.vertical,
-        ]);
+        // For root node children, don't add vertical/space to ancestor prefixes
+        const newAncestorPrefixes =
+          node.level === 0
+            ? []
+            : [...ancestorPrefixes, isLast ? symbols.space : symbols.vertical];
+
+        renderNode(child, fullChildPrefix, isLastChild, newAncestorPrefixes);
       });
     }
   }
@@ -94,16 +119,14 @@ function formatKey(
 ): string {
   if (key === null) return ""; // Root node
 
-  if (type === "primitive" && typeof key === "number") {
-    return options.showArrayIndices ? `[${key}]` : "";
+  // For tree command style, remove quotes and brackets
+  if (typeof key === "number") {
+    return String(key);
   }
 
   if (typeof key === "string") {
-    return `"${key}"`;
-  }
-
-  if (typeof key === "number") {
-    return options.showArrayIndices ? `[${key}]` : "";
+    // Remove quotes for cleaner tree display
+    return key.replace(/^"(.*)"$/, "$1");
   }
 
   return String(key);
@@ -117,21 +140,21 @@ function formatValue(
   type: "object" | "array" | "primitive",
   options: TreeDisplayOptions,
 ): string {
-  if (type === "object") {
-    if (value === null || value === undefined) return "null";
-    const keys = Object.keys(value);
-    return `{${keys.length} ${keys.length === 1 ? "key" : "keys"}}`;
+  // For tree command style, don't show container summaries for objects/arrays
+  // They will be shown as directory-like entries
+  if (type === "object" || type === "array") {
+    return "";
   }
 
-  if (type === "array") {
-    const length = Array.isArray(value) ? value.length : 0;
-    return `[${length} ${length === 1 ? "item" : "items"}]`;
-  }
-
-  // Primitive value
+  // Primitive value - remove quotes for cleaner display
   if (!options.showPrimitiveValues) return "";
 
   let formatted = JSON.stringify(value);
+
+  // Remove quotes from string values for cleaner tree display
+  if (typeof value === "string") {
+    formatted = value;
+  }
 
   if (formatted.length > options.maxValueLength) {
     formatted = `${formatted.substring(0, options.maxValueLength - 3)}...`;
@@ -143,17 +166,37 @@ function formatValue(
 /**
  * Gets the display text for a tree line
  */
-export function getTreeLineText(line: TreeLine): string {
-  const keyPart = line.key ? `${line.key}: ` : "";
-  const valuePart = line.value || "";
+export function getTreeLineText(
+  line: TreeLine,
+  options?: TreeDisplayOptions,
+): string {
+  // For tree command style, show key names for objects/arrays and values for primitives
+  let displayText = "";
 
-  // Add expand/collapse indicator for containers
-  let indicator = "";
-  if (line.hasChildren) {
-    indicator = line.isExpanded ? "▼ " : "▶ ";
+  if (line.type === "primitive") {
+    // For primitive values, show key and value like "name: John"
+    if (line.key) {
+      displayText = `${line.key}: ${line.value}`;
+    } else {
+      // Root primitive value
+      displayText = line.value || "";
+    }
+  } else {
+    // For objects and arrays, show just the key name like a directory
+    if (line.key) {
+      displayText = line.key;
+    } else {
+      // Root object/array: "." for object, "1:" for array (indicating it's a sequence)
+      displayText = line.type === "object" ? "." : "1:";
+    }
   }
 
-  return line.prefix + indicator + keyPart + valuePart;
+  // Add schema type if enabled
+  if (options?.showSchemaTypes && line.schemaType) {
+    displayText += ` <${line.schemaType}>`;
+  }
+
+  return line.prefix + displayText;
 }
 
 /**

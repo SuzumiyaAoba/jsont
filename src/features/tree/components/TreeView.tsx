@@ -2,9 +2,16 @@
  * Tree view component for displaying JSON in tree structure
  */
 
+import type { KeyboardInput } from "@core/types/app";
 import type { JsonValue } from "@core/types/index";
 import { Box, Text } from "ink";
-import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  type ReactElement,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import type {
   TreeDisplayOptions,
   TreeLine,
@@ -30,7 +37,7 @@ export interface TreeViewProps {
   searchTerm?: string;
   options?: Partial<TreeDisplayOptions>;
   onKeyboardHandlerReady?: (
-    handler: (input: string, key: any) => boolean,
+    handler: (input: string, key: KeyboardInput) => boolean,
   ) => void;
 }
 
@@ -39,6 +46,7 @@ const DEFAULT_OPTIONS: TreeDisplayOptions = {
   showPrimitiveValues: true,
   maxValueLength: 50,
   useUnicodeTree: true,
+  showSchemaTypes: false,
 };
 
 export function TreeView({
@@ -49,12 +57,14 @@ export function TreeView({
   options = {},
   onKeyboardHandlerReady,
 }: TreeViewProps) {
-  const displayOptions = { ...DEFAULT_OPTIONS, ...options };
   const [treeState, setTreeState] = useState<TreeViewState>(() =>
     buildTreeFromJson(data || null, { expandLevel: 2 }),
   );
   const [scrollOffset, setScrollOffset] = useState(0);
   const [selectedLineIndex, setSelectedLineIndex] = useState(0);
+  const [showSchemaTypes, setShowSchemaTypes] = useState(false);
+
+  const displayOptions = { ...DEFAULT_OPTIONS, ...options, showSchemaTypes };
 
   // Generate tree lines
   const treeLines = renderTreeLines(treeState, displayOptions);
@@ -65,25 +75,32 @@ export function TreeView({
       })
     : treeLines;
 
-  // Calculate visible lines
+  // Calculate visible lines and ensure bounds
+  const actualMaxScroll = Math.max(0, filteredLines.length - height);
+  const boundedScrollOffset = Math.min(scrollOffset, actualMaxScroll);
+  const boundedSelectedIndex = Math.min(
+    selectedLineIndex,
+    filteredLines.length - 1,
+  );
+
   const visibleLines = getVisibleTreeLines(
     filteredLines,
-    scrollOffset,
-    scrollOffset + height,
+    boundedScrollOffset,
+    boundedScrollOffset + height,
   );
-  const maxScroll = Math.max(0, filteredLines.length - height);
+  const maxScroll = actualMaxScroll;
 
   // Use refs to maintain stable references
   const stateRef = useRef({
-    selectedLineIndex,
-    scrollOffset,
+    selectedLineIndex: boundedSelectedIndex,
+    scrollOffset: boundedScrollOffset,
     filteredLines: [] as TreeLine[],
     height,
     maxScroll: 0,
   });
   stateRef.current = {
-    selectedLineIndex,
-    scrollOffset,
+    selectedLineIndex: boundedSelectedIndex,
+    scrollOffset: boundedScrollOffset,
     filteredLines,
     height,
     maxScroll,
@@ -91,10 +108,23 @@ export function TreeView({
 
   // Handle keyboard navigation using refs for stable state access
   const handleTreeKeyboardInput = useCallback(
-    (input: string, key: any): boolean => {
+    (input: string, key: KeyboardInput): boolean => {
       if (!key) {
+        console.log(
+          "TreeView: handleTreeKeyboardInput called with undefined key",
+        );
+        console.log("TreeView: Call stack:", new Error().stack);
         return false; // Safety check for undefined key
       }
+
+      console.log(
+        "TreeView: handleTreeKeyboardInput called with:",
+        JSON.stringify(input),
+        "key:",
+        JSON.stringify(key),
+        "active keys:",
+        Object.keys(key).filter((k) => key[k]),
+      );
 
       const {
         selectedLineIndex,
@@ -105,37 +135,96 @@ export function TreeView({
       } = stateRef.current;
 
       if (key.upArrow || (input === "k" && !key.ctrl)) {
-        setSelectedLineIndex((prev) => Math.max(0, prev - 1));
-        if (selectedLineIndex <= scrollOffset) {
-          setScrollOffset((prev) => Math.max(0, prev - 1));
+        console.log(
+          "TreeView: Up/k key - moving from index",
+          selectedLineIndex,
+          "to",
+          Math.max(0, selectedLineIndex - 1),
+        );
+        const newIndex = Math.max(0, selectedLineIndex - 1);
+        setSelectedLineIndex(newIndex);
+        if (newIndex <= scrollOffset) {
+          setScrollOffset(Math.max(0, scrollOffset - 1));
         }
         return true;
       } else if (key.downArrow || (input === "j" && !key.ctrl)) {
-        setSelectedLineIndex((prev) =>
-          Math.min(filteredLines.length - 1, prev + 1),
+        console.log(
+          "TreeView: Down/j key - moving from index",
+          selectedLineIndex,
+          "to",
+          Math.min(filteredLines.length - 1, selectedLineIndex + 1),
         );
-        if (selectedLineIndex >= scrollOffset + height - 1) {
-          setScrollOffset((prev) => Math.min(maxScroll, prev + 1));
+        const newIndex = Math.min(
+          filteredLines.length - 1,
+          selectedLineIndex + 1,
+        );
+        setSelectedLineIndex(newIndex);
+        if (newIndex >= scrollOffset + height - 1) {
+          setScrollOffset(Math.min(maxScroll, scrollOffset + 1));
         }
         return true;
       } else if (key.pageUp || (key.ctrl && input === "b")) {
         const newIndex = Math.max(0, selectedLineIndex - height);
+        const newScrollOffset = Math.max(0, newIndex - Math.floor(height / 2));
         setSelectedLineIndex(newIndex);
-        setScrollOffset(Math.max(0, newIndex - Math.floor(height / 2)));
+        setScrollOffset(newScrollOffset);
         return true;
       } else if (key.pageDown || (key.ctrl && input === "f")) {
         const newIndex = Math.min(
           filteredLines.length - 1,
           selectedLineIndex + height,
         );
+        const newScrollOffset = Math.min(
+          maxScroll,
+          newIndex - Math.floor(height / 2),
+        );
         setSelectedLineIndex(newIndex);
-        setScrollOffset(Math.min(maxScroll, newIndex - Math.floor(height / 2)));
+        setScrollOffset(newScrollOffset);
         return true;
       } else if (key.return || input === " ") {
         // Toggle expansion of selected node
+        console.log(
+          "TreeView: Space/Enter pressed for toggle. Input:",
+          JSON.stringify(input),
+          "Return key:",
+          key.return,
+          "filteredLines length:",
+          filteredLines.length,
+          "selectedLineIndex:",
+          selectedLineIndex,
+        );
         const selectedLine = filteredLines[selectedLineIndex];
+        console.log(
+          "TreeView: selectedLine:",
+          selectedLine
+            ? {
+                id: selectedLine.id,
+                key: selectedLine.key,
+                hasChildren: selectedLine.hasChildren,
+                isExpanded: selectedLine.isExpanded,
+                type: selectedLine.type,
+              }
+            : "undefined",
+        );
         if (selectedLine?.hasChildren) {
-          setTreeState((prev) => toggleNodeExpansion(prev, selectedLine.id));
+          console.log(
+            "TreeView: Toggling node expansion for:",
+            selectedLine.id,
+          );
+          setTreeState((prev) => {
+            console.log(
+              "TreeView: Before toggle - expanded nodes:",
+              Array.from(prev.expandedNodes),
+            );
+            const newState = toggleNodeExpansion(prev, selectedLine.id);
+            console.log(
+              "TreeView: After toggle - expanded nodes:",
+              Array.from(newState.expandedNodes),
+            );
+            return newState;
+          });
+        } else {
+          console.log("TreeView: Selected line has no children to toggle");
         }
         return true;
       } else if (input === "e") {
@@ -156,25 +245,58 @@ export function TreeView({
         setSelectedLineIndex(filteredLines.length - 1);
         setScrollOffset(maxScroll);
         return true;
+      } else if (input === "t") {
+        // Toggle schema type display
+        setShowSchemaTypes((prev) => !prev);
+        return true;
       }
       return false;
     },
-    [], // Empty dependency array since we're using ref
+    [], // State setters are stable in React and don't need to be in the dependency array
   );
+
+  // Remove direct useInput - let App.tsx handle all input and delegate to us
 
   // Register keyboard handler with parent
   useEffect(() => {
     if (onKeyboardHandlerReady) {
-      onKeyboardHandlerReady(handleTreeKeyboardInput);
+      console.log("TreeView: Registering keyboard handler with parent");
+      // Create a wrapper function that prevents invalid calls
+      const wrappedHandler = (input: string, key: KeyboardInput): boolean => {
+        if (typeof input !== "string" || !key) {
+          console.log(
+            "TreeView: Invalid handler call - input:",
+            typeof input,
+            "key:",
+            key,
+          );
+          return false;
+        }
+        return handleTreeKeyboardInput(input, key);
+      };
+      onKeyboardHandlerReady(wrappedHandler);
+    } else {
+      console.log(
+        "TreeView: onKeyboardHandlerReady is not available:",
+        onKeyboardHandlerReady,
+      );
     }
   }, [onKeyboardHandlerReady, handleTreeKeyboardInput]);
 
   // Update tree when data changes
   useEffect(() => {
-    setTreeState(buildTreeFromJson(data || null, { expandLevel: 2 }));
+    const newTreeState = buildTreeFromJson(data || null, { expandLevel: 2 });
+    setTreeState(newTreeState);
     setScrollOffset(0);
     setSelectedLineIndex(0);
   }, [data]);
+
+  // Ensure selected index is valid when filtered lines change
+  useEffect(() => {
+    if (filteredLines.length > 0 && selectedLineIndex >= filteredLines.length) {
+      setSelectedLineIndex(Math.max(0, filteredLines.length - 1));
+    }
+  }, [filteredLines.length, selectedLineIndex]);
 
   // Search highlighting
   const matchingNodes = searchTerm
@@ -187,18 +309,121 @@ export function TreeView({
       {/* TreeView identification header */}
       <Box width={width}>
         <Text color="blue" bold>
-          TREE VIEW MODE (j/k: navigate, Space: toggle)
+          TREE VIEW MODE (j/k: navigate, Space: toggle, t: types)
         </Text>
       </Box>
 
-      {/* Simple data display */}
-      <Box width={width}>
-        <Text color="white">
-          {data ? JSON.stringify(data, null, 2) : "No data"}
-        </Text>
-      </Box>
+      {/* Tree structure display */}
+      {visibleLines.map((line, index) => {
+        const lineIndex = boundedScrollOffset + index;
+        const isSelected = lineIndex === boundedSelectedIndex;
+        const isMatched = matchingNodes.has(line.id);
+
+        return (
+          <Box key={line.id} width={width}>
+            <Text color={isSelected ? "yellow" : "gray"}>
+              {isSelected ? ">" : " "}
+            </Text>
+            {renderTreeLineWithColors(
+              line,
+              isSelected,
+              isMatched,
+              displayOptions,
+            )}
+          </Box>
+        );
+      })}
+
+      {/* Show help text if no lines */}
+      {filteredLines.length === 0 && (
+        <Box
+          justifyContent="center"
+          alignItems="center"
+          height={Math.max(1, height - 1)}
+        >
+          <Text color="gray">
+            {searchTerm ? "No matches found" : "No data to display"}
+          </Text>
+        </Box>
+      )}
     </Box>
   );
+}
+
+/**
+ * Renders a tree line with different colors for keys and values
+ */
+function renderTreeLineWithColors(
+  line: TreeLine,
+  isSelected: boolean,
+  isMatched: boolean,
+  options: TreeDisplayOptions,
+): ReactElement {
+  const baseProps = {
+    ...(isSelected ? { bgColor: "blue", color: "white" } : {}),
+    bold: isSelected,
+  };
+
+  if (line.type === "primitive" && line.key) {
+    // For primitive values, separate key and value with different colors
+    const keyPart = `${line.key}:`;
+    const valuePart = ` ${line.value}`;
+    const typePart =
+      options.showSchemaTypes && line.schemaType ? ` <${line.schemaType}>` : "";
+
+    return (
+      <>
+        <Text
+          {...baseProps}
+          color={isSelected ? "white" : getKeyColor(isMatched)}
+        >
+          {line.prefix}
+          {keyPart}
+        </Text>
+        <Text {...baseProps} color={isSelected ? "white" : getValueColor()}>
+          {valuePart}
+        </Text>
+        {typePart && (
+          <Text {...baseProps} color={isSelected ? "white" : getTypeColor()}>
+            {typePart}
+          </Text>
+        )}
+      </>
+    );
+  } else {
+    // For objects, arrays, or root primitives, use single color
+    const text = getTreeLineText(line, options);
+    return (
+      <Text
+        {...baseProps}
+        color={isSelected ? "white" : getLineColor(line, isMatched)}
+      >
+        {text}
+      </Text>
+    );
+  }
+}
+
+/**
+ * Gets the color for keys
+ */
+function getKeyColor(isMatched: boolean): string {
+  if (isMatched) return "yellow";
+  return "blue"; // Keys in blue for better distinction
+}
+
+/**
+ * Gets the color for values (terminal default)
+ */
+function getValueColor(): string {
+  return "white"; // Terminal default color
+}
+
+/**
+ * Gets the color for schema types
+ */
+function getTypeColor(): string {
+  return "gray"; // Schema types in gray for subtle indication
 }
 
 /**
@@ -209,11 +434,11 @@ function getLineColor(line: TreeLine, isMatched: boolean): string {
 
   switch (line.type) {
     case "object":
-      return "blue";
+      return "blue"; // Object names in blue
     case "array":
-      return "cyan";
+      return "blue"; // Array names in blue (consistent with objects)
     case "primitive":
-      return "green";
+      return "white"; // Use terminal default for primitive values
     default:
       return "white";
   }
@@ -230,5 +455,6 @@ export function useTreeViewShortcuts() {
     e: "Expand all",
     c: "Collapse all",
     "g/G": "Go to first/last item",
+    t: "Toggle schema type display",
   };
 }

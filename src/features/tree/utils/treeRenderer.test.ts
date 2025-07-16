@@ -26,10 +26,15 @@ describe("treeRenderer", () => {
 
       expect(lines).toHaveLength(3); // root + 2 properties
       expect(lines[0]?.type).toBe("object");
-      expect(lines[1]?.key).toBe('"name"');
-      expect(lines[1]?.value).toBe('"John"');
-      expect(lines[2]?.key).toBe('"age"');
+      expect(lines[1]?.key).toBe("name");
+      expect(lines[1]?.value).toBe("John");
+      expect(lines[2]?.key).toBe("age");
       expect(lines[2]?.value).toBe("30");
+
+      // Test actual display text with proper indentation
+      expect(getTreeLineText(lines[0]!)).toBe(".");
+      expect(getTreeLineText(lines[1]!)).toBe("├─ name: John");
+      expect(getTreeLineText(lines[2]!)).toBe("└─ age: 30");
     });
 
     it("should render array with indices", () => {
@@ -46,10 +51,16 @@ describe("treeRenderer", () => {
 
       expect(lines).toHaveLength(4); // root + 3 items
       expect(lines[0]?.type).toBe("array");
-      expect(lines[1]?.key).toBe("[0]");
-      expect(lines[1]?.value).toBe('"a"');
-      expect(lines[2]?.key).toBe("[1]");
-      expect(lines[2]?.value).toBe('"b"');
+      expect(lines[1]?.key).toBe("0");
+      expect(lines[1]?.value).toBe("a");
+      expect(lines[2]?.key).toBe("1");
+      expect(lines[2]?.value).toBe("b");
+
+      // Test actual display text with proper indentation for array
+      expect(getTreeLineText(lines[0]!)).toBe("1:");
+      expect(getTreeLineText(lines[1]!)).toBe("├─ 0: a");
+      expect(getTreeLineText(lines[2]!)).toBe("├─ 1: b");
+      expect(getTreeLineText(lines[3]!)).toBe("└─ 2: c");
     });
 
     it("should handle nested structures", () => {
@@ -71,8 +82,17 @@ describe("treeRenderer", () => {
 
       expect(lines.length).toBeGreaterThan(3);
       expect(lines[0]?.type).toBe("object");
-      expect(lines[1]?.key).toBe('"user"');
+      expect(lines[1]?.key).toBe("user");
       expect(lines[1]?.type).toBe("object");
+
+      // Test nested structure indentation
+      expect(getTreeLineText(lines[0]!)).toBe("."); // root object
+      expect(getTreeLineText(lines[1]!)).toBe("└─ user"); // user object (no extra indentation)
+      // The nested elements should have proper indentation from the user level
+      const userNameLine = lines.find((line) => line.key === "name");
+      const contactsLine = lines.find((line) => line.key === "contacts");
+      expect(userNameLine?.prefix).toContain("├─");
+      expect(contactsLine?.prefix).toContain("└─");
     });
 
     it("should use ASCII symbols when useUnicodeTree is false", () => {
@@ -131,47 +151,129 @@ describe("treeRenderer", () => {
       const line = {
         id: "test",
         level: 1,
-        prefix: "├── ",
-        key: '"name"',
-        value: '"John"',
+        prefix: "├─ ",
+        key: "name",
+        value: "John",
         type: "primitive" as const,
         hasChildren: false,
       };
 
       const text = getTreeLineText(line);
-      expect(text).toBe('├── "name": "John"');
+      expect(text).toBe("├─ name: John");
     });
 
-    it("should add expand indicator for expandable nodes", () => {
+    it("should show key name for object nodes", () => {
       const line = {
         id: "test",
         level: 1,
-        prefix: "├── ",
-        key: '"user"',
-        value: "{2 keys}",
+        prefix: "├─ ",
+        key: "user",
+        value: "",
         type: "object" as const,
         isExpanded: true,
         hasChildren: true,
       };
 
       const text = getTreeLineText(line);
-      expect(text).toBe('├── ▼ "user": {2 keys}');
+      expect(text).toBe("├─ user");
     });
 
-    it("should show collapse indicator for collapsed nodes", () => {
+    it("should show key name for array nodes", () => {
       const line = {
         id: "test",
         level: 1,
-        prefix: "├── ",
-        key: '"user"',
-        value: "{2 keys}",
-        type: "object" as const,
+        prefix: "├─ ",
+        key: "items",
+        value: "",
+        type: "array" as const,
         isExpanded: false,
         hasChildren: true,
       };
 
       const text = getTreeLineText(line);
-      expect(text).toBe('├── ▶ "user": {2 keys}');
+      expect(text).toBe("├─ items");
+    });
+
+    it("should show '.' for root object nodes", () => {
+      const line = {
+        id: "root",
+        level: 0,
+        prefix: "",
+        key: "",
+        value: "",
+        type: "object" as const,
+        isExpanded: true,
+        hasChildren: true,
+      };
+
+      const text = getTreeLineText(line);
+      expect(text).toBe(".");
+    });
+
+    it("should show '1:' for root array nodes", () => {
+      const line = {
+        id: "root",
+        level: 0,
+        prefix: "",
+        key: "",
+        value: "",
+        type: "array" as const,
+        isExpanded: true,
+        hasChildren: true,
+      };
+
+      const text = getTreeLineText(line);
+      expect(text).toBe("1:");
+    });
+
+    it("should show schema types when enabled", () => {
+      const line = {
+        id: "test",
+        level: 1,
+        prefix: "├─ ",
+        key: "name",
+        value: "John",
+        type: "primitive" as const,
+        isExpanded: false,
+        hasChildren: false,
+        schemaType: "string",
+      };
+
+      const options = {
+        showArrayIndices: true,
+        showPrimitiveValues: true,
+        maxValueLength: 50,
+        useUnicodeTree: true,
+        showSchemaTypes: true,
+      };
+
+      const text = getTreeLineText(line, options);
+      expect(text).toBe("├─ name: John <string>");
+    });
+
+    it("should not show schema types when disabled", () => {
+      const line = {
+        id: "test",
+        level: 1,
+        prefix: "├─ ",
+        key: "name",
+        value: "John",
+        type: "primitive" as const,
+        isExpanded: false,
+        hasChildren: false,
+        schemaType: "string",
+      };
+
+      const options = {
+        showArrayIndices: true,
+        showPrimitiveValues: true,
+        maxValueLength: 50,
+        useUnicodeTree: true,
+        showSchemaTypes: false,
+      };
+
+      const text = getTreeLineText(line, options);
+      expect(text).toBe("├─ name: John");
     });
   });
 
