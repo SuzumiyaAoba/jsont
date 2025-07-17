@@ -366,7 +366,12 @@ function renderTreeLineWithColors(
     bold: isSelected,
   };
 
-  if (line.type === "primitive" && line.key) {
+  if (
+    line.type === "primitive" &&
+    line.key !== null &&
+    line.key !== undefined &&
+    line.key !== ""
+  ) {
     // For primitive values, separate key and value with different colors
     const keyPart = `${line.key}:`;
     const valuePart = ` ${line.value}`;

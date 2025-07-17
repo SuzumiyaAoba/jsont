@@ -174,7 +174,7 @@ export function getTreeLineText(
 
   if (line.type === "primitive") {
     // For primitive values, show key and value like "name: John"
-    if (line.key) {
+    if (line.key !== null && line.key !== undefined && line.key !== "") {
       displayText = `${line.key}: ${line.value}`;
     } else {
       // Root primitive value
@@ -182,7 +182,7 @@ export function getTreeLineText(
     }
   } else {
     // For objects and arrays, show just the key name like a directory
-    if (line.key) {
+    if (line.key !== null && line.key !== undefined && line.key !== "") {
       displayText = line.key;
     } else {
       // Root object/array: "." for object, "1:" for array (indicating it's a sequence)
