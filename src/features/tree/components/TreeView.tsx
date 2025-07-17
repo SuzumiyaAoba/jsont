@@ -9,6 +9,7 @@ import {
   type ReactElement,
   useCallback,
   useEffect,
+  useMemo,
   useRef,
   useState,
 } from "react";
@@ -30,12 +31,21 @@ import {
   searchTreeNodes,
 } from "../utils/treeRenderer";
 
+/**
+ * Props interface for the TreeView component
+ */
 export interface TreeViewProps {
+  /** JSON data to display in tree format */
   data: JsonValue | null;
+  /** Height of the tree view in terminal lines (default: 20) */
   height?: number;
+  /** Width of the tree view in characters (default: 80) */
   width?: number;
+  /** Search term to filter tree nodes */
   searchTerm?: string;
+  /** Display options for customizing tree appearance */
   options?: Partial<TreeDisplayOptions>;
+  /** Callback to register keyboard input handler with parent component */
   onKeyboardHandlerReady?: (
     handler: (input: string, key: KeyboardInput) => boolean,
   ) => void;
@@ -49,6 +59,19 @@ const DEFAULT_OPTIONS: TreeDisplayOptions = {
   showSchemaTypes: false,
 };
 
+/**
+ * TreeView component for displaying JSON data in an interactive tree structure
+ *
+ * Features:
+ * - Keyboard navigation (j/k, arrows, page up/down, g/G)
+ * - Node expansion/collapse (Space/Enter, e/c for all)
+ * - Search filtering
+ * - Schema type display toggle (t)
+ * - Scrolling support for large datasets
+ *
+ * @param props - TreeView component props
+ * @returns JSX element containing the tree view interface
+ */
 export function TreeView({
   data,
   height = 20,
@@ -64,16 +87,32 @@ export function TreeView({
   const [selectedLineIndex, setSelectedLineIndex] = useState(0);
   const [showSchemaTypes, setShowSchemaTypes] = useState(false);
 
-  const displayOptions = { ...DEFAULT_OPTIONS, ...options, showSchemaTypes };
+  // Memoize display options to prevent unnecessary recalculations
+  const displayOptions = useMemo(
+    () => ({
+      ...DEFAULT_OPTIONS,
+      ...options,
+      showSchemaTypes,
+    }),
+    [options, showSchemaTypes],
+  );
 
-  // Generate tree lines
-  const treeLines = renderTreeLines(treeState, displayOptions);
-  const filteredLines = searchTerm
-    ? treeLines.filter((line) => {
-        const text = getTreeLineText(line).toLowerCase();
-        return text.includes(searchTerm.toLowerCase());
-      })
-    : treeLines;
+  // Memoize tree lines generation for performance
+  const treeLines = useMemo(
+    () => renderTreeLines(treeState, displayOptions),
+    [treeState, displayOptions],
+  );
+
+  // Memoize search filtering for performance
+  const filteredLines = useMemo(() => {
+    if (!searchTerm) return treeLines;
+
+    const lowerSearchTerm = searchTerm.toLowerCase();
+    return treeLines.filter((line) => {
+      const text = getTreeLineText(line).toLowerCase();
+      return text.includes(lowerSearchTerm);
+    });
+  }, [treeLines, searchTerm]);
 
   // Calculate visible lines and ensure bounds
   const actualMaxScroll = Math.max(0, filteredLines.length - height);
@@ -109,111 +148,142 @@ export function TreeView({
   // Handle keyboard navigation using refs for stable state access
   const handleTreeKeyboardInput = useCallback(
     (input: string, key: KeyboardInput): boolean => {
-      if (!key) {
-        return false; // Safety check for undefined key
+      // Comprehensive input validation
+      if (
+        !key ||
+        typeof input !== "string" ||
+        input === null ||
+        input === undefined
+      ) {
+        return false; // Safety check for invalid input
       }
 
-      const {
-        selectedLineIndex,
-        scrollOffset,
-        filteredLines,
-        height,
-        maxScroll,
-      } = stateRef.current;
-
-      if (key.upArrow || (input === "k" && !key.ctrl)) {
-        const newIndex = Math.max(0, selectedLineIndex - 1);
-        setSelectedLineIndex(newIndex);
-        if (newIndex <= scrollOffset) {
-          setScrollOffset(Math.max(0, scrollOffset - 1));
-        }
-        return true;
-      } else if (key.downArrow || (input === "j" && !key.ctrl)) {
-        const newIndex = Math.min(
-          filteredLines.length - 1,
-          selectedLineIndex + 1,
-        );
-        setSelectedLineIndex(newIndex);
-        if (newIndex >= scrollOffset + height - 1) {
-          setScrollOffset(Math.min(maxScroll, scrollOffset + 1));
-        }
-        return true;
-      } else if (key.pageUp || (key.ctrl && input === "b")) {
-        const newIndex = Math.max(0, selectedLineIndex - height);
-        const newScrollOffset = Math.max(0, newIndex - Math.floor(height / 2));
-        setSelectedLineIndex(newIndex);
-        setScrollOffset(newScrollOffset);
-        return true;
-      } else if (key.pageDown || (key.ctrl && input === "f")) {
-        const newIndex = Math.min(
-          filteredLines.length - 1,
-          selectedLineIndex + height,
-        );
-        const newScrollOffset = Math.min(
+      try {
+        const {
+          selectedLineIndex,
+          scrollOffset,
+          filteredLines,
+          height,
           maxScroll,
-          newIndex - Math.floor(height / 2),
-        );
-        setSelectedLineIndex(newIndex);
-        setScrollOffset(newScrollOffset);
-        return true;
-      } else if (key.return || input === " ") {
-        // Toggle expansion of selected node
-        const selectedLine = filteredLines[selectedLineIndex];
-        if (selectedLine?.hasChildren) {
-          setTreeState((prev) => {
-            const newState = toggleNodeExpansion(prev, selectedLine.id);
-            return newState;
-          });
+        } = stateRef.current;
+
+        // Validate state data
+        if (!Array.isArray(filteredLines) || filteredLines.length < 0) {
+          return false; // Invalid state, don't process
         }
-        return true;
-      } else if (input === "e") {
-        // Expand all
-        setTreeState((prev) => expandAll(prev));
-        return true;
-      } else if (input === "c") {
-        // Collapse all
-        setTreeState((prev) => collapseAll(prev));
-        return true;
-      } else if (input === "g") {
-        // Go to top (similar to vim's gg)
-        setSelectedLineIndex(0);
-        setScrollOffset(0);
-        return true;
-      } else if (input === "G") {
-        // Go to bottom (similar to vim's G)
-        setSelectedLineIndex(filteredLines.length - 1);
-        setScrollOffset(maxScroll);
-        return true;
-      } else if (input === "t") {
-        // Toggle schema type display
-        setShowSchemaTypes((prev) => !prev);
-        return true;
+
+        if (key.upArrow || (input === "k" && !key.ctrl)) {
+          const newIndex = Math.max(0, selectedLineIndex - 1);
+          setSelectedLineIndex(newIndex);
+          if (newIndex <= scrollOffset) {
+            setScrollOffset(Math.max(0, scrollOffset - 1));
+          }
+          return true;
+        } else if (key.downArrow || (input === "j" && !key.ctrl)) {
+          const newIndex = Math.min(
+            filteredLines.length - 1,
+            selectedLineIndex + 1,
+          );
+          setSelectedLineIndex(newIndex);
+          if (newIndex >= scrollOffset + height - 1) {
+            setScrollOffset(Math.min(maxScroll, scrollOffset + 1));
+          }
+          return true;
+        } else if (key.pageUp || (key.ctrl && input === "b")) {
+          const newIndex = Math.max(0, selectedLineIndex - height);
+          const newScrollOffset = Math.max(
+            0,
+            newIndex - Math.floor(height / 2),
+          );
+          setSelectedLineIndex(newIndex);
+          setScrollOffset(newScrollOffset);
+          return true;
+        } else if (key.pageDown || (key.ctrl && input === "f")) {
+          const newIndex = Math.min(
+            filteredLines.length - 1,
+            selectedLineIndex + height,
+          );
+          const newScrollOffset = Math.min(
+            maxScroll,
+            newIndex - Math.floor(height / 2),
+          );
+          setSelectedLineIndex(newIndex);
+          setScrollOffset(newScrollOffset);
+          return true;
+        } else if (key.return || input === " ") {
+          // Toggle expansion of selected node
+          const selectedLine = filteredLines[selectedLineIndex];
+          if (selectedLine?.hasChildren) {
+            setTreeState((prev) => {
+              const newState = toggleNodeExpansion(prev, selectedLine.id);
+              return newState;
+            });
+          }
+          return true;
+        } else if (input === "e") {
+          // Expand all
+          setTreeState((prev) => expandAll(prev));
+          return true;
+        } else if (input === "c") {
+          // Collapse all
+          setTreeState((prev) => collapseAll(prev));
+          return true;
+        } else if (input === "g") {
+          // Go to top (similar to vim's gg)
+          setSelectedLineIndex(0);
+          setScrollOffset(0);
+          return true;
+        } else if (input === "G") {
+          // Go to bottom (similar to vim's G)
+          setSelectedLineIndex(filteredLines.length - 1);
+          setScrollOffset(maxScroll);
+          return true;
+        } else if (input === "t") {
+          // Toggle schema type display
+          setShowSchemaTypes((prev) => !prev);
+          return true;
+        }
+        return false;
+      } catch (error) {
+        // Log error in development but fail gracefully
+        if (process.env["NODE_ENV"] === "development") {
+          console.error("TreeView keyboard handler error:", error);
+        }
+        return false;
       }
-      return false;
     },
     [], // State setters are stable in React and don't need to be in the dependency array
   );
 
   // Remove direct useInput - let App.tsx handle all input and delegate to us
 
+  // Input validation utility
+  const isValidInput = useCallback(
+    (input: string, key: KeyboardInput): boolean => {
+      return !!(
+        input !== null &&
+        input !== undefined &&
+        typeof input === "string" &&
+        key &&
+        typeof key === "object"
+      );
+    },
+    [],
+  );
+
   // Register keyboard handler with parent
   useEffect(() => {
     if (onKeyboardHandlerReady) {
       // Create a wrapper function that prevents invalid calls
       const wrappedHandler = (input: string, key: KeyboardInput): boolean => {
-        if (
-          typeof input !== "string" ||
-          !key ||
-          input === null ||
-          input === undefined
-        ) {
+        if (!isValidInput(input, key)) {
           return false;
         }
         return handleTreeKeyboardInput(input, key);
       };
       onKeyboardHandlerReady(wrappedHandler);
     }
-  }, [onKeyboardHandlerReady, handleTreeKeyboardInput]);
+  }, [onKeyboardHandlerReady, handleTreeKeyboardInput, isValidInput]);
 
   // Update tree when data changes
   useEffect(() => {

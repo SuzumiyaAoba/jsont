@@ -1,4 +1,9 @@
-import type { AppProps, KeyboardInput } from "@core/types/app";
+import type {
+  AppProps,
+  KeyboardHandler,
+  KeyboardHandlerRegistration,
+  KeyboardInput,
+} from "@core/types/app";
 import type { JsonValue } from "@core/types/index";
 import { CollapsibleJsonViewer } from "@features/collapsible/components/CollapsibleJsonViewer";
 import type { NavigationAction } from "@features/collapsible/types/collapsible";
@@ -93,17 +98,17 @@ export function App({
   const [collapsibleMode, setCollapsibleMode] = useState<boolean>(false);
   const [treeViewMode, setTreeViewMode] = useState<boolean>(false);
   const [helpVisible, setHelpVisible] = useState<boolean>(false);
-  const [treeViewKeyboardHandler, setTreeViewKeyboardHandler] = useState<
-    ((input: string, key: KeyboardInput) => boolean) | null
-  >(null);
+  const [treeViewKeyboardHandler, setTreeViewKeyboardHandler] =
+    useState<KeyboardHandler | null>(null);
 
   // Prevent invalid calls to TreeView handler during registration
-  const safeSetTreeViewKeyboardHandler = useCallback(
-    (handler: ((input: string, key: KeyboardInput) => boolean) | null) => {
-      setTreeViewKeyboardHandler(() => handler); // Use function form to ensure handler is set correctly
-    },
-    [],
-  );
+  const safeSetTreeViewKeyboardHandler =
+    useCallback<KeyboardHandlerRegistration>(
+      (handler: KeyboardHandler | null) => {
+        setTreeViewKeyboardHandler(() => handler); // Use function form to ensure handler is set correctly
+      },
+      [],
+    );
 
   // jq transformation state
   const [jqState, setJqState] = useState<JqState>({
@@ -817,26 +822,40 @@ export function App({
 
       // Handle TreeView keyboard input first if in tree view mode
       if (treeViewMode && treeViewKeyboardHandler) {
-        // Convert key object to match KeyboardInput interface
-        const keyboardInput: KeyboardInput = {
-          upArrow: key?.upArrow || false,
-          downArrow: key?.downArrow || false,
-          leftArrow: key?.leftArrow || false,
-          rightArrow: key?.rightArrow || false,
-          pageUp: key?.pageUp || false,
-          pageDown: key?.pageDown || false,
-          return: key?.return || false,
-          escape: key?.escape || false,
-          ctrl: key?.ctrl || false,
-          shift: key?.shift || false,
-          tab: key?.tab || false,
-          backspace: key?.backspace || false,
-          delete: key?.delete || false,
-          meta: key?.meta || false,
-        };
+        try {
+          // Validate input before processing
+          if (
+            typeof input === "string" &&
+            input !== null &&
+            input !== undefined
+          ) {
+            // Convert key object to match KeyboardInput interface
+            const keyboardInput: KeyboardInput = {
+              upArrow: key?.upArrow || false,
+              downArrow: key?.downArrow || false,
+              leftArrow: key?.leftArrow || false,
+              rightArrow: key?.rightArrow || false,
+              pageUp: key?.pageUp || false,
+              pageDown: key?.pageDown || false,
+              return: key?.return || false,
+              escape: key?.escape || false,
+              ctrl: key?.ctrl || false,
+              shift: key?.shift || false,
+              tab: key?.tab || false,
+              backspace: key?.backspace || false,
+              delete: key?.delete || false,
+              meta: key?.meta || false,
+            };
 
-        if (treeViewKeyboardHandler(input, keyboardInput)) {
-          return; // Input was handled by TreeView
+            if (treeViewKeyboardHandler(input, keyboardInput)) {
+              return; // Input was handled by TreeView
+            }
+          }
+        } catch (error) {
+          // Log error in development but continue processing
+          if (process.env["NODE_ENV"] === "development") {
+            console.error("TreeView handler error in App:", error);
+          }
         }
       }
 

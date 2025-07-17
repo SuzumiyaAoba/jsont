@@ -65,3 +65,23 @@ export interface ProcessState {
   keepAliveTimer: NodeJS.Timeout | null;
   signalHandlersAttached: boolean;
 }
+
+/**
+ * Keyboard input handler function type
+ */
+export type KeyboardHandler = (input: string, key: KeyboardInput) => boolean;
+
+/**
+ * Safe keyboard handler that validates input before processing
+ */
+export type SafeKeyboardHandler = (
+  input: string,
+  key: KeyboardInput,
+) => boolean;
+
+/**
+ * Keyboard handler registration callback
+ */
+export type KeyboardHandlerRegistration = (
+  handler: KeyboardHandler | null,
+) => void;
