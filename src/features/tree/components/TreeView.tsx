@@ -105,13 +105,15 @@ export function TreeView({
 
   // Memoize search filtering for performance
   const filteredLines = useMemo(() => {
-    if (!searchTerm) return treeLines;
+    const result = !searchTerm
+      ? treeLines
+      : treeLines.filter((line) => {
+          const lowerSearchTerm = searchTerm.toLowerCase();
+          const text = getTreeLineText(line).toLowerCase();
+          return text.includes(lowerSearchTerm);
+        });
 
-    const lowerSearchTerm = searchTerm.toLowerCase();
-    return treeLines.filter((line) => {
-      const text = getTreeLineText(line).toLowerCase();
-      return text.includes(lowerSearchTerm);
-    });
+    return result;
   }, [treeLines, searchTerm]);
 
   // Calculate visible lines and ensure bounds
