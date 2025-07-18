@@ -28,13 +28,13 @@ describe("treeRenderer", () => {
       expect(lines).toHaveLength(3); // root + 2 properties
       expect(lines[0]?.type).toBe("object");
       expect(lines[1]?.key).toBe("name");
-      expect(lines[1]?.value).toBe("John");
+      expect(lines[1]?.value).toBe('"John"');
       expect(lines[2]?.key).toBe("age");
       expect(lines[2]?.value).toBe("30");
 
       // Test actual display text with proper indentation
       expect(getTreeLineText(lines[0]!)).toBe(".");
-      expect(getTreeLineText(lines[1]!)).toBe("├─ name: John");
+      expect(getTreeLineText(lines[1]!)).toBe('├─ name: "John"');
       expect(getTreeLineText(lines[2]!)).toBe("└─ age: 30");
     });
 
@@ -54,15 +54,15 @@ describe("treeRenderer", () => {
       expect(lines).toHaveLength(4); // root + 3 items
       expect(lines[0]?.type).toBe("array");
       expect(lines[1]?.key).toBe("0");
-      expect(lines[1]?.value).toBe("a");
+      expect(lines[1]?.value).toBe('"a"');
       expect(lines[2]?.key).toBe("1");
-      expect(lines[2]?.value).toBe("b");
+      expect(lines[2]?.value).toBe('"b"');
 
       // Test actual display text with proper indentation for array
       expect(getTreeLineText(lines[0]!)).toBe("1:");
-      expect(getTreeLineText(lines[1]!)).toBe("├─ 0: a");
-      expect(getTreeLineText(lines[2]!)).toBe("├─ 1: b");
-      expect(getTreeLineText(lines[3]!)).toBe("└─ 2: c");
+      expect(getTreeLineText(lines[1]!)).toBe('├─ 0: "a"');
+      expect(getTreeLineText(lines[2]!)).toBe('├─ 1: "b"');
+      expect(getTreeLineText(lines[3]!)).toBe('└─ 2: "c"');
     });
 
     it("should handle nested structures", () => {

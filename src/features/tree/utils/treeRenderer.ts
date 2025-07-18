@@ -150,10 +150,7 @@ function formatValue(
 
   let formatted = JSON.stringify(value);
 
-  // Remove quotes from string values for cleaner tree display
-  if (typeof value === "string") {
-    formatted = value;
-  }
+  // Keep quotes for string values to distinguish them from other types
 
   if (formatted.length > options.maxValueLength) {
     formatted = `${formatted.substring(0, options.maxValueLength - 3)}...`;
