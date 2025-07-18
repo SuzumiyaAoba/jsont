@@ -20,6 +20,7 @@ export function buildTreeFromJson(
   // Handle null data case
   if (data === null) {
     const nullNode = createNode(null, null, 0, [], undefined);
+    nodes.set(nullNode.id, nullNode);
     rootNodes.push(nullNode);
     return {
       nodes,

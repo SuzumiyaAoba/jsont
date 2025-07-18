@@ -3,12 +3,12 @@
  */
 
 import { describe, expect, it } from "vitest";
-import { buildTreeFromJson } from "./treeBuilder.js";
+import { buildTreeFromJson } from "./treeBuilder";
 import {
   getTreeLineText,
   renderTreeLines,
   searchTreeNodes,
-} from "./treeRenderer.js";
+} from "./treeRenderer";
 
 describe("treeRenderer", () => {
   describe("renderTreeLines", () => {

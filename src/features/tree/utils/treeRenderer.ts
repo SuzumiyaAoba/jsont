@@ -81,7 +81,7 @@ export function renderTreeLines(
           ? ""
           : basePrefix + (isLast ? symbols.space : symbols.vertical);
 
-      node.children.forEach((child, index) => {
+      node.children.forEach((child: TreeNode, index: number) => {
         const isLastChild = index === node.children.length - 1;
         const childPrefixSymbol = isLastChild
           ? symbols.lastBranch
@@ -100,7 +100,7 @@ export function renderTreeLines(
   }
 
   // Render root nodes
-  state.rootNodes.forEach((rootNode, index) => {
+  state.rootNodes.forEach((rootNode: TreeNode, index: number) => {
     const isLast = index === state.rootNodes.length - 1;
     renderNode(rootNode, "", isLast, []);
   });
