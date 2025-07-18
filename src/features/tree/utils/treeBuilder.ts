@@ -95,6 +95,14 @@ export function buildTreeFromJson(
   }
 
   const rootNode = createNode(data, null, 0);
+
+  // Recursively add all nodes to the map
+  function addNodeToMap(node: TreeNode): void {
+    nodes.set(node.id, node);
+    node.children.forEach((child) => addNodeToMap(child));
+  }
+
+  addNodeToMap(rootNode);
   rootNodes.push(rootNode);
 
   return {
