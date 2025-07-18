@@ -147,6 +147,8 @@ export function TreeView({
     filteredLines: [] as TreeLine[],
     height,
     maxScroll: 0,
+    displayOptions,
+    searchTerm,
   });
   stateRef.current = {
     selectedLineIndex: boundedSelectedIndex,
@@ -154,6 +156,8 @@ export function TreeView({
     filteredLines,
     height,
     maxScroll,
+    displayOptions,
+    searchTerm,
   };
 
   // Handle keyboard navigation using refs for stable state access
@@ -266,11 +270,16 @@ export function TreeView({
 
               // After expanding a node, ensure scroll position shows the first child
               setTimeout(() => {
-                const updatedLines = renderTreeLines(newState, displayOptions);
-                const updatedFilteredLines = !searchTerm
+                const currentState = stateRef.current;
+                const updatedLines = renderTreeLines(
+                  newState,
+                  currentState.displayOptions,
+                );
+                const updatedFilteredLines = !currentState.searchTerm
                   ? updatedLines
                   : updatedLines.filter((line) => {
-                      const lowerSearchTerm = searchTerm.toLowerCase();
+                      const lowerSearchTerm =
+                        currentState.searchTerm.toLowerCase();
                       const text = getTreeLineText(line).toLowerCase();
                       return text.includes(lowerSearchTerm);
                     });
@@ -367,7 +376,7 @@ export function TreeView({
         return false;
       }
     },
-    [displayOptions, searchTerm], // Add missing dependencies for useCallback
+    [], // State setters are stable, avoid displayOptions/searchTerm to prevent re-creation
   );
 
   // Remove direct useInput - let App.tsx handle all input and delegate to us

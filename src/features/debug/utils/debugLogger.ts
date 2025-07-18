@@ -2,7 +2,7 @@
  * Debug Logger - アプリケーション内でデバッグログを蓄積・管理するシステム
  */
 
-export type DebugLogLevel = 'info' | 'warn' | 'error' | 'debug';
+export type DebugLogLevel = "info" | "warn" | "error" | "debug";
 
 export interface DebugLogEntry {
   id: string;
@@ -10,7 +10,7 @@ export interface DebugLogEntry {
   level: DebugLogLevel;
   category: string;
   message: string;
-  data?: any;
+  data?: unknown;
 }
 
 class DebugLoggerClass {
@@ -29,7 +29,12 @@ class DebugLoggerClass {
   /**
    * ログを追加
    */
-  log(level: DebugLogLevel, category: string, message: string, data?: any): void {
+  log(
+    level: DebugLogLevel,
+    category: string,
+    message: string,
+    data?: unknown,
+  ): void {
     // デバッグビューアーがアクティブな場合はログを追加しない
     if (this.isDebugViewerActive) {
       return;
@@ -41,7 +46,7 @@ class DebugLoggerClass {
       level,
       category,
       message,
-      data
+      data,
     };
 
     this.logs.push(entry);
@@ -52,38 +57,38 @@ class DebugLoggerClass {
     }
 
     // 開発環境では通常のconsole.logにも出力
-    if (process.env.NODE_ENV === 'development') {
+    if (process.env.NODE_ENV === "development") {
       const prefix = `[${level.toUpperCase()}] [${category}]`;
-      console.log(`${prefix} ${message}`, data ? data : '');
+      console.log(`${prefix} ${message}`, data ? data : "");
     }
   }
 
   /**
    * デバッグレベルのログ
    */
-  debug(category: string, message: string, data?: any): void {
-    this.log('debug', category, message, data);
+  debug(category: string, message: string, data?: unknown): void {
+    this.log("debug", category, message, data);
   }
 
   /**
    * 情報レベルのログ
    */
-  info(category: string, message: string, data?: any): void {
-    this.log('info', category, message, data);
+  info(category: string, message: string, data?: unknown): void {
+    this.log("info", category, message, data);
   }
 
   /**
    * 警告レベルのログ
    */
-  warn(category: string, message: string, data?: any): void {
-    this.log('warn', category, message, data);
+  warn(category: string, message: string, data?: unknown): void {
+    this.log("warn", category, message, data);
   }
 
   /**
    * エラーレベルのログ
    */
-  error(category: string, message: string, data?: any): void {
-    this.log('error', category, message, data);
+  error(category: string, message: string, data?: unknown): void {
+    this.log("error", category, message, data);
   }
 
   /**
@@ -97,14 +102,14 @@ class DebugLoggerClass {
    * カテゴリ別ログを取得
    */
   getLogsByCategory(category: string): DebugLogEntry[] {
-    return this.logs.filter(log => log.category === category);
+    return this.logs.filter((log) => log.category === category);
   }
 
   /**
    * レベル別ログを取得
    */
   getLogsByLevel(level: DebugLogLevel): DebugLogEntry[] {
-    return this.logs.filter(log => log.level === level);
+    return this.logs.filter((log) => log.level === level);
   }
 
   /**
@@ -126,18 +131,27 @@ class DebugLoggerClass {
    * 利用可能なカテゴリを取得
    */
   getCategories(): string[] {
-    const categories = new Set(this.logs.map(log => log.category));
+    const categories = new Set(this.logs.map((log) => log.category));
     return Array.from(categories).sort();
   }
 
   /**
    * ログ統計を取得
    */
-  getStats(): { total: number; byLevel: Record<DebugLogLevel, number>; byCategory: Record<string, number> } {
-    const byLevel: Record<DebugLogLevel, number> = { info: 0, warn: 0, error: 0, debug: 0 };
+  getStats(): {
+    total: number;
+    byLevel: Record<DebugLogLevel, number>;
+    byCategory: Record<string, number>;
+  } {
+    const byLevel: Record<DebugLogLevel, number> = {
+      info: 0,
+      warn: 0,
+      error: 0,
+      debug: 0,
+    };
     const byCategory: Record<string, number> = {};
 
-    this.logs.forEach(log => {
+    this.logs.forEach((log) => {
       byLevel[log.level]++;
       byCategory[log.category] = (byCategory[log.category] || 0) + 1;
     });
@@ -145,7 +159,7 @@ class DebugLoggerClass {
     return {
       total: this.logs.length,
       byLevel,
-      byCategory
+      byCategory,
     };
   }
 }
@@ -154,10 +168,15 @@ class DebugLoggerClass {
 export const DebugLogger = new DebugLoggerClass();
 
 // 便利な関数をエクスポート
-export const debugLog = (category: string, message: string, data?: any) => DebugLogger.debug(category, message, data);
-export const infoLog = (category: string, message: string, data?: any) => DebugLogger.info(category, message, data);
-export const warnLog = (category: string, message: string, data?: any) => DebugLogger.warn(category, message, data);
-export const errorLog = (category: string, message: string, data?: any) => DebugLogger.error(category, message, data);
+export const debugLog = (category: string, message: string, data?: unknown) =>
+  DebugLogger.debug(category, message, data);
+export const infoLog = (category: string, message: string, data?: unknown) =>
+  DebugLogger.info(category, message, data);
+export const warnLog = (category: string, message: string, data?: unknown) =>
+  DebugLogger.warn(category, message, data);
+export const errorLog = (category: string, message: string, data?: unknown) =>
+  DebugLogger.error(category, message, data);
 
 // デバッグビューアー状態管理
-export const setDebugViewerActive = (active: boolean) => DebugLogger.setDebugViewerActive(active);
+export const setDebugViewerActive = (active: boolean) =>
+  DebugLogger.setDebugViewerActive(active);

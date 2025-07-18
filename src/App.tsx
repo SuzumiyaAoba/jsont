@@ -99,7 +99,8 @@ export function App({
   const [collapsibleMode, setCollapsibleMode] = useState<boolean>(false);
   const [treeViewMode, setTreeViewMode] = useState<boolean>(false);
   const [helpVisible, setHelpVisible] = useState<boolean>(false);
-  const [debugLogViewerVisible, setDebugLogViewerVisible] = useState<boolean>(false);
+  const [debugLogViewerVisible, setDebugLogViewerVisible] =
+    useState<boolean>(false);
   const [treeViewKeyboardHandler, setTreeViewKeyboardHandler] =
     useState<KeyboardHandler | null>(null);
 
@@ -1110,6 +1111,7 @@ export function App({
       jqState.isActive,
       treeViewMode,
       treeViewKeyboardHandler,
+      debugLogViewerVisible,
     ],
   );
 
