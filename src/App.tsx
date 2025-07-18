@@ -9,6 +9,7 @@ import { CollapsibleJsonViewer } from "@features/collapsible/components/Collapsi
 import type { NavigationAction } from "@features/collapsible/types/collapsible";
 import { handleTextInput } from "@features/common/components/TextInput";
 import { DebugBar } from "@features/debug/components/DebugBar";
+import { DebugLogViewer } from "@features/debug/components/DebugLogViewer";
 import { JqQueryInput } from "@features/jq/components/JqQueryInput";
 import type { JqState } from "@features/jq/types/jq";
 import { transformWithJq } from "@features/jq/utils/jqTransform";
@@ -98,6 +99,7 @@ export function App({
   const [collapsibleMode, setCollapsibleMode] = useState<boolean>(false);
   const [treeViewMode, setTreeViewMode] = useState<boolean>(false);
   const [helpVisible, setHelpVisible] = useState<boolean>(false);
+  const [debugLogViewerVisible, setDebugLogViewerVisible] = useState<boolean>(false);
   const [treeViewKeyboardHandler, setTreeViewKeyboardHandler] =
     useState<KeyboardHandler | null>(null);
 
@@ -815,6 +817,17 @@ export function App({
         return;
       }
 
+      // Handle D key for debug log viewer
+      if (input === "D" && !key?.ctrl && !key?.meta) {
+        // Toggle debug log viewer
+        setDebugLogViewerVisible((prev) => !prev);
+        updateDebugInfo(
+          `Toggle debug log viewer ${debugLogViewerVisible ? "OFF" : "ON"}`,
+          input,
+        );
+        return;
+      }
+
       // Safety check for undefined key
       if (!key) {
         return;
@@ -1338,6 +1351,24 @@ export function App({
             debugInfo={debugInfo}
             keyboardEnabled={keyboardEnabled}
             searchState={searchState}
+          />
+        </Box>
+      )}
+
+      {/* Debug Log Viewer - fullscreen modal overlay */}
+      {debugLogViewerVisible && (
+        <Box
+          position="absolute"
+          top={0}
+          left={0}
+          width="100%"
+          height="100%"
+          backgroundColor="black"
+        >
+          <DebugLogViewer
+            height={terminalSize.height}
+            width={terminalSize.width}
+            onExit={() => setDebugLogViewerVisible(false)}
           />
         </Box>
       )}
