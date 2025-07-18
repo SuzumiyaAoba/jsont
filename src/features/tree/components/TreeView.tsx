@@ -30,7 +30,6 @@ import {
   renderTreeLines,
   searchTreeNodes,
 } from "../utils/treeRenderer";
-import { debugLog } from "@features/debug/utils/debugLogger";
 
 /**
  * Props interface for the TreeView component
@@ -84,10 +83,10 @@ export function TreeView({
   const [treeState, setTreeState] = useState<TreeViewState>(() =>
     buildTreeFromJson(data || null, { expandLevel: 2 }),
   );
-  
+
   // Always start at the top
   const [scrollOffset, setScrollOffset] = useState(0);
-  
+
   const [selectedLineIndex, setSelectedLineIndex] = useState(0);
   const [showSchemaTypes, setShowSchemaTypes] = useState(false);
 
@@ -138,8 +137,7 @@ export function TreeView({
   const renderKey = useMemo(() => {
     return `${treeState.rootNodes.length}-${filteredLines.length}-${boundedScrollOffset}`;
   }, [treeState.rootNodes.length, filteredLines.length, boundedScrollOffset]);
-  
-  
+
   const maxScroll = actualMaxScroll;
 
   // Use refs to maintain stable references
@@ -188,7 +186,7 @@ export function TreeView({
         if (key.upArrow || (input === "k" && !key.ctrl)) {
           const newIndex = Math.max(0, selectedLineIndex - 1);
           setSelectedLineIndex(newIndex);
-          
+
           // Ensure selected line is visible
           if (newIndex < scrollOffset) {
             setScrollOffset(Math.max(0, newIndex));
@@ -200,29 +198,41 @@ export function TreeView({
             selectedLineIndex + 1,
           );
           setSelectedLineIndex(newIndex);
-          
+
           // Ensure selected line is visible and handle array parent selection
           if (newIndex >= scrollOffset + height) {
             let targetScrollOffset = Math.min(maxScroll, newIndex - height + 1);
-            
+
             // Special handling for array parents: ensure first child is visible
             const selectedLine = filteredLines[newIndex];
-            if (selectedLine && selectedLine.type === 'array' && selectedLine.hasChildren) {
+            if (
+              selectedLine &&
+              selectedLine.type === "array" &&
+              selectedLine.hasChildren
+            ) {
               const firstChildId = `${selectedLine.id}.0`;
-              const firstChildIndex = filteredLines.findIndex(line => line.id === firstChildId);
+              const firstChildIndex = filteredLines.findIndex(
+                (line) => line.id === firstChildId,
+              );
               if (firstChildIndex !== -1) {
                 // Ensure first child is visible by adjusting scroll if needed
                 const childVisibleStart = targetScrollOffset;
                 const childVisibleEnd = targetScrollOffset + height - 1;
-                if (firstChildIndex < childVisibleStart || firstChildIndex > childVisibleEnd) {
-                  targetScrollOffset = Math.max(0, Math.min(
-                    firstChildIndex - 1, // Show parent and first child
-                    maxScroll
-                  ));
+                if (
+                  firstChildIndex < childVisibleStart ||
+                  firstChildIndex > childVisibleEnd
+                ) {
+                  targetScrollOffset = Math.max(
+                    0,
+                    Math.min(
+                      firstChildIndex - 1, // Show parent and first child
+                      maxScroll,
+                    ),
+                  );
                 }
               }
             }
-            
+
             setScrollOffset(targetScrollOffset);
           }
           return true;
@@ -253,7 +263,7 @@ export function TreeView({
           if (selectedLine?.hasChildren) {
             setTreeState((prev) => {
               const newState = toggleNodeExpansion(prev, selectedLine.id);
-              
+
               // After expanding a node, ensure scroll position shows the first child
               setTimeout(() => {
                 const updatedLines = renderTreeLines(newState, displayOptions);
@@ -264,28 +274,39 @@ export function TreeView({
                       const text = getTreeLineText(line).toLowerCase();
                       return text.includes(lowerSearchTerm);
                     });
-                
+
                 // Find the current selected line in the new tree
-                const currentSelectedLine = updatedFilteredLines[selectedLineIndex];
-                if (currentSelectedLine && currentSelectedLine.hasChildren) {
+                const currentSelectedLine =
+                  updatedFilteredLines[selectedLineIndex];
+                if (currentSelectedLine?.hasChildren) {
                   // Check if the node was expanded
-                  const expandedNode = newState.nodes.get(currentSelectedLine.id);
-                  if (expandedNode && expandedNode.isExpanded) {
+                  const expandedNode = newState.nodes.get(
+                    currentSelectedLine.id,
+                  );
+                  if (expandedNode?.isExpanded) {
                     // Find the first child of the expanded node
                     const firstChildId = `${currentSelectedLine.id}.0`;
-                    const firstChildIndex = updatedFilteredLines.findIndex(line => line.id === firstChildId);
-                    
+                    const firstChildIndex = updatedFilteredLines.findIndex(
+                      (line) => line.id === firstChildId,
+                    );
+
                     if (firstChildIndex !== -1) {
                       // Ensure the first child is visible
                       const currentScrollOffset = stateRef.current.scrollOffset;
                       const visibleStart = currentScrollOffset;
                       const visibleEnd = currentScrollOffset + height - 1;
-                      
+
                       // If first child is not visible, adjust scroll
-                      if (firstChildIndex < visibleStart || firstChildIndex > visibleEnd) {
-                        const newScrollOffset = Math.max(0, 
-                          Math.min(firstChildIndex - Math.floor(height / 4), 
-                          Math.max(0, updatedFilteredLines.length - height))
+                      if (
+                        firstChildIndex < visibleStart ||
+                        firstChildIndex > visibleEnd
+                      ) {
+                        const newScrollOffset = Math.max(
+                          0,
+                          Math.min(
+                            firstChildIndex - Math.floor(height / 4),
+                            Math.max(0, updatedFilteredLines.length - height),
+                          ),
                         );
                         setScrollOffset(newScrollOffset);
                       }
@@ -293,7 +314,7 @@ export function TreeView({
                   }
                 }
               }, 0);
-              
+
               return newState;
             });
           }
@@ -346,7 +367,7 @@ export function TreeView({
         return false;
       }
     },
-    [], // State setters are stable in React and don't need to be in the dependency array
+    [displayOptions, searchTerm], // Add missing dependencies for useCallback
   );
 
   // Remove direct useInput - let App.tsx handle all input and delegate to us
@@ -383,12 +404,11 @@ export function TreeView({
   useEffect(() => {
     const newTreeState = buildTreeFromJson(data || null, { expandLevel: 2 });
     setTreeState(newTreeState);
-    
+
     // Always start at the top when data changes
     setScrollOffset(0);
     setSelectedLineIndex(0);
-    
-  }, [data, displayOptions, height]);
+  }, [data]);
 
   // Ensure selected index is valid when filtered lines change
   useEffect(() => {
@@ -465,17 +485,49 @@ function renderTreeLineWithColors(
     bold: isSelected,
   };
 
-  // Use single Text component to avoid rendering issues
-  const text = getTreeLineText(line, options);
-  
-  return (
-    <Text
-      {...baseProps}
-      color={isSelected ? "white" : getLineColor(line, isMatched)}
-    >
-      {text}
-    </Text>
-  );
+  // For primitive values, separate key and value with different colors
+  if (
+    line.type === "primitive" &&
+    line.key !== null &&
+    line.key !== undefined &&
+    line.key !== ""
+  ) {
+    const keyPart = `${line.key}:`;
+    const valuePart = ` ${line.value}`;
+    const typePart =
+      options.showSchemaTypes && line.schemaType ? ` <${line.schemaType}>` : "";
+
+    return (
+      <>
+        <Text
+          {...baseProps}
+          color={isSelected ? "white" : getKeyColor(isMatched)}
+        >
+          {line.prefix}
+          {keyPart}
+        </Text>
+        <Text {...baseProps} color={isSelected ? "white" : getValueColor()}>
+          {valuePart}
+        </Text>
+        {typePart && (
+          <Text {...baseProps} color={isSelected ? "white" : getTypeColor()}>
+            {typePart}
+          </Text>
+        )}
+      </>
+    );
+  } else {
+    // For objects, arrays, or root primitives, use single color
+    const text = getTreeLineText(line, options);
+    return (
+      <Text
+        {...baseProps}
+        color={isSelected ? "white" : getLineColor(line, isMatched)}
+      >
+        {text}
+      </Text>
+    );
+  }
 }
 
 /**
