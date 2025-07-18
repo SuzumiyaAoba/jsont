@@ -13,6 +13,16 @@ interface DebugLogViewerProps {
   onExit: () => void;
 }
 
+function formatLogData(data: unknown): string {
+  if (typeof data === "string") {
+    return data;
+  }
+  if (typeof data === "object" && data !== null) {
+    return JSON.stringify(data);
+  }
+  return String(data);
+}
+
 export function DebugLogViewer({ height, width, onExit }: DebugLogViewerProps) {
   const [logs, setLogs] = useState<DebugLogEntry[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
@@ -39,6 +49,7 @@ export function DebugLogViewer({ height, width, onExit }: DebugLogViewerProps) {
       }, 1000); // 1秒でリセット
       return () => clearTimeout(timer);
     }
+    return undefined;
   }, [gSequence]);
 
   // ログを定期的に更新
@@ -216,7 +227,7 @@ export function DebugLogViewer({ height, width, onExit }: DebugLogViewerProps) {
             <Box key={log.id} width={width}>
               <Text
                 color={isSelected ? "white" : "gray"}
-                backgroundColor={isSelected ? "blue" : undefined}
+                {...(isSelected ? { backgroundColor: "blue" } : {})}
                 bold={isSelected}
               >
                 {isSelected ? ">" : " "}
@@ -231,11 +242,9 @@ export function DebugLogViewer({ height, width, onExit }: DebugLogViewerProps) {
                 [{log.category}]
               </Text>
               <Text color={isSelected ? "white" : "white"}>{log.message}</Text>
-              {log.data && (
+              {log.data !== undefined && log.data !== null && (
                 <Text color={isSelected ? "white" : "gray"}>
-                  {typeof log.data === "string"
-                    ? log.data
-                    : JSON.stringify(log.data)}
+                  {formatLogData(log.data)}
                 </Text>
               )}
             </Box>

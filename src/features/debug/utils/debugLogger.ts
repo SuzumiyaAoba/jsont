@@ -57,7 +57,7 @@ class DebugLoggerClass {
     }
 
     // 開発環境では通常のconsole.logにも出力
-    if (process.env.NODE_ENV === "development") {
+    if (process.env["NODE_ENV"] === "development") {
       const prefix = `[${level.toUpperCase()}] [${category}]`;
       console.log(`${prefix} ${message}`, data ? data : "");
     }

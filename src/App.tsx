@@ -1359,14 +1359,7 @@ export function App({
 
       {/* Debug Log Viewer - fullscreen modal overlay */}
       {debugLogViewerVisible && (
-        <Box
-          position="absolute"
-          top={0}
-          left={0}
-          width="100%"
-          height="100%"
-          backgroundColor="black"
-        >
+        <Box position="absolute" width="100%" height="100%">
           <DebugLogViewer
             height={terminalSize.height}
             width={terminalSize.width}
