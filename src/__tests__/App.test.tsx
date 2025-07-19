@@ -77,7 +77,8 @@ describe("App", () => {
     }
 
     const output = lastFrame();
-    expect(output).toContain("Keyboard input unavailable");
+    // The keyboard unavailable message should still be present
+    expect(output).toContain("Keyboard input not available");
   });
 
   it("should handle null data gracefully", () => {

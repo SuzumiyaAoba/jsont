@@ -69,15 +69,6 @@ export class AppService {
     error: string | null,
     enableKeyboard: boolean = false,
   ): Promise<Instance> {
-    const renderOptions: {
-      stdout: NodeJS.WriteStream;
-      stderr: NodeJS.WriteStream;
-      stdin?: NodeJS.ReadStream;
-    } = {
-      stdout: process.stdout,
-      stderr: process.stderr,
-    };
-
     // Check if we're in test environment
     const isTestEnvironment =
       process.env["NODE_ENV"] === "test" || process.env["VITEST"] === "true";
@@ -88,14 +79,16 @@ export class AppService {
       ? enableKeyboard
       : enableKeyboard && rawModeSupported;
 
-    // Provide stdin for keyboard input
-    if (actualKeyboardEnabled) {
-      renderOptions.stdin = process.stdin;
+    const renderOptions = {
+      stdout: process.stdout,
+      stderr: process.stderr,
+      ...(actualKeyboardEnabled ? { stdin: process.stdin } : {}),
+    };
 
+    // Provide stdin for keyboard input if enabled
+    if (actualKeyboardEnabled) {
       // Force stdin to be available for reading
-      if (process.stdin.readable === false) {
-        Object.defineProperty(process.stdin, "readable", { value: true });
-      }
+      Object.defineProperty(process.stdin, "readable", { value: true });
 
       if (process.stdin.readableHighWaterMark === 0) {
         Object.defineProperty(process.stdin, "readableHighWaterMark", {
@@ -122,8 +115,8 @@ export class AppService {
       this.processManager.cleanup();
     });
 
-    // In CI environments, auto-exit after a short delay
-    if (this.isCIEnvironment()) {
+    // In CI environments or non-TTY environments, auto-exit after a short delay
+    if (this.isCIEnvironment() || !process.stdin.isTTY) {
       setTimeout(() => {
         app.unmount();
         this.processManager.cleanup();
