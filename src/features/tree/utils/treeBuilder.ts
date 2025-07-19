@@ -37,7 +37,7 @@ export function buildTreeFromJson(
     path: (string | number)[] = [],
     parent?: TreeNode,
   ): TreeNode {
-    const id = path.length === 0 ? "__root__" : "__root__." + path.join(".");
+    const id = path.length === 0 ? "__root__" : `__root__.${path.join(".")}`;
     const type = getValueType(value);
     const hasChildren = type === "object" || type === "array";
 

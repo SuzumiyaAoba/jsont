@@ -42,4 +42,5 @@ export interface TreeLine {
   isExpanded?: boolean;
   hasChildren: boolean;
   schemaType?: string; // JSON Schema type (string, number, boolean, etc.)
+  originalValue?: JsonValue | null; // Original value for arrays/objects to get length/count
 }

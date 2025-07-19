@@ -68,6 +68,7 @@ export function renderTreeLines(
       isExpanded: node.isExpanded,
       hasChildren: node.hasChildren,
       schemaType: inferSchemaType(node.value),
+      originalValue: node.value, // Store original value for arrays/objects
     };
 
     lines.push(line);
@@ -182,8 +183,20 @@ export function getTreeLineText(
     if (line.key !== null && line.key !== undefined && line.key !== "") {
       displayText = line.key;
     } else {
-      // Root object/array: "." for object, "1:" for array (indicating it's a sequence)
-      displayText = line.type === "object" ? "." : "1:";
+      // Root object/array: "." for object, show array length for arrays
+      if (line.type === "object") {
+        displayText = ".";
+      } else if (line.type === "array") {
+        // For arrays, show the array length using originalValue
+        const arrayValue = line.originalValue;
+        if (Array.isArray(arrayValue)) {
+          displayText = `${arrayValue.length}:`;
+        } else {
+          displayText = "1:"; // fallback
+        }
+      } else {
+        displayText = "1:"; // fallback
+      }
     }
   }
 

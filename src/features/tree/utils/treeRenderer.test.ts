@@ -59,7 +59,7 @@ describe("treeRenderer", () => {
       expect(lines[2]?.value).toBe('"b"');
 
       // Test actual display text with proper indentation for array
-      expect(getTreeLineText(lines[0]!)).toBe("1:");
+      expect(getTreeLineText(lines[0]!)).toBe("3:");
       expect(getTreeLineText(lines[1]!)).toBe('├─ 0: "a"');
       expect(getTreeLineText(lines[2]!)).toBe('├─ 1: "b"');
       expect(getTreeLineText(lines[3]!)).toBe('└─ 2: "c"');

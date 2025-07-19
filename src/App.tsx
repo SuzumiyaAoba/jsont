@@ -1186,205 +1186,211 @@ export function App({
       handleKeyInput(input, key);
     },
     {
-      isActive: keyboardEnabled && !exportDialog.isVisible,
+      isActive:
+        keyboardEnabled && !exportDialog.isVisible && !debugLogViewerVisible,
     },
   );
 
   return (
     <Box flexDirection="column" width="100%">
-      {/* Help bar - only shown when ? key is pressed */}
-      {helpVisible && !exportDialog.isVisible && (
-        <Box flexShrink={0} width="100%" height={statusBarHeight}>
-          <StatusBar
-            error={error}
-            keyboardEnabled={keyboardEnabled}
-            collapsibleMode={collapsibleMode}
-          />
-        </Box>
+      {/* Debug Log Viewer - fullscreen modal overlay - render first to override everything */}
+      {debugLogViewerVisible && (
+        <DebugLogViewer
+          height={terminalSize.height}
+          width={terminalSize.width}
+          onExit={() => setDebugLogViewerVisible(false)}
+        />
       )}
-      {/* Search bar fixed at top when in search mode */}
-      {(searchState.isSearching || searchState.searchTerm) &&
-        !exportDialog.isVisible && (
-          <Box flexShrink={0} width="100%" height={searchBarHeight}>
-            <SearchBar
-              searchState={searchState}
-              searchInput={searchInput}
-              searchCursorPosition={searchCursorPosition}
-              onScopeChange={handleSearchScopeChange}
-            />
-          </Box>
-        )}
-      {/* jq transformation bar */}
-      {jqState.isActive && !exportDialog.isVisible && (
-        <Box flexShrink={0} width="100%" height={jqState.error ? 12 : 7}>
-          <JqQueryInput
-            jqState={jqState}
-            queryInput={jqInput}
-            cursorPosition={jqCursorPosition}
-            errorScrollOffset={jqErrorScrollOffset}
-            focusMode={jqFocusMode}
-          />
-        </Box>
-      )}
-      {/* Keyboard unavailable warning */}
-      {!keyboardEnabled && !exportDialog.isVisible && (
-        <Box flexShrink={0} width="100%" height={1}>
-          <Box
-            borderStyle="single"
-            borderColor="yellow"
-            padding={0}
-            paddingLeft={1}
-            paddingRight={1}
-            width="100%"
-          >
-            <Text color="yellow" dimColor>
-              ⚠️ Keyboard input unavailable (terminal access failed). Use file
-              input: jsont file.json
-            </Text>
-          </Box>
-        </Box>
-      )}
-      {/* Export status bar */}
-      {(exportStatus.isExporting || exportStatus.message) &&
-        !exportDialog.isVisible && (
-          <Box flexShrink={0} width="100%" height={1}>
-            <Box
-              borderStyle="single"
-              borderColor={
-                exportStatus.isExporting
-                  ? "yellow"
-                  : exportStatus.type === "success"
-                    ? "green"
-                    : "red"
-              }
-              padding={0}
-              paddingLeft={1}
-              paddingRight={1}
-              width="100%"
-            >
-              {exportStatus.isExporting ? (
-                <Text color="yellow">Exporting...</Text>
-              ) : (
-                <Text color={exportStatus.type === "success" ? "green" : "red"}>
-                  {exportStatus.message}
+
+      {/* Main content - hide when debug viewer is visible */}
+      {!debugLogViewerVisible && (
+        <>
+          {/* Help bar - only shown when ? key is pressed */}
+          {helpVisible && !exportDialog.isVisible && (
+            <Box flexShrink={0} width="100%" height={statusBarHeight}>
+              <StatusBar
+                error={error}
+                keyboardEnabled={keyboardEnabled}
+                collapsibleMode={collapsibleMode}
+              />
+            </Box>
+          )}
+          {/* Search bar fixed at top when in search mode */}
+          {(searchState.isSearching || searchState.searchTerm) &&
+            !exportDialog.isVisible && (
+              <Box flexShrink={0} width="100%" height={searchBarHeight}>
+                <SearchBar
+                  searchState={searchState}
+                  searchInput={searchInput}
+                  searchCursorPosition={searchCursorPosition}
+                  onScopeChange={handleSearchScopeChange}
+                />
+              </Box>
+            )}
+          {/* jq transformation bar */}
+          {jqState.isActive && !exportDialog.isVisible && (
+            <Box flexShrink={0} width="100%" height={jqState.error ? 12 : 7}>
+              <JqQueryInput
+                jqState={jqState}
+                queryInput={jqInput}
+                cursorPosition={jqCursorPosition}
+                errorScrollOffset={jqErrorScrollOffset}
+                focusMode={jqFocusMode}
+              />
+            </Box>
+          )}
+          {/* Keyboard unavailable warning */}
+          {!keyboardEnabled && !exportDialog.isVisible && (
+            <Box flexShrink={0} width="100%" height={1}>
+              <Box
+                borderStyle="single"
+                borderColor="yellow"
+                padding={0}
+                paddingLeft={1}
+                paddingRight={1}
+                width="100%"
+              >
+                <Text color="yellow" dimColor>
+                  ⚠️ Keyboard input unavailable (terminal access failed). Use
+                  file input: jsont file.json
                 </Text>
+              </Box>
+            </Box>
+          )}
+          {/* Export status bar */}
+          {(exportStatus.isExporting || exportStatus.message) &&
+            !exportDialog.isVisible && (
+              <Box flexShrink={0} width="100%" height={1}>
+                <Box
+                  borderStyle="single"
+                  borderColor={
+                    exportStatus.isExporting
+                      ? "yellow"
+                      : exportStatus.type === "success"
+                        ? "green"
+                        : "red"
+                  }
+                  padding={0}
+                  paddingLeft={1}
+                  paddingRight={1}
+                  width="100%"
+                >
+                  {exportStatus.isExporting ? (
+                    <Text color="yellow">Exporting...</Text>
+                  ) : (
+                    <Text
+                      color={exportStatus.type === "success" ? "green" : "red"}
+                    >
+                      {exportStatus.message}
+                    </Text>
+                  )}
+                </Box>
+              </Box>
+            )}
+          {!exportDialog.isVisible && (
+            <Box
+              flexGrow={1}
+              width="100%"
+              minHeight={
+                searchState.isSearching || searchState.searchTerm
+                  ? searchModeVisibleLines
+                  : 1
+              }
+            >
+              {treeViewMode ? (
+                <TreeView
+                  data={displayData as JsonValue | null}
+                  height={
+                    searchState.isSearching || searchState.searchTerm
+                      ? searchModeVisibleLines
+                      : visibleLines
+                  }
+                  searchTerm={searchState.searchTerm}
+                  options={{
+                    showArrayIndices: true,
+                    showPrimitiveValues: true,
+                    maxValueLength: 50,
+                    useUnicodeTree: true,
+                  }}
+                  onKeyboardHandlerReady={safeSetTreeViewKeyboardHandler}
+                />
+              ) : collapsibleMode ? (
+                <CollapsibleJsonViewer
+                  ref={collapsibleViewerRef}
+                  data={displayData as JsonValue | null}
+                  scrollOffset={scrollOffset}
+                  searchTerm={searchState.searchTerm}
+                  searchResults={searchState.searchResults}
+                  currentSearchIndex={searchState.currentResultIndex}
+                  visibleLines={
+                    searchState.isSearching || searchState.searchTerm
+                      ? searchModeVisibleLines
+                      : visibleLines
+                  }
+                  showLineNumbers={lineNumbersVisible}
+                  onScrollChange={handleCollapsibleScrollChange}
+                />
+              ) : schemaVisible ? (
+                <SchemaViewer
+                  data={displayData as JsonValue | null}
+                  scrollOffset={scrollOffset}
+                  searchTerm={searchState.searchTerm}
+                  searchResults={searchState.searchResults}
+                  currentSearchIndex={searchState.currentResultIndex}
+                  visibleLines={
+                    searchState.isSearching || searchState.searchTerm
+                      ? searchModeVisibleLines
+                      : visibleLines
+                  }
+                  showLineNumbers={lineNumbersVisible}
+                />
+              ) : (
+                <JsonViewer
+                  data={displayData as JsonValue | null}
+                  scrollOffset={scrollOffset}
+                  searchTerm={searchState.searchTerm}
+                  searchResults={searchState.searchResults}
+                  currentSearchIndex={searchState.currentResultIndex}
+                  visibleLines={
+                    searchState.isSearching || searchState.searchTerm
+                      ? searchModeVisibleLines
+                      : visibleLines
+                  }
+                  showLineNumbers={lineNumbersVisible}
+                />
               )}
             </Box>
-          </Box>
-        )}
-      {!exportDialog.isVisible && (
-        <Box
-          flexGrow={1}
-          width="100%"
-          minHeight={
-            searchState.isSearching || searchState.searchTerm
-              ? searchModeVisibleLines
-              : 1
-          }
-        >
-          {treeViewMode ? (
-            <TreeView
-              data={displayData as JsonValue | null}
-              height={
-                searchState.isSearching || searchState.searchTerm
-                  ? searchModeVisibleLines
-                  : visibleLines
-              }
-              searchTerm={searchState.searchTerm}
-              options={{
-                showArrayIndices: true,
-                showPrimitiveValues: true,
-                maxValueLength: 50,
-                useUnicodeTree: true,
-              }}
-              onKeyboardHandlerReady={safeSetTreeViewKeyboardHandler}
-            />
-          ) : collapsibleMode ? (
-            <CollapsibleJsonViewer
-              ref={collapsibleViewerRef}
-              data={displayData as JsonValue | null}
-              scrollOffset={scrollOffset}
-              searchTerm={searchState.searchTerm}
-              searchResults={searchState.searchResults}
-              currentSearchIndex={searchState.currentResultIndex}
-              visibleLines={
-                searchState.isSearching || searchState.searchTerm
-                  ? searchModeVisibleLines
-                  : visibleLines
-              }
-              showLineNumbers={lineNumbersVisible}
-              onScrollChange={handleCollapsibleScrollChange}
-            />
-          ) : schemaVisible ? (
-            <SchemaViewer
-              data={displayData as JsonValue | null}
-              scrollOffset={scrollOffset}
-              searchTerm={searchState.searchTerm}
-              searchResults={searchState.searchResults}
-              currentSearchIndex={searchState.currentResultIndex}
-              visibleLines={
-                searchState.isSearching || searchState.searchTerm
-                  ? searchModeVisibleLines
-                  : visibleLines
-              }
-              showLineNumbers={lineNumbersVisible}
-            />
-          ) : (
-            <JsonViewer
-              data={displayData as JsonValue | null}
-              scrollOffset={scrollOffset}
-              searchTerm={searchState.searchTerm}
-              searchResults={searchState.searchResults}
-              currentSearchIndex={searchState.currentResultIndex}
-              visibleLines={
-                searchState.isSearching || searchState.searchTerm
-                  ? searchModeVisibleLines
-                  : visibleLines
-              }
-              showLineNumbers={lineNumbersVisible}
-            />
           )}
-        </Box>
-      )}
-      {/* Debug bar - conditionally rendered based on debugVisible */}
-      {debugVisible && !exportDialog.isVisible && (
-        <Box flexShrink={0} width="100%">
-          <DebugBar
-            debugInfo={debugInfo}
-            keyboardEnabled={keyboardEnabled}
-            searchState={searchState}
-          />
-        </Box>
-      )}
+          {/* Debug bar - conditionally rendered based on debugVisible */}
+          {debugVisible && !exportDialog.isVisible && (
+            <Box flexShrink={0} width="100%">
+              <DebugBar
+                debugInfo={debugInfo}
+                keyboardEnabled={keyboardEnabled}
+                searchState={searchState}
+              />
+            </Box>
+          )}
 
-      {/* Debug Log Viewer - fullscreen modal overlay */}
-      {debugLogViewerVisible && (
-        <Box position="absolute" width="100%" height="100%">
-          <DebugLogViewer
-            height={terminalSize.height}
-            width={terminalSize.width}
-            onExit={() => setDebugLogViewerVisible(false)}
-          />
-        </Box>
-      )}
-
-      {/* Export Dialog - fullscreen modal overlay */}
-      {exportDialog.isVisible && (
-        <Box
-          flexGrow={1}
-          width="100%"
-          justifyContent="center"
-          alignItems="center"
-          paddingX={2}
-          paddingY={2}
-        >
-          <ExportDialog
-            isVisible={exportDialog.isVisible}
-            onConfirm={handleExportConfirm}
-            onCancel={handleExportCancel}
-            defaultFilename={generateDefaultFilename()}
-          />
-        </Box>
+          {/* Export Dialog - fullscreen modal overlay */}
+          {exportDialog.isVisible && (
+            <Box
+              flexGrow={1}
+              width="100%"
+              justifyContent="center"
+              alignItems="center"
+              paddingX={2}
+              paddingY={2}
+            >
+              <ExportDialog
+                isVisible={exportDialog.isVisible}
+                onConfirm={handleExportConfirm}
+                onCancel={handleExportCancel}
+                defaultFilename={generateDefaultFilename()}
+              />
+            </Box>
+          )}
+        </>
       )}
     </Box>
   );

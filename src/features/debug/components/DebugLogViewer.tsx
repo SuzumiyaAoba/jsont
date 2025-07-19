@@ -13,12 +13,31 @@ interface DebugLogViewerProps {
   onExit: () => void;
 }
 
-function formatLogData(data: unknown): string {
+function formatLogData(data: unknown, maxWidth: number = 80): string {
   if (typeof data === "string") {
     return data;
   }
   if (typeof data === "object" && data !== null) {
-    return JSON.stringify(data);
+    const jsonString = JSON.stringify(data, null, 2);
+    // 長すぎる場合は改行して表示
+    if (jsonString.length > maxWidth) {
+      const lines = jsonString.split("\n");
+      if (lines.length > 1) {
+        // 既に改行されているJSONの場合、インデントを調整
+        return lines
+          .map((line) =>
+            line.length > maxWidth
+              ? `${line.substring(0, maxWidth - 3)}...`
+              : line,
+          )
+          .join("\n");
+      } else {
+        // 一行の長いJSONの場合、適切な位置で改行
+        const truncated = `${jsonString.substring(0, maxWidth - 3)}...`;
+        return truncated;
+      }
+    }
+    return jsonString;
   }
   return String(data);
 }
@@ -33,8 +52,24 @@ export function DebugLogViewer({ height, width, onExit }: DebugLogViewerProps) {
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [gSequence, setGSequence] = useState(false);
 
-  // デバッグビューアーがアクティブであることを通知
+  // デバッグビューアーがアクティブであることを通知と画面クリア
   useEffect(() => {
+    // 複数の方法で画面をクリア
+    console.clear();
+
+    // より強力なターミナルクリア
+    process.stdout.write("\x1b[2J"); // 画面全体クリア
+    process.stdout.write("\x1b[H"); // カーソルを左上に移動
+    process.stdout.write("\x1b[3J"); // スクロールバッファもクリア
+
+    // 代替方法も試行
+    if (process.stdout.cursorTo) {
+      process.stdout.cursorTo(0, 0);
+    }
+    if (process.stdout.clearScreenDown) {
+      process.stdout.clearScreenDown();
+    }
+
     setDebugViewerActive(true);
     return () => {
       setDebugViewerActive(false);
@@ -78,8 +113,15 @@ export function DebugLogViewer({ height, width, onExit }: DebugLogViewerProps) {
     return filtered; // ログを時系列順（最新が末尾）で表示
   }, [logs, selectedCategory, selectedLevel]);
 
-  // 表示可能な行数（ヘッダーとフッターを除く）
-  const visibleLines = height - 4;
+  // 表示可能な行数を動的に計算
+  // ボーダー付きBoxのヘッダー(3行) + 統計行(1行) + ボーダー付きフッター(3行) = 7行を除外
+  const reservedLines = 7;
+  const availableLogLines = Math.max(1, height - reservedLines);
+
+  // 各ログエントリは複数行になる可能性があるため、実際の表示可能エントリ数を計算
+  // 保守的に見積もって、各エントリは最大2行（ヘッダー + データ）と仮定
+  const maxEntriesPerScreen = Math.floor(availableLogLines / 2);
+  const visibleLines = Math.max(1, maxEntriesPerScreen);
   const maxScroll = Math.max(0, filteredLogs.length - visibleLines);
 
   // 表示するログのスライス
@@ -194,7 +236,7 @@ export function DebugLogViewer({ height, width, onExit }: DebugLogViewerProps) {
   return (
     <Box flexDirection="column" width={width} height={height}>
       {/* ヘッダー */}
-      <Box width={width} borderStyle="single" borderColor="blue">
+      <Box flexShrink={0} width={width} borderStyle="single" borderColor="blue">
         <Text bold color="blue">
           DEBUG LOG VIEWER ({filteredLogs.length} entries) - q:quit, c:clear
           filter, C:clear all, r:refresh
@@ -203,7 +245,7 @@ export function DebugLogViewer({ height, width, onExit }: DebugLogViewerProps) {
       </Box>
 
       {/* 統計とフィルタ情報 */}
-      <Box width={width}>
+      <Box flexShrink={0} width={width}>
         <Text>
           Total: {stats.total} | ERROR:{" "}
           <Text color="red">{stats.byLevel.error}</Text> | WARN:{" "}
@@ -217,35 +259,55 @@ export function DebugLogViewer({ height, width, onExit }: DebugLogViewerProps) {
       </Box>
 
       {/* ログ一覧 */}
-      <Box flexDirection="column" width={width} height={visibleLines}>
+      <Box flexGrow={1} flexDirection="column" width={width} overflow="hidden">
         {visibleLogs.map((log, index) => {
           const absoluteIndex = scrollOffset + index;
           const isSelected = absoluteIndex === selectedIndex;
           const levelColor = getLevelColor(log.level);
 
+          // 利用可能な幅を計算（マージンを考慮）
+          const availableWidth = Math.max(60, width - 4);
+
+          // ログのヘッダー部分（時間、レベル、カテゴリ、メッセージ）
+          const headerText = `[${formatTime(log.timestamp)}][${log.level.toUpperCase()}][${log.category}] ${log.message}`;
+
+          // データ部分のフォーマット
+          const dataText =
+            log.data !== undefined && log.data !== null
+              ? formatLogData(log.data, availableWidth)
+              : null;
+
           return (
-            <Box key={log.id} width={width}>
-              <Text
-                color={isSelected ? "white" : "gray"}
-                {...(isSelected ? { backgroundColor: "blue" } : {})}
-                bold={isSelected}
-              >
-                {isSelected ? ">" : " "}
-              </Text>
-              <Text color={isSelected ? "white" : levelColor}>
-                [{formatTime(log.timestamp)}]
-              </Text>
-              <Text color={isSelected ? "white" : "cyan"}>
-                [{log.level.toUpperCase()}]
-              </Text>
-              <Text color={isSelected ? "white" : "magenta"}>
-                [{log.category}]
-              </Text>
-              <Text color={isSelected ? "white" : "white"}>{log.message}</Text>
-              {log.data !== undefined && log.data !== null && (
-                <Text color={isSelected ? "white" : "gray"}>
-                  {formatLogData(log.data)}
+            <Box key={log.id} flexDirection="column" width={width}>
+              {/* ヘッダー行 */}
+              <Box width={width}>
+                <Text
+                  color={isSelected ? "white" : "gray"}
+                  {...(isSelected ? { backgroundColor: "blue" } : {})}
+                  bold={isSelected}
+                >
+                  {isSelected ? ">" : " "}
                 </Text>
+                <Text
+                  color={isSelected ? "white" : levelColor}
+                  {...(isSelected ? { backgroundColor: "blue" } : {})}
+                >
+                  {headerText.length > availableWidth
+                    ? `${headerText.substring(0, availableWidth - 3)}...`
+                    : headerText}
+                </Text>
+              </Box>
+
+              {/* データ行（存在する場合） */}
+              {dataText && (
+                <Box width={width} paddingLeft={2}>
+                  <Text
+                    color={isSelected ? "white" : "gray"}
+                    {...(isSelected ? { backgroundColor: "blue" } : {})}
+                  >
+                    {dataText}
+                  </Text>
+                </Box>
               )}
             </Box>
           );
@@ -253,7 +315,7 @@ export function DebugLogViewer({ height, width, onExit }: DebugLogViewerProps) {
       </Box>
 
       {/* フッター */}
-      <Box width={width} borderStyle="single" borderColor="blue">
+      <Box flexShrink={0} width={width} borderStyle="single" borderColor="blue">
         <Text>
           {selectedIndex + 1}/{filteredLogs.length} | Categories:{" "}
           {categories.join(", ") || "None"} | j/k: navigate, PageUp/PageDown:
