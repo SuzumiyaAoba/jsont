@@ -3,7 +3,7 @@
  * Specifically testing the functionality around line 26 and getVisibleTreeLines
  */
 
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 import { buildTreeFromJson, expandAll } from "./treeBuilder";
 import {
   getTreeLineText,
@@ -60,6 +60,8 @@ describe("Tree Line Generation and Visibility", () => {
       // Line 26 should be the author field (0-based index 25)
       const line26 = lines[25];
       expect(line26).toBeDefined();
+      if (!line26) throw new Error("Line 26 should be defined");
+
       expect(line26.key).toBe("author");
       expect(line26.type).toBe("primitive");
       expect(line26.level).toBe(1);
@@ -76,20 +78,26 @@ describe("Tree Line Generation and Visibility", () => {
 
       // Verify key structural elements
       const rootLine = lines[0];
+      if (!rootLine) throw new Error("Root line should be defined");
       expect(getTreeLineText(rootLine, defaultOptions)).toBe(".");
 
       const scriptsLine = lines[1];
+      if (!scriptsLine) throw new Error("Scripts line should be defined");
       expect(getTreeLineText(scriptsLine, defaultOptions)).toBe("├─ scripts");
 
       const keywordsLine = lines[17]; // Line 18 (0-based index 17)
+      if (!keywordsLine) throw new Error("Keywords line should be defined");
       expect(getTreeLineText(keywordsLine, defaultOptions)).toBe("├─ keywords");
 
       const lastKeywordLine = lines[24]; // Line 25 (0-based index 24)
+      if (!lastKeywordLine)
+        throw new Error("Last keyword line should be defined");
       expect(getTreeLineText(lastKeywordLine, defaultOptions)).toBe(
         '│  └─ 6: "jsonata"',
       );
 
       const authorLine = lines[25]; // Line 26 (0-based index 25)
+      if (!authorLine) throw new Error("Author line should be defined");
       expect(getTreeLineText(authorLine, defaultOptions)).toBe(
         '└─ author: "test"',
       );
@@ -109,11 +117,17 @@ describe("Tree Line Generation and Visibility", () => {
       const visibleLines = getVisibleTreeLines(allLines, 0, 10);
 
       expect(visibleLines).toHaveLength(10);
-      expect(getTreeLineText(visibleLines[0], defaultOptions)).toBe(".");
-      expect(getTreeLineText(visibleLines[1], defaultOptions)).toBe(
-        "├─ scripts",
-      );
-      expect(getTreeLineText(visibleLines[9], defaultOptions)).toBe(
+      const firstLine = visibleLines[0];
+      if (!firstLine) throw new Error("First visible line should be defined");
+      expect(getTreeLineText(firstLine, defaultOptions)).toBe(".");
+
+      const secondLine = visibleLines[1];
+      if (!secondLine) throw new Error("Second visible line should be defined");
+      expect(getTreeLineText(secondLine, defaultOptions)).toBe("├─ scripts");
+
+      const tenthLine = visibleLines[9];
+      if (!tenthLine) throw new Error("Tenth visible line should be defined");
+      expect(getTreeLineText(tenthLine, defaultOptions)).toBe(
         '│  ├─ lint: "biome lint ./src"',
       );
     });
@@ -123,10 +137,15 @@ describe("Tree Line Generation and Visibility", () => {
 
       expect(visibleLines).toHaveLength(6);
       // Should include lines 21-26 (0-based indices 20-25)
-      expect(getTreeLineText(visibleLines[0], defaultOptions)).toBe(
+      const firstLine = visibleLines[0];
+      if (!firstLine) throw new Error("First line in slice should be defined");
+      expect(getTreeLineText(firstLine, defaultOptions)).toBe(
         '│  ├─ 2: "terminal"',
       );
-      expect(getTreeLineText(visibleLines[5], defaultOptions)).toBe(
+
+      const lastLine = visibleLines[5];
+      if (!lastLine) throw new Error("Last line in slice should be defined");
+      expect(getTreeLineText(lastLine, defaultOptions)).toBe(
         '└─ author: "test"',
       );
     });
@@ -135,9 +154,9 @@ describe("Tree Line Generation and Visibility", () => {
       const visibleLines = getVisibleTreeLines(allLines, 25, 26);
 
       expect(visibleLines).toHaveLength(1);
-      expect(getTreeLineText(visibleLines[0], defaultOptions)).toBe(
-        '└─ author: "test"',
-      );
+      const line26 = visibleLines[0];
+      if (!line26) throw new Error("Line 26 should be defined");
+      expect(getTreeLineText(line26, defaultOptions)).toBe('└─ author: "test"');
     });
 
     it("should handle edge cases correctly", () => {
@@ -161,11 +180,13 @@ describe("Tree Line Generation and Visibility", () => {
 
       // Line 25 (0-based index 24)
       const line25 = visibleLines[0];
+      if (!line25) throw new Error("Line 25 should be defined");
       expect(line25.key).toBe("6");
       expect(line25.value).toBe('"jsonata"');
 
       // Line 26 (0-based index 25)
       const line26 = visibleLines[1];
+      if (!line26) throw new Error("Line 26 should be defined");
       expect(line26.key).toBe("author");
       expect(line26.value).toBe('"test"');
     });
@@ -179,11 +200,13 @@ describe("Tree Line Generation and Visibility", () => {
 
       // Get line 26 directly from full array
       const directLine26 = allLines[25];
+      if (!directLine26) throw new Error("Direct line 26 should be defined");
       const directDisplayText = getTreeLineText(directLine26, defaultOptions);
 
       // Get line 26 via getVisibleTreeLines
       const visibleLines = getVisibleTreeLines(allLines, 25, 26);
       const visibleLine26 = visibleLines[0];
+      if (!visibleLine26) throw new Error("Visible line 26 should be defined");
       const visibleDisplayText = getTreeLineText(visibleLine26, defaultOptions);
 
       expect(directDisplayText).toBe(visibleDisplayText);
@@ -197,7 +220,11 @@ describe("Tree Line Generation and Visibility", () => {
 
       const visibleLines = getVisibleTreeLines(allLines, 25, 26);
       const line26FromVisible = visibleLines[0];
+      if (!line26FromVisible)
+        throw new Error("Line 26 from visible should be defined");
+
       const line26FromAll = allLines[25];
+      if (!line26FromAll) throw new Error("Line 26 from all should be defined");
 
       // Should be the exact same object reference
       expect(line26FromVisible).toBe(line26FromAll);
