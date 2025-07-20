@@ -2,13 +2,6 @@
  * Configuration types for jsont application
  */
 
-export interface KeyBinding {
-  /** Primary key(s) for this action */
-  keys: string[];
-  /** Optional description for documentation */
-  description?: string;
-}
-
 export interface NavigationKeys {
   up: string[];
   down: string[];

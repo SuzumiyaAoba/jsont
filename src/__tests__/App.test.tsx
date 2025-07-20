@@ -16,7 +16,7 @@ type MockKeyInput = {
 
 // Mock input handler for useInput hook
 // @ts-expect-error - mockInputHandler is used in the mock setup but TypeScript can't detect it
-let mockInputHandler: ((input: string, key: MockKeyInput) => void) | null =
+let _mockInputHandler: ((input: string, key: MockKeyInput) => void) | null =
   null;
 
 vi.mock("ink", async () => {
@@ -24,7 +24,7 @@ vi.mock("ink", async () => {
   return {
     ...actual,
     useInput: vi.fn((handler: (input: string, key: MockKeyInput) => void) => {
-      mockInputHandler = handler;
+      _mockInputHandler = handler;
     }),
     useApp: () => ({ exit: vi.fn() }),
   };

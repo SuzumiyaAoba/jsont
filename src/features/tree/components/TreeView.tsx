@@ -52,8 +52,6 @@ export interface TreeViewProps {
   ) => void;
 }
 
-// DEFAULT_OPTIONS removed - now using config.display.tree directly
-
 /**
  * TreeView component for displaying JSON data in an interactive tree structure
  *

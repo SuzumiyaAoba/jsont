@@ -86,8 +86,12 @@ export function App({
     lastKeyAction: string;
     timestamp: string;
   } | null>(null);
-  const [debugVisible, setDebugVisible] = useState<boolean>(false);
-  const [lineNumbersVisible, setLineNumbersVisible] = useState<boolean>(false);
+  const [debugVisible, setDebugVisible] = useState<boolean>(
+    config.display.interface.debugMode,
+  );
+  const [lineNumbersVisible, setLineNumbersVisible] = useState<boolean>(
+    config.display.interface.showLineNumbers,
+  );
   const [schemaVisible, setSchemaVisible] = useState<boolean>(false);
 
   // Export state
@@ -637,8 +641,8 @@ export function App({
           // Scroll down
           const currentMaxScroll = Math.max(
             0,
-            JSON.stringify(currentDisplayData, null, 2).split("\n").length -
-              visibleLines,
+            JSON.stringify(currentDisplayData, null, JSON_INDENT).split("\n")
+              .length - visibleLines,
           );
           setScrollOffset((prev) => Math.min(currentMaxScroll, prev + 1));
         } else if (input === "k" && !key.ctrl) {
@@ -648,8 +652,8 @@ export function App({
           // Half-page down
           const currentMaxScroll = Math.max(
             0,
-            JSON.stringify(currentDisplayData, null, 2).split("\n").length -
-              visibleLines,
+            JSON.stringify(currentDisplayData, null, JSON_INDENT).split("\n")
+              .length - visibleLines,
           );
           setScrollOffset((prev) =>
             Math.min(currentMaxScroll, prev + halfPageLines),
@@ -671,8 +675,8 @@ export function App({
           // Go to bottom
           const currentMaxScroll = Math.max(
             0,
-            JSON.stringify(currentDisplayData, null, 2).split("\n").length -
-              visibleLines,
+            JSON.stringify(currentDisplayData, null, JSON_INDENT).split("\n")
+              .length - visibleLines,
           );
           setScrollOffset(currentMaxScroll);
         } else if (input === "i" && !key.ctrl && !key.meta) {
@@ -745,6 +749,7 @@ export function App({
       handleJqTransformation,
       jqState.error,
       updateDebugInfo,
+      JSON_INDENT,
     ],
   );
 

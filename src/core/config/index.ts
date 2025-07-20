@@ -10,7 +10,6 @@ export type {
   InterfaceConfig,
   JsonDisplayConfig,
   JsontConfig,
-  KeyBinding,
   KeyBindings,
   ModeKeys,
   NavigationConfig,

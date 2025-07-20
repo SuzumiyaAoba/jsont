@@ -8,7 +8,7 @@ The jsont application now supports configuration through a YAML file located at 
 
 ## Configuration File Location
 
-```
+```bash
 ~/.config/jsont/config.yaml
 ```
 
