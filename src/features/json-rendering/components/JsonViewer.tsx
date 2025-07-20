@@ -1,3 +1,4 @@
+import { useConfig } from "@core/context/ConfigContext";
 import type { JsonValue } from "@core/types/index";
 import { BaseViewer } from "@features/common";
 import type {
@@ -6,20 +7,25 @@ import type {
 } from "@features/common/types/viewer";
 import { jsonHighlighter } from "@features/json-rendering/utils/jsonHighlighter";
 
-// Define the data processor for JSON formatting
-const jsonDataProcessor: DataProcessor = (data: JsonValue | null) => {
-  if (!data) return null;
-
-  try {
-    // Format JSON with 2-space indentation for clean display
-    const formattedJson = JSON.stringify(data, null, 2);
-    return formattedJson.split("\n");
-  } catch {
-    return ["Error: Unable to format JSON"];
-  }
-};
-
 export function JsonViewer(props: BaseViewerProps) {
+  const config = useConfig();
+
+  // Create data processor that uses configuration for indentation
+  const jsonDataProcessor: DataProcessor = (data: JsonValue | null) => {
+    if (!data) return null;
+
+    try {
+      // Use configuration for indentation
+      const indent = config.display.json.useTabs
+        ? "\t"
+        : " ".repeat(config.display.json.indent);
+      const formattedJson = JSON.stringify(data, null, indent);
+      return formattedJson.split("\n");
+    } catch {
+      return ["Error: Unable to format JSON"];
+    }
+  };
+
   return (
     <BaseViewer
       {...props}
