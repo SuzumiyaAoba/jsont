@@ -17,212 +17,224 @@ export function getConfigPath(): string {
 }
 
 /**
- * Deep merge two configuration objects
+ * Deep merge two configuration objects with type safety
  */
 function mergeConfig(
   target: JsontConfig,
   source: PartialJsontConfig,
 ): JsontConfig {
-  const result = { ...target };
+  const result: JsontConfig = { ...target };
 
-  for (const key in source) {
-    const sourceValue = source[key as keyof PartialJsontConfig];
-    if (
-      sourceValue &&
-      typeof sourceValue === "object" &&
-      !Array.isArray(sourceValue)
-    ) {
-      const targetValue = result[key as keyof JsontConfig];
-      if (
-        targetValue &&
-        typeof targetValue === "object" &&
-        !Array.isArray(targetValue)
-      ) {
-        result[key as keyof JsontConfig] = {
-          ...targetValue,
-          ...sourceValue,
-        } as any;
+  // Handle keybindings
+  if (source.keybindings) {
+    result.keybindings = {
+      ...target.keybindings,
+      ...source.keybindings,
+      navigation: {
+        ...target.keybindings.navigation,
+        ...source.keybindings.navigation,
+      },
+      modes: {
+        ...target.keybindings.modes,
+        ...source.keybindings.modes,
+      },
+      search: {
+        ...target.keybindings.search,
+        ...source.keybindings.search,
+      },
+    };
+  }
 
-        // Handle nested objects
-        for (const nestedKey in sourceValue) {
-          const nestedSourceValue =
-            sourceValue[nestedKey as keyof typeof sourceValue];
-          const nestedTargetValue = (targetValue as any)[nestedKey];
-          if (
-            nestedSourceValue &&
-            typeof nestedSourceValue === "object" &&
-            !Array.isArray(nestedSourceValue) &&
-            nestedTargetValue &&
-            typeof nestedTargetValue === "object" &&
-            !Array.isArray(nestedTargetValue)
-          ) {
-            (result[key as keyof JsontConfig] as any)[nestedKey] = {
-              ...(nestedTargetValue as Record<string, any>),
-              ...(nestedSourceValue as Record<string, any>),
-            };
-          }
-        }
-      }
-    } else if (sourceValue !== undefined) {
-      (result as any)[key] = sourceValue;
-    }
+  // Handle display
+  if (source.display) {
+    result.display = {
+      ...target.display,
+      ...source.display,
+      json: {
+        ...target.display.json,
+        ...source.display.json,
+      },
+      tree: {
+        ...target.display.tree,
+        ...source.display.tree,
+      },
+      interface: {
+        ...target.display.interface,
+        ...source.display.interface,
+      },
+    };
+  }
+
+  // Handle behavior
+  if (source.behavior) {
+    result.behavior = {
+      ...target.behavior,
+      ...source.behavior,
+      search: {
+        ...target.behavior.search,
+        ...source.behavior.search,
+      },
+      navigation: {
+        ...target.behavior.navigation,
+        ...source.behavior.navigation,
+      },
+    };
   }
 
   return result;
 }
 
 /**
+ * Type guards for configuration validation
+ */
+function isObject(value: unknown): value is Record<string, any> {
+  return value !== null && typeof value === "object" && !Array.isArray(value);
+}
+
+function isStringArray(value: unknown): value is string[] {
+  return (
+    Array.isArray(value) && value.every((item) => typeof item === "string")
+  );
+}
+
+function isValidKeyBindings(value: unknown): value is Record<string, string[]> {
+  if (!isObject(value)) return false;
+  return Object.values(value).every(isStringArray);
+}
+
+/**
  * Validate configuration object
  */
-function validateConfig(config: any): PartialJsontConfig {
+function validateConfig(config: unknown): PartialJsontConfig {
   // Basic validation - ensure required sections exist and have correct types
   const validated: PartialJsontConfig = {};
 
   // Handle null or undefined config
-  if (!config || typeof config !== "object") {
+  if (!isObject(config)) {
     return validated;
   }
 
-  if (config.keybindings && typeof config.keybindings === "object") {
+  // Validate keybindings with safe type assertion
+  const configObj = config as Record<string, any>;
+
+  if (isObject(configObj.keybindings)) {
     validated.keybindings = {};
 
-    if (
-      config.keybindings.navigation &&
-      typeof config.keybindings.navigation === "object"
-    ) {
-      validated.keybindings.navigation = {};
-      for (const [key, value] of Object.entries(
-        config.keybindings.navigation,
-      )) {
-        if (Array.isArray(value) && value.every((v) => typeof v === "string")) {
-          (validated.keybindings.navigation as any)[key] = value;
-        }
-      }
+    if (isValidKeyBindings(configObj.keybindings.navigation)) {
+      validated.keybindings.navigation = configObj.keybindings.navigation;
     }
 
-    if (
-      config.keybindings.modes &&
-      typeof config.keybindings.modes === "object"
-    ) {
-      validated.keybindings.modes = {};
-      for (const [key, value] of Object.entries(config.keybindings.modes)) {
-        if (Array.isArray(value) && value.every((v) => typeof v === "string")) {
-          (validated.keybindings.modes as any)[key] = value;
-        }
-      }
+    if (isValidKeyBindings(configObj.keybindings.modes)) {
+      validated.keybindings.modes = configObj.keybindings.modes;
     }
 
-    if (
-      config.keybindings.search &&
-      typeof config.keybindings.search === "object"
-    ) {
-      validated.keybindings.search = {};
-      for (const [key, value] of Object.entries(config.keybindings.search)) {
-        if (Array.isArray(value) && value.every((v) => typeof v === "string")) {
-          (validated.keybindings.search as any)[key] = value;
-        }
-      }
+    if (isValidKeyBindings(configObj.keybindings.search)) {
+      validated.keybindings.search = configObj.keybindings.search;
     }
   }
 
-  if (config.display && typeof config.display === "object") {
+  if (configObj.display && typeof configObj.display === "object") {
     validated.display = {};
 
-    if (config.display.json && typeof config.display.json === "object") {
+    if (configObj.display.json && typeof configObj.display.json === "object") {
       validated.display.json = {};
-      if (typeof config.display.json.indent === "number") {
-        validated.display.json.indent = config.display.json.indent;
+      if (typeof configObj.display.json.indent === "number") {
+        validated.display.json.indent = configObj.display.json.indent;
       }
-      if (typeof config.display.json.useTabs === "boolean") {
-        validated.display.json.useTabs = config.display.json.useTabs;
+      if (typeof configObj.display.json.useTabs === "boolean") {
+        validated.display.json.useTabs = configObj.display.json.useTabs;
       }
-      if (typeof config.display.json.maxLineLength === "number") {
+      if (typeof configObj.display.json.maxLineLength === "number") {
         validated.display.json.maxLineLength =
-          config.display.json.maxLineLength;
+          configObj.display.json.maxLineLength;
       }
     }
 
-    if (config.display.tree && typeof config.display.tree === "object") {
+    if (configObj.display.tree && typeof configObj.display.tree === "object") {
       validated.display.tree = {};
-      if (typeof config.display.tree.showArrayIndices === "boolean") {
+      if (typeof configObj.display.tree.showArrayIndices === "boolean") {
         validated.display.tree.showArrayIndices =
-          config.display.tree.showArrayIndices;
+          configObj.display.tree.showArrayIndices;
       }
-      if (typeof config.display.tree.showPrimitiveValues === "boolean") {
+      if (typeof configObj.display.tree.showPrimitiveValues === "boolean") {
         validated.display.tree.showPrimitiveValues =
-          config.display.tree.showPrimitiveValues;
+          configObj.display.tree.showPrimitiveValues;
       }
-      if (typeof config.display.tree.maxValueLength === "number") {
+      if (typeof configObj.display.tree.maxValueLength === "number") {
         validated.display.tree.maxValueLength =
-          config.display.tree.maxValueLength;
+          configObj.display.tree.maxValueLength;
       }
-      if (typeof config.display.tree.useUnicodeTree === "boolean") {
+      if (typeof configObj.display.tree.useUnicodeTree === "boolean") {
         validated.display.tree.useUnicodeTree =
-          config.display.tree.useUnicodeTree;
+          configObj.display.tree.useUnicodeTree;
       }
-      if (typeof config.display.tree.showSchemaTypes === "boolean") {
+      if (typeof configObj.display.tree.showSchemaTypes === "boolean") {
         validated.display.tree.showSchemaTypes =
-          config.display.tree.showSchemaTypes;
+          configObj.display.tree.showSchemaTypes;
       }
     }
 
     if (
-      config.display.interface &&
-      typeof config.display.interface === "object"
+      configObj.display.interface &&
+      typeof configObj.display.interface === "object"
     ) {
       validated.display.interface = {};
-      if (typeof config.display.interface.showLineNumbers === "boolean") {
+      if (typeof configObj.display.interface.showLineNumbers === "boolean") {
         validated.display.interface.showLineNumbers =
-          config.display.interface.showLineNumbers;
+          configObj.display.interface.showLineNumbers;
       }
-      if (typeof config.display.interface.debugMode === "boolean") {
+      if (typeof configObj.display.interface.debugMode === "boolean") {
         validated.display.interface.debugMode =
-          config.display.interface.debugMode;
+          configObj.display.interface.debugMode;
       }
-      if (typeof config.display.interface.defaultHeight === "number") {
+      if (typeof configObj.display.interface.defaultHeight === "number") {
         validated.display.interface.defaultHeight =
-          config.display.interface.defaultHeight;
+          configObj.display.interface.defaultHeight;
       }
-      if (typeof config.display.interface.showStatusBar === "boolean") {
+      if (typeof configObj.display.interface.showStatusBar === "boolean") {
         validated.display.interface.showStatusBar =
-          config.display.interface.showStatusBar;
+          configObj.display.interface.showStatusBar;
       }
     }
   }
 
-  if (config.behavior && typeof config.behavior === "object") {
+  if (configObj.behavior && typeof configObj.behavior === "object") {
     validated.behavior = {};
 
-    if (config.behavior.search && typeof config.behavior.search === "object") {
+    if (
+      configObj.behavior.search &&
+      typeof configObj.behavior.search === "object"
+    ) {
       validated.behavior.search = {};
-      if (typeof config.behavior.search.caseSensitive === "boolean") {
+      if (typeof configObj.behavior.search.caseSensitive === "boolean") {
         validated.behavior.search.caseSensitive =
-          config.behavior.search.caseSensitive;
+          configObj.behavior.search.caseSensitive;
       }
-      if (typeof config.behavior.search.regex === "boolean") {
-        validated.behavior.search.regex = config.behavior.search.regex;
+      if (typeof configObj.behavior.search.regex === "boolean") {
+        validated.behavior.search.regex = configObj.behavior.search.regex;
       }
-      if (typeof config.behavior.search.highlight === "boolean") {
-        validated.behavior.search.highlight = config.behavior.search.highlight;
+      if (typeof configObj.behavior.search.highlight === "boolean") {
+        validated.behavior.search.highlight =
+          configObj.behavior.search.highlight;
       }
     }
 
     if (
-      config.behavior.navigation &&
-      typeof config.behavior.navigation === "object"
+      configObj.behavior.navigation &&
+      typeof configObj.behavior.navigation === "object"
     ) {
       validated.behavior.navigation = {};
-      if (typeof config.behavior.navigation.halfPageScroll === "boolean") {
+      if (typeof configObj.behavior.navigation.halfPageScroll === "boolean") {
         validated.behavior.navigation.halfPageScroll =
-          config.behavior.navigation.halfPageScroll;
+          configObj.behavior.navigation.halfPageScroll;
       }
-      if (typeof config.behavior.navigation.autoScroll === "boolean") {
+      if (typeof configObj.behavior.navigation.autoScroll === "boolean") {
         validated.behavior.navigation.autoScroll =
-          config.behavior.navigation.autoScroll;
+          configObj.behavior.navigation.autoScroll;
       }
-      if (typeof config.behavior.navigation.scrollOffset === "number") {
+      if (typeof configObj.behavior.navigation.scrollOffset === "number") {
         validated.behavior.navigation.scrollOffset =
-          config.behavior.navigation.scrollOffset;
+          configObj.behavior.navigation.scrollOffset;
       }
     }
   }
@@ -243,7 +255,7 @@ export function loadConfig(): JsontConfig {
 
   try {
     const fileContent = readFileSync(configPath, "utf-8");
-    const parsedConfig = yamlLoad(fileContent) as any;
+    const parsedConfig = yamlLoad(fileContent) as unknown;
 
     // Validate and sanitize the configuration
     const validatedConfig = validateConfig(parsedConfig);
@@ -260,13 +272,16 @@ export function loadConfig(): JsontConfig {
 /**
  * Get a specific configuration value by path
  */
-export function getConfigValue<T = any>(config: JsontConfig, path: string): T {
+export function getConfigValue<T = unknown>(
+  config: JsontConfig,
+  path: string,
+): T {
   const keys = path.split(".");
-  let current: any = config;
+  let current: unknown = config;
 
   for (const key of keys) {
     if (current && typeof current === "object" && key in current) {
-      current = current[key];
+      current = (current as Record<string, any>)[key];
     } else {
       throw new Error(`Configuration path "${path}" not found`);
     }
