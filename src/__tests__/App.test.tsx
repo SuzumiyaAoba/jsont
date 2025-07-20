@@ -13,6 +13,8 @@ type MockKeyInput = {
   delete?: boolean;
 };
 
+// Mock input handler for useInput hook
+// @ts-expect-error - mockInputHandler is used in the mock setup but TypeScript can't detect it
 let mockInputHandler: ((input: string, key: MockKeyInput) => void) | null =
   null;
 
