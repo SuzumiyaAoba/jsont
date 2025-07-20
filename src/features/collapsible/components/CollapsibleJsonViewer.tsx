@@ -235,7 +235,7 @@ export const CollapsibleJsonViewer = forwardRef<
   );
 
   return (
-    <Box flexGrow={1} flexDirection="column" padding={1}>
+    <Box flexGrow={1} flexDirection="column">
       <Box flexDirection="column">
         {visibleLineData.map((line, index) => {
           const originalIndex = index;

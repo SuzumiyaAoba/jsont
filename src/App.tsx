@@ -132,6 +132,10 @@ export function App({
       return "tree" as const;
     } else if (jqState.isActive) {
       return "filter" as const;
+    } else if (collapsibleMode) {
+      return "collapsible" as const;
+    } else if (schemaVisible) {
+      return "schema" as const;
     } else {
       return "raw" as const;
     }
@@ -140,6 +144,8 @@ export function App({
     searchState.searchTerm,
     treeViewMode,
     jqState.isActive,
+    collapsibleMode,
+    schemaVisible,
   ]);
   const [jqInput, setJqInput] = useState<string>("");
   const [jqCursorPosition, setJqCursorPosition] = useState<number>(0);
@@ -279,7 +285,7 @@ export function App({
   const searchBarLines = searchBarHeight; // Dynamic search bar height
   const debugBarLines = debugBarHeight; // Debug bar height based on content
   const jqBarLines = jqState.isActive ? (jqState.error ? 12 : 7) : 0; // jq query input height (with error box)
-  const contentPaddingLines = 2; // JsonViewer padding={1} adds 1 line top + 1 line bottom
+  const contentPaddingLines = 0; // Removed padding from viewers to fix first line display issue
   const UI_RESERVED_LINES =
     statusBarLines +
     searchBarLines +
