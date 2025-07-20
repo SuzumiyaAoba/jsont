@@ -1,5 +1,7 @@
+import { ConfigProvider } from "@core/context/ConfigContext";
 import type { JsonValue } from "@core/types/index";
 import { render } from "ink-testing-library";
+import React from "react";
 import { describe, expect, it, vi } from "vitest";
 import { App } from "@/App";
 
@@ -43,7 +45,9 @@ describe("Goto Navigation (gg/G)", () => {
     const data = createLargeJsonData();
 
     const { lastFrame } = render(
-      <App initialData={data} keyboardEnabled={true} />,
+      <ConfigProvider>
+        <App initialData={data} keyboardEnabled={true} />
+      </ConfigProvider>,
     );
 
     const output = lastFrame();
@@ -55,7 +59,9 @@ describe("Goto Navigation (gg/G)", () => {
     const data = { test: "data" };
 
     const { lastFrame } = render(
-      <App initialData={data} keyboardEnabled={true} />,
+      <ConfigProvider>
+        <App initialData={data} keyboardEnabled={true} />
+      </ConfigProvider>,
     );
 
     const output = lastFrame();
@@ -67,7 +73,9 @@ describe("Goto Navigation (gg/G)", () => {
     const data = createLargeJsonData();
 
     const { lastFrame } = render(
-      <App initialData={data} keyboardEnabled={false} />,
+      <ConfigProvider>
+        <App initialData={data} keyboardEnabled={false} />
+      </ConfigProvider>,
     );
 
     const output = lastFrame();
@@ -80,7 +88,9 @@ describe("Goto Navigation (gg/G)", () => {
     const data = { simple: "data" };
 
     const { lastFrame } = render(
-      <App initialData={data} keyboardEnabled={true} />,
+      <ConfigProvider>
+        <App initialData={data} keyboardEnabled={true} />
+      </ConfigProvider>,
     );
 
     const output = lastFrame();

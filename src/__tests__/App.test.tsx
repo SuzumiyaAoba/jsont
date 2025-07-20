@@ -1,4 +1,6 @@
+import { ConfigProvider } from "@core/context/ConfigContext.js";
 import { render } from "ink-testing-library";
+import React from "react";
 import { describe, expect, it, vi } from "vitest";
 import { App } from "@/App.js";
 
@@ -33,7 +35,9 @@ describe("App", () => {
   it("should render without error", () => {
     const data = { key: "value" };
     const { lastFrame } = render(
-      <App initialData={data} keyboardEnabled={true} />,
+      <ConfigProvider>
+        <App initialData={data} keyboardEnabled={true} />
+      </ConfigProvider>,
     );
 
     // Should show JSON content
@@ -44,11 +48,13 @@ describe("App", () => {
 
   it("should render when no data is provided", () => {
     const { lastFrame } = render(
-      <App
-        initialData={null}
-        initialError="Test error"
-        keyboardEnabled={true}
-      />,
+      <ConfigProvider>
+        <App
+          initialData={null}
+          initialError="Test error"
+          keyboardEnabled={true}
+        />
+      </ConfigProvider>,
     );
 
     const output = lastFrame();
@@ -58,7 +64,9 @@ describe("App", () => {
   it("should show JSON content when keyboard is enabled", () => {
     const data = { test: "data" };
     const { lastFrame } = render(
-      <App initialData={data} keyboardEnabled={true} />,
+      <ConfigProvider>
+        <App initialData={data} keyboardEnabled={true} />
+      </ConfigProvider>,
     );
 
     const output = lastFrame();
@@ -69,7 +77,9 @@ describe("App", () => {
   it("should show initializing message when keyboard is disabled", () => {
     const data = { test: "data" };
     const { lastFrame } = render(
-      <App initialData={data} keyboardEnabled={false} />,
+      <ConfigProvider>
+        <App initialData={data} keyboardEnabled={false} />
+      </ConfigProvider>,
     );
 
     const output = lastFrame();
@@ -79,7 +89,9 @@ describe("App", () => {
 
   it("should handle null data gracefully", () => {
     const { lastFrame } = render(
-      <App initialData={null} keyboardEnabled={true} />,
+      <ConfigProvider>
+        <App initialData={null} keyboardEnabled={true} />
+      </ConfigProvider>,
     );
 
     const output = lastFrame();

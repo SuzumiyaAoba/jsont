@@ -1,4 +1,6 @@
+import { ConfigProvider } from "@core/context/ConfigContext";
 import { render } from "ink-testing-library";
+import React from "react";
 import { describe, expect, it, vi } from "vitest";
 import { App } from "@/App";
 
@@ -85,7 +87,9 @@ describe("Line Numbers Functionality", () => {
   it("should render JSON data correctly", () => {
     const data = { name: "test", value: 123 };
     const { lastFrame } = render(
-      <App initialData={data} keyboardEnabled={true} />,
+      <ConfigProvider>
+        <App initialData={data} keyboardEnabled={true} />
+      </ConfigProvider>,
     );
 
     const output = lastFrame();

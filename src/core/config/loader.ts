@@ -78,6 +78,11 @@ function validateConfig(config: any): PartialJsontConfig {
   // Basic validation - ensure required sections exist and have correct types
   const validated: PartialJsontConfig = {};
 
+  // Handle null or undefined config
+  if (!config || typeof config !== "object") {
+    return validated;
+  }
+
   if (config.keybindings && typeof config.keybindings === "object") {
     validated.keybindings = {};
 
