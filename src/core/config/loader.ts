@@ -35,7 +35,6 @@ function mergeConfig(
   if (source.keybindings) {
     result.keybindings = {
       ...target.keybindings,
-      ...source.keybindings,
       navigation: {
         ...target.keybindings.navigation,
         ...source.keybindings.navigation,
@@ -55,7 +54,6 @@ function mergeConfig(
   if (source.display) {
     result.display = {
       ...target.display,
-      ...source.display,
       json: {
         ...target.display.json,
         ...source.display.json,
@@ -75,7 +73,6 @@ function mergeConfig(
   if (source.behavior) {
     result.behavior = {
       ...target.behavior,
-      ...source.behavior,
       search: {
         ...target.behavior.search,
         ...source.behavior.search,
