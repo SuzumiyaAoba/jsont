@@ -31,22 +31,22 @@ function getCommonHelpSections(): HelpSection[] {
     {
       title: "Mode Switching",
       shortcuts: [
-        { key: "t", description: "Switch to Tree View mode", category: "mode" },
-        { key: "s", description: "Switch to Search mode", category: "mode" },
-        { key: "f", description: "Switch to Filter mode", category: "mode" },
-        { key: "r", description: "Switch to Raw mode", category: "mode" },
+        { key: "T", description: "Toggle Tree View mode", category: "mode" },
+        { key: "s", description: "Start Search mode", category: "mode" },
+        { key: "J", description: "Toggle jq Filter mode", category: "mode" },
+        { key: "C", description: "Toggle Collapsible mode", category: "mode" },
+        { key: "S", description: "Toggle Schema view", category: "mode" },
+        { key: "D", description: "Toggle Debug Log Viewer", category: "mode" },
       ],
     },
     {
       title: "Global Controls",
       shortcuts: [
         { key: "?", description: "Toggle this help", category: "global" },
-        {
-          key: "Esc",
-          description: "Exit current mode/close dialogs",
-          category: "global",
-        },
+        { key: "q", description: "Quit application", category: "global" },
         { key: "Ctrl+C", description: "Exit application", category: "global" },
+        { key: "E", description: "Export JSON Schema", category: "global" },
+        { key: "L", description: "Toggle line numbers", category: "global" },
       ],
     },
   ];
@@ -65,13 +65,13 @@ function getModeSpecificHelpSections(mode: AppMode): HelpSection[] {
             { key: "j / ↓", description: "Move down", category: "navigation" },
             { key: "k / ↑", description: "Move up", category: "navigation" },
             {
-              key: "Page Up/Down",
-              description: "Navigate by page",
+              key: "Ctrl+b",
+              description: "Page up",
               category: "navigation",
             },
             {
-              key: "Ctrl+b/f",
-              description: "Page up/down (alternative)",
+              key: "Ctrl+f",
+              description: "Page down",
               category: "navigation",
             },
             {
@@ -125,12 +125,12 @@ function getModeSpecificHelpSections(mode: AppMode): HelpSection[] {
           shortcuts: [
             {
               key: "Enter",
-              description: "Start/confirm search",
+              description: "Confirm search",
               category: "search",
             },
             {
               key: "Esc",
-              description: "Cancel search input",
+              description: "Exit search mode",
               category: "search",
             },
             {
@@ -149,6 +149,11 @@ function getModeSpecificHelpSections(mode: AppMode): HelpSection[] {
               category: "navigation",
             },
             { key: "s", description: "Start new search", category: "search" },
+            {
+              key: "q",
+              description: "Return to search input",
+              category: "search",
+            },
           ],
         },
         {
@@ -187,13 +192,18 @@ function getModeSpecificHelpSections(mode: AppMode): HelpSection[] {
     case "filter":
       return [
         {
-          title: "Filter Operations",
+          title: "jq Filter Operations",
           shortcuts: [
-            { key: "Enter", description: "Apply filter", category: "filter" },
-            { key: "Esc", description: "Clear filter", category: "filter" },
+            {
+              key: "Enter",
+              description: "Apply jq filter",
+              category: "filter",
+            },
+            { key: "Esc", description: "Exit jq mode", category: "filter" },
+            { key: "J", description: "Exit jq mode", category: "filter" },
             {
               key: "Tab",
-              description: "Switch filter type",
+              description: "Switch between input/output",
               category: "filter",
             },
           ],
@@ -218,10 +228,127 @@ function getModeSpecificHelpSections(mode: AppMode): HelpSection[] {
               category: "editing",
             },
             {
+              key: "Ctrl+W",
+              description: "Delete word backward",
+              category: "editing",
+            },
+            {
               key: "←/→",
               description: "Move cursor left/right",
               category: "editing",
             },
+          ],
+        },
+        {
+          title: "JSON Result Navigation",
+          shortcuts: [
+            {
+              key: "j/k",
+              description: "Scroll up/down",
+              category: "navigation",
+            },
+            { key: "Ctrl+f", description: "Page down", category: "navigation" },
+            { key: "Ctrl+b", description: "Page up", category: "navigation" },
+            { key: "gg", description: "Go to top", category: "navigation" },
+            { key: "G", description: "Go to bottom", category: "navigation" },
+            { key: "i", description: "Return to input mode", category: "mode" },
+            {
+              key: "o",
+              description: "Toggle original/result",
+              category: "display",
+            },
+          ],
+        },
+        {
+          title: "Error Navigation",
+          shortcuts: [
+            {
+              key: "Shift+↑",
+              description: "Scroll error up",
+              category: "error",
+            },
+            {
+              key: "Shift+↓",
+              description: "Scroll error down",
+              category: "error",
+            },
+          ],
+        },
+      ];
+
+    case "collapsible":
+      return [
+        {
+          title: "Collapsible View Navigation",
+          shortcuts: [
+            {
+              key: "j / ↓",
+              description: "Move cursor down",
+              category: "navigation",
+            },
+            {
+              key: "k / ↑",
+              description: "Move cursor up",
+              category: "navigation",
+            },
+            {
+              key: "Ctrl+f",
+              description: "Page down",
+              category: "navigation",
+            },
+            {
+              key: "Ctrl+b",
+              description: "Page up",
+              category: "navigation",
+            },
+            { key: "gg", description: "Go to top", category: "navigation" },
+            { key: "G", description: "Go to bottom", category: "navigation" },
+          ],
+        },
+        {
+          title: "Collapsible Operations",
+          shortcuts: [
+            {
+              key: "Space/Enter",
+              description: "Toggle node",
+              category: "operation",
+            },
+            { key: "o", description: "Expand node", category: "operation" },
+            { key: "c", description: "Collapse node", category: "operation" },
+            { key: "O", description: "Expand all", category: "operation" },
+          ],
+        },
+      ];
+
+    case "schema":
+      return [
+        {
+          title: "Schema View Navigation",
+          shortcuts: [
+            {
+              key: "j",
+              description: "Scroll down",
+              category: "navigation",
+            },
+            { key: "k", description: "Scroll up", category: "navigation" },
+            {
+              key: "Ctrl+f",
+              description: "Page down",
+              category: "navigation",
+            },
+            {
+              key: "Ctrl+b",
+              description: "Page up",
+              category: "navigation",
+            },
+            { key: "gg", description: "Go to top", category: "navigation" },
+            { key: "G", description: "Go to bottom", category: "navigation" },
+          ],
+        },
+        {
+          title: "Schema Operations",
+          shortcuts: [
+            { key: "E", description: "Export schema", category: "operation" },
           ],
         },
       ];
@@ -232,34 +359,23 @@ function getModeSpecificHelpSections(mode: AppMode): HelpSection[] {
           title: "Raw View Navigation",
           shortcuts: [
             {
-              key: "j / ↓",
+              key: "j",
               description: "Scroll down",
               category: "navigation",
             },
-            { key: "k / ↑", description: "Scroll up", category: "navigation" },
+            { key: "k", description: "Scroll up", category: "navigation" },
             {
-              key: "Page Up/Down",
-              description: "Navigate by page",
+              key: "Ctrl+f",
+              description: "Page down",
               category: "navigation",
             },
-            { key: "g", description: "Go to top", category: "navigation" },
+            {
+              key: "Ctrl+b",
+              description: "Page up",
+              category: "navigation",
+            },
+            { key: "gg", description: "Go to top", category: "navigation" },
             { key: "G", description: "Go to bottom", category: "navigation" },
-          ],
-        },
-        {
-          title: "Display Options",
-          shortcuts: [
-            { key: "w", description: "Toggle word wrap", category: "display" },
-            {
-              key: "n",
-              description: "Toggle line numbers",
-              category: "display",
-            },
-            {
-              key: "i",
-              description: "Toggle syntax highlighting",
-              category: "display",
-            },
           ],
         },
       ];
@@ -275,9 +391,12 @@ function getModeSpecificHelpSections(mode: AppMode): HelpSection[] {
 export function getQuickHelpText(mode: AppMode): string {
   const quickHelp: Record<AppMode, string> = {
     tree: "j/k: move, Space: toggle, e/c: expand/collapse all, ?: help",
-    search: "Enter: search, n/N: next/prev, Tab: scope, ?: help",
-    filter: "Enter: apply, Esc: clear, Tab: type, ?: help",
-    raw: "j/k: scroll, w: wrap, n: numbers, ?: help",
+    search: "Enter: search, n/N: next/prev, Tab: scope, q: input, ?: help",
+    filter: "Enter: apply, Tab: switch, i: input, o: toggle view, ?: help",
+    collapsible:
+      "j/k: move, Space: toggle, o/c: expand/collapse, O: all, ?: help",
+    schema: "j/k: scroll, Ctrl+f/b: page, E: export, ?: help",
+    raw: "j/k: scroll, Ctrl+f/b: page, gg/G: top/bottom, ?: help",
   };
 
   return quickHelp[mode] || "?: help";
@@ -340,12 +459,26 @@ export function getAvailableModes(): Array<{
 }> {
   return [
     {
-      key: "t",
+      key: "T",
       mode: "tree",
       description: "Tree View - Hierarchical JSON structure",
     },
     { key: "s", mode: "search", description: "Search - Find content in JSON" },
-    { key: "f", mode: "filter", description: "Filter - Apply filters to data" },
-    { key: "r", mode: "raw", description: "Raw - Plain text JSON view" },
+    {
+      key: "J",
+      mode: "filter",
+      description: "jq Filter - Apply jq expressions",
+    },
+    {
+      key: "C",
+      mode: "collapsible",
+      description: "Collapsible - Interactive JSON tree",
+    },
+    {
+      key: "S",
+      mode: "schema",
+      description: "Schema View - JSON Schema visualization",
+    },
+    { key: "", mode: "raw", description: "Raw View - Simple scrollable JSON" },
   ];
 }

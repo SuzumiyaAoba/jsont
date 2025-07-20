@@ -33,48 +33,46 @@ export function HelpViewer({ mode, height = 20, width = 80 }: HelpViewerProps) {
       {/* Help content with border frame */}
       <Box
         flexDirection="column"
-        width={Math.min(width - 4, 76)}
-        height={Math.min(height - 4, 18)}
+        width={70}
         borderStyle="double"
         borderColor="cyan"
         paddingX={2}
         paddingY={1}
       >
         {/* Header */}
-        <Box justifyContent="center" marginBottom={1}>
+        <Box justifyContent="center">
           <Text color="cyan" bold>
             HELP - {mode.toUpperCase()} MODE
           </Text>
         </Box>
 
+        {/* Empty line after header */}
+        <Text> </Text>
+
         {/* Help Content */}
-        <Box flexDirection="column" flexGrow={1}>
-          {helpContent.map((section, _sectionIndex) => (
-            <Box key={section.title} flexDirection="column" marginBottom={1}>
-              <Text color="yellow" bold>
-                {section.title}
+        {helpContent.map((section, sectionIndex) => (
+          <Box key={section.title} flexDirection="column">
+            <Text color="yellow" bold>
+              {section.title}
+            </Text>
+            {section.shortcuts.map((shortcut, index) => (
+              <Text key={`${section.title}-${shortcut.key}-${index}`}>
+                <Text color="cyan" bold>
+                  {`  ${shortcut.key.padEnd(18)}`}
+                </Text>
+                <Text color="white">{shortcut.description}</Text>
               </Text>
-              <Box height={1} />
-              {section.shortcuts.map((shortcut, index) => (
-                <Box
-                  key={`${shortcut.key}-${index}`}
-                  flexDirection="row"
-                  marginLeft={2}
-                >
-                  <Text color="cyan" bold>
-                    {shortcut.key.padEnd(12)}
-                  </Text>
-                  <Text color="white">{shortcut.description}</Text>
-                </Box>
-              ))}
-              {/* Add extra spacing after each section */}
-              <Box height={1} />
-            </Box>
-          ))}
-        </Box>
+            ))}
+            {/* Add spacing between sections except for the last one */}
+            {sectionIndex < helpContent.length - 1 && <Text> </Text>}
+          </Box>
+        ))}
+
+        {/* Empty line before footer */}
+        <Text> </Text>
 
         {/* Footer */}
-        <Box justifyContent="center" marginTop={1}>
+        <Box justifyContent="center">
           <Text color="gray" italic>
             Press ? again or Esc to close help
           </Text>

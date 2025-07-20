@@ -14,10 +14,10 @@ describe("HelpViewer", () => {
 
     const output = lastFrame();
     expect(output).toContain("HELP - TREE MODE");
-    expect(output).toContain("Tr"); // "Tree Navigation" が "Tr" として短縮表示
-    expect(output).toContain("Tre"); // "Tree Operations" が "Tre" として短縮表示
-    expect(output).toContain("j / ↓"); // "j / ↓" が表示されることを確認
-    expect(output).toContain("expansion"); // "Toggle node expansion" の "expansion" をチェック
+    expect(output).toContain("k / ↑");
+    expect(output).toContain("Move up");
+    expect(output).toContain("Expand all nodes");
+    expect(output).toContain("Toggle schema type display");
   });
 
   it("should render help content for search mode", () => {
@@ -27,9 +27,9 @@ describe("HelpViewer", () => {
 
     const output = lastFrame();
     expect(output).toContain("HELP - SEARCH MODE");
-    expect(output).toContain("Se"); // "Search Operations" が短縮表示
-    expect(output).toContain("Te"); // "Text Input" が短縮表示
-    expect(output).toContain("search");
+    expect(output).toContain("Exit search mode");
+    expect(output).toContain("Go to next result");
+    expect(output).toContain("Return to search input");
   });
 
   it("should render help content for filter mode", () => {
@@ -39,8 +39,30 @@ describe("HelpViewer", () => {
 
     const output = lastFrame();
     expect(output).toContain("HELP - FILTER MODE");
-    expect(output).toContain("Fi"); // "Filter Operations" が短縮表示
-    expect(output).toContain("filter");
+    expect(output).toContain("Exit jq mode");
+    expect(output).toContain("Switch between input/output");
+  });
+
+  it("should render help content for schema mode", () => {
+    const { lastFrame } = render(
+      <HelpViewer mode="schema" height={20} width={80} />,
+    );
+
+    const output = lastFrame();
+    expect(output).toContain("HELP - SCHEMA MODE");
+    expect(output).toContain("Scroll down");
+    expect(output).toContain("Export schema");
+  });
+
+  it("should render help content for collapsible mode", () => {
+    const { lastFrame } = render(
+      <HelpViewer mode="collapsible" height={20} width={80} />,
+    );
+
+    const output = lastFrame();
+    expect(output).toContain("HELP - COLLAPSIBLE MODE");
+    expect(output).toContain("Move cursor down");
+    expect(output).toContain("Toggle node");
   });
 
   it("should render help content for raw mode", () => {
@@ -50,12 +72,19 @@ describe("HelpViewer", () => {
 
     const output = lastFrame();
     expect(output).toContain("HELP - RAW MODE");
-    expect(output).toContain("Ra"); // "Raw View Navigation" が短縮表示
-    expect(output).toContain("Di"); // "Display Options" が短縮表示
+    expect(output).toContain("Scroll down");
+    expect(output).toContain("Page down");
   });
 
-  it("should include common help sections in all modes", () => {
-    const modes = ["tree", "search", "filter", "raw"] as const;
+  it("should include help header in all modes", () => {
+    const modes = [
+      "tree",
+      "search",
+      "filter",
+      "collapsible",
+      "schema",
+      "raw",
+    ] as const;
 
     for (const mode of modes) {
       const { lastFrame } = render(
@@ -63,9 +92,8 @@ describe("HelpViewer", () => {
       );
 
       const output = lastFrame();
-      expect(output).toContain("Mo"); // "Mode Switching" の一部が確実に含まれることをチェック
-      expect(output).toContain("Gl"); // "Global Controls" が短縮表示
-      expect(output).toContain("HELP -");
+      expect(output).toContain(`HELP - ${mode.toUpperCase()} MODE`);
+      expect(output).toContain("Press ? again or Esc to close help");
     }
   });
 });
