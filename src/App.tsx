@@ -10,6 +10,7 @@ import type { NavigationAction } from "@features/collapsible/types/collapsible";
 import { handleTextInput } from "@features/common/components/TextInput";
 import { DebugBar } from "@features/debug/components/DebugBar";
 import { DebugLogViewer } from "@features/debug/components/DebugLogViewer";
+import { HelpViewer } from "@features/help/components/HelpViewer";
 import { JqQueryInput } from "@features/jq/components/JqQueryInput";
 import type { JqState } from "@features/jq/types/jq";
 import { transformWithJq } from "@features/jq/utils/jqTransform";
@@ -32,7 +33,6 @@ import {
   searchInJson,
   searchInJsonSchema,
 } from "@features/search/utils/searchUtils";
-import { StatusBar } from "@features/status/components/StatusBar";
 import {
   calculateStatusBarHeight,
   getStatusContent,
@@ -101,6 +101,7 @@ export function App({
   const [helpVisible, setHelpVisible] = useState<boolean>(false);
   const [debugLogViewerVisible, setDebugLogViewerVisible] =
     useState<boolean>(false);
+
   const [treeViewKeyboardHandler, setTreeViewKeyboardHandler] =
     useState<KeyboardHandler | null>(null);
 
@@ -122,6 +123,24 @@ export function App({
     isProcessing: false,
     showOriginal: false,
   });
+
+  // Determine current mode for help system
+  const currentMode = useMemo(() => {
+    if (searchState.isSearching || searchState.searchTerm) {
+      return "search" as const;
+    } else if (treeViewMode) {
+      return "tree" as const;
+    } else if (jqState.isActive) {
+      return "filter" as const;
+    } else {
+      return "raw" as const;
+    }
+  }, [
+    searchState.isSearching,
+    searchState.searchTerm,
+    treeViewMode,
+    jqState.isActive,
+  ]);
   const [jqInput, setJqInput] = useState<string>("");
   const [jqCursorPosition, setJqCursorPosition] = useState<number>(0);
   const [jqErrorScrollOffset, setJqErrorScrollOffset] = useState<number>(0);
@@ -1061,8 +1080,29 @@ export function App({
         );
       } else if (input === "?" && !key.ctrl && !key.meta) {
         // Toggle help visibility
+        const willShowHelp = !helpVisible;
+        if (willShowHelp && process.stdout.write) {
+          // Complete terminal isolation - multiple clearing techniques
+          process.stdout.write("\x1b[2J\x1b[3J\x1b[H\x1b[0;0H\x1b[0m"); // Clear screen, scrollback, home cursor
+          process.stdout.write("\x1b[?1049h"); // Switch to alternate screen buffer
+          process.stdout.write("\x1b[2J\x1b[H"); // Clear alternate buffer
+          // Fill the screen with spaces to ensure complete isolation
+          for (let i = 0; i < (terminalSize.height || 24); i++) {
+            process.stdout.write(`${" ".repeat(terminalSize.width || 80)}\n`);
+          }
+          process.stdout.write("\x1b[H"); // Return to home position
+        }
         setHelpVisible((prev) => !prev);
         updateDebugInfo(`Toggle help ${helpVisible ? "OFF" : "ON"}`, input);
+      } else if (key.escape && helpVisible) {
+        // Close help when Escape is pressed and help is visible
+        if (process.stdout.write) {
+          // Restore main screen buffer and clear
+          process.stdout.write("\x1b[?1049l"); // Switch back to main screen buffer
+          process.stdout.write("\x1b[2J\x1b[H\x1b[0m"); // Clear and reset
+        }
+        setHelpVisible(false);
+        updateDebugInfo("Close help (Esc)", input);
       } else if (input === "J" && !key.ctrl && !key.meta) {
         // Toggle jq mode
         setJqState((prev) => ({
@@ -1112,6 +1152,8 @@ export function App({
       treeViewMode,
       treeViewKeyboardHandler,
       debugLogViewerVisible,
+      terminalSize.height,
+      terminalSize.width,
     ],
   );
 
@@ -1140,6 +1182,27 @@ export function App({
       if (key.ctrl && input === "c") {
         updateDebugInfo("Exit (Ctrl+C)", input);
         exit();
+      } else if (helpVisible) {
+        // Handle help mode inputs - only allow help close or exit
+        if (input === "?" && !key.ctrl && !key.meta) {
+          if (process.stdout.write) {
+            // Restore main screen buffer and clear
+            process.stdout.write("\x1b[?1049l"); // Switch back to main screen buffer
+            process.stdout.write("\x1b[2J\x1b[H\x1b[0m"); // Clear and reset
+          }
+          setHelpVisible(false);
+          updateDebugInfo("Close help (?)", input);
+        } else if (key.escape) {
+          if (process.stdout.write) {
+            // Restore main screen buffer and clear
+            process.stdout.write("\x1b[?1049l"); // Switch back to main screen buffer
+            process.stdout.write("\x1b[2J\x1b[H\x1b[0m"); // Clear and reset
+          }
+          setHelpVisible(false);
+          updateDebugInfo("Close help (Esc)", input);
+        }
+        // Ignore all other keys when help is visible
+        return;
       } else if (
         input === "q" &&
         !key.ctrl &&
@@ -1171,6 +1234,7 @@ export function App({
       handleNavigationInput,
       updateDebugInfo,
       handleExportSchema,
+      helpVisible,
     ],
   );
 
@@ -1205,19 +1269,20 @@ export function App({
       {/* Main content - hide when debug viewer is visible */}
       {!debugLogViewerVisible && (
         <>
-          {/* Help bar - only shown when ? key is pressed */}
+          {/* Enhanced Help Viewer - ONLY show help, hide everything else */}
           {helpVisible && !exportDialog.isVisible && (
-            <Box flexShrink={0} width="100%" height={statusBarHeight}>
-              <StatusBar
-                error={error}
-                keyboardEnabled={keyboardEnabled}
-                collapsibleMode={collapsibleMode}
+            <Box width="100%" height="100%">
+              <HelpViewer
+                mode={currentMode}
+                height={terminalSize.height}
+                width={terminalSize.width}
               />
             </Box>
           )}
           {/* Search bar fixed at top when in search mode */}
           {(searchState.isSearching || searchState.searchTerm) &&
-            !exportDialog.isVisible && (
+            !exportDialog.isVisible &&
+            !helpVisible && (
               <Box flexShrink={0} width="100%" height={searchBarHeight}>
                 <SearchBar
                   searchState={searchState}
@@ -1228,7 +1293,7 @@ export function App({
               </Box>
             )}
           {/* jq transformation bar */}
-          {jqState.isActive && !exportDialog.isVisible && (
+          {jqState.isActive && !exportDialog.isVisible && !helpVisible && (
             <Box flexShrink={0} width="100%" height={jqState.error ? 12 : 7}>
               <JqQueryInput
                 jqState={jqState}
@@ -1240,7 +1305,7 @@ export function App({
             </Box>
           )}
           {/* Keyboard unavailable warning */}
-          {!keyboardEnabled && !exportDialog.isVisible && (
+          {!keyboardEnabled && !exportDialog.isVisible && !helpVisible && (
             <Box flexShrink={0} width="100%" height={1}>
               <Box
                 borderStyle="single"
@@ -1259,7 +1324,8 @@ export function App({
           )}
           {/* Export status bar */}
           {(exportStatus.isExporting || exportStatus.message) &&
-            !exportDialog.isVisible && (
+            !exportDialog.isVisible &&
+            !helpVisible && (
               <Box flexShrink={0} width="100%" height={1}>
                 <Box
                   borderStyle="single"
@@ -1287,7 +1353,7 @@ export function App({
                 </Box>
               </Box>
             )}
-          {!exportDialog.isVisible && (
+          {!exportDialog.isVisible && !helpVisible && (
             <Box
               flexGrow={1}
               width="100%"
@@ -1362,7 +1428,7 @@ export function App({
             </Box>
           )}
           {/* Debug bar - conditionally rendered based on debugVisible */}
-          {debugVisible && !exportDialog.isVisible && (
+          {debugVisible && !exportDialog.isVisible && !helpVisible && (
             <Box flexShrink={0} width="100%">
               <DebugBar
                 debugInfo={debugInfo}
