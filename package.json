@@ -50,14 +50,15 @@
     "node-jq": "^6.0.1",
     "react": "^19.1.0",
     "tsx": "^4.20.3",
-    "typescript": "^5.8.3"
+    "typescript": "^5.8.3",
+    "zod": "^4.0.5"
   },
   "devDependencies": {
-    "@types/js-yaml": "^4.0.9",
     "@biomejs/biome": "^2.0.6",
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^16.3.0",
     "@tsconfig/strictest": "^2.0.5",
+    "@types/js-yaml": "^4.0.9",
     "@types/node": "^24.0.10",
     "@vitest/coverage-v8": "^3.2.4",
     "@vitest/ui": "^3.2.4",
