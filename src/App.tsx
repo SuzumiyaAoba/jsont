@@ -86,12 +86,8 @@ export function App({
     lastKeyAction: string;
     timestamp: string;
   } | null>(null);
-  const [debugVisible, setDebugVisible] = useState<boolean>(
-    config.display.interface.debugMode,
-  );
-  const [lineNumbersVisible, setLineNumbersVisible] = useState<boolean>(
-    config.display.interface.showLineNumbers,
-  );
+  const [debugVisible, setDebugVisible] = useState<boolean>(false);
+  const [lineNumbersVisible, setLineNumbersVisible] = useState<boolean>(false);
   const [schemaVisible, setSchemaVisible] = useState<boolean>(false);
 
   // Export state
