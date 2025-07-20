@@ -33,7 +33,7 @@ export function HelpViewer({ mode, height = 20, width = 80 }: HelpViewerProps) {
       {/* Help content with border frame */}
       <Box
         flexDirection="column"
-        width={70}
+        width={Math.min(width - 4, 76)}
         borderStyle="double"
         borderColor="cyan"
         paddingX={2}

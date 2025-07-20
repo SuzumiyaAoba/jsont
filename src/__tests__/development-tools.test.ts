@@ -81,9 +81,12 @@ describe("Development Tools Integration", () => {
     });
 
     it("should have proper test environment configuration", () => {
-      // This test verifies that Vitest can run tests properly
-      // The actual configuration is validated by the existence and executability
-      expect(true).toBe(true); // Placeholder - actual validation happens at runtime
+      // This test verifies that Vitest can run tests properly by checking environment
+      // Verify that we're running in a test environment
+      expect(process.env["NODE_ENV"]).toBe("test");
+      expect(typeof describe).toBe("function");
+      expect(typeof it).toBe("function");
+      expect(typeof expect).toBe("function");
     });
 
     it("should support TypeScript imports", () => {
