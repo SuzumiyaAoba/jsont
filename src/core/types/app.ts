@@ -5,6 +5,17 @@
 import type { JsonValue } from "@core/types/index";
 
 /**
+ * Application modes for the JSON viewer
+ */
+export type AppMode =
+  | "tree"
+  | "search"
+  | "filter"
+  | "collapsible"
+  | "schema"
+  | "raw";
+
+/**
  * Keyboard input event from Ink useInput hook
  */
 export interface KeyboardInput {

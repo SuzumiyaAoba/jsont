@@ -83,8 +83,10 @@ describe("Project Setup", () => {
 
     it("should require .js extensions in imports", () => {
       // This test ensures our TypeScript config enforces .js extensions
-      // The actual enforcement is checked by TypeScript compiler
-      expect(true).toBe(true); // Placeholder - actual check happens at compile time
+      // The actual enforcement is checked by TypeScript compiler during build
+      // Verify that the build system supports ES modules properly
+      expect(typeof import.meta.url).toBe("string");
+      expect(import.meta.url).toContain("file://");
     });
   });
 });

@@ -60,9 +60,11 @@ export const CollapsibleJsonViewer = forwardRef<
     setCollapsibleState(initializeCollapsibleState(data));
   }, [data]);
 
-  // Calculate visible lines
-  const effectiveVisibleLines =
-    visibleLines || Math.max(1, (process.stdout.rows || 24) - 3);
+  // Use the passed visibleLines or fallback calculation, subtract 1 like TreeView does
+  const effectiveVisibleLines = Math.max(
+    1,
+    (visibleLines ?? Math.max(1, (process.stdout.rows || 24) - 3)) - 1,
+  );
 
   // Get the display lines from flattened nodes
   const displayLines = useMemo(() => {
@@ -235,30 +237,28 @@ export const CollapsibleJsonViewer = forwardRef<
   );
 
   return (
-    <Box flexGrow={1} flexDirection="column" padding={1}>
-      <Box flexDirection="column">
-        {visibleLineData.map((line, index) => {
-          const originalIndex = index;
-          const node = visibleNodes[index];
-          const globalLineIndex = startLine + index;
-          const uniqueKey = `collapsible-line-${globalLineIndex}`;
+    <Box flexGrow={1} flexDirection="column">
+      {visibleLineData.map((line, index) => {
+        const originalIndex = index;
+        const node = visibleNodes[index];
+        const globalLineIndex = startLine + index;
+        const uniqueKey = `collapsible-line-${globalLineIndex}`;
 
-          if (!node) return null;
+        if (!node) return null;
 
-          return (
-            <Box key={uniqueKey} flexDirection="row">
-              {showLineNumbers && (
-                <Box marginRight={1}>
-                  <Text color="gray" dimColor>
-                    {formatLineNumber(globalLineIndex)}
-                  </Text>
-                </Box>
-              )}
-              <Box flexGrow={1}>{renderLine(line, originalIndex, node)}</Box>
-            </Box>
-          );
-        })}
-      </Box>
+        return (
+          <Box key={uniqueKey} flexDirection="row">
+            {showLineNumbers && (
+              <Box marginRight={1}>
+                <Text color="gray" dimColor>
+                  {formatLineNumber(globalLineIndex)}
+                </Text>
+              </Box>
+            )}
+            <Box flexGrow={1}>{renderLine(line, originalIndex, node)}</Box>
+          </Box>
+        );
+      })}
     </Box>
   );
 });
