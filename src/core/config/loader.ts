@@ -87,7 +87,7 @@ function mergeConfig(
 /**
  * Type guards for configuration validation
  */
-function isObject(value: unknown): value is Record<string, any> {
+function isObject(value: unknown): value is Record<string, unknown> {
   return value !== null && typeof value === "object" && !Array.isArray(value);
 }
 
@@ -115,126 +115,124 @@ function validateConfig(config: unknown): PartialJsontConfig {
   }
 
   // Validate keybindings with safe type assertion
-  const configObj = config as Record<string, any>;
+  const configObj = config as Record<string, unknown>;
 
-  if (isObject(configObj.keybindings)) {
+  if (isObject(configObj["keybindings"])) {
     validated.keybindings = {};
 
-    if (isValidKeyBindings(configObj.keybindings.navigation)) {
-      validated.keybindings.navigation = configObj.keybindings.navigation;
+    if (isValidKeyBindings(configObj["keybindings"]["navigation"])) {
+      validated.keybindings.navigation = configObj["keybindings"]["navigation"];
     }
 
-    if (isValidKeyBindings(configObj.keybindings.modes)) {
-      validated.keybindings.modes = configObj.keybindings.modes;
+    if (isValidKeyBindings(configObj["keybindings"]["modes"])) {
+      validated.keybindings.modes = configObj["keybindings"]["modes"];
     }
 
-    if (isValidKeyBindings(configObj.keybindings.search)) {
-      validated.keybindings.search = configObj.keybindings.search;
+    if (isValidKeyBindings(configObj["keybindings"]["search"])) {
+      validated.keybindings.search = configObj["keybindings"]["search"];
     }
   }
 
-  if (configObj.display && typeof configObj.display === "object") {
+  if (configObj["display"] && typeof configObj["display"] === "object") {
     validated.display = {};
+    const displayObj = configObj["display"] as Record<string, unknown>;
 
-    if (configObj.display.json && typeof configObj.display.json === "object") {
+    if (displayObj["json"] && typeof displayObj["json"] === "object") {
       validated.display.json = {};
-      if (typeof configObj.display.json.indent === "number") {
-        validated.display.json.indent = configObj.display.json.indent;
+      const jsonObj = displayObj["json"] as Record<string, unknown>;
+      if (typeof jsonObj["indent"] === "number") {
+        validated.display.json.indent = jsonObj["indent"];
       }
-      if (typeof configObj.display.json.useTabs === "boolean") {
-        validated.display.json.useTabs = configObj.display.json.useTabs;
+      if (typeof jsonObj["useTabs"] === "boolean") {
+        validated.display.json.useTabs = jsonObj["useTabs"];
       }
-      if (typeof configObj.display.json.maxLineLength === "number") {
-        validated.display.json.maxLineLength =
-          configObj.display.json.maxLineLength;
+      if (typeof jsonObj["maxLineLength"] === "number") {
+        validated.display.json.maxLineLength = jsonObj["maxLineLength"];
       }
     }
 
-    if (configObj.display.tree && typeof configObj.display.tree === "object") {
+    if (displayObj["tree"] && typeof displayObj["tree"] === "object") {
       validated.display.tree = {};
-      if (typeof configObj.display.tree.showArrayIndices === "boolean") {
-        validated.display.tree.showArrayIndices =
-          configObj.display.tree.showArrayIndices;
+      const treeObj = displayObj["tree"] as Record<string, unknown>;
+      if (typeof treeObj["showArrayIndices"] === "boolean") {
+        validated.display.tree.showArrayIndices = treeObj["showArrayIndices"];
       }
-      if (typeof configObj.display.tree.showPrimitiveValues === "boolean") {
+      if (typeof treeObj["showPrimitiveValues"] === "boolean") {
         validated.display.tree.showPrimitiveValues =
-          configObj.display.tree.showPrimitiveValues;
+          treeObj["showPrimitiveValues"];
       }
-      if (typeof configObj.display.tree.maxValueLength === "number") {
-        validated.display.tree.maxValueLength =
-          configObj.display.tree.maxValueLength;
+      if (typeof treeObj["maxValueLength"] === "number") {
+        validated.display.tree.maxValueLength = treeObj["maxValueLength"];
       }
-      if (typeof configObj.display.tree.useUnicodeTree === "boolean") {
-        validated.display.tree.useUnicodeTree =
-          configObj.display.tree.useUnicodeTree;
+      if (typeof treeObj["useUnicodeTree"] === "boolean") {
+        validated.display.tree.useUnicodeTree = treeObj["useUnicodeTree"];
       }
-      if (typeof configObj.display.tree.showSchemaTypes === "boolean") {
-        validated.display.tree.showSchemaTypes =
-          configObj.display.tree.showSchemaTypes;
+      if (typeof treeObj["showSchemaTypes"] === "boolean") {
+        validated.display.tree.showSchemaTypes = treeObj["showSchemaTypes"];
       }
     }
 
     if (
-      configObj.display.interface &&
-      typeof configObj.display.interface === "object"
+      displayObj["interface"] &&
+      typeof displayObj["interface"] === "object"
     ) {
       validated.display.interface = {};
-      if (typeof configObj.display.interface.showLineNumbers === "boolean") {
+      const interfaceObj = displayObj["interface"] as Record<string, unknown>;
+      if (typeof interfaceObj["showLineNumbers"] === "boolean") {
         validated.display.interface.showLineNumbers =
-          configObj.display.interface.showLineNumbers;
+          interfaceObj["showLineNumbers"];
       }
-      if (typeof configObj.display.interface.debugMode === "boolean") {
-        validated.display.interface.debugMode =
-          configObj.display.interface.debugMode;
+      if (typeof interfaceObj["debugMode"] === "boolean") {
+        validated.display.interface.debugMode = interfaceObj["debugMode"];
       }
-      if (typeof configObj.display.interface.defaultHeight === "number") {
+      if (typeof interfaceObj["defaultHeight"] === "number") {
         validated.display.interface.defaultHeight =
-          configObj.display.interface.defaultHeight;
+          interfaceObj["defaultHeight"];
       }
-      if (typeof configObj.display.interface.showStatusBar === "boolean") {
+      if (typeof interfaceObj["showStatusBar"] === "boolean") {
         validated.display.interface.showStatusBar =
-          configObj.display.interface.showStatusBar;
+          interfaceObj["showStatusBar"];
       }
     }
   }
 
-  if (configObj.behavior && typeof configObj.behavior === "object") {
+  if (configObj["behavior"] && typeof configObj["behavior"] === "object") {
     validated.behavior = {};
+    const behaviorObj = configObj["behavior"] as Record<string, unknown>;
 
-    if (
-      configObj.behavior.search &&
-      typeof configObj.behavior.search === "object"
-    ) {
+    if (behaviorObj["search"] && typeof behaviorObj["search"] === "object") {
       validated.behavior.search = {};
-      if (typeof configObj.behavior.search.caseSensitive === "boolean") {
-        validated.behavior.search.caseSensitive =
-          configObj.behavior.search.caseSensitive;
+      const searchObj = behaviorObj["search"] as Record<string, unknown>;
+      if (typeof searchObj["caseSensitive"] === "boolean") {
+        validated.behavior.search.caseSensitive = searchObj["caseSensitive"];
       }
-      if (typeof configObj.behavior.search.regex === "boolean") {
-        validated.behavior.search.regex = configObj.behavior.search.regex;
+      if (typeof searchObj["regex"] === "boolean") {
+        validated.behavior.search.regex = searchObj["regex"];
       }
-      if (typeof configObj.behavior.search.highlight === "boolean") {
-        validated.behavior.search.highlight =
-          configObj.behavior.search.highlight;
+      if (typeof searchObj["highlight"] === "boolean") {
+        validated.behavior.search.highlight = searchObj["highlight"];
       }
     }
 
     if (
-      configObj.behavior.navigation &&
-      typeof configObj.behavior.navigation === "object"
+      behaviorObj["navigation"] &&
+      typeof behaviorObj["navigation"] === "object"
     ) {
       validated.behavior.navigation = {};
-      if (typeof configObj.behavior.navigation.halfPageScroll === "boolean") {
+      const navigationObj = behaviorObj["navigation"] as Record<
+        string,
+        unknown
+      >;
+      if (typeof navigationObj["halfPageScroll"] === "boolean") {
         validated.behavior.navigation.halfPageScroll =
-          configObj.behavior.navigation.halfPageScroll;
+          navigationObj["halfPageScroll"];
       }
-      if (typeof configObj.behavior.navigation.autoScroll === "boolean") {
-        validated.behavior.navigation.autoScroll =
-          configObj.behavior.navigation.autoScroll;
+      if (typeof navigationObj["autoScroll"] === "boolean") {
+        validated.behavior.navigation.autoScroll = navigationObj["autoScroll"];
       }
-      if (typeof configObj.behavior.navigation.scrollOffset === "number") {
+      if (typeof navigationObj["scrollOffset"] === "number") {
         validated.behavior.navigation.scrollOffset =
-          configObj.behavior.navigation.scrollOffset;
+          navigationObj["scrollOffset"];
       }
     }
   }
@@ -281,7 +279,7 @@ export function getConfigValue<T = unknown>(
 
   for (const key of keys) {
     if (current && typeof current === "object" && key in current) {
-      current = (current as Record<string, any>)[key];
+      current = (current as Record<string, unknown>)[key];
     } else {
       throw new Error(`Configuration path "${path}" not found`);
     }
