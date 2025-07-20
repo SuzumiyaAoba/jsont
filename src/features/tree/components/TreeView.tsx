@@ -2,6 +2,7 @@
  * Tree view component for displaying JSON in tree structure
  */
 
+import { useConfig } from "@core/context/ConfigContext";
 import type { KeyboardInput } from "@core/types/app";
 import type { JsonValue } from "@core/types/index";
 import { Box, Text } from "ink";
@@ -51,14 +52,6 @@ export interface TreeViewProps {
   ) => void;
 }
 
-const DEFAULT_OPTIONS: TreeDisplayOptions = {
-  showArrayIndices: true,
-  showPrimitiveValues: true,
-  maxValueLength: 50,
-  useUnicodeTree: true,
-  showSchemaTypes: false,
-};
-
 /**
  * TreeView component for displaying JSON data in an interactive tree structure
  *
@@ -80,6 +73,8 @@ export function TreeView({
   options = {},
   onKeyboardHandlerReady,
 }: TreeViewProps) {
+  const config = useConfig();
+
   const [treeState, setTreeState] = useState<TreeViewState>(() =>
     buildTreeFromJson(data || null, { expandLevel: 1 }),
   );
@@ -88,17 +83,21 @@ export function TreeView({
   const [scrollOffset, setScrollOffset] = useState(0);
 
   const [selectedLineIndex, setSelectedLineIndex] = useState(0);
-  const [showSchemaTypes, setShowSchemaTypes] = useState(false);
-  const [showLineNumbers, setShowLineNumbers] = useState(false);
+  const [showSchemaTypes, setShowSchemaTypes] = useState(
+    config.display.tree.showSchemaTypes,
+  );
+  const [showLineNumbers, setShowLineNumbers] = useState(
+    config.display.interface.showLineNumbers,
+  );
 
   // Memoize display options to prevent unnecessary recalculations
   const displayOptions = useMemo(
     () => ({
-      ...DEFAULT_OPTIONS,
+      ...config.display.tree,
       ...options,
       showSchemaTypes,
     }),
-    [options, showSchemaTypes],
+    [config.display.tree, options, showSchemaTypes],
   );
 
   // Memoize tree lines generation for performance

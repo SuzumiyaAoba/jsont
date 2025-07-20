@@ -1,3 +1,4 @@
+import { useConfig } from "@core/context/ConfigContext";
 import type {
   AppProps,
   KeyboardHandler,
@@ -59,6 +60,9 @@ export function App({
 
   // Avoid unused variable warning
   void isTestEnvironment;
+
+  // Load configuration
+  const config = useConfig();
 
   const [error] = useState<string | null>(initialError ?? null);
   const [scrollOffset, setScrollOffset] = useState<number>(0);
@@ -189,7 +193,7 @@ export function App({
   }, []);
 
   // Calculate max scroll based on JSON data
-  const JSON_INDENT = 2;
+  const JSON_INDENT = config.display.json.indent;
   // Calculate debug bar height dynamically based on content length with memoization
   const debugBarHeight = useMemo(() => {
     if (!debugVisible) return 0; // No debug bar when hidden
@@ -292,7 +296,7 @@ export function App({
     debugBarLines +
     jqBarLines +
     contentPaddingLines;
-  const G_SEQUENCE_TIMEOUT = 1000;
+  const G_SEQUENCE_TIMEOUT = 1000; // TODO: Move to config
 
   const jsonLines = initialData
     ? JSON.stringify(initialData, null, JSON_INDENT).split("\n").length
@@ -633,8 +637,8 @@ export function App({
           // Scroll down
           const currentMaxScroll = Math.max(
             0,
-            JSON.stringify(currentDisplayData, null, 2).split("\n").length -
-              visibleLines,
+            JSON.stringify(currentDisplayData, null, JSON_INDENT).split("\n")
+              .length - visibleLines,
           );
           setScrollOffset((prev) => Math.min(currentMaxScroll, prev + 1));
         } else if (input === "k" && !key.ctrl) {
@@ -644,8 +648,8 @@ export function App({
           // Half-page down
           const currentMaxScroll = Math.max(
             0,
-            JSON.stringify(currentDisplayData, null, 2).split("\n").length -
-              visibleLines,
+            JSON.stringify(currentDisplayData, null, JSON_INDENT).split("\n")
+              .length - visibleLines,
           );
           setScrollOffset((prev) =>
             Math.min(currentMaxScroll, prev + halfPageLines),
@@ -667,8 +671,8 @@ export function App({
           // Go to bottom
           const currentMaxScroll = Math.max(
             0,
-            JSON.stringify(currentDisplayData, null, 2).split("\n").length -
-              visibleLines,
+            JSON.stringify(currentDisplayData, null, JSON_INDENT).split("\n")
+              .length - visibleLines,
           );
           setScrollOffset(currentMaxScroll);
         } else if (input === "i" && !key.ctrl && !key.meta) {
@@ -741,6 +745,7 @@ export function App({
       handleJqTransformation,
       jqState.error,
       updateDebugInfo,
+      JSON_INDENT,
     ],
   );
 

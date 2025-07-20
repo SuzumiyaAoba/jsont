@@ -1,3 +1,4 @@
+import { ConfigProvider } from "@core/context/ConfigContext.js";
 import { render } from "ink-testing-library";
 import { describe, expect, it, vi } from "vitest";
 import { App } from "@/App.js";
@@ -15,7 +16,7 @@ type MockKeyInput = {
 
 // Mock input handler for useInput hook
 // @ts-expect-error - mockInputHandler is used in the mock setup but TypeScript can't detect it
-let mockInputHandler: ((input: string, key: MockKeyInput) => void) | null =
+let _mockInputHandler: ((input: string, key: MockKeyInput) => void) | null =
   null;
 
 vi.mock("ink", async () => {
@@ -23,7 +24,7 @@ vi.mock("ink", async () => {
   return {
     ...actual,
     useInput: vi.fn((handler: (input: string, key: MockKeyInput) => void) => {
-      mockInputHandler = handler;
+      _mockInputHandler = handler;
     }),
     useApp: () => ({ exit: vi.fn() }),
   };
@@ -33,7 +34,9 @@ describe("App", () => {
   it("should render without error", () => {
     const data = { key: "value" };
     const { lastFrame } = render(
-      <App initialData={data} keyboardEnabled={true} />,
+      <ConfigProvider>
+        <App initialData={data} keyboardEnabled={true} />
+      </ConfigProvider>,
     );
 
     // Should show JSON content
@@ -44,11 +47,13 @@ describe("App", () => {
 
   it("should render when no data is provided", () => {
     const { lastFrame } = render(
-      <App
-        initialData={null}
-        initialError="Test error"
-        keyboardEnabled={true}
-      />,
+      <ConfigProvider>
+        <App
+          initialData={null}
+          initialError="Test error"
+          keyboardEnabled={true}
+        />
+      </ConfigProvider>,
     );
 
     const output = lastFrame();
@@ -58,7 +63,9 @@ describe("App", () => {
   it("should show JSON content when keyboard is enabled", () => {
     const data = { test: "data" };
     const { lastFrame } = render(
-      <App initialData={data} keyboardEnabled={true} />,
+      <ConfigProvider>
+        <App initialData={data} keyboardEnabled={true} />
+      </ConfigProvider>,
     );
 
     const output = lastFrame();
@@ -69,7 +76,9 @@ describe("App", () => {
   it("should show initializing message when keyboard is disabled", () => {
     const data = { test: "data" };
     const { lastFrame } = render(
-      <App initialData={data} keyboardEnabled={false} />,
+      <ConfigProvider>
+        <App initialData={data} keyboardEnabled={false} />
+      </ConfigProvider>,
     );
 
     const output = lastFrame();
@@ -79,7 +88,9 @@ describe("App", () => {
 
   it("should handle null data gracefully", () => {
     const { lastFrame } = render(
-      <App initialData={null} keyboardEnabled={true} />,
+      <ConfigProvider>
+        <App initialData={null} keyboardEnabled={true} />
+      </ConfigProvider>,
     );
 
     const output = lastFrame();

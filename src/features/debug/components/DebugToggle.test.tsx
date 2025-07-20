@@ -1,3 +1,4 @@
+import { ConfigProvider } from "@core/context/ConfigContext";
 import { render } from "ink-testing-library";
 import { describe, expect, it, vi } from "vitest";
 import { App } from "@/App";
@@ -17,7 +18,9 @@ describe("Debug Toggle Functionality", () => {
   it("should not show debug bar by default", () => {
     const data = { name: "test", value: 123 };
     const { lastFrame } = render(
-      <App initialData={data} keyboardEnabled={true} />,
+      <ConfigProvider>
+        <App initialData={data} keyboardEnabled={true} />
+      </ConfigProvider>,
     );
 
     const output = lastFrame();
@@ -27,7 +30,9 @@ describe("Debug Toggle Functionality", () => {
   it("should render JSON data without debug bar initially", () => {
     const data = { name: "test", value: 123 };
     const { lastFrame } = render(
-      <App initialData={data} keyboardEnabled={true} />,
+      <ConfigProvider>
+        <App initialData={data} keyboardEnabled={true} />
+      </ConfigProvider>,
     );
 
     // Should show JSON data without debug bar
@@ -40,7 +45,9 @@ describe("Debug Toggle Functionality", () => {
   it("should render different JSON data types correctly", () => {
     const data = { name: "test", value: 123 };
     const { lastFrame } = render(
-      <App initialData={data} keyboardEnabled={true} />,
+      <ConfigProvider>
+        <App initialData={data} keyboardEnabled={true} />
+      </ConfigProvider>,
     );
 
     // Should show JSON data with correct formatting
@@ -54,7 +61,9 @@ describe("Debug Toggle Functionality", () => {
   it("should render with keyboard enabled", () => {
     const data = { name: "test", value: 123 };
     const { lastFrame } = render(
-      <App initialData={data} keyboardEnabled={true} />,
+      <ConfigProvider>
+        <App initialData={data} keyboardEnabled={true} />
+      </ConfigProvider>,
     );
 
     const output = lastFrame();
@@ -65,7 +74,9 @@ describe("Debug Toggle Functionality", () => {
   it("should not respond to lowercase d key", () => {
     const data = { name: "test", value: 123 };
     const { lastFrame } = render(
-      <App initialData={data} keyboardEnabled={true} />,
+      <ConfigProvider>
+        <App initialData={data} keyboardEnabled={true} />
+      </ConfigProvider>,
     );
 
     // The debug mode is toggled with uppercase 'D', not lowercase 'd'

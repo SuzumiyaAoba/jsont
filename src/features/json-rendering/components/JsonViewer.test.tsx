@@ -1,16 +1,25 @@
+import { ConfigProvider } from "@core/context/ConfigContext";
 import { JsonViewer } from "@features/json-rendering/components/JsonViewer";
 import { render } from "ink-testing-library";
 import { describe, expect, it } from "vitest";
 
 describe("JsonViewer", () => {
   it("should render null data gracefully", () => {
-    const { lastFrame } = render(<JsonViewer data={null} />);
+    const { lastFrame } = render(
+      <ConfigProvider>
+        <JsonViewer data={null} />
+      </ConfigProvider>,
+    );
     expect(lastFrame()).toContain("No JSON data to display");
   });
 
   it("should render simple JSON with proper formatting", () => {
     const data = { key: "value", number: 42 };
-    const { lastFrame } = render(<JsonViewer data={data} />);
+    const { lastFrame } = render(
+      <ConfigProvider>
+        <JsonViewer data={data} />
+      </ConfigProvider>,
+    );
     const output = lastFrame();
 
     // Check that JSON structure is present
@@ -33,7 +42,11 @@ describe("JsonViewer", () => {
       },
     };
 
-    const { lastFrame } = render(<JsonViewer data={data} />);
+    const { lastFrame } = render(
+      <ConfigProvider>
+        <JsonViewer data={data} />
+      </ConfigProvider>,
+    );
     const output = lastFrame();
 
     // Check that all data types are rendered
@@ -52,7 +65,11 @@ describe("JsonViewer", () => {
       emptyArray: [],
     };
 
-    const { lastFrame } = render(<JsonViewer data={data} />);
+    const { lastFrame } = render(
+      <ConfigProvider>
+        <JsonViewer data={data} />
+      </ConfigProvider>,
+    );
     const output = lastFrame();
 
     expect(output).toContain("emptyObject");
@@ -62,7 +79,11 @@ describe("JsonViewer", () => {
   it("should handle arrays with mixed types", () => {
     const data = ["string", 42, true, null, { nested: "object" }, [1, 2, 3]];
 
-    const { lastFrame } = render(<JsonViewer data={data} />);
+    const { lastFrame } = render(
+      <ConfigProvider>
+        <JsonViewer data={data} />
+      </ConfigProvider>,
+    );
     const output = lastFrame();
 
     expect(output).toContain("string");
@@ -80,7 +101,11 @@ describe("JsonViewer", () => {
       line4: "value4",
     };
 
-    const { lastFrame } = render(<JsonViewer data={data} scrollOffset={2} />);
+    const { lastFrame } = render(
+      <ConfigProvider>
+        <JsonViewer data={data} scrollOffset={2} />
+      </ConfigProvider>,
+    );
     const output = lastFrame();
 
     // With scroll offset, some early lines might not be visible

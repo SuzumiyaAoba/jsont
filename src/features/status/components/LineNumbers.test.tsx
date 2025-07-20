@@ -1,3 +1,4 @@
+import { ConfigProvider } from "@core/context/ConfigContext";
 import { render } from "ink-testing-library";
 import { describe, expect, it, vi } from "vitest";
 import { App } from "@/App";
@@ -31,7 +32,9 @@ describe("Line Numbers Functionality", () => {
   it("should not show line numbers by default", () => {
     const data = { name: "test", value: 123 };
     const { lastFrame } = render(
-      <App initialData={data} keyboardEnabled={true} />,
+      <ConfigProvider>
+        <App initialData={data} keyboardEnabled={true} />
+      </ConfigProvider>,
     );
 
     const output = lastFrame();
@@ -42,7 +45,9 @@ describe("Line Numbers Functionality", () => {
   it("should show line numbers when L key is pressed", () => {
     const data = { name: "test", value: 123 };
     const { lastFrame, rerender } = render(
-      <App initialData={data} keyboardEnabled={true} />,
+      <ConfigProvider>
+        <App initialData={data} keyboardEnabled={true} />
+      </ConfigProvider>,
     );
 
     // Initially no line numbers
@@ -51,7 +56,11 @@ describe("Line Numbers Functionality", () => {
 
     // Press L to toggle line numbers
     mockInputHandler?.("L", { ctrl: false, meta: false });
-    rerender(<App initialData={data} keyboardEnabled={true} />);
+    rerender(
+      <ConfigProvider>
+        <App initialData={data} keyboardEnabled={true} />
+      </ConfigProvider>,
+    );
 
     // Should now show line numbers
     output = lastFrame();
@@ -61,12 +70,18 @@ describe("Line Numbers Functionality", () => {
   it("should hide line numbers when L key is pressed again", () => {
     const data = { name: "test", value: 123 };
     const { lastFrame, rerender } = render(
-      <App initialData={data} keyboardEnabled={true} />,
+      <ConfigProvider>
+        <App initialData={data} keyboardEnabled={true} />
+      </ConfigProvider>,
     );
 
     // Press L to show line numbers
     mockInputHandler?.("L", { ctrl: false, meta: false });
-    rerender(<App initialData={data} keyboardEnabled={true} />);
+    rerender(
+      <ConfigProvider>
+        <App initialData={data} keyboardEnabled={true} />
+      </ConfigProvider>,
+    );
 
     // Should show line numbers
     let output = lastFrame();
@@ -74,7 +89,11 @@ describe("Line Numbers Functionality", () => {
 
     // Press L again to hide line numbers
     mockInputHandler?.("L", { ctrl: false, meta: false });
-    rerender(<App initialData={data} keyboardEnabled={true} />);
+    rerender(
+      <ConfigProvider>
+        <App initialData={data} keyboardEnabled={true} />
+      </ConfigProvider>,
+    );
 
     // Should hide line numbers
     output = lastFrame();
@@ -85,7 +104,9 @@ describe("Line Numbers Functionality", () => {
   it("should render JSON data correctly", () => {
     const data = { name: "test", value: 123 };
     const { lastFrame } = render(
-      <App initialData={data} keyboardEnabled={true} />,
+      <ConfigProvider>
+        <App initialData={data} keyboardEnabled={true} />
+      </ConfigProvider>,
     );
 
     const output = lastFrame();
@@ -96,12 +117,18 @@ describe("Line Numbers Functionality", () => {
   it("should not respond to lowercase l key", () => {
     const data = { name: "test", value: 123 };
     const { lastFrame, rerender } = render(
-      <App initialData={data} keyboardEnabled={true} />,
+      <ConfigProvider>
+        <App initialData={data} keyboardEnabled={true} />
+      </ConfigProvider>,
     );
 
     // Press lowercase l (should not toggle line numbers)
     mockInputHandler?.("l", { ctrl: false, meta: false });
-    rerender(<App initialData={data} keyboardEnabled={true} />);
+    rerender(
+      <ConfigProvider>
+        <App initialData={data} keyboardEnabled={true} />
+      </ConfigProvider>,
+    );
 
     // Should still not show line numbers
     const output = lastFrame();
@@ -118,12 +145,18 @@ describe("Line Numbers Functionality", () => {
       total: 3,
     };
     const { lastFrame, rerender } = render(
-      <App initialData={data} keyboardEnabled={true} />,
+      <ConfigProvider>
+        <App initialData={data} keyboardEnabled={true} />
+      </ConfigProvider>,
     );
 
     // Enable line numbers
     mockInputHandler?.("L", { ctrl: false, meta: false });
-    rerender(<App initialData={data} keyboardEnabled={true} />);
+    rerender(
+      <ConfigProvider>
+        <App initialData={data} keyboardEnabled={true} />
+      </ConfigProvider>,
+    );
 
     const output = lastFrame();
     // Should contain line numbers

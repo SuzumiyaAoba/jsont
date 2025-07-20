@@ -3,6 +3,7 @@
  * Orchestrates application initialization and lifecycle
  */
 
+import { ConfigProvider } from "@core/context/ConfigContext";
 import type { JsonValue } from "@core/types/index";
 import { ProcessManager } from "@core/utils/processManager";
 import {
@@ -98,11 +99,15 @@ export class AppService {
     }
 
     return render(
-      React.createElement(App, {
-        initialData: data,
-        initialError: error,
-        keyboardEnabled: actualKeyboardEnabled,
-      }),
+      React.createElement(
+        ConfigProvider,
+        null,
+        React.createElement(App, {
+          initialData: data,
+          initialError: error,
+          keyboardEnabled: actualKeyboardEnabled,
+        }),
+      ),
       renderOptions,
     );
   }
