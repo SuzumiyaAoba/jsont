@@ -85,10 +85,7 @@ function TestConfigValueDisplay() {
   return <Text>{JSON.stringify({ indent, useTabs })}</Text>;
 }
 
-function TestConfigWithoutProvider() {
-  const config = useConfig();
-  return <Text>{config.display.json.indent}</Text>;
-}
+// TestConfigWithoutProvider removed as it's no longer used
 
 describe("ConfigContext", () => {
   describe("ConfigProvider", () => {

@@ -1,7 +1,6 @@
 import { ConfigProvider } from "@core/context/ConfigContext";
 import { JsonViewer } from "@features/json-rendering/components/JsonViewer";
 import { render } from "ink-testing-library";
-import React from "react";
 import { describe, expect, it } from "vitest";
 
 describe("JsonViewer", () => {

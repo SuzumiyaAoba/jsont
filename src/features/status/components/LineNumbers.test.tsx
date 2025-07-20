@@ -1,6 +1,5 @@
 import { ConfigProvider } from "@core/context/ConfigContext";
 import { render } from "ink-testing-library";
-import React from "react";
 import { describe, expect, it, vi } from "vitest";
 import { App } from "@/App";
 
