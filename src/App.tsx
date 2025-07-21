@@ -575,6 +575,8 @@ export function App({
             isProcessing: false,
             query: query,
           }));
+          // Reset scroll to top when jq filtering is applied successfully
+          setScrollOffset(0);
         } else {
           setJqState((prev) => ({
             ...prev,
@@ -592,7 +594,7 @@ export function App({
         }));
       }
     },
-    [initialData, setJqState],
+    [initialData, setJqState, setScrollOffset],
   );
 
   // Handle jq input mode
@@ -629,6 +631,7 @@ export function App({
         setJqInput("");
         setJqCursorPosition(0);
         setJqFocusMode("input");
+        // Preserve scroll position when exiting jq mode
       } else if (key.tab) {
         // Toggle focus between input and JSON (Tab or Ctrl+Tab)
         setJqFocusMode((prev) => (prev === "input" ? "json" : "input"));
@@ -735,6 +738,7 @@ export function App({
         setJqCursorPosition(0);
         setJqErrorScrollOffset(0);
         setJqFocusMode("input");
+        // Preserve scroll position when exiting jq mode
       } else {
         // In jq mode, ignore other keys
       }
@@ -1145,6 +1149,7 @@ export function App({
         if (!jqState.isActive) {
           setJqInput("");
         }
+        // Preserve scroll position when toggling jq mode
       } else {
         // Any other key resets the 'g' sequence
         updateDebugInfo(`Unhandled key: "${input}"`, input);
