@@ -127,13 +127,13 @@ export function TreeView({
 
   // Calculate visible lines: account for header line taking 1 row
   // Available content height = height - 1
-  // To get exactly contentHeight lines from slice(start, end), we need end = start + contentHeight + 1
-  // because slice excludes the end index
+  // To get exactly contentHeight lines from slice(start, end), we need end = start + contentHeight
+  // slice(start, end) returns elements from start to end-1, so end = start + contentHeight gives us contentHeight elements
   const contentHeight = height - 1; // Available height for content after header
   const visibleLines = getVisibleTreeLines(
     filteredLines,
     boundedScrollOffset,
-    boundedScrollOffset + contentHeight + 1,
+    boundedScrollOffset + contentHeight,
   );
 
   // Ensure stable rendering by adding a key that forces proper reconciliation
@@ -505,12 +505,12 @@ export function TreeView({
               const calculatedVisibleLines = getVisibleTreeLines(
                 filteredLines,
                 boundedScrollOffset,
-                boundedScrollOffset + contentHeight + 1,
+                boundedScrollOffset + contentHeight,
               );
               console.log("Visible lines calculation:");
               console.log(`  Bounded scroll offset: ${boundedScrollOffset}`);
               console.log(
-                `  End index: ${boundedScrollOffset + contentHeight + 1}`,
+                `  End index: ${boundedScrollOffset + contentHeight}`,
               );
               console.log(
                 `  Calculated visible lines: ${calculatedVisibleLines.length}`,
@@ -522,7 +522,7 @@ export function TreeView({
                 let i = boundedScrollOffset;
                 i <
                 Math.min(
-                  boundedScrollOffset + contentHeight + 1,
+                  boundedScrollOffset + contentHeight,
                   filteredLines.length,
                 );
                 i++
