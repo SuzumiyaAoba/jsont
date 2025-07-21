@@ -20,7 +20,9 @@
       "@/*": ["./*"],
       "@core/*": ["core/*"],
       "@features/*": ["features/*"],
-      "@store/*": ["store/*"]
+      "@store/*": ["store/*"],
+      "@components/*": ["components/*"],
+      "@hooks/*": ["hooks/*"]
     }
   },
   "include": ["src/**/*"],
