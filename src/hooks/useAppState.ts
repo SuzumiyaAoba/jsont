@@ -5,19 +5,11 @@
 
 import type { JqState } from "@features/jq/types/jq";
 import type { ExportDialogState } from "@features/schema/types/export";
-import type { SearchResult, SearchState } from "@features/search/types/search";
 import { useState } from "react";
 
 export interface AppState {
   // Scroll and navigation
   scrollOffset: number;
-
-  // Search state
-  searchState: SearchState;
-  searchInput: string;
-  searchCursorPosition: number;
-  searchResults: SearchResult[];
-  searchResultIndex: number;
 
   // JQ transformation state
   jqState: JqState;
@@ -53,14 +45,6 @@ export interface AppState {
   waitingForSecondG: boolean;
 }
 
-const initialSearchState: SearchState = {
-  isSearching: false,
-  searchTerm: "",
-  searchResults: [],
-  currentResultIndex: 0,
-  searchScope: "all",
-};
-
 const initialJqState: JqState = {
   isActive: false,
   query: "",
@@ -71,14 +55,8 @@ const initialJqState: JqState = {
 };
 
 export function useAppState() {
-  // Search state
+  // Scroll and navigation state
   const [scrollOffset, setScrollOffset] = useState<number>(0);
-  const [searchState, setSearchState] =
-    useState<SearchState>(initialSearchState);
-  const [searchInput, setSearchInput] = useState<string>("");
-  const [searchCursorPosition, setSearchCursorPosition] = useState<number>(0);
-  const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
-  const [searchResultIndex, setSearchResultIndex] = useState<number>(0);
 
   // JQ state
   const [jqState, setJqState] = useState<JqState>(initialJqState);
@@ -121,11 +99,6 @@ export function useAppState() {
   return {
     // State values
     scrollOffset,
-    searchState,
-    searchInput,
-    searchCursorPosition,
-    searchResults,
-    searchResultIndex,
     jqState,
     jqInput,
     jqCursorPosition,
@@ -144,11 +117,6 @@ export function useAppState() {
 
     // State setters
     setScrollOffset,
-    setSearchState,
-    setSearchInput,
-    setSearchCursorPosition,
-    setSearchResults,
-    setSearchResultIndex,
     setJqState,
     setJqInput,
     setJqCursorPosition,

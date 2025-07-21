@@ -26,9 +26,7 @@ import {
   inferJsonSchema,
 } from "@features/schema/utils/schemaUtils";
 import { SearchBar } from "@features/search/components/SearchBar";
-import type { SearchScope } from "@features/search/types/search";
 import {
-  getNextSearchScope,
   searchInJson,
   searchInJsonSchema,
 } from "@features/search/utils/searchUtils";
@@ -38,6 +36,20 @@ import {
 } from "@features/status/utils/statusUtils";
 import { TreeView } from "@features/tree/components/TreeView";
 import { useUpdateDebugInfo } from "@store/hooks";
+import {
+  useCancelSearch,
+  useCurrentSearchResult,
+  useCycleScope,
+  useIsSearching,
+  useNextSearchResult,
+  usePreviousSearchResult,
+  useSearchCursorPosition,
+  useSearchInput,
+  useSearchScope,
+  useSearchState,
+  useStartSearch,
+  useUpdateSearchResults,
+} from "@store/hooks/useSearch";
 import { Box, Text, useApp, useInput } from "ink";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useAppState } from "@/hooks/useAppState";
@@ -69,15 +81,25 @@ export function App({
 
   // Test jotai integration alongside existing state
   const updateDebugInfo = useUpdateDebugInfo();
+
+  // Search state management using jotai
+  const searchState = useSearchState();
+  const [searchInput, setSearchInput] = useSearchInput();
+  const [searchCursorPosition, setSearchCursorPosition] =
+    useSearchCursorPosition();
+  const [_isSearching, setIsSearching] = useIsSearching();
+  const [_searchScope, _setSearchScope] = useSearchScope();
+  const startSearch = useStartSearch();
+  const cancelSearch = useCancelSearch();
+  const cycleScope = useCycleScope();
+  const updateSearchResults = useUpdateSearchResults();
+  const nextSearchResult = useNextSearchResult();
+  const previousSearchResult = usePreviousSearchResult();
+  const currentSearchResult = useCurrentSearchResult();
+
   const {
     scrollOffset,
     setScrollOffset,
-    searchState,
-    setSearchState,
-    searchInput,
-    setSearchInput,
-    searchCursorPosition,
-    setSearchCursorPosition,
     jqState,
     setJqState,
     jqInput,
@@ -368,38 +390,21 @@ export function App({
   // Helper function to navigate to next search result
   const navigateToNextResult = useCallback(() => {
     if (searchState.searchResults.length === 0) return;
-    const nextIndex =
-      (searchState.currentResultIndex + 1) % searchState.searchResults.length;
-    setSearchState((prev) => ({ ...prev, currentResultIndex: nextIndex }));
-    const nextResult = searchState.searchResults[nextIndex];
-    if (nextResult) {
-      scrollToSearchResult(nextResult);
-    }
-  }, [
-    searchState.currentResultIndex,
-    searchState.searchResults,
-    scrollToSearchResult,
-    setSearchState,
-  ]);
+    nextSearchResult();
+  }, [searchState.searchResults.length, nextSearchResult]);
 
   // Helper function to navigate to previous search result
   const navigateToPreviousResult = useCallback(() => {
     if (searchState.searchResults.length === 0) return;
-    const prevIndex =
-      searchState.currentResultIndex === 0
-        ? searchState.searchResults.length - 1
-        : searchState.currentResultIndex - 1;
-    setSearchState((prev) => ({ ...prev, currentResultIndex: prevIndex }));
-    const prevResult = searchState.searchResults[prevIndex];
-    if (prevResult) {
-      scrollToSearchResult(prevResult);
+    previousSearchResult();
+  }, [searchState.searchResults.length, previousSearchResult]);
+
+  // Effect to scroll to current search result when it changes
+  useEffect(() => {
+    if (currentSearchResult) {
+      scrollToSearchResult(currentSearchResult);
     }
-  }, [
-    searchState.currentResultIndex,
-    searchState.searchResults,
-    scrollToSearchResult,
-    setSearchState,
-  ]);
+  }, [currentSearchResult, scrollToSearchResult]);
 
   // Helper function to handle collapsible navigation
   const handleCollapsibleNavigation = useCallback(
@@ -420,15 +425,6 @@ export function App({
   );
 
   // Helper function to handle search scope changes
-  const handleSearchScopeChange = useCallback(
-    (newScope: SearchScope) => {
-      setSearchState((prev) => ({
-        ...prev,
-        searchScope: newScope,
-      }));
-    },
-    [setSearchState],
-  );
 
   // Update search results when search term or view mode changes
   useEffect(() => {
@@ -446,28 +442,20 @@ export function App({
             searchState.searchScope,
           );
 
-      setSearchState((prev) => ({
-        ...prev,
-        searchResults: results,
-        currentResultIndex: 0,
-      }));
+      updateSearchResults(results);
 
       // Reset scroll to top after search
       setScrollOffset(0);
     } else {
-      setSearchState((prev) => ({
-        ...prev,
-        searchResults: [],
-        currentResultIndex: 0,
-      }));
+      updateSearchResults([]);
     }
   }, [
     searchState.searchTerm,
     searchState.searchScope,
     initialData,
-    schemaVisible, // Reset scroll to top after search
+    schemaVisible,
     setScrollOffset,
-    setSearchState,
+    updateSearchResults,
   ]);
 
   // Clear timeout when component unmounts or when g sequence is reset
@@ -784,30 +772,17 @@ export function App({
       if (key.return) {
         // Confirm search
         updateDebugInfoCallback("Confirm search", input);
-        setSearchState((prev) => ({
-          ...prev,
-          isSearching: false,
-          searchTerm: searchInput,
-        }));
+        startSearch(searchInput);
         setScrollOffset(0); // Reset scroll to top after search
       } else if (key.escape) {
         // Cancel search - exit search mode entirely and clear all search state
         updateDebugInfoCallback("Cancel search", input);
-        setSearchState((prev) => ({
-          ...prev,
-          isSearching: false,
-          searchTerm: "",
-          searchResults: [],
-          currentResultIndex: 0,
-        }));
-        setSearchInput("");
-        setSearchCursorPosition(0);
+        cancelSearch();
         setScrollOffset(0); // Reset scroll to top after canceling search
       } else if (key.tab) {
         // Toggle search scope
         updateDebugInfoCallback("Toggle search scope", input);
-        const nextScope = getNextSearchScope(searchState.searchScope);
-        handleSearchScopeChange(nextScope);
+        cycleScope();
       } else if (
         handleTextInput(
           { text: searchInput, cursorPosition: searchCursorPosition },
@@ -829,12 +804,12 @@ export function App({
       searchInput,
       searchCursorPosition,
       updateDebugInfoCallback,
-      searchState.searchScope,
-      handleSearchScopeChange,
       setScrollOffset,
       setSearchCursorPosition,
       setSearchInput,
-      setSearchState,
+      startSearch,
+      cancelSearch,
+      cycleScope,
     ],
   );
 
@@ -928,7 +903,7 @@ export function App({
       if (input === "s" && !key.ctrl && !key.meta) {
         // Start search mode
         updateDebugInfo("Start search mode", input);
-        setSearchState((prev) => ({ ...prev, isSearching: true }));
+        setIsSearching(true);
         setSearchInput("");
         setSearchCursorPosition(0);
         setScrollOffset(0);
@@ -940,7 +915,7 @@ export function App({
       ) {
         // Return to search input mode when 'q' is pressed after search
         updateDebugInfo("Return to search input", input);
-        setSearchState((prev) => ({ ...prev, isSearching: true }));
+        setIsSearching(true);
         setSearchInput(searchState.searchTerm); // Pre-fill with current search term
         setSearchCursorPosition(searchState.searchTerm.length);
       } else if (input === "j" && !key.ctrl) {
@@ -1070,22 +1045,14 @@ export function App({
       } else if (key.escape && searchState.searchTerm) {
         // Exit search mode when Escape is pressed and search results are visible
         updateDebugInfo("Exit search mode", input);
-        setSearchState((prev) => ({
-          ...prev,
-          isSearching: false,
-          searchTerm: "",
-          searchResults: [],
-          currentResultIndex: 0,
-        }));
-        setSearchInput("");
+        cancelSearch();
       } else if (
         key.tab &&
         (searchState.searchTerm || searchState.isSearching)
       ) {
         // Toggle search scope when Tab is pressed and search is active
         updateDebugInfo("Toggle search scope", input);
-        const nextScope = getNextSearchScope(searchState.searchScope);
-        handleSearchScopeChange(nextScope);
+        cycleScope();
       } else if (input === "D" && !key.ctrl && !key.meta) {
         // Toggle debug visibility
         setDebugVisible((prev) => !prev);
@@ -1167,7 +1134,6 @@ export function App({
       searchState.isSearching,
       searchState.searchTerm,
       searchState.searchResults.length,
-      searchState.searchScope,
       maxScrollSearchMode,
       maxScroll,
       halfPageLines,
@@ -1181,27 +1147,28 @@ export function App({
       collapsibleMode,
       helpVisible,
       handleCollapsibleNavigation,
-      handleSearchScopeChange,
+      cycleScope,
       jqState.isActive,
       treeViewMode,
       treeViewKeyboardHandler,
       debugLogViewerVisible,
       terminalSize.height,
-      terminalSize.width, // Toggle collapsible mode
-      setCollapsibleMode, // Toggle debug log viewer
-      setDebugLogViewerVisible, // Toggle debug visibility
+      terminalSize.width,
+      setCollapsibleMode,
+      setDebugLogViewerVisible,
       setDebugVisible,
       setHelpVisible,
-      setJqInput, // Toggle jq mode
-      setJqState, // Toggle line numbers visibility
-      setLineNumbersVisible, // Toggle schema view
+      setJqInput,
+      setJqState,
+      setLineNumbersVisible,
       setSchemaVisible,
       setScrollOffset,
       setSearchCursorPosition,
       setSearchInput,
-      setSearchState, // Toggle tree view mode
+      setIsSearching,
       setTreeViewMode,
       setWaitingForSecondG,
+      cancelSearch,
     ],
   );
 
@@ -1337,7 +1304,6 @@ export function App({
                   searchState={searchState}
                   searchInput={searchInput}
                   searchCursorPosition={searchCursorPosition}
-                  onScopeChange={handleSearchScopeChange}
                 />
               </Box>
             )}
