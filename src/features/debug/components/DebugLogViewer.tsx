@@ -220,7 +220,16 @@ export function DebugLogViewer({ height, width, onExit }: DebugLogViewerProps) {
 
   // Optimized keyboard input handling with useCallback to prevent recreations
   const handleKeyboardInput = useCallback(
-    (input: string, key: { escape?: boolean }) => {
+    (
+      input: string,
+      key: {
+        escape?: boolean;
+        upArrow?: boolean;
+        downArrow?: boolean;
+        pageUp?: boolean;
+        pageDown?: boolean;
+      },
+    ) => {
       if (input === "q" || key?.escape) {
         onExit();
         return;
