@@ -40,10 +40,14 @@ import { isSearchingAtom } from "@store/atoms/search";
 import { useUpdateDebugInfo } from "@store/hooks";
 import { useDebugInfo } from "@store/hooks/useDebug";
 import {
+  useCompleteExport,
   useExportDialog,
   useExportStatus,
   useHideExportDialog,
+  useResetExportStatus,
+  useSetExportError,
   useShowExportDialog,
+  useStartExport,
 } from "@store/hooks/useExport";
 import {
   useCompleteJqTransformation,
@@ -147,11 +151,15 @@ export function App({
   const completeJqTransformation = useCompleteJqTransformation();
 
   // Export and debug state
-  const [exportStatus, setExportStatus] = useExportStatus();
+  const [exportStatus] = useExportStatus();
   const exportDialog = useExportDialog();
   const [debugInfo] = useDebugInfo();
   const showExportDialog = useShowExportDialog();
   const hideExportDialog = useHideExportDialog();
+  const setExportError = useSetExportError();
+  const startExport = useStartExport();
+  const completeExport = useCompleteExport();
+  const resetExportStatus = useResetExportStatus();
 
   // UI state
   const {
@@ -525,20 +533,12 @@ export function App({
   // Handle schema export
   const handleExportSchema = useCallback(() => {
     if (!initialData) {
-      setExportStatus({
-        isExporting: false,
-        message: "No data to export. Please load JSON data first.",
-        type: "error",
-      });
+      setExportError("No data to export. Please load JSON data first.");
       return;
     }
     // Show export dialog
     showExportDialog("simple");
-  }, [
-    initialData, // Show export dialog
-    showExportDialog,
-    setExportStatus,
-  ]);
+  }, [initialData, showExportDialog, setExportError]);
 
   // Handle export dialog confirmation
   const handleExportConfirm = useCallback(
@@ -546,38 +546,41 @@ export function App({
       if (!initialData) return;
 
       hideExportDialog();
-      setExportStatus({ isExporting: true });
+      startExport();
 
       try {
         const result = await exportToFile(initialData, options);
         if (result.success) {
           const exportType =
             options?.format === "json" ? "JSON data" : "JSON Schema";
-          setExportStatus({
-            isExporting: false,
+          completeExport({
+            success: true,
             message: `${exportType} exported to ${result.filePath}`,
-            type: "success",
           });
         } else {
-          setExportStatus({
-            isExporting: false,
+          completeExport({
+            success: false,
             message: result.error || "Export failed",
-            type: "error",
           });
         }
       } catch (error) {
-        setExportStatus({
-          isExporting: false,
+        completeExport({
+          success: false,
           message: error instanceof Error ? error.message : "Export failed",
-          type: "error",
         });
       }
       // Clear export status after 3 seconds
       setTimeout(() => {
-        setExportStatus({ isExporting: false });
+        resetExportStatus();
       }, 3000);
     },
-    [initialData, hideExportDialog, setExportStatus],
+    [
+      initialData,
+      hideExportDialog,
+      startExport,
+      completeExport,
+      resetExportStatus,
+    ],
   );
 
   // Handle export dialog cancellation
