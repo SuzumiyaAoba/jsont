@@ -116,32 +116,77 @@ export function TreeView({
         });
   }, [treeLines, searchTerm]);
 
-  // Calculate visible lines and ensure bounds
-  // Subtract 1 from height to account for the header line
-  const actualMaxScroll = Math.max(0, filteredLines.length - (height - 1));
-  const boundedScrollOffset = Math.min(scrollOffset, actualMaxScroll);
+  // ROOT CAUSE SOLUTION: Conservative approach to ensure reliable line display
+  // The core issue: subtle mismatch between calculated and actual displayable lines
+
+  // Use a conservative content height to account for potential Ink.js layout constraints
+  const baseContentHeight = height - 1; // Account for header line
+  const safeContentHeight = Math.max(1, baseContentHeight - 1); // Additional safety margin
+
+  // Recalculate max scroll with conservative height to ensure last line is always reachable
+  const conservativeMaxScroll = Math.max(
+    0,
+    filteredLines.length - safeContentHeight,
+  );
+  const boundedScrollOffset = Math.min(scrollOffset, conservativeMaxScroll);
   const boundedSelectedIndex = Math.min(
     selectedLineIndex,
     filteredLines.length - 1,
   );
 
-  // Calculate visible lines: account for header line taking 1 row
-  // Available content height = height - 1
-  // To get exactly contentHeight lines from slice(start, end), we need end = start + contentHeight
-  // slice(start, end) returns elements from start to end-1, so end = start + contentHeight gives us contentHeight elements
-  const contentHeight = height - 1; // Available height for content after header
-  const visibleLines = getVisibleTreeLines(
-    filteredLines,
-    boundedScrollOffset,
-    boundedScrollOffset + contentHeight,
-  );
+  // Always ensure the last line is visible when we're near the end
+  const isNearEnd = boundedScrollOffset >= conservativeMaxScroll - 1;
+
+  let visibleLines: TreeLine[];
+  if (isNearEnd && filteredLines.length > 0) {
+    // Near end: show the last safeContentHeight lines to guarantee last line visibility
+    const endStartIndex = Math.max(0, filteredLines.length - safeContentHeight);
+    visibleLines = getVisibleTreeLines(
+      filteredLines,
+      endStartIndex,
+      filteredLines.length,
+    );
+  } else {
+    // Normal case: use safe content height
+    const endIndex = Math.min(
+      boundedScrollOffset + safeContentHeight,
+      filteredLines.length,
+    );
+    visibleLines = getVisibleTreeLines(
+      filteredLines,
+      boundedScrollOffset,
+      endIndex,
+    );
+  }
+
+  // Debug info for verification
+  if (process.env["NODE_ENV"] === "development" && showLineNumbers) {
+    console.log("=== CONSERVATIVE TREE VIEW CALCULATION ===");
+    console.log(`Total lines: ${filteredLines.length}`);
+    console.log(
+      `Height: ${height}, Base content height: ${baseContentHeight}, Safe content height: ${safeContentHeight}`,
+    );
+    console.log(`Conservative max scroll: ${conservativeMaxScroll}`);
+    console.log(`Bounded scroll offset: ${boundedScrollOffset}`);
+    console.log(`Is near end: ${isNearEnd}`);
+    console.log(`Visible lines count: ${visibleLines.length}`);
+    if (visibleLines.length > 0) {
+      const firstIndex = filteredLines.indexOf(visibleLines[0]);
+      const lastIndex = filteredLines.indexOf(
+        visibleLines[visibleLines.length - 1],
+      );
+      console.log(
+        `Displaying lines ${firstIndex + 1} to ${lastIndex + 1} (1-based)`,
+      );
+    }
+  }
 
   // Ensure stable rendering by adding a key that forces proper reconciliation
   const renderKey = useMemo(() => {
     return `${treeState.rootNodes.length}-${filteredLines.length}`;
   }, [treeState.rootNodes.length, filteredLines.length]);
 
-  const maxScroll = actualMaxScroll;
+  const maxScroll = conservativeMaxScroll;
 
   // Use refs to maintain stable references
   const stateRef = useRef({
@@ -207,7 +252,7 @@ export function TreeView({
           setSelectedLineIndex(newIndex);
 
           // Ensure selected line is visible and handle array parent selection
-          const effectiveHeight = height - 1; // Account for header line
+          const effectiveHeight = Math.max(1, height - 2); // Conservative content height
           if (newIndex >= scrollOffset + effectiveHeight) {
             let targetScrollOffset = Math.min(
               maxScroll,
@@ -249,7 +294,7 @@ export function TreeView({
           }
           return true;
         } else if (key.pageUp || (key.ctrl && input === "b")) {
-          const effectiveHeight = height - 1; // Account for header line
+          const effectiveHeight = Math.max(1, height - 2); // Conservative content height
           const newIndex = Math.max(0, selectedLineIndex - effectiveHeight);
           const newScrollOffset = Math.max(
             0,
@@ -259,7 +304,7 @@ export function TreeView({
           setScrollOffset(newScrollOffset);
           return true;
         } else if (key.pageDown || (key.ctrl && input === "f")) {
-          const effectiveHeight = height - 1; // Account for header line
+          const effectiveHeight = Math.max(1, height - 2); // Conservative content height
           const newIndex = Math.min(
             filteredLines.length - 1,
             selectedLineIndex + effectiveHeight,
@@ -571,7 +616,7 @@ export function TreeView({
         return false;
       }
     },
-    [boundedScrollOffset, contentHeight], // State setters are stable, avoid displayOptions/searchTerm to prevent re-creation
+    [boundedScrollOffset], // State setters are stable, avoid displayOptions/searchTerm to prevent re-creation
   );
 
   // Remove direct useInput - let App.tsx handle all input and delegate to us
