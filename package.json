@@ -55,7 +55,7 @@
     "zod": "^4.0.5"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.0.6",
+    "@biomejs/biome": "^2.1.2",
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^16.3.0",
     "@tsconfig/strictest": "^2.0.5",
