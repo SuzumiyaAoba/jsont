@@ -64,7 +64,7 @@ export function App({
   const config = useConfig();
 
   // Application state management
-  const appState = useAppState(initialError);
+  const appState = useAppState();
   const {
     scrollOffset,
     setScrollOffset,

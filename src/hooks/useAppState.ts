@@ -70,7 +70,7 @@ const initialJqState: JqState = {
   showOriginal: false,
 };
 
-export function useAppState(_initialError: string | null = null) {
+export function useAppState() {
   // Search state
   const [scrollOffset, setScrollOffset] = useState<number>(0);
   const [searchState, setSearchState] =
