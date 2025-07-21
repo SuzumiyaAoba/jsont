@@ -8,8 +8,8 @@ import { describe, expect, it, vi } from "vitest";
 import type { JsontConfig } from "../../config/index.js";
 import { ConfigProvider, useConfig, useConfigValue } from "../ConfigContext.js";
 
-// Mock the config loader
-vi.mock("../../config/loader.js", () => ({
+// Mock the config loader - mock the index.js file since that's what ConfigContext imports
+vi.mock("../../config/index.js", () => ({
   loadConfig: vi.fn(() => ({
     display: {
       json: {

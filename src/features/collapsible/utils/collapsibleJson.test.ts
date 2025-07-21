@@ -356,5 +356,28 @@ describe("collapsibleJson", () => {
         expect(getNodeDisplayText(thirdNode, false)).toBe('  "third": "value"'); // Standard indentation
       }
     });
+
+    it("should respect custom indent configuration", () => {
+      const tree = buildJsonTree(testData);
+      const nameNode = tree.children?.find(
+        (child) => child.path.key === "name",
+      );
+
+      if (nameNode) {
+        // Test with 4 spaces
+        const displayText4 = getNodeDisplayText(nameNode, true, {
+          useTabs: false,
+          indent: 4,
+        });
+        expect(displayText4).toBe('    "name": "John",'); // 4-space indent
+
+        // Test with tabs
+        const displayTextTabs = getNodeDisplayText(nameNode, true, {
+          useTabs: true,
+          indent: 2,
+        });
+        expect(displayTextTabs).toBe('\t"name": "John",'); // tab indent
+      }
+    });
   });
 });

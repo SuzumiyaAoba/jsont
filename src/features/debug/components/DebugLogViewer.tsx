@@ -3,7 +3,7 @@
  */
 
 import { Box, Text, useInput } from "ink";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { DebugLogEntry, DebugLogLevel } from "../utils/debugLogger";
 import { DebugLogger, setDebugViewerActive } from "../utils/debugLogger";
 
@@ -13,33 +13,71 @@ interface DebugLogViewerProps {
   onExit: () => void;
 }
 
+// Memoized cache for formatted log data to avoid repeated processing
+const formatCache = new Map<string, string>();
+const MAX_CACHE_SIZE = 1000;
+
 function formatLogData(data: unknown, maxWidth: number = 80): string {
   if (typeof data === "string") {
-    return data;
+    return data.length > maxWidth
+      ? `${data.substring(0, maxWidth - 3)}...`
+      : data;
   }
+
   if (typeof data === "object" && data !== null) {
+    // Create cache key based on data and maxWidth
+    const cacheKey = `${JSON.stringify(data)}-${maxWidth}`;
+
+    // Check cache first
+    if (formatCache.has(cacheKey)) {
+      const cached = formatCache.get(cacheKey);
+      if (cached !== undefined) {
+        return cached;
+      }
+    }
+
+    // Clear cache if it gets too large to prevent memory leaks
+    if (formatCache.size >= MAX_CACHE_SIZE) {
+      formatCache.clear();
+    }
+
     const jsonString = JSON.stringify(data, null, 2);
-    // 長すぎる場合は改行して表示
+    let result: string;
+
+    // Optimize processing for large JSON
     if (jsonString.length > maxWidth) {
       const lines = jsonString.split("\n");
       if (lines.length > 1) {
-        // 既に改行されているJSONの場合、インデントを調整
-        return lines
+        // Multi-line JSON: process lines efficiently
+        result = lines
+          .slice(0, 10) // Limit to first 10 lines for performance
           .map((line) =>
             line.length > maxWidth
               ? `${line.substring(0, maxWidth - 3)}...`
               : line,
           )
           .join("\n");
+
+        if (lines.length > 10) {
+          result += `\n... (${lines.length - 10} more lines)`;
+        }
       } else {
-        // 一行の長いJSONの場合、適切な位置で改行
-        const truncated = `${jsonString.substring(0, maxWidth - 3)}...`;
-        return truncated;
+        // Single line: truncate
+        result = `${jsonString.substring(0, maxWidth - 3)}...`;
       }
+    } else {
+      result = jsonString;
     }
-    return jsonString;
+
+    // Cache the result
+    formatCache.set(cacheKey, result);
+    return result;
   }
-  return String(data);
+
+  const stringified = String(data);
+  return stringified.length > maxWidth
+    ? `${stringified.substring(0, maxWidth - 3)}...`
+    : stringified;
 }
 
 export function DebugLogViewer({ height, width, onExit }: DebugLogViewerProps) {
@@ -51,6 +89,10 @@ export function DebugLogViewer({ height, width, onExit }: DebugLogViewerProps) {
   const [scrollOffset, setScrollOffset] = useState(0);
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [gSequence, setGSequence] = useState(false);
+
+  // Performance optimization: track last log count to avoid unnecessary updates
+  const lastLogCountRef = useRef(0);
+  const updateIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   // デバッグビューアーがアクティブであることを通知と画面クリア
   useEffect(() => {
@@ -87,123 +129,202 @@ export function DebugLogViewer({ height, width, onExit }: DebugLogViewerProps) {
     return undefined;
   }, [gSequence]);
 
-  // ログを定期的に更新
+  // Optimized log updating: only update when there are actually new logs
   useEffect(() => {
     const updateLogs = () => {
-      setLogs(DebugLogger.getAllLogs());
+      const stats = DebugLogger.getStats();
+      const currentLogCount = stats.total;
+
+      // Only fetch and update logs if the count has changed
+      if (currentLogCount !== lastLogCountRef.current) {
+        // Limit the number of logs to prevent memory issues (keep last 10000 logs)
+        const allLogs = DebugLogger.getAllLogs();
+        const maxLogs = 10000;
+        const limitedLogs =
+          allLogs.length > maxLogs ? allLogs.slice(-maxLogs) : allLogs;
+
+        setLogs(limitedLogs);
+        lastLogCountRef.current = currentLogCount;
+      }
     };
 
+    // Initial update
     updateLogs();
-    const interval = setInterval(updateLogs, 1000);
-    return () => clearInterval(interval);
+
+    // More efficient polling: check every 500ms instead of 1000ms for better responsiveness
+    // but only update state when necessary
+    updateIntervalRef.current = setInterval(updateLogs, 500);
+
+    return () => {
+      if (updateIntervalRef.current) {
+        clearInterval(updateIntervalRef.current);
+        updateIntervalRef.current = null;
+      }
+    };
   }, []);
 
-  // フィルタリングされたログ
+  // Optimized filtering with early returns and efficient filtering
   const filteredLogs = useMemo(() => {
-    let filtered = logs;
-
-    if (selectedCategory) {
-      filtered = filtered.filter((log) => log.category === selectedCategory);
+    // Early return if no filters applied
+    if (!selectedCategory && !selectedLevel) {
+      return logs;
     }
 
-    if (selectedLevel) {
-      filtered = filtered.filter((log) => log.level === selectedLevel);
-    }
-
-    return filtered; // ログを時系列順（最新が末尾）で表示
+    // Use a single pass filter for better performance
+    return logs.filter((log) => {
+      if (selectedCategory && log.category !== selectedCategory) {
+        return false;
+      }
+      if (selectedLevel && log.level !== selectedLevel) {
+        return false;
+      }
+      return true;
+    });
   }, [logs, selectedCategory, selectedLevel]);
 
-  // 表示可能な行数を動的に計算
-  // ボーダー付きBoxのヘッダー(3行) + 統計行(1行) + ボーダー付きフッター(3行) = 7行を除外
-  const reservedLines = 7;
-  const availableLogLines = Math.max(1, height - reservedLines);
+  // Memoize layout calculations to prevent unnecessary recalculations
+  const layoutCalculations = useMemo(() => {
+    // ボーダー付きBoxのヘッダー(3行) + 統計行(1行) + ボーダー付きフッター(3行) = 7行を除外
+    const reservedLines = 7;
+    const availableLogLines = Math.max(1, height - reservedLines);
 
-  // 各ログエントリは複数行になる可能性があるため、実際の表示可能エントリ数を計算
-  // 保守的に見積もって、各エントリは最大2行（ヘッダー + データ）と仮定
-  const maxEntriesPerScreen = Math.floor(availableLogLines / 2);
-  const visibleLines = Math.max(1, maxEntriesPerScreen);
-  const maxScroll = Math.max(0, filteredLogs.length - visibleLines);
+    // 各ログエントリは複数行になる可能性があるため、実際の表示可能エントリ数を計算
+    // 保守的に見積もって、各エントリは最大2行（ヘッダー + データ）と仮定
+    const maxEntriesPerScreen = Math.floor(availableLogLines / 2);
+    const visibleLines = Math.max(1, maxEntriesPerScreen);
 
-  // 表示するログのスライス
-  const visibleLogs = filteredLogs.slice(
-    scrollOffset,
-    scrollOffset + visibleLines,
+    return {
+      reservedLines,
+      availableLogLines,
+      maxEntriesPerScreen,
+      visibleLines,
+    };
+  }, [height]);
+
+  // Memoize scroll calculations
+  const scrollCalculations = useMemo(() => {
+    const maxScroll = Math.max(
+      0,
+      filteredLogs.length - layoutCalculations.visibleLines,
+    );
+    return { maxScroll };
+  }, [filteredLogs.length, layoutCalculations.visibleLines]);
+
+  // Memoize visible logs slice - only recalculate when dependencies change
+  const visibleLogs = useMemo(() => {
+    return filteredLogs.slice(
+      scrollOffset,
+      scrollOffset + layoutCalculations.visibleLines,
+    );
+  }, [filteredLogs, scrollOffset, layoutCalculations.visibleLines]);
+
+  // Optimized keyboard input handling with useCallback to prevent recreations
+  const handleKeyboardInput = useCallback(
+    (
+      input: string,
+      key: {
+        escape?: boolean;
+        upArrow?: boolean;
+        downArrow?: boolean;
+        pageUp?: boolean;
+        pageDown?: boolean;
+      },
+    ) => {
+      if (input === "q" || key?.escape) {
+        onExit();
+        return;
+      }
+
+      const { visibleLines } = layoutCalculations;
+      const { maxScroll } = scrollCalculations;
+
+      if (key?.upArrow || input === "k") {
+        setSelectedIndex((prevIndex) => {
+          const newIndex = Math.max(0, prevIndex - 1);
+          // スクロール調整
+          if (newIndex <= scrollOffset) {
+            setScrollOffset(Math.max(0, scrollOffset - 1));
+          }
+          return newIndex;
+        });
+      } else if (key?.downArrow || input === "j") {
+        setSelectedIndex((prevIndex) => {
+          const newIndex = Math.min(filteredLogs.length - 1, prevIndex + 1);
+          // スクロール調整
+          if (newIndex >= scrollOffset + visibleLines - 1) {
+            setScrollOffset(Math.min(maxScroll, scrollOffset + 1));
+          }
+          return newIndex;
+        });
+      } else if (key?.pageUp) {
+        const newIndex = Math.max(0, selectedIndex - visibleLines);
+        setSelectedIndex(newIndex);
+        setScrollOffset(Math.max(0, newIndex - Math.floor(visibleLines / 2)));
+      } else if (key?.pageDown) {
+        const newIndex = Math.min(
+          filteredLogs.length - 1,
+          selectedIndex + visibleLines,
+        );
+        setSelectedIndex(newIndex);
+        setScrollOffset(
+          Math.min(maxScroll, newIndex - Math.floor(visibleLines / 2)),
+        );
+      } else if (input === "c") {
+        // フィルタをクリア
+        setSelectedCategory(null);
+        setSelectedLevel(null);
+        setScrollOffset(0);
+        setSelectedIndex(0);
+      } else if (input === "C") {
+        // 全ログをクリア
+        DebugLogger.clearLogs();
+        setLogs([]);
+        setScrollOffset(0);
+        setSelectedIndex(0);
+        lastLogCountRef.current = 0; // Reset log count tracking
+      } else if (input === "r") {
+        // 最新ログに移動（末尾に移動）
+        const maxIndex = filteredLogs.length - 1;
+        setSelectedIndex(maxIndex);
+        setScrollOffset(Math.max(0, maxIndex - visibleLines + 1));
+      } else if (input === "g") {
+        if (gSequence) {
+          // gg シーケンス完了 - 先頭に移動
+          setSelectedIndex(0);
+          setScrollOffset(0);
+          setGSequence(false);
+        } else {
+          // 最初の g - シーケンス開始
+          setGSequence(true);
+        }
+      } else if (input === "G") {
+        // 末尾に移動
+        const maxIndex = filteredLogs.length - 1;
+        setSelectedIndex(maxIndex);
+        setScrollOffset(Math.max(0, maxIndex - visibleLines + 1));
+      } else {
+        // 他のキー入力でgシーケンスをリセット
+        if (gSequence) {
+          setGSequence(false);
+        }
+      }
+    },
+    [
+      onExit,
+      layoutCalculations,
+      scrollCalculations,
+      scrollOffset,
+      selectedIndex,
+      filteredLogs.length,
+      gSequence,
+    ],
   );
 
-  // キーボード入力処理
-  useInput((input, key) => {
-    if (input === "q" || key?.escape) {
-      onExit();
-      return;
-    }
+  // Use the memoized keyboard handler
+  useInput(handleKeyboardInput);
 
-    if (key?.upArrow || input === "k") {
-      setSelectedIndex(Math.max(0, selectedIndex - 1));
-      // スクロール調整
-      if (selectedIndex <= scrollOffset) {
-        setScrollOffset(Math.max(0, scrollOffset - 1));
-      }
-    } else if (key?.downArrow || input === "j") {
-      setSelectedIndex(Math.min(filteredLogs.length - 1, selectedIndex + 1));
-      // スクロール調整
-      if (selectedIndex >= scrollOffset + visibleLines - 1) {
-        setScrollOffset(Math.min(maxScroll, scrollOffset + 1));
-      }
-    } else if (key?.pageUp) {
-      const newIndex = Math.max(0, selectedIndex - visibleLines);
-      setSelectedIndex(newIndex);
-      setScrollOffset(Math.max(0, newIndex - Math.floor(visibleLines / 2)));
-    } else if (key?.pageDown) {
-      const newIndex = Math.min(
-        filteredLogs.length - 1,
-        selectedIndex + visibleLines,
-      );
-      setSelectedIndex(newIndex);
-      setScrollOffset(
-        Math.min(maxScroll, newIndex - Math.floor(visibleLines / 2)),
-      );
-    } else if (input === "c") {
-      // フィルタをクリア
-      setSelectedCategory(null);
-      setSelectedLevel(null);
-      setScrollOffset(0);
-      setSelectedIndex(0);
-    } else if (input === "C") {
-      // 全ログをクリア
-      DebugLogger.clearLogs();
-      setLogs([]);
-      setScrollOffset(0);
-      setSelectedIndex(0);
-    } else if (input === "r") {
-      // 最新ログに移動（末尾に移動）
-      const maxIndex = filteredLogs.length - 1;
-      setSelectedIndex(maxIndex);
-      setScrollOffset(Math.max(0, maxIndex - visibleLines + 1));
-    } else if (input === "g") {
-      if (gSequence) {
-        // gg シーケンス完了 - 先頭に移動
-        setSelectedIndex(0);
-        setScrollOffset(0);
-        setGSequence(false);
-      } else {
-        // 最初の g - シーケンス開始
-        setGSequence(true);
-      }
-    } else if (input === "G") {
-      // 末尾に移動
-      const maxIndex = filteredLogs.length - 1;
-      setSelectedIndex(maxIndex);
-      setScrollOffset(Math.max(0, maxIndex - visibleLines + 1));
-    } else {
-      // 他のキー入力でgシーケンスをリセット
-      if (gSequence) {
-        setGSequence(false);
-      }
-    }
-  });
-
-  // ログレベルの色を取得
-  const getLevelColor = (level: DebugLogLevel): string => {
+  // Memoized utility functions to prevent recreations
+  const getLevelColor = useCallback((level: DebugLogLevel): string => {
     switch (level) {
       case "error":
         return "red";
@@ -216,10 +337,9 @@ export function DebugLogViewer({ height, width, onExit }: DebugLogViewerProps) {
       default:
         return "white";
     }
-  };
+  }, []);
 
-  // 時間フォーマット
-  const formatTime = (date: Date): string => {
+  const formatTime = useCallback((date: Date): string => {
     return date.toLocaleTimeString("ja-JP", {
       hour12: false,
       hour: "2-digit",
@@ -227,11 +347,14 @@ export function DebugLogViewer({ height, width, onExit }: DebugLogViewerProps) {
       second: "2-digit",
       fractionalSecondDigits: 3,
     });
-  };
+  }, []);
 
-  // 統計情報
-  const stats = DebugLogger.getStats();
-  const categories = DebugLogger.getCategories();
+  // Memoize expensive operations from DebugLogger
+  const stats = useMemo(() => DebugLogger.getStats(), []);
+  const categories = useMemo(() => DebugLogger.getCategories(), []);
+
+  // Memoize available width calculation
+  const availableWidth = useMemo(() => Math.max(60, width - 4), [width]);
 
   return (
     <Box flexDirection="column" width={width} height={height}>
@@ -265,17 +388,20 @@ export function DebugLogViewer({ height, width, onExit }: DebugLogViewerProps) {
           const isSelected = absoluteIndex === selectedIndex;
           const levelColor = getLevelColor(log.level);
 
-          // 利用可能な幅を計算（マージンを考慮）
-          const availableWidth = Math.max(60, width - 4);
-
           // ログのヘッダー部分（時間、レベル、カテゴリ、メッセージ）
           const headerText = `[${formatTime(log.timestamp)}][${log.level.toUpperCase()}][${log.category}] ${log.message}`;
 
-          // データ部分のフォーマット
+          // データ部分のフォーマット - only format if there's data to avoid unnecessary work
           const dataText =
             log.data !== undefined && log.data !== null
               ? formatLogData(log.data, availableWidth)
               : null;
+
+          // Optimize text truncation by pre-calculating
+          const displayHeaderText =
+            headerText.length > availableWidth
+              ? `${headerText.substring(0, availableWidth - 3)}...`
+              : headerText;
 
           return (
             <Box key={log.id} flexDirection="column" width={width}>
@@ -292,9 +418,7 @@ export function DebugLogViewer({ height, width, onExit }: DebugLogViewerProps) {
                   color={isSelected ? "white" : levelColor}
                   {...(isSelected ? { backgroundColor: "blue" } : {})}
                 >
-                  {headerText.length > availableWidth
-                    ? `${headerText.substring(0, availableWidth - 3)}...`
-                    : headerText}
+                  {displayHeaderText}
                 </Text>
               </Box>
 

@@ -13,12 +13,10 @@ import { DebugBar } from "@features/debug/components/DebugBar";
 import { DebugLogViewer } from "@features/debug/components/DebugLogViewer";
 import { HelpViewer } from "@features/help/components/HelpViewer";
 import { JqQueryInput } from "@features/jq/components/JqQueryInput";
-import type { JqState } from "@features/jq/types/jq";
 import { transformWithJq } from "@features/jq/utils/jqTransform";
 import { JsonViewer } from "@features/json-rendering/components/JsonViewer";
 import { ExportDialog } from "@features/schema/components/ExportDialog";
 import { SchemaViewer } from "@features/schema/components/SchemaViewer";
-import type { ExportDialogState } from "@features/schema/types/export";
 import {
   exportToFile,
   generateDefaultFilename,
@@ -28,7 +26,7 @@ import {
   inferJsonSchema,
 } from "@features/schema/utils/schemaUtils";
 import { SearchBar } from "@features/search/components/SearchBar";
-import type { SearchScope, SearchState } from "@features/search/types/search";
+import type { SearchScope } from "@features/search/types/search";
 import {
   getNextSearchScope,
   searchInJson,
@@ -41,6 +39,7 @@ import {
 import { TreeView } from "@features/tree/components/TreeView";
 import { Box, Text, useApp, useInput } from "ink";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useAppState } from "@/hooks/useAppState";
 
 /**
  * Main application component for the JSON TUI Viewer
@@ -64,47 +63,51 @@ export function App({
   // Load configuration
   const config = useConfig();
 
+  // Application state management
+  const appState = useAppState();
+  const {
+    scrollOffset,
+    setScrollOffset,
+    searchState,
+    setSearchState,
+    searchInput,
+    setSearchInput,
+    searchCursorPosition,
+    setSearchCursorPosition,
+    jqState,
+    setJqState,
+    jqInput,
+    setJqInput,
+    jqCursorPosition,
+    setJqCursorPosition,
+    jqFocusMode,
+    setJqFocusMode,
+    debugVisible,
+    setDebugVisible,
+    lineNumbersVisible,
+    setLineNumbersVisible,
+    schemaVisible,
+    setSchemaVisible,
+    helpVisible,
+    setHelpVisible,
+    treeViewMode,
+    setTreeViewMode,
+    collapsibleMode,
+    setCollapsibleMode,
+    debugLogViewerVisible,
+    setDebugLogViewerVisible,
+    exportStatus,
+    setExportStatus,
+    exportDialog,
+    setExportDialog,
+    debugInfo,
+    setDebugInfo,
+    waitingForSecondG,
+    setWaitingForSecondG,
+  } = appState;
+
   const [error] = useState<string | null>(initialError ?? null);
-  const [scrollOffset, setScrollOffset] = useState<number>(0);
-  const [waitingForSecondG, setWaitingForSecondG] = useState<boolean>(false);
   const gTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-
-  // Search state
-  const [searchState, setSearchState] = useState<SearchState>({
-    isSearching: false,
-    searchTerm: "",
-    searchResults: [],
-    currentResultIndex: 0,
-    searchScope: "all",
-  });
-  const [searchInput, setSearchInput] = useState<string>("");
-  const [searchCursorPosition, setSearchCursorPosition] = useState<number>(0);
-
-  // Debug state for keyboard input
-  const [debugInfo, setDebugInfo] = useState<{
-    lastKey: string;
-    lastKeyAction: string;
-    timestamp: string;
-  } | null>(null);
-  const [debugVisible, setDebugVisible] = useState<boolean>(false);
-  const [lineNumbersVisible, setLineNumbersVisible] = useState<boolean>(false);
-  const [schemaVisible, setSchemaVisible] = useState<boolean>(false);
-
-  // Export state
-  const [exportStatus, setExportStatus] = useState<{
-    isExporting: boolean;
-    message?: string;
-    type?: "success" | "error";
-  }>({ isExporting: false });
-  const [exportDialog, setExportDialog] = useState<ExportDialogState>({
-    isVisible: false,
-    mode: "simple",
-  });
-  const [collapsibleMode, setCollapsibleMode] = useState<boolean>(false);
-  const [treeViewMode, setTreeViewMode] = useState<boolean>(false);
-  const [helpVisible, setHelpVisible] = useState<boolean>(false);
-  const [debugLogViewerVisible, setDebugLogViewerVisible] =
-    useState<boolean>(false);
 
   const [treeViewKeyboardHandler, setTreeViewKeyboardHandler] =
     useState<KeyboardHandler | null>(null);
@@ -117,16 +120,6 @@ export function App({
       },
       [],
     );
-
-  // jq transformation state
-  const [jqState, setJqState] = useState<JqState>({
-    isActive: false,
-    query: "",
-    transformedData: null,
-    error: null,
-    isProcessing: false,
-    showOriginal: false,
-  });
 
   // Determine current mode for help system
   const currentMode = useMemo(() => {
@@ -151,10 +144,7 @@ export function App({
     collapsibleMode,
     schemaVisible,
   ]);
-  const [jqInput, setJqInput] = useState<string>("");
-  const [jqCursorPosition, setJqCursorPosition] = useState<number>(0);
   const [jqErrorScrollOffset, setJqErrorScrollOffset] = useState<number>(0);
-  const [jqFocusMode, setJqFocusMode] = useState<"input" | "json">("input"); // 'input' for query input, 'json' for result viewing
 
   const [terminalSize, setTerminalSize] = useState({
     width: process.stdout.columns || 80,
@@ -363,7 +353,13 @@ export function App({
         setScrollOffset(Math.min(currentMaxScroll, targetLine));
       }
     },
-    [visibleLines, maxScroll, maxScrollSearchMode, searchState.isSearching],
+    [
+      visibleLines,
+      maxScroll,
+      maxScrollSearchMode,
+      searchState.isSearching,
+      setScrollOffset,
+    ],
   );
 
   // Helper function to navigate to next search result
@@ -380,6 +376,7 @@ export function App({
     searchState.currentResultIndex,
     searchState.searchResults,
     scrollToSearchResult,
+    setSearchState,
   ]);
 
   // Helper function to navigate to previous search result
@@ -398,6 +395,7 @@ export function App({
     searchState.currentResultIndex,
     searchState.searchResults,
     scrollToSearchResult,
+    setSearchState,
   ]);
 
   // Helper function to handle collapsible navigation
@@ -415,16 +413,19 @@ export function App({
     (newScrollOffset: number) => {
       setScrollOffset(newScrollOffset);
     },
-    [],
+    [setScrollOffset],
   );
 
   // Helper function to handle search scope changes
-  const handleSearchScopeChange = useCallback((newScope: SearchScope) => {
-    setSearchState((prev) => ({
-      ...prev,
-      searchScope: newScope,
-    }));
-  }, []);
+  const handleSearchScopeChange = useCallback(
+    (newScope: SearchScope) => {
+      setSearchState((prev) => ({
+        ...prev,
+        searchScope: newScope,
+      }));
+    },
+    [setSearchState],
+  );
 
   // Update search results when search term or view mode changes
   useEffect(() => {
@@ -461,7 +462,9 @@ export function App({
     searchState.searchTerm,
     searchState.searchScope,
     initialData,
-    schemaVisible,
+    schemaVisible, // Reset scroll to top after search
+    setScrollOffset,
+    setSearchState,
   ]);
 
   // Clear timeout when component unmounts or when g sequence is reset
@@ -488,7 +491,7 @@ export function App({
         timestamp: timestamp,
       });
     },
-    [searchState.isSearching],
+    [searchState.isSearching, setDebugInfo],
   );
 
   // Handle schema export
@@ -503,7 +506,11 @@ export function App({
     }
     // Show export dialog
     setExportDialog({ isVisible: true, mode: "simple" });
-  }, [initialData]);
+  }, [
+    initialData, // Show export dialog
+    setExportDialog,
+    setExportStatus,
+  ]);
 
   // Handle export dialog confirmation
   const handleExportConfirm = useCallback(
@@ -542,13 +549,13 @@ export function App({
         setExportStatus({ isExporting: false });
       }, 3000);
     },
-    [initialData],
+    [initialData, setExportDialog, setExportStatus],
   );
 
   // Handle export dialog cancellation
   const handleExportCancel = useCallback(() => {
     setExportDialog({ isVisible: false, mode: "simple" });
-  }, []);
+  }, [setExportDialog]);
 
   // Handle jq transformation
   const handleJqTransformation = useCallback(
@@ -585,7 +592,7 @@ export function App({
         }));
       }
     },
-    [initialData],
+    [initialData, setJqState],
   );
 
   // Handle jq input mode
@@ -746,6 +753,12 @@ export function App({
       jqState.error,
       updateDebugInfo,
       JSON_INDENT,
+      setJqCursorPosition,
+      setJqFocusMode,
+      setJqInput, // Toggle jq mode (exit when in jq mode)
+      setJqState, // Reset scroll position when switching views to ensure proper navigation
+      setScrollOffset, // First 'g' pressed
+      setWaitingForSecondG,
     ],
   );
 
@@ -813,6 +826,10 @@ export function App({
       updateDebugInfo,
       searchState.searchScope,
       handleSearchScopeChange,
+      setScrollOffset,
+      setSearchCursorPosition,
+      setSearchInput,
+      setSearchState,
     ],
   );
 
@@ -1164,7 +1181,21 @@ export function App({
       treeViewKeyboardHandler,
       debugLogViewerVisible,
       terminalSize.height,
-      terminalSize.width,
+      terminalSize.width, // Toggle collapsible mode
+      setCollapsibleMode, // Toggle debug log viewer
+      setDebugLogViewerVisible, // Toggle debug visibility
+      setDebugVisible,
+      setHelpVisible,
+      setJqInput, // Toggle jq mode
+      setJqState, // Toggle line numbers visibility
+      setLineNumbersVisible, // Toggle schema view
+      setSchemaVisible,
+      setScrollOffset,
+      setSearchCursorPosition,
+      setSearchInput,
+      setSearchState, // Toggle tree view mode
+      setTreeViewMode,
+      setWaitingForSecondG,
     ],
   );
 
@@ -1246,6 +1277,7 @@ export function App({
       updateDebugInfo,
       handleExportSchema,
       helpVisible,
+      setHelpVisible,
     ],
   );
 

@@ -41,11 +41,11 @@ export function useConfig(): JsontConfig {
 export function useConfigValue<T>(path: string): T {
   const config = useConfig();
   const keys = path.split(".");
-  let current: any = config;
+  let current: unknown = config;
 
   for (const key of keys) {
     if (current && typeof current === "object" && key in current) {
-      current = current[key];
+      current = (current as Record<string, unknown>)[key];
     } else {
       throw new Error(`Configuration path "${path}" not found`);
     }

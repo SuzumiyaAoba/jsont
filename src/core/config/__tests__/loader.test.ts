@@ -7,7 +7,12 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { DEFAULT_CONFIG } from "../defaults.js";
-import { getConfigPath, loadConfig } from "../loader.js";
+import {
+  getConfigPath,
+  loadConfig,
+  loadConfigFromPath,
+  validateConfigWithDetails,
+} from "../loader.js";
 
 // Mock os.homedir to use a temporary directory
 const testTmpDir = join(tmpdir(), "jsont-test-config");
@@ -108,7 +113,6 @@ display:
       expect(config).toEqual(DEFAULT_CONFIG);
       expect(consoleSpy).toHaveBeenCalledWith(
         expect.stringContaining("Warning: Failed to load config"),
-        expect.any(Error),
       );
 
       consoleSpy.mockRestore();
@@ -138,18 +142,22 @@ keybindings:
 
       const config = loadConfig();
 
-      // Invalid values should be ignored, valid ones should be kept
+      // With Zod validation, invalid configs result in fallback to defaults
       expect(config.display.json.indent).toBe(
         DEFAULT_CONFIG.display.json.indent,
-      ); // Invalid, uses default
+      );
       expect(config.display.json.useTabs).toBe(
         DEFAULT_CONFIG.display.json.useTabs,
-      ); // Invalid, uses default
-      expect(config.display.tree.maxValueLength).toBe(100); // Valid, should be used
+      );
+      expect(config.display.tree.maxValueLength).toBe(
+        DEFAULT_CONFIG.display.tree.maxValueLength,
+      ); // Falls back to default due to validation failure
       expect(config.keybindings.navigation.up).toEqual(
         DEFAULT_CONFIG.keybindings.navigation.up,
-      ); // Invalid, uses default
-      expect(config.keybindings.navigation.down).toEqual(["j", "ArrowDown"]); // Valid, should be used
+      );
+      expect(config.keybindings.navigation.down).toEqual(
+        DEFAULT_CONFIG.keybindings.navigation.down,
+      ); // Falls back to default due to validation failure
     });
 
     it("should handle nested configuration merging correctly", () => {
@@ -206,6 +214,118 @@ behavior:
 
       const config = loadConfig();
       expect(config).toEqual(DEFAULT_CONFIG);
+    });
+
+    it("should show validation warnings for invalid values with Zod", () => {
+      // Create config directory
+      mkdirSync(testConfigDir, { recursive: true });
+
+      // Write config with validation errors
+      const invalidConfig = `
+display:
+  json:
+    indent: -1  # Should be positive
+    maxLineLength: 2000  # Exceeds max limit (1000)
+  tree:
+    maxValueLength: 0  # Should be positive
+keybindings:
+  navigation:
+    up: []  # Should have at least one string
+behavior:
+  navigation:
+    scrollOffset: -10  # Should be non-negative
+`;
+      writeFileSync(testConfigPath, invalidConfig);
+
+      const consoleSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+
+      const config = loadConfig();
+
+      // Should fallback to defaults for invalid values
+      expect(config).toEqual(DEFAULT_CONFIG);
+
+      // Should show validation warnings from Zod
+      expect(consoleSpy).toHaveBeenCalledWith(
+        expect.stringContaining("Configuration validation warnings"),
+      );
+
+      consoleSpy.mockRestore();
+    });
+  });
+
+  describe("validateConfigWithDetails", () => {
+    it("should return validation details for valid config", () => {
+      const validConfig = {
+        display: {
+          json: {
+            indent: 2,
+            useTabs: false,
+          },
+        },
+      };
+
+      const result = validateConfigWithDetails(validConfig);
+
+      expect(result.isValid).toBe(true);
+      expect(result.errors).toEqual([]);
+      expect(result.validatedConfig).toEqual(validConfig);
+    });
+
+    it("should return validation details for invalid config", () => {
+      const invalidConfig = {
+        display: {
+          json: {
+            indent: -1, // Invalid: should be positive
+            useTabs: "not boolean", // Invalid: should be boolean
+          },
+        },
+      };
+
+      const result = validateConfigWithDetails(invalidConfig);
+
+      expect(result.isValid).toBe(false);
+      expect(result.errors.length).toBeGreaterThan(0);
+      expect(result.errors.some((error) => error.includes("indent"))).toBe(
+        true,
+      );
+      expect(result.validatedConfig).toEqual({}); // Should be empty due to coercion
+    });
+
+    it("should handle null and undefined gracefully", () => {
+      expect(validateConfigWithDetails(null).validatedConfig).toEqual({});
+      expect(validateConfigWithDetails(undefined).validatedConfig).toEqual({});
+    });
+  });
+
+  describe("loadConfigFromPath", () => {
+    it("should load config from custom path", () => {
+      const customPath = join(testTmpDir, "custom-config.yaml");
+      const customConfig = `
+display:
+  json:
+    indent: 6
+`;
+      writeFileSync(customPath, customConfig);
+
+      const config = loadConfigFromPath(customPath);
+      expect(config.display.json.indent).toBe(6);
+    });
+
+    it("should throw error for non-existent path", () => {
+      const nonExistentPath = join(testTmpDir, "does-not-exist.yaml");
+
+      expect(() => loadConfigFromPath(nonExistentPath)).toThrow(
+        "Configuration file not found",
+      );
+    });
+
+    it("should throw error for invalid YAML in custom path", () => {
+      const customPath = join(testTmpDir, "invalid-config.yaml");
+      writeFileSync(customPath, "invalid: [yaml");
+
+      expect(() => loadConfigFromPath(customPath)).toThrow(
+        "Failed to load config",
+      );
     });
   });
 });
