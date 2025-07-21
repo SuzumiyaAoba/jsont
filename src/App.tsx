@@ -35,17 +35,17 @@ import {
   getStatusContent,
 } from "@features/status/utils/statusUtils";
 import { TreeView } from "@features/tree/components/TreeView";
+import { useSetAtom } from "@store/atoms";
+import { isSearchingAtom } from "@store/atoms/search";
 import { useUpdateDebugInfo } from "@store/hooks";
 import {
   useCancelSearch,
   useCurrentSearchResult,
   useCycleScope,
-  useIsSearching,
   useNextSearchResult,
   usePreviousSearchResult,
   useSearchCursorPosition,
   useSearchInput,
-  useSearchScope,
   useSearchState,
   useStartSearch,
   useUpdateSearchResults,
@@ -87,8 +87,8 @@ export function App({
   const [searchInput, setSearchInput] = useSearchInput();
   const [searchCursorPosition, setSearchCursorPosition] =
     useSearchCursorPosition();
-  const [_isSearching, setIsSearching] = useIsSearching();
-  const [_searchScope, _setSearchScope] = useSearchScope();
+  const setIsSearching = useSetAtom(isSearchingAtom);
+  // Note: searchScope is available via searchState.searchScope, setters not needed since we use cycleScope()
   const startSearch = useStartSearch();
   const cancelSearch = useCancelSearch();
   const cycleScope = useCycleScope();

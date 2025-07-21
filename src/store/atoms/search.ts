@@ -69,12 +69,13 @@ export const previousSearchResultAtom = atom(null, (get, set) => {
   }
 });
 
+const SEARCH_SCOPES: SearchScope[] = ["all", "keys", "values"] as const;
+
 export const cycleScopeAtom = atom(null, (get, set) => {
   const currentScope = get(searchScopeAtom);
-  const scopes: SearchScope[] = ["all", "keys", "values"];
-  const currentIndex = scopes.indexOf(currentScope);
-  const nextIndex = (currentIndex + 1) % scopes.length;
-  const nextScope = scopes[nextIndex] as SearchScope;
+  const currentIndex = SEARCH_SCOPES.indexOf(currentScope);
+  const nextIndex = (currentIndex + 1) % SEARCH_SCOPES.length;
+  const nextScope = SEARCH_SCOPES[nextIndex];
   set(searchScopeAtom, nextScope);
 });
 

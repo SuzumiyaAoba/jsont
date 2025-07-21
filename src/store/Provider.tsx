@@ -2,7 +2,7 @@
  * Jotai Provider component for the application
  */
 
-import { Provider } from "jotai";
+import { Provider as JotaiRootProvider } from "jotai";
 import type { ReactNode } from "react";
 
 interface JotaiProviderProps {
@@ -10,5 +10,5 @@ interface JotaiProviderProps {
 }
 
 export function JotaiProvider({ children }: JotaiProviderProps) {
-  return <Provider>{children}</Provider>;
+  return <JotaiRootProvider>{children}</JotaiRootProvider>;
 }
