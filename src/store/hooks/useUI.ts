@@ -55,3 +55,32 @@ export const useUIState = () => ({
   debugLogViewerVisible: useAtomValue(debugLogViewerVisibleAtom),
   currentMode: useAtomValue(currentModeAtom),
 });
+
+// Main UI hook that returns both state and setters (for App.tsx compatibility)
+export const useUI = () => {
+  const [debugVisible, setDebugVisible] = useDebugVisible();
+  const [lineNumbersVisible, setLineNumbersVisible] = useLineNumbersVisible();
+  const [schemaVisible, setSchemaVisible] = useSchemaVisible();
+  const [helpVisible, setHelpVisible] = useHelpVisible();
+  const [treeViewMode, setTreeViewMode] = useTreeViewMode();
+  const [collapsibleMode, setCollapsibleMode] = useCollapsibleMode();
+  const [debugLogViewerVisible, setDebugLogViewerVisible] =
+    useDebugLogViewerVisible();
+
+  return {
+    debugVisible,
+    setDebugVisible,
+    lineNumbersVisible,
+    setLineNumbersVisible,
+    schemaVisible,
+    setSchemaVisible,
+    helpVisible,
+    setHelpVisible,
+    treeViewMode,
+    setTreeViewMode,
+    collapsibleMode,
+    setCollapsibleMode,
+    debugLogViewerVisible,
+    setDebugLogViewerVisible,
+  };
+};

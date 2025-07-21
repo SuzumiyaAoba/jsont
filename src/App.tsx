@@ -39,6 +39,35 @@ import { useSetAtom } from "@store/atoms";
 import { isSearchingAtom } from "@store/atoms/search";
 import { useUpdateDebugInfo } from "@store/hooks";
 import {
+  useDebugInfo,
+  useExportDialog,
+  useExportStatus,
+  useHideExportDialog,
+  useShowExportDialog,
+} from "@store/hooks/useExport";
+import {
+  useCompleteJqTransformation,
+  useExitJqMode,
+  useJqCursorPosition,
+  useJqErrorScrollOffset,
+  useJqFocusMode,
+  useJqInput,
+  useJqState,
+  useStartJqTransformation,
+  useToggleJqMode,
+  useToggleJqView,
+} from "@store/hooks/useJq";
+import {
+  useAdjustScroll,
+  useResetGSequence,
+  useResetScroll,
+  useScrollOffset,
+  useScrollToBottom,
+  useScrollToTop,
+  useStartGSequence,
+  useWaitingForSecondG,
+} from "@store/hooks/useNavigation";
+import {
   useCancelSearch,
   useCurrentSearchResult,
   useCycleScope,
@@ -50,9 +79,9 @@ import {
   useStartSearch,
   useUpdateSearchResults,
 } from "@store/hooks/useSearch";
+import { useUI } from "@store/hooks/useUI";
 import { Box, Text, useApp, useInput } from "ink";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useAppState } from "@/hooks/useAppState";
 
 /**
  * Main application component for the JSON TUI Viewer
@@ -76,10 +105,7 @@ export function App({
   // Load configuration
   const config = useConfig();
 
-  // Application state management
-  const appState = useAppState();
-
-  // Test jotai integration alongside existing state
+  // Jotai-based state management
   const updateDebugInfo = useUpdateDebugInfo();
 
   // Search state management using jotai
@@ -97,17 +123,38 @@ export function App({
   const previousSearchResult = usePreviousSearchResult();
   const currentSearchResult = useCurrentSearchResult();
 
+  // Navigation and scroll state
+  const [scrollOffset, setScrollOffset] = useScrollOffset();
+  const [waitingForSecondG, setWaitingForSecondG] = useWaitingForSecondG();
+  const resetScroll = useResetScroll();
+  const scrollToTop = useScrollToTop();
+  const scrollToBottom = useScrollToBottom();
+  const adjustScroll = useAdjustScroll();
+  const startGSequence = useStartGSequence();
+  const resetGSequence = useResetGSequence();
+
+  // JQ transformation state
+  const jqState = useJqState();
+  const [jqInput, setJqInput] = useJqInput();
+  const [jqCursorPosition, setJqCursorPosition] = useJqCursorPosition();
+  const [jqFocusMode, setJqFocusMode] = useJqFocusMode();
+  const [jqErrorScrollOffset, setJqErrorScrollOffset] =
+    useJqErrorScrollOffset();
+  const exitJqMode = useExitJqMode();
+  const toggleJqMode = useToggleJqMode();
+  const toggleJqView = useToggleJqView();
+  const startJqTransformation = useStartJqTransformation();
+  const completeJqTransformation = useCompleteJqTransformation();
+
+  // Export and debug state
+  const [exportStatus, setExportStatus] = useExportStatus();
+  const exportDialog = useExportDialog();
+  const [debugInfo] = useDebugInfo();
+  const showExportDialog = useShowExportDialog();
+  const hideExportDialog = useHideExportDialog();
+
+  // UI state
   const {
-    scrollOffset,
-    setScrollOffset,
-    jqState,
-    setJqState,
-    jqInput,
-    setJqInput,
-    jqCursorPosition,
-    setJqCursorPosition,
-    jqFocusMode,
-    setJqFocusMode,
     debugVisible,
     setDebugVisible,
     lineNumbersVisible,
@@ -122,14 +169,7 @@ export function App({
     setCollapsibleMode,
     debugLogViewerVisible,
     setDebugLogViewerVisible,
-    exportStatus,
-    setExportStatus,
-    exportDialog,
-    setExportDialog,
-    debugInfo,
-    waitingForSecondG,
-    setWaitingForSecondG,
-  } = appState;
+  } = useUI();
 
   const [error] = useState<string | null>(initialError ?? null);
   const gTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -169,7 +209,6 @@ export function App({
     collapsibleMode,
     schemaVisible,
   ]);
-  const [jqErrorScrollOffset, setJqErrorScrollOffset] = useState<number>(0);
 
   const [terminalSize, setTerminalSize] = useState({
     width: process.stdout.columns || 80,
@@ -445,7 +484,7 @@ export function App({
       updateSearchResults(results);
 
       // Reset scroll to top after search
-      setScrollOffset(0);
+      resetScroll();
     } else {
       updateSearchResults([]);
     }
@@ -454,8 +493,8 @@ export function App({
     searchState.searchScope,
     initialData,
     schemaVisible,
-    setScrollOffset,
-    updateSearchResults,
+    updateSearchResults, // Reset scroll to top after search
+    resetScroll,
   ]);
 
   // Clear timeout when component unmounts or when g sequence is reset
@@ -470,7 +509,7 @@ export function App({
   // Reset error scroll offset when error changes
   useEffect(() => {
     setJqErrorScrollOffset(0);
-  }, []);
+  }, [setJqErrorScrollOffset]);
 
   // Helper function to update debug info (using jotai)
   const updateDebugInfoCallback = useCallback(
@@ -494,10 +533,10 @@ export function App({
       return;
     }
     // Show export dialog
-    setExportDialog({ isVisible: true, mode: "simple" });
+    showExportDialog("simple");
   }, [
     initialData, // Show export dialog
-    setExportDialog,
+    showExportDialog,
     setExportStatus,
   ]);
 
@@ -506,7 +545,7 @@ export function App({
     async (options: Parameters<typeof exportToFile>[1]) => {
       if (!initialData) return;
 
-      setExportDialog({ isVisible: false, mode: "simple" });
+      hideExportDialog();
       setExportStatus({ isExporting: true });
 
       try {
@@ -538,52 +577,48 @@ export function App({
         setExportStatus({ isExporting: false });
       }, 3000);
     },
-    [initialData, setExportDialog, setExportStatus],
+    [initialData, hideExportDialog, setExportStatus],
   );
 
   // Handle export dialog cancellation
   const handleExportCancel = useCallback(() => {
-    setExportDialog({ isVisible: false, mode: "simple" });
-  }, [setExportDialog]);
+    hideExportDialog();
+  }, [hideExportDialog]);
 
   // Handle jq transformation
   const handleJqTransformation = useCallback(
     async (query: string) => {
       if (!initialData) return;
 
-      setJqState((prev) => ({ ...prev, isProcessing: true, error: null }));
+      startJqTransformation(jqInput);
 
       try {
         const result = await transformWithJq(initialData, query);
 
         if (result.success) {
-          setJqState((prev) => ({
-            ...prev,
-            transformedData: result.data,
-            error: null,
-            isProcessing: false,
-            query: query,
-          }));
+          completeJqTransformation({ success: true, data: result.data });
           // Reset scroll to top when jq filtering is applied successfully
-          setScrollOffset(0);
+          resetScroll();
         } else {
-          setJqState((prev) => ({
-            ...prev,
-            transformedData: null,
+          completeJqTransformation({
+            success: false,
             error: result.error || "Transformation failed",
-            isProcessing: false,
-          }));
+          });
         }
       } catch (error) {
-        setJqState((prev) => ({
-          ...prev,
-          transformedData: null,
+        completeJqTransformation({
+          success: false,
           error: error instanceof Error ? error.message : "Unknown error",
-          isProcessing: false,
-        }));
+        });
       }
     },
-    [initialData, setJqState, setScrollOffset],
+    [
+      initialData,
+      startJqTransformation,
+      completeJqTransformation,
+      jqInput, // Reset scroll to top when jq filtering is applied successfully
+      resetScroll,
+    ],
   );
 
   // Handle jq input mode
@@ -611,15 +646,7 @@ export function App({
         // Keep focus in edit mode after transformation
       } else if (key.escape) {
         // Exit jq mode
-        setJqState((prev) => ({
-          ...prev,
-          isActive: false,
-          transformedData: null,
-          error: null,
-        }));
-        setJqInput("");
-        setJqCursorPosition(0);
-        setJqFocusMode("input");
+        exitJqMode();
         // Preserve scroll position when exiting jq mode
       } else if (key.tab) {
         // Toggle focus between input and JSON (Tab or Ctrl+Tab)
@@ -639,10 +666,10 @@ export function App({
             JSON.stringify(currentDisplayData, null, JSON_INDENT).split("\n")
               .length - visibleLines,
           );
-          setScrollOffset((prev) => Math.min(currentMaxScroll, prev + 1));
+          adjustScroll(1, currentMaxScroll);
         } else if (input === "k" && !key.ctrl) {
           // Scroll up
-          setScrollOffset((prev) => Math.max(0, prev - 1));
+          adjustScroll(-1, Number.MAX_SAFE_INTEGER);
         } else if (key.ctrl && input === "f") {
           // Half-page down
           const currentMaxScroll = Math.max(
@@ -650,21 +677,18 @@ export function App({
             JSON.stringify(currentDisplayData, null, JSON_INDENT).split("\n")
               .length - visibleLines,
           );
-          setScrollOffset((prev) =>
-            Math.min(currentMaxScroll, prev + halfPageLines),
-          );
+          adjustScroll(halfPageLines, currentMaxScroll);
         } else if (key.ctrl && input === "b") {
           // Half-page up
-          setScrollOffset((prev) => Math.max(0, prev - halfPageLines));
+          adjustScroll(-halfPageLines, Number.MAX_SAFE_INTEGER);
         } else if (input === "g" && !key.ctrl && !key.meta) {
           if (waitingForSecondG) {
             // Go to top (gg)
-            setScrollOffset(0);
-            setWaitingForSecondG(false);
+            scrollToTop();
+            resetGSequence();
           } else {
             // First 'g' pressed
-            setWaitingForSecondG(true);
-            setTimeout(() => setWaitingForSecondG(false), 1000);
+            startGSequence();
           }
         } else if (input === "G" && !key.ctrl && !key.meta) {
           // Go to bottom
@@ -673,7 +697,7 @@ export function App({
             JSON.stringify(currentDisplayData, null, JSON_INDENT).split("\n")
               .length - visibleLines,
           );
-          setScrollOffset(currentMaxScroll);
+          scrollToBottom(currentMaxScroll);
         } else if (input === "i" && !key.ctrl && !key.meta) {
           // Return to input mode
           setJqFocusMode("input");
@@ -684,10 +708,10 @@ export function App({
           jqState.transformedData !== null
         ) {
           // Toggle between original and transformed JSON view
-          setJqState((prev) => ({ ...prev, showOriginal: !prev.showOriginal }));
+          toggleJqView();
 
           // Reset scroll position when switching views to ensure proper navigation
-          setScrollOffset(0);
+          resetScroll();
 
           updateDebugInfo(
             `Show ${jqState.showOriginal ? "transformed" : "original"} JSON`,
@@ -716,17 +740,7 @@ export function App({
         );
       } else if (input === "J" && !key.ctrl && !key.meta) {
         // Toggle jq mode (exit when in jq mode)
-        setJqState((prev) => ({
-          ...prev,
-          isActive: false,
-          transformedData: null,
-          error: null,
-          showOriginal: false,
-        }));
-        setJqInput("");
-        setJqCursorPosition(0);
-        setJqErrorScrollOffset(0);
-        setJqFocusMode("input");
+        exitJqMode();
         // Preserve scroll position when exiting jq mode
       } else {
         // In jq mode, ignore other keys
@@ -748,10 +762,16 @@ export function App({
       JSON_INDENT,
       setJqCursorPosition,
       setJqFocusMode,
-      setJqInput, // Toggle jq mode (exit when in jq mode)
-      setJqState, // Reset scroll position when switching views to ensure proper navigation
-      setScrollOffset, // First 'g' pressed
-      setWaitingForSecondG,
+      setJqInput,
+      toggleJqView,
+      exitJqMode, // Half-page up
+      adjustScroll,
+      resetGSequence, // Reset scroll position when switching views to ensure proper navigation
+      resetScroll,
+      scrollToBottom, // Go to top (gg)
+      scrollToTop,
+      setJqErrorScrollOffset, // First 'g' pressed
+      startGSequence,
     ],
   );
 
@@ -773,12 +793,12 @@ export function App({
         // Confirm search
         updateDebugInfoCallback("Confirm search", input);
         startSearch(searchInput);
-        setScrollOffset(0); // Reset scroll to top after search
+        resetScroll(); // Reset scroll to top after search
       } else if (key.escape) {
         // Cancel search - exit search mode entirely and clear all search state
         updateDebugInfoCallback("Cancel search", input);
         cancelSearch();
-        setScrollOffset(0); // Reset scroll to top after canceling search
+        resetScroll(); // Reset scroll to top after canceling search
       } else if (key.tab) {
         // Toggle search scope
         updateDebugInfoCallback("Toggle search scope", input);
@@ -804,12 +824,12 @@ export function App({
       searchInput,
       searchCursorPosition,
       updateDebugInfoCallback,
-      setScrollOffset,
       setSearchCursorPosition,
       setSearchInput,
       startSearch,
       cancelSearch,
       cycleScope,
+      resetScroll,
     ],
   );
 
@@ -906,7 +926,7 @@ export function App({
         setIsSearching(true);
         setSearchInput("");
         setSearchCursorPosition(0);
-        setScrollOffset(0);
+        resetScroll();
       } else if (
         input === "q" &&
         !key.ctrl &&
@@ -997,9 +1017,9 @@ export function App({
           if (collapsibleMode) {
             handleCollapsibleNavigation({ type: "goto_top" });
           } else {
-            setScrollOffset(0);
+            scrollToTop();
           }
-          setWaitingForSecondG(false);
+          resetGSequence();
           if (gTimeoutRef.current) {
             clearTimeout(gTimeoutRef.current);
             gTimeoutRef.current = null;
@@ -1105,18 +1125,11 @@ export function App({
         updateDebugInfo("Close help (Esc)", input);
       } else if (input === "J" && !key.ctrl && !key.meta) {
         // Toggle jq mode
-        setJqState((prev) => ({
-          ...prev,
-          isActive: !prev.isActive,
-          showOriginal: false, // Reset to show transformed data when entering jq mode
-        }));
+        toggleJqMode();
         updateDebugInfo(
           `Toggle jq mode ${jqState.isActive ? "OFF" : "ON"}`,
           input,
         );
-        if (!jqState.isActive) {
-          setJqInput("");
-        }
         // Preserve scroll position when toggling jq mode
       } else {
         // Any other key resets the 'g' sequence
@@ -1158,8 +1171,7 @@ export function App({
       setDebugLogViewerVisible,
       setDebugVisible,
       setHelpVisible,
-      setJqInput,
-      setJqState,
+      toggleJqMode,
       setLineNumbersVisible,
       setSchemaVisible,
       setScrollOffset,
@@ -1169,6 +1181,9 @@ export function App({
       setTreeViewMode,
       setWaitingForSecondG,
       cancelSearch,
+      resetGSequence,
+      resetScroll,
+      scrollToTop,
     ],
   );
 
