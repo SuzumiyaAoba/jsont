@@ -567,8 +567,12 @@ export function formatCollapsedNode(node: JsonNode): string {
 export function getNodeDisplayText(
   node: JsonNode,
   isExpanded: boolean,
+  indentConfig?: { useTabs: boolean; indent: number },
 ): string {
-  const indent = "  ".repeat(node.level);
+  const indentString = indentConfig?.useTabs
+    ? "\t"
+    : " ".repeat(indentConfig?.indent ?? 2);
+  const indent = indentString.repeat(node.level);
   let prefix = "";
   let suffix = "";
   let comma = "";

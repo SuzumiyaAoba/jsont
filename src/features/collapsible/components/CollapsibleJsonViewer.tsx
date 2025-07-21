@@ -1,3 +1,4 @@
+import { useConfig } from "@core/context/ConfigContext";
 import type { JsonValue, SearchResult } from "@core/types/index";
 import type {
   CollapsibleState,
@@ -51,6 +52,7 @@ export const CollapsibleJsonViewer = forwardRef<
   },
   ref,
 ) {
+  const config = useConfig();
   const [collapsibleState, setCollapsibleState] = useState<CollapsibleState>(
     () => initializeCollapsibleState(data),
   );
@@ -68,11 +70,20 @@ export const CollapsibleJsonViewer = forwardRef<
 
   // Get the display lines from flattened nodes
   const displayLines = useMemo(() => {
+    const indentConfig = {
+      useTabs: config.display.json.useTabs,
+      indent: config.display.json.indent,
+    };
     return collapsibleState.flattenedNodes.map((node) => {
       const isExpanded = collapsibleState.expandedNodes.has(node.id);
-      return getNodeDisplayText(node, isExpanded);
+      return getNodeDisplayText(node, isExpanded, indentConfig);
     });
-  }, [collapsibleState.flattenedNodes, collapsibleState.expandedNodes]);
+  }, [
+    collapsibleState.flattenedNodes,
+    collapsibleState.expandedNodes,
+    config.display.json.useTabs,
+    config.display.json.indent,
+  ]);
 
   // Calculate which lines to display based on scroll offset
   const startLine = scrollOffset;
