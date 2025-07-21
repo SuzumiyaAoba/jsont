@@ -3,7 +3,16 @@
  */
 
 export { DEFAULT_CONFIG } from "./defaults.js";
-export { getConfigPath, getConfigValue, loadConfig } from "./loader.js";
+export {
+  createConfig,
+  createPartialConfig,
+  getConfigPath,
+  getConfigValue,
+  loadConfig,
+  loadConfigFromPath,
+  mergeConfigs,
+  validateConfigWithDetails,
+} from "./loader.js";
 export type {
   BehaviorConfig,
   DisplayConfig,
@@ -19,3 +28,13 @@ export type {
   SearchKeys,
   TreeDisplayConfig,
 } from "./types.js";
+export {
+  applyConfigPreset,
+  CONFIG_BUILDERS,
+  CONFIG_PRESETS,
+  createConfigPreset,
+  getConfigDiff,
+  getConfigSummary,
+  isDefaultConfig,
+  smartMergeConfigs,
+} from "./utils.js";

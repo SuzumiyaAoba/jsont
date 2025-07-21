@@ -41,6 +41,7 @@
   },
   "dependencies": {
     "@types/react": "^19.1.8",
+    "defu": "^6.1.4",
     "es-toolkit": "^1.28.1",
     "ink": "^6.0.1",
     "jotai": "^2.10.3",
