@@ -1,23 +1,14 @@
+import { debugInfoAtom, searchStateAtom } from "@store/atoms";
 import { Box, Text } from "ink";
+import { useAtomValue } from "jotai";
 
 interface DebugBarProps {
-  debugInfo: {
-    lastKey: string;
-    lastKeyAction: string;
-    timestamp: string;
-  } | null;
   keyboardEnabled: boolean;
-  searchState?: {
-    isSearching: boolean;
-    searchTerm: string;
-  };
 }
 
-export function DebugBar({
-  debugInfo,
-  keyboardEnabled,
-  searchState,
-}: DebugBarProps) {
+export function DebugBar({ keyboardEnabled }: DebugBarProps) {
+  const debugInfo = useAtomValue(debugInfoAtom);
+  const searchState = useAtomValue(searchStateAtom);
   return (
     <Box flexDirection="column">
       <Box flexGrow={1} flexWrap="wrap">

@@ -37,6 +37,7 @@ import {
   getStatusContent,
 } from "@features/status/utils/statusUtils";
 import { TreeView } from "@features/tree/components/TreeView";
+import { useUpdateDebugInfo } from "@store/hooks";
 import { Box, Text, useApp, useInput } from "ink";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useAppState } from "@/hooks/useAppState";
@@ -65,6 +66,9 @@ export function App({
 
   // Application state management
   const appState = useAppState();
+
+  // Test jotai integration alongside existing state
+  const updateDebugInfo = useUpdateDebugInfo();
   const {
     scrollOffset,
     setScrollOffset,
@@ -101,7 +105,6 @@ export function App({
     exportDialog,
     setExportDialog,
     debugInfo,
-    setDebugInfo,
     waitingForSecondG,
     setWaitingForSecondG,
   } = appState;
@@ -481,17 +484,15 @@ export function App({
     setJqErrorScrollOffset(0);
   }, []);
 
-  // Helper function to update debug info
-  const updateDebugInfo = useCallback(
+  // Helper function to update debug info (using jotai)
+  const updateDebugInfoCallback = useCallback(
     (action: string, input: string) => {
-      const timestamp = new Date().toLocaleTimeString();
-      setDebugInfo({
-        lastKey: input,
-        lastKeyAction: `${action} (searching: ${searchState.isSearching})`,
-        timestamp: timestamp,
-      });
+      updateDebugInfo(
+        `${action} (searching: ${searchState.isSearching})`,
+        input,
+      );
     },
-    [searchState.isSearching, setDebugInfo],
+    [searchState.isSearching, updateDebugInfo],
   );
 
   // Handle schema export
@@ -782,7 +783,7 @@ export function App({
     ) => {
       if (key.return) {
         // Confirm search
-        updateDebugInfo("Confirm search", input);
+        updateDebugInfoCallback("Confirm search", input);
         setSearchState((prev) => ({
           ...prev,
           isSearching: false,
@@ -791,7 +792,7 @@ export function App({
         setScrollOffset(0); // Reset scroll to top after search
       } else if (key.escape) {
         // Cancel search - exit search mode entirely and clear all search state
-        updateDebugInfo("Cancel search", input);
+        updateDebugInfoCallback("Cancel search", input);
         setSearchState((prev) => ({
           ...prev,
           isSearching: false,
@@ -804,7 +805,7 @@ export function App({
         setScrollOffset(0); // Reset scroll to top after canceling search
       } else if (key.tab) {
         // Toggle search scope
-        updateDebugInfo("Toggle search scope", input);
+        updateDebugInfoCallback("Toggle search scope", input);
         const nextScope = getNextSearchScope(searchState.searchScope);
         handleSearchScopeChange(nextScope);
       } else if (
@@ -821,13 +822,13 @@ export function App({
         // Text input handled by utility
       } else {
         // In search mode, ignore other keys
-        updateDebugInfo(`Ignored in search mode: "${input}"`, input);
+        updateDebugInfoCallback(`Ignored in search mode: "${input}"`, input);
       }
     },
     [
       searchInput,
       searchCursorPosition,
-      updateDebugInfo,
+      updateDebugInfoCallback,
       searchState.searchScope,
       handleSearchScopeChange,
       setScrollOffset,
@@ -1478,11 +1479,7 @@ export function App({
           {/* Debug bar - conditionally rendered based on debugVisible */}
           {debugVisible && !exportDialog.isVisible && !helpVisible && (
             <Box flexShrink={0} width="100%">
-              <DebugBar
-                debugInfo={debugInfo}
-                keyboardEnabled={keyboardEnabled}
-                searchState={searchState}
-              />
+              <DebugBar keyboardEnabled={keyboardEnabled} />
             </Box>
           )}
 
