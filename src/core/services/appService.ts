@@ -11,6 +11,7 @@ import {
   readStdinThenReinitialize,
 } from "@core/utils/stdinHandler";
 import { TerminalManager } from "@core/utils/terminal";
+import { JotaiProvider } from "@store/Provider";
 import { type Instance, render } from "ink";
 import React from "react";
 import { App } from "@/App";
@@ -100,13 +101,17 @@ export class AppService {
 
     return render(
       React.createElement(
-        ConfigProvider,
+        JotaiProvider,
         null,
-        React.createElement(App, {
-          initialData: data,
-          initialError: error,
-          keyboardEnabled: actualKeyboardEnabled,
-        }),
+        React.createElement(
+          ConfigProvider,
+          null,
+          React.createElement(App, {
+            initialData: data,
+            initialError: error,
+            keyboardEnabled: actualKeyboardEnabled,
+          }),
+        ),
       ),
       renderOptions,
     );
