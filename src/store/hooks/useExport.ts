@@ -10,6 +10,7 @@ import {
   exportStatusAtom,
   hideExportDialogAtom,
   resetExportStatusAtom,
+  setExportErrorAtom,
   showExportDialogAtom,
   startExportAtom,
   toggleExportDialogModeAtom,
@@ -28,6 +29,7 @@ export const useExportDialog = () => useAtomValue(exportDialogAtom);
 export const useStartExport = () => useSetAtom(startExportAtom);
 export const useCompleteExport = () => useSetAtom(completeExportAtom);
 export const useResetExportStatus = () => useSetAtom(resetExportStatusAtom);
+export const useSetExportError = () => useSetAtom(setExportErrorAtom);
 export const useShowExportDialog = () => useSetAtom(showExportDialogAtom);
 export const useHideExportDialog = () => useSetAtom(hideExportDialogAtom);
 export const useToggleExportDialogMode = () =>

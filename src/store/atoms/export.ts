@@ -1,9 +1,10 @@
 /**
- * Export and debug state atoms
+ * Export state atoms
  */
 
 import type { ExportDialogState } from "@features/schema/types/export";
 import { atom } from "jotai";
+import { create } from "mutative";
 
 // Export status atoms
 export const exportStatusAtom = atom<{
@@ -25,27 +26,47 @@ export const exportDialogAtom = atom<ExportDialogState>((get) => ({
 }));
 
 // Export actions
-export const startExportAtom = atom(null, (_, set) => {
-  set(exportStatusAtom, {
-    isExporting: true,
+export const startExportAtom = atom(null, (get, set) => {
+  const newStatus = create(get(exportStatusAtom), (draft) => {
+    draft.isExporting = true;
+    // Clear previous message and type when starting new export
+    delete draft.message;
+    delete draft.type;
   });
+  set(exportStatusAtom, newStatus);
 });
 
 export const completeExportAtom = atom(
   null,
-  (_, set, result: { success: boolean; message?: string }) => {
-    set(exportStatusAtom, {
-      isExporting: false,
-      ...(result.message && { message: result.message }),
-      type: result.success ? "success" : "error",
+  (get, set, result: { success: boolean; message?: string }) => {
+    const newStatus = create(get(exportStatusAtom), (draft) => {
+      draft.isExporting = false;
+      if (result.message) {
+        draft.message = result.message;
+      }
+      draft.type = result.success ? "success" : "error";
     });
+    set(exportStatusAtom, newStatus);
   },
 );
 
-export const resetExportStatusAtom = atom(null, (_, set) => {
-  set(exportStatusAtom, {
-    isExporting: false,
+export const resetExportStatusAtom = atom(null, (get, set) => {
+  const newStatus = create(get(exportStatusAtom), (draft) => {
+    draft.isExporting = false;
+    // Clear message and type when resetting
+    delete draft.message;
+    delete draft.type;
   });
+  set(exportStatusAtom, newStatus);
+});
+
+export const setExportErrorAtom = atom(null, (get, set, message: string) => {
+  const newStatus = create(get(exportStatusAtom), (draft) => {
+    draft.isExporting = false;
+    draft.message = message;
+    draft.type = "error";
+  });
+  set(exportStatusAtom, newStatus);
 });
 
 export const showExportDialogAtom = atom(
