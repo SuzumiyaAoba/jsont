@@ -24,13 +24,6 @@ export const exportDialogAtom = atom<ExportDialogState>((get) => ({
   mode: get(exportDialogModeAtom),
 }));
 
-// Debug info atom
-export const debugInfoAtom = atom<{
-  lastKey: string;
-  lastKeyAction: string;
-  timestamp: string;
-} | null>(null);
-
 // Export actions
 export const startExportAtom = atom(null, (_, set) => {
   set(exportStatusAtom, {
@@ -70,20 +63,4 @@ export const hideExportDialogAtom = atom(null, (_, set) => {
 export const toggleExportDialogModeAtom = atom(null, (get, set) => {
   const currentMode = get(exportDialogModeAtom);
   set(exportDialogModeAtom, currentMode === "simple" ? "advanced" : "simple");
-});
-
-// Debug actions
-export const updateDebugInfoAtom = atom(
-  null,
-  (_, set, lastKeyAction: string, lastKey: string) => {
-    set(debugInfoAtom, {
-      lastKey,
-      lastKeyAction,
-      timestamp: new Date().toISOString(),
-    });
-  },
-);
-
-export const clearDebugInfoAtom = atom(null, (_, set) => {
-  set(debugInfoAtom, null);
 });

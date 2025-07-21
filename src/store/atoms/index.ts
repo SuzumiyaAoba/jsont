@@ -4,7 +4,9 @@
 
 // Re-export jotai core
 export { atom, useAtom, useAtomValue, useSetAtom } from "jotai";
-// Export and debug atoms
+// Debug atoms
+export * from "./debug";
+// Export atoms
 export * from "./export";
 // JQ transformation atoms
 export * from "./jq";

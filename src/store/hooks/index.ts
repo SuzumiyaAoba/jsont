@@ -2,7 +2,9 @@
  * Central export for all jotai hooks
  */
 
-// Export and debug hooks
+// Debug hooks
+export * from "./useDebug";
+// Export hooks
 export * from "./useExport";
 // JQ transformation hooks
 export * from "./useJq";

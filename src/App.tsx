@@ -38,8 +38,8 @@ import { TreeView } from "@features/tree/components/TreeView";
 import { useSetAtom } from "@store/atoms";
 import { isSearchingAtom } from "@store/atoms/search";
 import { useUpdateDebugInfo } from "@store/hooks";
+import { useDebugInfo } from "@store/hooks/useDebug";
 import {
-  useDebugInfo,
   useExportDialog,
   useExportStatus,
   useHideExportDialog,
