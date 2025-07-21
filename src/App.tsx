@@ -17,10 +17,7 @@ import { JsonViewer } from "@features/json-rendering/components/JsonViewer";
 import { ExportDialog } from "@features/schema/components/ExportDialog";
 import { SchemaViewer } from "@features/schema/components/SchemaViewer";
 import { generateDefaultFilename } from "@features/schema/utils/fileExport";
-import {
-  formatJsonSchema,
-  inferJsonSchema,
-} from "@features/schema/utils/schemaUtils";
+// Schema utilities available when needed
 import { SearchBar } from "@features/search/components/SearchBar";
 import {
   searchInJson,
@@ -92,7 +89,7 @@ export function App({
   void isTestEnvironment;
 
   // Load configuration
-  const _config = useConfig();
+  void useConfig();
 
   // Jotai-based state management
   const updateDebugInfo = useUpdateDebugInfo();
@@ -108,19 +105,19 @@ export function App({
   const cancelSearch = useCancelSearch();
   const cycleScope = useCycleScope();
   const updateSearchResults = useUpdateSearchResults();
-  const nextSearchResult = useNextSearchResult();
-  const previousSearchResult = usePreviousSearchResult();
+  void useNextSearchResult();
+  void usePreviousSearchResult();
   const currentSearchResult = useCurrentSearchResult();
 
   // Navigation and scroll state
   const [scrollOffset, setScrollOffset] = useScrollOffset();
-  const [_waitingForSecondG, _setWaitingForSecondG] = useWaitingForSecondG();
+  void useWaitingForSecondG();
   const resetScroll = useResetScroll();
-  const _scrollToTop = useScrollToTop();
-  const _scrollToBottom = useScrollToBottom();
-  const _adjustScroll = useAdjustScroll();
-  const _startGSequence = useStartGSequence();
-  const _resetGSequence = useResetGSequence();
+  void useScrollToTop();
+  void useScrollToBottom();
+  void useAdjustScroll();
+  void useStartGSequence();
+  void useResetGSequence();
 
   // JQ transformation state
   const jqState = useJqState();
@@ -131,29 +128,24 @@ export function App({
     useJqErrorScrollOffset();
   const exitJqMode = useExitJqMode();
   const toggleJqMode = useToggleJqMode();
-  const _toggleJqView = useToggleJqView();
+  void useToggleJqView();
   const startJqTransformation = useStartJqTransformation();
   const completeJqTransformation = useCompleteJqTransformation();
 
   // Export and debug state
   const [exportStatus] = useExportStatus();
   const exportDialog = useExportDialog();
-  const [_debugInfo] = useDebugInfo();
+  void useDebugInfo();
 
   // UI state
   const {
     debugVisible,
-    setDebugVisible,
     lineNumbersVisible,
-    setLineNumbersVisible,
     schemaVisible,
-    setSchemaVisible,
     helpVisible,
     setHelpVisible,
     treeViewMode,
-    setTreeViewMode,
     collapsibleMode,
-    setCollapsibleMode,
     debugLogViewerVisible,
     setDebugLogViewerVisible,
   } = useUI();
@@ -161,8 +153,7 @@ export function App({
   const [error] = useState<string | null>(initialError ?? null);
   const gTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  const [_treeViewKeyboardHandler, setTreeViewKeyboardHandler] =
-    useState<KeyboardHandler | null>(null);
+  const [, setTreeViewKeyboardHandler] = useState<KeyboardHandler | null>(null);
 
   // Extract export handlers
   const { handleExportSchema, handleExportConfirm, handleExportCancel } =
@@ -176,8 +167,8 @@ export function App({
     searchModeVisibleLines,
     maxScroll,
     maxScrollSearchMode,
-    halfPageLines,
-    JSON_INDENT,
+    // halfPageLines available when needed
+    // JSON_INDENT available when needed
   } = useTerminalCalculations({
     keyboardEnabled,
     error,
@@ -224,22 +215,12 @@ export function App({
 
   const { exit } = useApp();
 
-  const _G_SEQUENCE_TIMEOUT = 1000; // TODO: Move to config
+  // G_SEQUENCE_TIMEOUT moved to config when needed
 
-  // Calculate schema lines when in schema view mode
-  const schemaLines = useMemo(() => {
-    if (!initialData || !schemaVisible) return 0;
-    const schema = inferJsonSchema(initialData, "JSON Schema");
-    const formattedSchema = formatJsonSchema(schema);
-    return formattedSchema.split("\n").length;
-  }, [initialData, schemaVisible]);
-
-  const jsonLines = initialData
-    ? JSON.stringify(initialData, null, JSON_INDENT).split("\n").length
-    : 0;
+  // Schema and JSON lines calculation available when needed
 
   // Use schema lines for scroll calculation when in schema view
-  const _currentDataLines = schemaVisible ? schemaLines : jsonLines;
+  // currentDataLines calculation available when needed
 
   // Determine which data to display
   const displayData = useMemo((): unknown => {
@@ -282,16 +263,7 @@ export function App({
   );
 
   // Helper function to navigate to next search result
-  const _navigateToNextResult = useCallback(() => {
-    if (searchState.searchResults.length === 0) return;
-    nextSearchResult();
-  }, [searchState.searchResults.length, nextSearchResult]);
-
-  // Helper function to navigate to previous search result
-  const _navigateToPreviousResult = useCallback(() => {
-    if (searchState.searchResults.length === 0) return;
-    previousSearchResult();
-  }, [searchState.searchResults.length, previousSearchResult]);
+  // Navigation helpers available when needed
 
   // Effect to scroll to current search result when it changes
   useEffect(() => {
@@ -301,14 +273,7 @@ export function App({
   }, [currentSearchResult, scrollToSearchResult]);
 
   // Helper function to handle collapsible navigation
-  const _handleCollapsibleNavigation = useCallback(
-    (action: NavigationAction) => {
-      if (collapsibleViewerRef.current?.navigate) {
-        collapsibleViewerRef.current.navigate(action);
-      }
-    },
-    [],
-  );
+  // Collapsible navigation handler available when needed
 
   // Helper function to handle scroll changes from collapsible viewer
   const handleCollapsibleScrollChange = useCallback(
