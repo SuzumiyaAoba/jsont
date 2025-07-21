@@ -125,10 +125,15 @@ export function TreeView({
     filteredLines.length - 1,
   );
 
+  // Calculate visible lines: account for header line taking 1 row
+  // Available content height = height - 1
+  // To get exactly contentHeight lines from slice(start, end), we need end = start + contentHeight + 1
+  // because slice excludes the end index
+  const contentHeight = height - 1; // Available height for content after header
   const visibleLines = getVisibleTreeLines(
     filteredLines,
     boundedScrollOffset,
-    boundedScrollOffset + (height - 1),
+    boundedScrollOffset + contentHeight + 1,
   );
 
   // Ensure stable rendering by adding a key that forces proper reconciliation
@@ -202,10 +207,11 @@ export function TreeView({
           setSelectedLineIndex(newIndex);
 
           // Ensure selected line is visible and handle array parent selection
-          if (newIndex >= scrollOffset + (height - 1)) {
+          const effectiveHeight = height - 1; // Account for header line
+          if (newIndex >= scrollOffset + effectiveHeight) {
             let targetScrollOffset = Math.min(
               maxScroll,
-              newIndex - (height - 1) + 1,
+              newIndex - effectiveHeight + 1,
             );
 
             // Special handling for array parents: ensure first child is visible
@@ -222,7 +228,8 @@ export function TreeView({
               if (firstChildIndex !== -1) {
                 // Ensure first child is visible by adjusting scroll if needed
                 const childVisibleStart = targetScrollOffset;
-                const childVisibleEnd = targetScrollOffset + (height - 1) - 1;
+                const childVisibleEnd =
+                  targetScrollOffset + effectiveHeight - 1;
                 if (
                   firstChildIndex < childVisibleStart ||
                   firstChildIndex > childVisibleEnd
@@ -242,22 +249,24 @@ export function TreeView({
           }
           return true;
         } else if (key.pageUp || (key.ctrl && input === "b")) {
-          const newIndex = Math.max(0, selectedLineIndex - (height - 1));
+          const effectiveHeight = height - 1; // Account for header line
+          const newIndex = Math.max(0, selectedLineIndex - effectiveHeight);
           const newScrollOffset = Math.max(
             0,
-            newIndex - Math.floor((height - 1) / 2),
+            newIndex - Math.floor(effectiveHeight / 2),
           );
           setSelectedLineIndex(newIndex);
           setScrollOffset(newScrollOffset);
           return true;
         } else if (key.pageDown || (key.ctrl && input === "f")) {
+          const effectiveHeight = height - 1; // Account for header line
           const newIndex = Math.min(
             filteredLines.length - 1,
-            selectedLineIndex + (height - 1),
+            selectedLineIndex + effectiveHeight,
           );
           const newScrollOffset = Math.min(
             maxScroll,
-            newIndex - Math.floor((height - 1) / 2),
+            newIndex - Math.floor(effectiveHeight / 2),
           );
           setSelectedLineIndex(newIndex);
           setScrollOffset(newScrollOffset);
@@ -481,7 +490,7 @@ export function TreeView({
                 "Visible range:",
                 scrollOffset,
                 "to",
-                scrollOffset + (height - 1) - 1,
+                scrollOffset + (height - 1),
               );
 
               // Show first 10 lines for reference
@@ -496,11 +505,13 @@ export function TreeView({
               const calculatedVisibleLines = getVisibleTreeLines(
                 filteredLines,
                 boundedScrollOffset,
-                boundedScrollOffset + (height - 1),
+                boundedScrollOffset + contentHeight + 1,
               );
               console.log("Visible lines calculation:");
               console.log(`  Bounded scroll offset: ${boundedScrollOffset}`);
-              console.log(`  End index: ${boundedScrollOffset + (height - 1)}`);
+              console.log(
+                `  End index: ${boundedScrollOffset + contentHeight + 1}`,
+              );
               console.log(
                 `  Calculated visible lines: ${calculatedVisibleLines.length}`,
               );
@@ -511,7 +522,7 @@ export function TreeView({
                 let i = boundedScrollOffset;
                 i <
                 Math.min(
-                  boundedScrollOffset + (height - 1),
+                  boundedScrollOffset + contentHeight + 1,
                   filteredLines.length,
                 );
                 i++
@@ -560,7 +571,7 @@ export function TreeView({
         return false;
       }
     },
-    [boundedScrollOffset], // State setters are stable, avoid displayOptions/searchTerm to prevent re-creation
+    [boundedScrollOffset, contentHeight], // State setters are stable, avoid displayOptions/searchTerm to prevent re-creation
   );
 
   // Remove direct useInput - let App.tsx handle all input and delegate to us
