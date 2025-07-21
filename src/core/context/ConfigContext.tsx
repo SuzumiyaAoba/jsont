@@ -4,7 +4,7 @@
 
 import { createContext, type ReactNode, useContext } from "react";
 import type { JsontConfig } from "../config/index.js";
-import { loadConfig } from "../config/index.js";
+import { getConfigValue, loadConfig } from "../config/index.js";
 
 interface ConfigContextType {
   config: JsontConfig;
@@ -40,16 +40,5 @@ export function useConfig(): JsontConfig {
  */
 export function useConfigValue<T>(path: string): T {
   const config = useConfig();
-  const keys = path.split(".");
-  let current: unknown = config;
-
-  for (const key of keys) {
-    if (current && typeof current === "object" && key in current) {
-      current = (current as Record<string, unknown>)[key];
-    } else {
-      throw new Error(`Configuration path "${path}" not found`);
-    }
-  }
-
-  return current as T;
+  return getConfigValue<T>(config, path);
 }
