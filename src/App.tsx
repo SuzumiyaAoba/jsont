@@ -65,7 +65,14 @@ import {
   useStartSearch,
   useUpdateSearchResults,
 } from "@store/hooks/useSearch";
-import { useUI } from "@store/hooks/useUI";
+import {
+  useToggleCollapsible,
+  useToggleDebugLogViewer,
+  useToggleLineNumbers,
+  useToggleSchema,
+  useToggleTreeView,
+  useUI,
+} from "@store/hooks/useUI";
 import { Box, Text, useApp, useInput } from "ink";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
@@ -149,6 +156,13 @@ export function App({
     debugLogViewerVisible,
     setDebugLogViewerVisible,
   } = useUI();
+
+  // UI toggle functions
+  const toggleTreeView = useToggleTreeView();
+  const toggleSchema = useToggleSchema();
+  const toggleCollapsible = useToggleCollapsible();
+  const toggleLineNumbers = useToggleLineNumbers();
+  const toggleDebugLogViewer = useToggleDebugLogViewer();
 
   const [error] = useState<string | null>(initialError ?? null);
   const gTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -516,6 +530,38 @@ export function App({
           // Toggle help visibility
           setHelpVisible((prev) => !prev);
           updateDebugInfo(`Toggle help ${helpVisible ? "OFF" : "ON"}`, input);
+        } else if (input === "T" && !key.ctrl && !key.meta) {
+          // Toggle tree view mode
+          toggleTreeView();
+          updateDebugInfo(
+            `Toggle tree view ${treeViewMode ? "OFF" : "ON"}`,
+            input,
+          );
+        } else if (input === "S" && !key.ctrl && !key.meta) {
+          // Toggle schema view
+          toggleSchema();
+          updateDebugInfo(
+            `Toggle schema view ${schemaVisible ? "OFF" : "ON"}`,
+            input,
+          );
+        } else if (input === "C" && !key.ctrl && !key.meta) {
+          // Toggle collapsible mode
+          toggleCollapsible();
+          updateDebugInfo(
+            `Toggle collapsible mode ${collapsibleMode ? "OFF" : "ON"}`,
+            input,
+          );
+        } else if (input === "L" && !key.ctrl && !key.meta) {
+          // Toggle line numbers
+          toggleLineNumbers();
+          updateDebugInfo(
+            `Toggle line numbers ${lineNumbersVisible ? "OFF" : "ON"}`,
+            input,
+          );
+        } else if (input === "D" && !key.ctrl && !key.meta) {
+          // Toggle debug log viewer
+          toggleDebugLogViewer();
+          updateDebugInfo("Toggle debug log viewer", input);
         } else if (input === "g" && !key.ctrl && !key.meta) {
           // Start G sequence for 'gg' command
           if (waitingForSecondG) {
@@ -578,6 +624,10 @@ export function App({
       jqState.isActive,
       jqFocusMode,
       helpVisible,
+      treeViewMode,
+      schemaVisible,
+      collapsibleMode,
+      lineNumbersVisible,
       waitingForSecondG,
       searchInput,
       searchCursorPosition,
@@ -611,6 +661,11 @@ export function App({
       resetGSequence,
       nextSearchResult,
       previousSearchResult,
+      toggleTreeView,
+      toggleSchema,
+      toggleCollapsible,
+      toggleLineNumbers,
+      toggleDebugLogViewer,
     ],
   );
 
