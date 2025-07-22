@@ -2,6 +2,7 @@
  * Export handling logic and dialog management
  */
 
+import type { JsonValue } from "@core/types/index";
 import { exportToFile } from "@features/schema/utils/fileExport";
 import {
   useCompleteExport,
@@ -45,7 +46,7 @@ export function useExportHandlers({ initialData }: UseExportHandlersProps) {
       startExport();
 
       try {
-        const result = await exportToFile(initialData as any, options);
+        const result = await exportToFile(initialData as JsonValue, options);
         if (result.success) {
           const exportType =
             options?.format === "json" ? "JSON data" : "JSON Schema";

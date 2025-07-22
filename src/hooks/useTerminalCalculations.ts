@@ -3,6 +3,11 @@
  */
 
 import { useConfig } from "@core/context/ConfigContext";
+import type { JsonValue } from "@core/types/index";
+import {
+  formatJsonSchema,
+  inferJsonSchema,
+} from "@features/schema/utils/schemaUtils";
 import {
   calculateStatusBarHeight,
   getStatusContent,
@@ -18,6 +23,7 @@ interface UseTerminalCalculationsProps {
   error: string | null;
   searchInput: string;
   initialData: unknown;
+  collapsibleMode: boolean;
 }
 
 export function useTerminalCalculations({
@@ -25,6 +31,7 @@ export function useTerminalCalculations({
   error,
   searchInput,
   initialData,
+  collapsibleMode,
 }: UseTerminalCalculationsProps) {
   const config = useConfig();
   const searchState = useSearchState();
@@ -106,12 +113,18 @@ export function useTerminalCalculations({
 
     const statusContent = getStatusContent({
       keyboardEnabled,
-      collapsibleMode: false, // This will be passed from parent or determined elsewhere
+      collapsibleMode,
       error,
     });
 
     return calculateStatusBarHeight(statusContent, terminalSize.width);
-  }, [helpVisible, keyboardEnabled, error, terminalSize.width]);
+  }, [
+    helpVisible,
+    keyboardEnabled,
+    collapsibleMode,
+    error,
+    terminalSize.width,
+  ]);
 
   // Calculate search bar height dynamically based on content
   const searchBarHeight = useMemo(() => {
@@ -174,10 +187,10 @@ export function useTerminalCalculations({
   // Calculate schema lines when in schema view mode
   const schemaLines = useMemo(() => {
     if (!initialData || !schemaVisible) return 0;
-    // Note: This would need the schema utilities imported if used
-    // For now, return estimated lines
-    return Math.max(jsonLines, 50); // Placeholder calculation
-  }, [initialData, schemaVisible, jsonLines]);
+    const schema = inferJsonSchema(initialData as JsonValue, "JSON Schema");
+    const formattedSchema = formatJsonSchema(schema);
+    return formattedSchema.split("\n").length;
+  }, [initialData, schemaVisible]);
 
   // Use schema lines for scroll calculation when in schema view
   const currentDataLines = schemaVisible ? schemaLines : jsonLines;

@@ -105,19 +105,19 @@ export function App({
   const cancelSearch = useCancelSearch();
   const cycleScope = useCycleScope();
   const updateSearchResults = useUpdateSearchResults();
-  void useNextSearchResult();
-  void usePreviousSearchResult();
+  const nextSearchResult = useNextSearchResult();
+  const previousSearchResult = usePreviousSearchResult();
   const currentSearchResult = useCurrentSearchResult();
 
   // Navigation and scroll state
   const [scrollOffset, setScrollOffset] = useScrollOffset();
-  void useWaitingForSecondG();
+  const [waitingForSecondG] = useWaitingForSecondG();
   const resetScroll = useResetScroll();
-  void useScrollToTop();
-  void useScrollToBottom();
-  void useAdjustScroll();
-  void useStartGSequence();
-  void useResetGSequence();
+  const scrollToTop = useScrollToTop();
+  const scrollToBottom = useScrollToBottom();
+  const adjustScroll = useAdjustScroll();
+  const startGSequence = useStartGSequence();
+  const resetGSequence = useResetGSequence();
 
   // JQ transformation state
   const jqState = useJqState();
@@ -174,6 +174,7 @@ export function App({
     error,
     searchInput,
     initialData,
+    collapsibleMode,
   });
 
   // Prevent invalid calls to TreeView handler during registration
@@ -289,12 +290,12 @@ export function App({
       // Use appropriate search function based on current view mode
       const results = schemaVisible
         ? searchInJsonSchema(
-            initialData as any,
+            initialData as JsonValue,
             searchState.searchTerm,
             searchState.searchScope,
           )
         : searchInJson(
-            initialData as any,
+            initialData as JsonValue,
             searchState.searchTerm,
             searchState.searchScope,
           );
@@ -516,8 +517,50 @@ export function App({
           // Toggle help visibility
           setHelpVisible((prev) => !prev);
           updateDebugInfo(`Toggle help ${helpVisible ? "OFF" : "ON"}`, input);
+        } else if (input === "g" && !key.ctrl && !key.meta) {
+          // Start G sequence for 'gg' command
+          if (waitingForSecondG) {
+            // Second 'g' pressed - go to top
+            updateDebugInfo("Go to top (gg)", input);
+            scrollToTop();
+            resetGSequence();
+          } else {
+            // First 'g' pressed - start sequence
+            updateDebugInfo("Start G sequence (g)", input);
+            startGSequence();
+          }
+        } else if (input === "G" && !key.ctrl && !key.meta) {
+          // Go to bottom
+          updateDebugInfo("Go to bottom (G)", input);
+          scrollToBottom();
+          resetGSequence();
+        } else if (key.ctrl && input === "f") {
+          // Page down
+          updateDebugInfo("Page down (Ctrl+f)", input);
+          adjustScroll("pageDown");
+        } else if (key.ctrl && input === "b") {
+          // Page up
+          updateDebugInfo("Page up (Ctrl+b)", input);
+          adjustScroll("pageUp");
+        } else if (
+          input === "n" &&
+          !key.ctrl &&
+          !key.meta &&
+          searchState.searchTerm
+        ) {
+          // Next search result
+          updateDebugInfo("Next search result (n)", input);
+          nextSearchResult();
+        } else if (
+          input === "N" &&
+          !key.ctrl &&
+          !key.meta &&
+          searchState.searchTerm
+        ) {
+          // Previous search result
+          updateDebugInfo("Previous search result (N)", input);
+          previousSearchResult();
         }
-        // Add other essential navigation keys as needed...
       }
     },
     [
@@ -527,6 +570,7 @@ export function App({
       jqState.isActive,
       jqFocusMode,
       helpVisible,
+      waitingForSecondG,
       searchInput,
       searchCursorPosition,
       jqInput,
@@ -551,6 +595,13 @@ export function App({
       setJqInput,
       setJqCursorPosition,
       toggleJqMode,
+      scrollToTop,
+      scrollToBottom,
+      adjustScroll,
+      startGSequence,
+      resetGSequence,
+      nextSearchResult,
+      previousSearchResult,
     ],
   );
 

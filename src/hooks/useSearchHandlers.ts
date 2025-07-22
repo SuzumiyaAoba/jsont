@@ -2,6 +2,7 @@
  * Search handling logic and result navigation
  */
 
+import type { JsonValue } from "@core/types/index";
 import {
   searchInJson,
   searchInJsonSchema,
@@ -71,12 +72,12 @@ export function useSearchHandlers({
       // Use appropriate search function based on current view mode
       const results = schemaVisible
         ? searchInJsonSchema(
-            initialData as any,
+            initialData as JsonValue,
             searchState.searchTerm,
             searchState.searchScope,
           )
         : searchInJson(
-            initialData as any,
+            initialData as JsonValue,
             searchState.searchTerm,
             searchState.searchScope,
           );
