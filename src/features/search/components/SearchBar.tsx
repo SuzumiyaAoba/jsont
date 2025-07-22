@@ -60,7 +60,7 @@ export function SearchBar({
               <Text color="white">{searchState.searchTerm}</Text>
               <Text color="gray" dimColor>
                 {" "}
-                ({navigationInfo}) n: next, N: prev, s: new search, Tab: scope
+                ({navigationInfo}) n: next, N: prev, /: new search, Tab: scope
               </Text>
             </>
           )}

@@ -148,7 +148,7 @@ function getModeSpecificHelpSections(mode: AppMode): HelpSection[] {
               description: "Go to previous result",
               category: "navigation",
             },
-            { key: "s", description: "Start new search", category: "search" },
+            { key: "/", description: "Start new search", category: "search" },
             {
               key: "q",
               description: "Return to search input",
@@ -391,7 +391,7 @@ function getModeSpecificHelpSections(mode: AppMode): HelpSection[] {
 export function getQuickHelpText(mode: AppMode): string {
   const quickHelp: Record<AppMode, string> = {
     tree: "j/k: move, Space: toggle, e/c: expand/collapse all, ?: help",
-    search: "Enter: search, n/N: next/prev, Tab: scope, q: input, ?: help",
+    search: "Enter: search, n/N: next/prev, Tab: scope, /: new search, ?: help",
     filter: "Enter: apply, Tab: switch, i: input, o: toggle view, ?: help",
     collapsible:
       "j/k: move, Space: toggle, o/c: expand/collapse, O: all, ?: help",
@@ -463,7 +463,7 @@ export function getAvailableModes(): Array<{
       mode: "tree",
       description: "Tree View - Hierarchical JSON structure",
     },
-    { key: "s", mode: "search", description: "Search - Find content in JSON" },
+    { key: "/", mode: "search", description: "Search - Find content in JSON" },
     {
       key: "J",
       mode: "filter",
