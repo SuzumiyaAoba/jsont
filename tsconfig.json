@@ -15,6 +15,7 @@
     "jsx": "react-jsx",
     "allowImportingTsExtensions": false,
     "noEmit": false,
+    "types": ["vitest/globals"],
     "baseUrl": "./src",
     "paths": {
       "@/*": ["./*"],
