@@ -565,6 +565,68 @@ export function App({
           }
         }
 
+        // Check Collapsible mode handler
+        if (collapsibleMode && collapsibleViewerRef.current) {
+          // Handle collapsible-specific navigation
+          if ((input === "j" && !key.ctrl) || key.downArrow) {
+            // Move cursor down
+            collapsibleViewerRef.current.navigate({ type: "move_down" });
+            updateDebugInfo("Collapsible: Move cursor down", input);
+            return;
+          } else if ((input === "k" && !key.ctrl) || key.upArrow) {
+            // Move cursor up
+            collapsibleViewerRef.current.navigate({ type: "move_up" });
+            updateDebugInfo("Collapsible: Move cursor up", input);
+            return;
+          } else if (key.return || input === " ") {
+            // Toggle node
+            collapsibleViewerRef.current.navigate({ type: "toggle_node" });
+            updateDebugInfo("Collapsible: Toggle node", input);
+            return;
+          } else if (input === "o" && !key.ctrl && !key.meta) {
+            // Expand node
+            collapsibleViewerRef.current.navigate({ type: "expand_node" });
+            updateDebugInfo("Collapsible: Expand node", input);
+            return;
+          } else if (input === "c" && !key.ctrl && !key.meta) {
+            // Collapse node
+            collapsibleViewerRef.current.navigate({ type: "collapse_node" });
+            updateDebugInfo("Collapsible: Collapse node", input);
+            return;
+          } else if (input === "O" && !key.ctrl && !key.meta) {
+            // Expand all
+            collapsibleViewerRef.current.navigate({ type: "expand_all" });
+            updateDebugInfo("Collapsible: Expand all", input);
+            return;
+          } else if (key.ctrl && input === "f") {
+            // Page down
+            collapsibleViewerRef.current.navigate({
+              type: "page_down",
+              count: halfPageLines,
+            });
+            updateDebugInfo("Collapsible: Page down", "Ctrl+f");
+            return;
+          } else if (key.ctrl && input === "b") {
+            // Page up
+            collapsibleViewerRef.current.navigate({
+              type: "page_up",
+              count: halfPageLines,
+            });
+            updateDebugInfo("Collapsible: Page up", "Ctrl+b");
+            return;
+          } else if (input === "g" && !key.ctrl && !key.meta) {
+            // Go to top (simplified, no gg sequence in collapsible mode)
+            collapsibleViewerRef.current.navigate({ type: "goto_top" });
+            updateDebugInfo("Collapsible: Go to top", input);
+            return;
+          } else if (input === "G" && !key.ctrl && !key.meta) {
+            // Go to bottom
+            collapsibleViewerRef.current.navigate({ type: "goto_bottom" });
+            updateDebugInfo("Collapsible: Go to bottom", input);
+            return;
+          }
+        }
+
         // Standard navigation mode
         if (input === "s" && !key.ctrl && !key.meta) {
           // Start search mode
