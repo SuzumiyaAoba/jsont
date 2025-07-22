@@ -135,7 +135,7 @@ export function App({
     useJqErrorScrollOffset();
   const exitJqMode = useExitJqMode();
   const toggleJqMode = useToggleJqMode();
-  void useToggleJqView();
+  const toggleJqView = useToggleJqView();
   const startJqTransformation = useStartJqTransformation();
   const completeJqTransformation = useCompleteJqTransformation();
 
@@ -167,7 +167,8 @@ export function App({
   const [error] = useState<string | null>(initialError ?? null);
   const gTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  const [, setTreeViewKeyboardHandler] = useState<KeyboardHandler | null>(null);
+  const [treeViewKeyboardHandler, setTreeViewKeyboardHandler] =
+    useState<KeyboardHandler | null>(null);
 
   // Extract export handlers
   const { handleExportSchema, handleExportConfirm, handleExportCancel } =
@@ -481,13 +482,29 @@ export function App({
           updateDebugInfoCallback(`Ignored in search mode: "${input}"`, input);
         }
       } else if (jqState.isActive) {
-        // JQ input mode - simplified version of the original logic
+        // JQ mode - complete implementation with all documented shortcuts
         if (key.return) {
           handleJqTransformation(jqInput);
         } else if (key.escape) {
           exitJqMode();
         } else if (key.tab) {
           setJqFocusMode((prev) => (prev === "input" ? "json" : "input"));
+        } else if (input === "i" && !key.ctrl && !key.meta) {
+          // Return to input mode
+          setJqFocusMode("input");
+          updateDebugInfo("JQ: Return to input mode", input);
+        } else if (input === "o" && !key.ctrl && !key.meta) {
+          // Toggle original/result view
+          toggleJqView();
+          updateDebugInfo("JQ: Toggle original/result view", input);
+        } else if (key.shift && key.upArrow) {
+          // Scroll error messages up
+          setJqErrorScrollOffset((prev) => Math.max(0, prev - 1));
+          updateDebugInfo("JQ: Scroll error up", "Shift+↑");
+        } else if (key.shift && key.downArrow) {
+          // Scroll error messages down
+          setJqErrorScrollOffset((prev) => prev + 1);
+          updateDebugInfo("JQ: Scroll error down", "Shift+↓");
         } else if (
           jqFocusMode === "input" &&
           handleTextInput(
@@ -498,9 +515,57 @@ export function App({
           )
         ) {
           // Text input handled by utility
+        } else if (jqFocusMode === "json") {
+          // JSON output navigation when focus is on result
+          if (input === "j" && !key.ctrl) {
+            // Scroll JSON result down
+            const currentMaxScroll = searchState.isSearching
+              ? maxScrollSearchMode
+              : maxScroll;
+            setScrollOffset((prev) => Math.min(currentMaxScroll, prev + 1));
+            updateDebugInfo("JQ JSON: Scroll down", input);
+          } else if (input === "k" && !key.ctrl) {
+            // Scroll JSON result up
+            setScrollOffset((prev) => Math.max(0, prev - 1));
+            updateDebugInfo("JQ JSON: Scroll up", input);
+          } else if (input === "g" && !key.ctrl && !key.meta) {
+            // Go to top in JSON result (simplified, no gg sequence in JQ mode)
+            scrollToTop();
+            updateDebugInfo("JQ JSON: Go to top", input);
+          } else if (input === "G" && !key.ctrl && !key.meta) {
+            // Go to bottom in JSON result
+            const currentMaxScroll = searchState.isSearching
+              ? maxScrollSearchMode
+              : maxScroll;
+            scrollToBottom(currentMaxScroll);
+            updateDebugInfo("JQ JSON: Go to bottom", input);
+          } else if (key.ctrl && input === "f") {
+            // Page down in JSON result
+            const currentMaxScroll = searchState.isSearching
+              ? maxScrollSearchMode
+              : maxScroll;
+            adjustScroll(halfPageLines, currentMaxScroll);
+            updateDebugInfo("JQ JSON: Page down", "Ctrl+f");
+          } else if (key.ctrl && input === "b") {
+            // Page up in JSON result
+            const currentMaxScroll = searchState.isSearching
+              ? maxScrollSearchMode
+              : maxScroll;
+            adjustScroll(-halfPageLines, currentMaxScroll);
+            updateDebugInfo("JQ JSON: Page up", "Ctrl+b");
+          }
         }
       } else {
-        // Navigation mode - simplified version
+        // Navigation mode - check TreeView handler first
+        if (treeViewMode && treeViewKeyboardHandler) {
+          // Let TreeView handle the input first
+          if (treeViewKeyboardHandler(input, key)) {
+            updateDebugInfo("TreeView handled", input);
+            return; // TreeView handled the input
+          }
+        }
+
+        // Standard navigation mode
         if (input === "s" && !key.ctrl && !key.meta) {
           // Start search mode
           updateDebugInfo("Start search mode", input);
@@ -628,6 +693,7 @@ export function App({
       schemaVisible,
       collapsibleMode,
       lineNumbersVisible,
+      treeViewKeyboardHandler,
       waitingForSecondG,
       searchInput,
       searchCursorPosition,
@@ -654,6 +720,8 @@ export function App({
       setJqInput,
       setJqCursorPosition,
       toggleJqMode,
+      toggleJqView,
+      setJqErrorScrollOffset,
       scrollToTop,
       scrollToBottom,
       adjustScroll,
