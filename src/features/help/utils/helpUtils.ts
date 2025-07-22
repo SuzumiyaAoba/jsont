@@ -32,7 +32,7 @@ function getCommonHelpSections(): HelpSection[] {
       title: "Mode Switching",
       shortcuts: [
         { key: "T", description: "Toggle Tree View mode", category: "mode" },
-        { key: "s", description: "Start Search mode", category: "mode" },
+        { key: "/", description: "Start Search mode", category: "mode" },
         { key: "J", description: "Toggle jq Filter mode", category: "mode" },
         { key: "C", description: "Toggle Collapsible mode", category: "mode" },
         { key: "S", description: "Toggle Schema view", category: "mode" },

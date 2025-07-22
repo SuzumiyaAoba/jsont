@@ -20,12 +20,9 @@ import { SchemaViewer } from "@features/schema/components/SchemaViewer";
 import { generateDefaultFilename } from "@features/schema/utils/fileExport";
 // Schema utilities available when needed
 import { SearchBar } from "@features/search/components/SearchBar";
-import {
-  searchInJson,
-  searchInJsonSchema,
-} from "@features/search/utils/searchUtils";
 import { TreeView } from "@features/tree/components/TreeView";
 import { useExportHandlers } from "@hooks/useExportHandlers";
+import { useSearchHandlers } from "@hooks/useSearchHandlers";
 import { useTerminalCalculations } from "@hooks/useTerminalCalculations";
 import { useSetAtom } from "@store/atoms";
 import { isSearchingAtom } from "@store/atoms/search";
@@ -56,7 +53,6 @@ import {
 } from "@store/hooks/useNavigation";
 import {
   useCancelSearch,
-  useCurrentSearchResult,
   useCycleScope,
   useNextSearchResult,
   usePreviousSearchResult,
@@ -64,7 +60,6 @@ import {
   useSearchInput,
   useSearchState,
   useStartSearch,
-  useUpdateSearchResults,
 } from "@store/hooks/useSearch";
 import {
   useToggleCollapsible,
@@ -116,10 +111,8 @@ export function App({
   const startSearch = useStartSearch();
   const cancelSearch = useCancelSearch();
   const cycleScope = useCycleScope();
-  const updateSearchResults = useUpdateSearchResults();
   const nextSearchResult = useNextSearchResult();
   const previousSearchResult = usePreviousSearchResult();
-  const currentSearchResult = useCurrentSearchResult();
 
   // Navigation and scroll state
   const [scrollOffset, setScrollOffset] = useScrollOffset();
@@ -196,6 +189,15 @@ export function App({
     collapsibleMode,
   });
 
+  // Extract search handlers
+  useSearchHandlers({
+    initialData,
+    schemaVisible,
+    visibleLines,
+    maxScroll,
+    maxScrollSearchMode,
+  });
+
   // Prevent invalid calls to TreeView handler during registration
   const safeSetTreeViewKeyboardHandler =
     useCallback<KeyboardHandlerRegistration>(
@@ -259,39 +261,6 @@ export function App({
     initialData,
   ]);
 
-  // Helper function to scroll to search result
-  const scrollToSearchResult = useCallback(
-    (result: (typeof searchState.searchResults)[0]) => {
-      if (result) {
-        const targetLine = Math.max(
-          0,
-          result.lineIndex - Math.floor(visibleLines / 2),
-        );
-        const currentMaxScroll = searchState.isSearching
-          ? maxScrollSearchMode
-          : maxScroll;
-        setScrollOffset(Math.min(currentMaxScroll, targetLine));
-      }
-    },
-    [
-      visibleLines,
-      maxScroll,
-      maxScrollSearchMode,
-      searchState.isSearching,
-      setScrollOffset,
-    ],
-  );
-
-  // Helper function to navigate to next search result
-  // Navigation helpers available when needed
-
-  // Effect to scroll to current search result when it changes
-  useEffect(() => {
-    if (currentSearchResult) {
-      scrollToSearchResult(currentSearchResult);
-    }
-  }, [currentSearchResult, scrollToSearchResult]);
-
   // Helper function to handle collapsible navigation
   // Collapsible navigation handler available when needed
 
@@ -303,37 +272,7 @@ export function App({
     [setScrollOffset],
   );
 
-  // Update search results when search term or view mode changes
-  useEffect(() => {
-    if (searchState.searchTerm && initialData) {
-      // Use appropriate search function based on current view mode
-      const results = schemaVisible
-        ? searchInJsonSchema(
-            initialData as JsonValue,
-            searchState.searchTerm,
-            searchState.searchScope,
-          )
-        : searchInJson(
-            initialData as JsonValue,
-            searchState.searchTerm,
-            searchState.searchScope,
-          );
-
-      updateSearchResults(results);
-
-      // Reset scroll to top after search
-      resetScroll();
-    } else {
-      updateSearchResults([]);
-    }
-  }, [
-    searchState.searchTerm,
-    searchState.searchScope,
-    initialData,
-    schemaVisible,
-    updateSearchResults, // Reset scroll to top after search
-    resetScroll,
-  ]);
+  // Search results are now handled by useSearchHandlers hook
 
   // Clear timeout when component unmounts or when g sequence is reset
   useEffect(() => {
