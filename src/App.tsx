@@ -167,8 +167,7 @@ export function App({
     searchModeVisibleLines,
     maxScroll,
     maxScrollSearchMode,
-    // halfPageLines available when needed
-    // JSON_INDENT available when needed
+    halfPageLines,
   } = useTerminalCalculations({
     keyboardEnabled,
     error,
@@ -532,16 +531,25 @@ export function App({
         } else if (input === "G" && !key.ctrl && !key.meta) {
           // Go to bottom
           updateDebugInfo("Go to bottom (G)", input);
-          scrollToBottom();
+          const currentMaxScroll = searchState.isSearching
+            ? maxScrollSearchMode
+            : maxScroll;
+          scrollToBottom(currentMaxScroll);
           resetGSequence();
         } else if (key.ctrl && input === "f") {
           // Page down
           updateDebugInfo("Page down (Ctrl+f)", input);
-          adjustScroll("pageDown");
+          const currentMaxScroll = searchState.isSearching
+            ? maxScrollSearchMode
+            : maxScroll;
+          adjustScroll(halfPageLines, currentMaxScroll);
         } else if (key.ctrl && input === "b") {
           // Page up
           updateDebugInfo("Page up (Ctrl+b)", input);
-          adjustScroll("pageUp");
+          const currentMaxScroll = searchState.isSearching
+            ? maxScrollSearchMode
+            : maxScroll;
+          adjustScroll(-halfPageLines, currentMaxScroll);
         } else if (
           input === "n" &&
           !key.ctrl &&
@@ -577,6 +585,7 @@ export function App({
       jqCursorPosition,
       maxScroll,
       maxScrollSearchMode,
+      halfPageLines,
       updateDebugInfo,
       updateDebugInfoCallback,
       handleExportSchema,
