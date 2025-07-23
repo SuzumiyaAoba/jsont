@@ -30,7 +30,7 @@ export const searchStateAtom = atom<SearchState>((get) => ({
 // Search actions
 export const startSearchAtom = atom(null, (_, set, term: string) => {
   set(searchTermAtom, term);
-  set(isSearchingAtom, true);
+  set(isSearchingAtom, false); // Exit search input mode after confirming search
   set(currentResultIndexAtom, 0);
 });
 

@@ -26,7 +26,7 @@ keybindings:
     top: ["g"]
     bottom: ["G"]
   modes:
-    search: ["s"]
+    search: ["/"]
     schema: ["S"]
     tree: ["T"]
     collapsible: ["C"]

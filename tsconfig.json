@@ -15,12 +15,15 @@
     "jsx": "react-jsx",
     "allowImportingTsExtensions": false,
     "noEmit": false,
+    "types": ["vitest/globals"],
     "baseUrl": "./src",
     "paths": {
       "@/*": ["./*"],
       "@core/*": ["core/*"],
       "@features/*": ["features/*"],
-      "@store/*": ["store/*"]
+      "@store/*": ["store/*"],
+      "@components/*": ["components/*"],
+      "@hooks/*": ["hooks/*"]
     }
   },
   "include": ["src/**/*"],
