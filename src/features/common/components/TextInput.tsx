@@ -70,6 +70,7 @@ export function handleTextInput(
   key: KeyboardEvent,
   input?: string,
 ): boolean {
+  console.log("handleTextInput called with key:", key, "input:", input);
   const { text, cursorPosition } = state;
   const { setText, setCursorPosition } = actions;
 
@@ -86,11 +87,13 @@ export function handleTextInput(
 
   // Arrow key navigation
   if (normalizedKey.leftArrow && !normalizedKey.shift) {
+    console.log("handleTextInput: left arrow handled");
     setCursorPosition(Math.max(0, cursorPosition - 1));
     return true;
   }
 
   if (normalizedKey.rightArrow && !normalizedKey.shift) {
+    console.log("handleTextInput: right arrow handled");
     setCursorPosition(Math.min(text.length, cursorPosition + 1));
     return true;
   }
@@ -234,6 +237,7 @@ export function handleTextInput(
     !normalizedKey.meta &&
     !normalizedKey.tab
   ) {
+    console.log("handleTextInput: regular character input handled:", input);
     const newText =
       text.slice(0, cursorPosition) + input + text.slice(cursorPosition);
     setText(newText);
@@ -241,6 +245,7 @@ export function handleTextInput(
     return true;
   }
 
+  console.log("handleTextInput returning false - event not handled");
   return false; // Event not handled
 }
 

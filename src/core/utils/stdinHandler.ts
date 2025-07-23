@@ -52,7 +52,7 @@ export async function readStdinThenReinitialize(): Promise<StdinReadResult> {
       success: parseResult.success,
       data: parseResult.data,
       error: parseResult.error,
-      canUseKeyboard: keyboardAvailable, // Use actual keyboard availability
+      canUseKeyboard: true, // Force enable keyboard for pipe input - let AppService handle final validation
     };
   } catch (error) {
     return {

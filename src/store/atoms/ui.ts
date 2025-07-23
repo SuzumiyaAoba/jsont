@@ -42,6 +42,13 @@ export const toggleSchemaAtom = atom(null, (get, set) => {
   const currentSchema = get(schemaVisibleAtom);
   const newSchema = !currentSchema;
 
+  console.log(
+    "toggleSchemaAtom - current:",
+    currentSchema,
+    "newValue:",
+    newSchema,
+  );
+
   // When enabling schema, disable other modes
   if (newSchema) {
     set(helpVisibleAtom, false);
@@ -68,6 +75,8 @@ export const toggleTreeViewAtom = atom(null, (get, set) => {
   const current = get(treeViewModeAtom);
   const newValue = !current;
 
+  console.log("toggleTreeViewAtom - current:", current, "newValue:", newValue);
+
   // When enabling tree view, disable collapsible mode
   if (newValue) {
     set(collapsibleModeAtom, false);
@@ -79,6 +88,13 @@ export const toggleTreeViewAtom = atom(null, (get, set) => {
 export const toggleCollapsibleAtom = atom(null, (get, set) => {
   const current = get(collapsibleModeAtom);
   const newValue = !current;
+
+  console.log(
+    "toggleCollapsibleAtom - current:",
+    current,
+    "newValue:",
+    newValue,
+  );
 
   // When enabling collapsible, disable tree view mode
   if (newValue) {

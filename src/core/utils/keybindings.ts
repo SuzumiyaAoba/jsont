@@ -43,7 +43,12 @@ function normalizeKey(input: string, key: KeyboardInput): string {
   const modifiers: string[] = [];
   if (key.ctrl) modifiers.push("Ctrl");
   if (key.meta) modifiers.push("Meta");
-  if (key.shift) modifiers.push("Shift");
+
+  // For single character keys, ignore shift modifier (T and Shift+T should both match "T")
+  // Only include shift for non-alphabetic characters
+  if (key.shift && !/^[a-zA-Z]$/.test(input)) {
+    modifiers.push("Shift");
+  }
 
   if (modifiers.length > 0) {
     return `${modifiers.join("+")}+${input}`;

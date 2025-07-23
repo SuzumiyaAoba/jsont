@@ -84,19 +84,17 @@ export class AppService {
     const renderOptions = {
       stdout: process.stdout,
       stderr: process.stderr,
-      ...(actualKeyboardEnabled ? { stdin: process.stdin } : {}),
+      stdin: process.stdin, // Always provide stdin to Ink
     };
 
-    // Provide stdin for keyboard input if enabled
-    if (actualKeyboardEnabled) {
-      // Force stdin to be available for reading
-      Object.defineProperty(process.stdin, "readable", { value: true });
+    // Always setup stdin for Ink compatibility
+    // Force stdin to be available for reading
+    Object.defineProperty(process.stdin, "readable", { value: true });
 
-      if (process.stdin.readableHighWaterMark === 0) {
-        Object.defineProperty(process.stdin, "readableHighWaterMark", {
-          value: 16384,
-        });
-      }
+    if (process.stdin.readableHighWaterMark === 0) {
+      Object.defineProperty(process.stdin, "readableHighWaterMark", {
+        value: 16384,
+      });
     }
 
     return render(
