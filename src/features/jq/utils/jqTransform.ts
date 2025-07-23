@@ -12,17 +12,9 @@ export async function transformWithJq(
   data: unknown,
   query: string,
 ): Promise<JqTransformationResult> {
-  console.log(
-    "transformWithJq called with query:",
-    query,
-    "data type:",
-    typeof data,
-  );
-
   try {
     // Validate query
     if (!query || query.trim() === "") {
-      console.log("Empty query, returning original data");
       return { success: true, data: data }; // Return original data for empty query
     }
 
@@ -50,21 +42,13 @@ export async function transformWithJq(
     }
 
     // Run jq transformation with better error handling
-    console.log(
-      "About to run jq with query:",
-      cleanQuery,
-      "on data length:",
-      jsonString.length,
-    );
     let result: string | object;
     try {
       result = await jq.run(cleanQuery, jsonString, {
         input: "string",
         raw: false, // Ensure JSON output
       });
-      console.log("jq transformation successful, result type:", typeof result);
     } catch (jqError) {
-      console.log("jq transformation failed:", jqError);
       // Improve jq error messages
       let errorMsg =
         jqError instanceof Error ? jqError.message : "Unknown jq error";

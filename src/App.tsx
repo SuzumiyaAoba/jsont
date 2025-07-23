@@ -84,7 +84,6 @@ export function App({
   initialError,
   keyboardEnabled = false,
 }: AppProps) {
-  console.log("App component - keyboardEnabled:", keyboardEnabled);
   // Check if we're in test environment - moved to top to avoid dependency issues
   const isTestEnvironment =
     process.env["NODE_ENV"] === "test" || process.env["VITEST"] === "true";
@@ -156,13 +155,6 @@ export function App({
     setDebugLogViewerVisible,
   } = useUI();
 
-  console.log("App render - UI state:", {
-    treeViewMode,
-    collapsibleMode,
-    schemaVisible,
-    helpVisible,
-  });
-
   // UI toggle functions
   const toggleTreeView = useToggleTreeView();
   const toggleSchema = useToggleSchema();
@@ -179,7 +171,6 @@ export function App({
   // Clear TreeView handler when TreeView is disabled
   useEffect(() => {
     if (!treeViewMode) {
-      console.log("Clearing TreeView handler - treeViewMode is false");
       setTreeViewKeyboardHandler(null);
     }
   }, [treeViewMode]);
@@ -318,40 +309,24 @@ export function App({
   // Handle jq transformation
   const handleJqTransformation = useCallback(
     async (query: string) => {
-      console.log(
-        "handleJqTransformation called with query:",
-        query,
-        "initialData exists:",
-        !!initialData,
-      );
+      if (!initialData) return;
 
-      if (!initialData) {
-        console.log("No initialData, aborting transformation");
-        return;
-      }
-
-      console.log("Starting jq transformation...");
       startJqTransformation(jqInput);
 
       try {
-        console.log("Calling transformWithJq...");
         const result = await transformWithJq(initialData, query);
-        console.log("transformWithJq result:", result);
 
         if (result.success) {
-          console.log("Transformation successful, updating state");
           completeJqTransformation({ success: true, data: result.data });
           // Reset scroll to top when jq filtering is applied successfully
           resetScroll();
         } else {
-          console.log("Transformation failed:", result.error);
           completeJqTransformation({
             success: false,
             error: result.error || "Transformation failed",
           });
         }
       } catch (error) {
-        console.log("Exception in transformation:", error);
         completeJqTransformation({
           success: false,
           error: error instanceof Error ? error.message : "Unknown error",
@@ -393,8 +368,6 @@ export function App({
         updateDebugInfo("Exit (Ctrl+C)", input);
         exit();
       } else if (helpVisible) {
-        console.log("Entering help mode handler");
-        // Handle help mode inputs - only allow help close or exit
         // Handle help mode inputs - only allow help close or exit
         if (keybindings.isHelp(input, key)) {
           if (process.stdout.write) {
@@ -427,7 +400,6 @@ export function App({
         updateDebugInfo("Export schema", input);
         handleExportSchema();
       } else if (searchState.isSearching) {
-        console.log("Entering search input mode");
         // Search input mode
         if (key.return) {
           // Confirm search
@@ -536,21 +508,10 @@ export function App({
           }
         }
       } else {
-        console.log(
-          "Entering Navigation mode - this is where T key should be handled",
-        );
         // Navigation mode - check TreeView handler first
-        console.log(
-          "Navigation mode - treeViewMode:",
-          treeViewMode,
-          "handler exists:",
-          !!treeViewKeyboardHandler,
-        );
         if (treeViewMode && treeViewKeyboardHandler) {
           // Let TreeView handle the input first
-          const handled = treeViewKeyboardHandler(input, key);
-          console.log("TreeView handler result:", handled, "for input:", input);
-          if (handled) {
+          if (treeViewKeyboardHandler(input, key)) {
             updateDebugInfo("TreeView handled", input);
             return; // TreeView handled the input
           }
@@ -619,16 +580,6 @@ export function App({
         }
 
         // Standard navigation mode
-        console.log("Checking keybindings for input:", input, "key:", key);
-        console.log(
-          "isTree:",
-          keybindings.isTree(input, key),
-          "isSchema:",
-          keybindings.isSchema(input, key),
-          "isCollapsible:",
-          keybindings.isCollapsible(input, key),
-        );
-
         if (keybindings.isSearch(input, key)) {
           // Start search mode
           updateDebugInfo("Start search mode", input);
@@ -660,13 +611,6 @@ export function App({
           updateDebugInfo(`Toggle help ${helpVisible ? "OFF" : "ON"}`, input);
         } else if (keybindings.isTree(input, key)) {
           // Toggle tree view mode
-          console.log(
-            "Tree keybinding matched! input:",
-            input,
-            "current state:",
-            treeViewMode,
-          );
-          console.log("Tree view toggle called, current state:", treeViewMode);
           toggleTreeView();
           updateDebugInfo(
             `Toggle tree view ${treeViewMode ? "OFF" : "ON"}`,
@@ -674,7 +618,6 @@ export function App({
           );
         } else if (keybindings.isSchema(input, key)) {
           // Toggle schema view
-          console.log("Schema toggle called, current state:", schemaVisible);
           toggleSchema();
           updateDebugInfo(
             `Toggle schema view ${schemaVisible ? "OFF" : "ON"}`,
@@ -682,10 +625,6 @@ export function App({
           );
         } else if (keybindings.isCollapsible(input, key)) {
           // Toggle collapsible mode
-          console.log(
-            "Collapsible toggle called, current state:",
-            collapsibleMode,
-          );
           toggleCollapsible();
           updateDebugInfo(
             `Toggle collapsible mode ${collapsibleMode ? "OFF" : "ON"}`,
@@ -929,15 +868,6 @@ export function App({
                   : 1
               }
             >
-              {/* Debug current mode state */}
-              {console.log(
-                "Render mode - treeViewMode:",
-                treeViewMode,
-                "collapsibleMode:",
-                collapsibleMode,
-                "schemaVisible:",
-                schemaVisible,
-              )}
               {treeViewMode ? (
                 <TreeView
                   data={displayData as JsonValue | null}
