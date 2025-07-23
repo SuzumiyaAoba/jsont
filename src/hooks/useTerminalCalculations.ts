@@ -179,10 +179,16 @@ export function useTerminalCalculations({
   const terminalHeight = terminalSize.height;
   const visibleLines = Math.max(1, terminalHeight - UI_RESERVED_LINES);
 
-  // Calculate JSON lines for scroll calculations
-  const jsonLines = initialData
-    ? JSON.stringify(initialData, null, JSON_INDENT).split("\n").length
-    : 0;
+  // Calculate JSON lines for scroll calculations - memoized to avoid repeated stringification
+  const jsonLines = useMemo(() => {
+    if (!initialData) return 0;
+    try {
+      return JSON.stringify(initialData, null, JSON_INDENT).split("\n").length;
+    } catch {
+      // Fallback for objects that can't be stringified
+      return 100; // Reasonable default
+    }
+  }, [initialData, JSON_INDENT]);
 
   // Calculate schema lines when in schema view mode
   const schemaLines = useMemo(() => {

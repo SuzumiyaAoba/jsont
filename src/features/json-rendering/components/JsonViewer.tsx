@@ -6,25 +6,31 @@ import type {
   DataProcessor,
 } from "@features/common/types/viewer";
 import { jsonHighlighter } from "@features/json-rendering/utils/jsonHighlighter";
+import { memo, type ReactElement, useMemo } from "react";
 
-export function JsonViewer(props: BaseViewerProps) {
+export const JsonViewer = memo(function JsonViewer(
+  props: BaseViewerProps,
+): ReactElement {
   const config = useConfig();
 
-  // Create data processor that uses configuration for indentation
-  const jsonDataProcessor: DataProcessor = (data: JsonValue | null) => {
-    if (!data) return null;
+  // Create data processor that uses configuration for indentation - memoized
+  const jsonDataProcessor: DataProcessor = useMemo(
+    () => (data: JsonValue | null) => {
+      if (!data) return null;
 
-    try {
-      // Use configuration for indentation
-      const indent = config.display.json.useTabs
-        ? "\t"
-        : " ".repeat(config.display.json.indent);
-      const formattedJson = JSON.stringify(data, null, indent);
-      return formattedJson.split("\n");
-    } catch {
-      return ["Error: Unable to format JSON"];
-    }
-  };
+      try {
+        // Use configuration for indentation
+        const indent = config.display.json.useTabs
+          ? "\t"
+          : " ".repeat(config.display.json.indent);
+        const formattedJson = JSON.stringify(data, null, indent);
+        return formattedJson.split("\n");
+      } catch {
+        return ["Error: Unable to format JSON"];
+      }
+    },
+    [config.display.json.useTabs, config.display.json.indent],
+  );
 
   return (
     <BaseViewer
@@ -37,4 +43,4 @@ export function JsonViewer(props: BaseViewerProps) {
       }}
     />
   );
-}
+});

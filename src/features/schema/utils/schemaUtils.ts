@@ -3,6 +3,10 @@
  */
 
 import type { JsonArray, JsonObject, JsonValue } from "@core/types/index";
+import { LRUCache } from "@core/utils/lruCache";
+
+// Cache for schema inference to improve performance with LRU eviction
+const schemaCache = new LRUCache<string, JsonSchema>(200); // Reduced size for better memory efficiency
 
 export interface JsonSchemaProperty {
   type: string;
@@ -34,21 +38,32 @@ export interface JsonSchema {
 }
 
 /**
- * Infer JSON Schema from a JSON value (legacy function)
+ * Infer JSON Schema from a JSON value (legacy function) - with caching
  */
 export function inferJsonSchema(
   data: JsonValue,
   title?: string,
   baseUrl?: string,
 ): JsonSchema {
+  // Create cache key from data + title + baseUrl
+  const cacheKey = `${JSON.stringify(data)}-${title || "Generated Schema"}-${baseUrl || "default"}`;
+
+  // Check cache first (LRU cache automatically handles access tracking)
+  const cached = schemaCache.get(cacheKey);
+  if (cached) return cached;
+
   const schema = inferType(data);
 
-  return {
+  const result: JsonSchema = {
     $schema: baseUrl || "https://json-schema.org/draft/2020-12/schema",
     title: title || "Generated Schema",
     description: `Auto-generated schema from JSON data`,
     ...schema,
   };
+
+  // Cache the result (LRU cache automatically handles eviction)
+  schemaCache.set(cacheKey, result);
+  return result;
 }
 
 /**

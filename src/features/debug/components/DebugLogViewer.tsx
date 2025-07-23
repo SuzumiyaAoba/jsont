@@ -2,6 +2,7 @@
  * Debug Log Viewer - デバッグログを表示するコンポーネント
  */
 
+import { LRUCache } from "@core/utils/lruCache";
 import { Box, Text, useInput } from "ink";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { DebugLogEntry, DebugLogLevel } from "../utils/debugLogger";
@@ -13,9 +14,8 @@ interface DebugLogViewerProps {
   onExit: () => void;
 }
 
-// Memoized cache for formatted log data to avoid repeated processing
-const formatCache = new Map<string, string>();
-const MAX_CACHE_SIZE = 1000;
+// LRU cache for formatted log data to avoid repeated processing
+const formatCache = new LRUCache<string, string>(1000); // Optimized cache size with LRU eviction
 
 function formatLogData(data: unknown, maxWidth: number = 80): string {
   if (typeof data === "string") {
@@ -28,17 +28,10 @@ function formatLogData(data: unknown, maxWidth: number = 80): string {
     // Create cache key based on data and maxWidth
     const cacheKey = `${JSON.stringify(data)}-${maxWidth}`;
 
-    // Check cache first
-    if (formatCache.has(cacheKey)) {
-      const cached = formatCache.get(cacheKey);
-      if (cached !== undefined) {
-        return cached;
-      }
-    }
-
-    // Clear cache if it gets too large to prevent memory leaks
-    if (formatCache.size >= MAX_CACHE_SIZE) {
-      formatCache.clear();
+    // Check cache first (LRU cache automatically handles access tracking)
+    const cached = formatCache.get(cacheKey);
+    if (cached !== undefined) {
+      return cached;
     }
 
     const jsonString = JSON.stringify(data, null, 2);
@@ -69,7 +62,7 @@ function formatLogData(data: unknown, maxWidth: number = 80): string {
       result = jsonString;
     }
 
-    // Cache the result
+    // Cache the result (LRU cache automatically handles eviction)
     formatCache.set(cacheKey, result);
     return result;
   }

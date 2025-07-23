@@ -7,6 +7,7 @@ import {
   getSearchScopeDisplayName,
 } from "@features/search/utils/searchUtils.js";
 import { Box, Text } from "ink";
+import { memo, useMemo } from "react";
 import { renderTextWithCursor } from "../../common/components/TextInput";
 
 interface SearchBarProps {
@@ -16,23 +17,30 @@ interface SearchBarProps {
   onScopeChange?: (scope: SearchScope) => void;
 }
 
-export function SearchBar({
+export const SearchBar = memo(function SearchBar({
   searchState,
   searchInput,
   searchCursorPosition = 0,
   onScopeChange: _onScopeChange,
 }: SearchBarProps) {
-  const navigationInfo = getSearchNavigationInfo(
-    searchState.searchResults,
-    searchState.currentResultIndex,
+  const navigationInfo = useMemo(
+    () =>
+      getSearchNavigationInfo(
+        searchState.searchResults,
+        searchState.currentResultIndex,
+      ),
+    [searchState.searchResults, searchState.currentResultIndex],
   );
 
-  const scopeDisplayName = getSearchScopeDisplayName(searchState.searchScope);
+  const scopeDisplayName = useMemo(
+    () => getSearchScopeDisplayName(searchState.searchScope),
+    [searchState.searchScope],
+  );
 
-  // Render search input with cursor
-  const { beforeCursor, atCursor, afterCursor } = renderTextWithCursor(
-    searchInput,
-    searchCursorPosition,
+  // Render search input with cursor - memoized
+  const { beforeCursor, atCursor, afterCursor } = useMemo(
+    () => renderTextWithCursor(searchInput, searchCursorPosition),
+    [searchInput, searchCursorPosition],
   );
 
   return (
@@ -80,4 +88,4 @@ export function SearchBar({
       </Box>
     </Box>
   );
-}
+});
