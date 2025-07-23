@@ -11,10 +11,14 @@ export function useScrolling(
 ) {
   // Calculate effective visible lines with fallback
   const effectiveVisibleLines = useMemo(() => {
-    return Math.max(
-      1,
-      visibleLines || Math.max(1, (process.stdout.rows || 24) - 3),
-    );
+    const defaultHeight = Math.max(1, (process.stdout.rows || 24) - 3);
+    // Only apply -1 reduction for very small terminals to prevent display issues
+    const shouldReduceHeight = defaultHeight <= 5;
+    const finalHeight = shouldReduceHeight
+      ? Math.max(1, defaultHeight - 1)
+      : defaultHeight;
+
+    return Math.max(1, visibleLines || finalHeight);
   }, [visibleLines]);
 
   // Calculate visible line range
