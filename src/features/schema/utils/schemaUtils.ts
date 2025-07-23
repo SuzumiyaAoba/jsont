@@ -4,6 +4,10 @@
 
 import type { JsonArray, JsonObject, JsonValue } from "@core/types/index";
 
+// Cache for schema inference to improve performance
+const schemaCache = new Map<string, JsonSchema>();
+const MAX_SCHEMA_CACHE_SIZE = 500;
+
 export interface JsonSchemaProperty {
   type: string;
   description?: string;
@@ -34,21 +38,43 @@ export interface JsonSchema {
 }
 
 /**
- * Infer JSON Schema from a JSON value (legacy function)
+ * Infer JSON Schema from a JSON value (legacy function) - with caching
  */
 export function inferJsonSchema(
   data: JsonValue,
   title?: string,
   baseUrl?: string,
 ): JsonSchema {
+  // Create cache key from data + title + baseUrl
+  const cacheKey = `${JSON.stringify(data)}-${title || "Generated Schema"}-${baseUrl || "default"}`;
+
+  // Check cache first
+  if (schemaCache.has(cacheKey)) {
+    const cached = schemaCache.get(cacheKey);
+    if (cached) return cached;
+  }
+
+  // Clear cache if it gets too large
+  if (schemaCache.size >= MAX_SCHEMA_CACHE_SIZE) {
+    const keysToDelete = Array.from(schemaCache.keys()).slice(
+      0,
+      MAX_SCHEMA_CACHE_SIZE / 2,
+    );
+    keysToDelete.forEach((key) => schemaCache.delete(key));
+  }
+
   const schema = inferType(data);
 
-  return {
+  const result: JsonSchema = {
     $schema: baseUrl || "https://json-schema.org/draft/2020-12/schema",
     title: title || "Generated Schema",
     description: `Auto-generated schema from JSON data`,
     ...schema,
   };
+
+  // Cache the result
+  schemaCache.set(cacheKey, result);
+  return result;
 }
 
 /**

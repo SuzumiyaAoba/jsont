@@ -15,7 +15,7 @@ interface DebugLogViewerProps {
 
 // Memoized cache for formatted log data to avoid repeated processing
 const formatCache = new Map<string, string>();
-const MAX_CACHE_SIZE = 1000;
+const MAX_CACHE_SIZE = 2000; // Increased cache size for better performance
 
 function formatLogData(data: unknown, maxWidth: number = 80): string {
   if (typeof data === "string") {
@@ -36,9 +36,13 @@ function formatLogData(data: unknown, maxWidth: number = 80): string {
       }
     }
 
-    // Clear cache if it gets too large to prevent memory leaks
+    // Clear half of cache if it gets too large to prevent memory leaks
     if (formatCache.size >= MAX_CACHE_SIZE) {
-      formatCache.clear();
+      const keysToDelete = Array.from(formatCache.keys()).slice(
+        0,
+        MAX_CACHE_SIZE / 2,
+      );
+      keysToDelete.forEach((key) => formatCache.delete(key));
     }
 
     const jsonString = JSON.stringify(data, null, 2);

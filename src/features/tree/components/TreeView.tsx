@@ -111,15 +111,25 @@ export function TreeView({
     return renderTreeLines(treeState, displayOptions);
   }, [treeState, displayOptions]);
 
-  // Memoize search filtering for performance
+  // Memoize search filtering for performance with early return optimization
   const filteredLines = useMemo(() => {
-    return !searchTerm
-      ? treeLines
-      : treeLines.filter((line) => {
-          const lowerSearchTerm = searchTerm.toLowerCase();
-          const text = getTreeLineText(line).toLowerCase();
-          return text.includes(lowerSearchTerm);
-        });
+    if (!searchTerm) return treeLines;
+
+    const lowerSearchTerm = searchTerm.toLowerCase();
+    const result: TreeLine[] = [];
+
+    // Optimized filtering with early break for large datasets
+    for (let i = 0; i < treeLines.length; i++) {
+      const line = treeLines[i];
+      if (
+        line &&
+        getTreeLineText(line).toLowerCase().includes(lowerSearchTerm)
+      ) {
+        result.push(line);
+      }
+    }
+
+    return result;
   }, [treeLines, searchTerm]);
 
   // ROOT CAUSE SOLUTION: Conservative approach to ensure reliable line display

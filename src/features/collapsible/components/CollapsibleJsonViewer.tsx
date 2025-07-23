@@ -68,16 +68,26 @@ export const CollapsibleJsonViewer = forwardRef<
     (visibleLines ?? Math.max(1, (process.stdout.rows || 24) - 3)) - 1,
   );
 
-  // Get the display lines from flattened nodes
+  // Get the display lines from flattened nodes - optimized calculation
   const displayLines = useMemo(() => {
     const indentConfig = {
       useTabs: config.display.json.useTabs,
       indent: config.display.json.indent,
     };
-    return collapsibleState.flattenedNodes.map((node) => {
-      const isExpanded = collapsibleState.expandedNodes.has(node.id);
-      return getNodeDisplayText(node, isExpanded, indentConfig);
-    });
+
+    // Pre-allocate array for better performance with large datasets
+    const result = new Array(collapsibleState.flattenedNodes.length);
+    const expandedNodes = collapsibleState.expandedNodes;
+
+    for (let i = 0; i < collapsibleState.flattenedNodes.length; i++) {
+      const node = collapsibleState.flattenedNodes[i];
+      if (node) {
+        const isExpanded = expandedNodes.has(node.id);
+        result[i] = getNodeDisplayText(node, isExpanded, indentConfig);
+      }
+    }
+
+    return result;
   }, [
     collapsibleState.flattenedNodes,
     collapsibleState.expandedNodes,
