@@ -45,8 +45,10 @@ The codebase follows a feature-driven clean architecture with clear separation o
 
 #### Core Layer (`src/core/`)
 - **Services**: `AppService` orchestrates application lifecycle and initialization
-- **Utils**: Terminal management, process lifecycle, stdin handling, error handling
+- **Utils**: Terminal management, process lifecycle, stdin handling, error handling, LRU cache
 - **Types**: Application-wide type definitions
+- **Config**: YAML configuration loading and validation
+- **Context**: React context providers for configuration
 
 #### Features Layer (`src/features/`)
 Organized by feature domains, each containing:
@@ -64,6 +66,9 @@ Organized by feature domains, each containing:
 - `json-rendering/` - Core JSON parsing and syntax highlighting
 - `common/` - Shared components (TextInput, BaseViewer, hooks)
 - `debug/` - Debug logging and viewer components
+- `navigation/` - Goto navigation (gg/G) and keyboard shortcuts
+- `help/` - Context-sensitive help system
+- `status/` - Status bar and line number display
 
 ### State Management
 - React hooks for local component state
@@ -95,6 +100,10 @@ Organized by feature domains, each containing:
 - `node-jq` - jq query processing
 - `json5` - Enhanced JSON parsing
 - `es-toolkit` - Modern utility functions
+- `js-yaml` - YAML configuration parsing
+- `zod` - Runtime type validation
+- `jotai` - Atomic state management
+- `mutative` - Immutable state updates
 
 ## Development Guidelines
 
@@ -141,13 +150,62 @@ The application implements sophisticated stdin processing to enable keyboard nav
 - **Goto Navigation**: gg (top), G (bottom) for instant positioning
 - **Feature Toggle**: T (tree view), S (schema), D (debug), etc.
 
+## Performance Optimization
+
+### Caching Strategy
+- **LRU Cache**: `src/core/utils/lruCache.ts` provides efficient caching with automatic eviction
+- **Schema Inference**: Cached with 200-entry LRU cache to prevent redundant processing
+- **Debug Log Formatting**: Cached with 1000-entry LRU cache for improved rendering
+- **React Memoization**: Strategic use of `React.memo`, `useMemo`, and `useCallback`
+
+### Algorithm Optimizations
+- **Tree Filtering**: Optimized from array methods to for-loops for large datasets
+- **Search Performance**: Efficient text matching with early returns
+- **Memory Management**: Controlled object creation and garbage collection
+
+### Performance Testing
+- **Comprehensive Benchmarks**: 11 performance tests covering all major operations
+- **Memory Usage Monitoring**: Automated tests to prevent memory leaks
+- **CI/CD Integration**: Performance regression detection in build pipeline
+
+## Configuration System
+
+### YAML Configuration
+- **Location**: `~/.config/jsont/config.yaml`
+- **Hot Reloading**: Configuration changes applied without restart
+- **Validation**: Zod-based schema validation with helpful error messages
+- **Merging**: Deep merge with default configuration
+
+### Configuration Structure
+```yaml
+display:
+  interface:
+    showLineNumbers: boolean
+    useUnicodeTree: boolean
+  json:
+    indent: number
+    useTabs: boolean
+  tree:
+    showArrayIndices: boolean
+    showPrimitiveValues: boolean
+    maxValueLength: number
+
+keybindings:
+  navigation:
+    up: string
+    down: string
+    pageUp: string
+    pageDown: string
+```
+
 ## Testing Strategy
 
-- **Comprehensive Coverage**: 37+ tests across tree utilities alone
-- **Test Types**: Unit tests for utilities, integration tests for components
+- **Comprehensive Coverage**: 150+ tests across all utilities and components
+- **Test Types**: Unit tests for utilities, integration tests for components, performance tests
 - **Test Environment**: Node.js environment with Vitest globals
 - **Patterns**: Feature-specific test suites with clear scenarios
 - **Coverage**: v8 provider with text, JSON, and HTML reporting
+- **Performance Tests**: Automated benchmarking to prevent regressions
 
 ## Common Development Patterns
 
