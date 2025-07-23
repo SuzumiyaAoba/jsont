@@ -3,10 +3,10 @@
  */
 
 import type { JsonArray, JsonObject, JsonValue } from "@core/types/index";
+import { LRUCache } from "@core/utils/lruCache";
 
-// Cache for schema inference to improve performance
-const schemaCache = new Map<string, JsonSchema>();
-const MAX_SCHEMA_CACHE_SIZE = 500;
+// Cache for schema inference to improve performance with LRU eviction
+const schemaCache = new LRUCache<string, JsonSchema>(200); // Reduced size for better memory efficiency
 
 export interface JsonSchemaProperty {
   type: string;
@@ -48,20 +48,9 @@ export function inferJsonSchema(
   // Create cache key from data + title + baseUrl
   const cacheKey = `${JSON.stringify(data)}-${title || "Generated Schema"}-${baseUrl || "default"}`;
 
-  // Check cache first
-  if (schemaCache.has(cacheKey)) {
-    const cached = schemaCache.get(cacheKey);
-    if (cached) return cached;
-  }
-
-  // Clear cache if it gets too large
-  if (schemaCache.size >= MAX_SCHEMA_CACHE_SIZE) {
-    const keysToDelete = Array.from(schemaCache.keys()).slice(
-      0,
-      MAX_SCHEMA_CACHE_SIZE / 2,
-    );
-    keysToDelete.forEach((key) => schemaCache.delete(key));
-  }
+  // Check cache first (LRU cache automatically handles access tracking)
+  const cached = schemaCache.get(cacheKey);
+  if (cached) return cached;
 
   const schema = inferType(data);
 
@@ -72,7 +61,7 @@ export function inferJsonSchema(
     ...schema,
   };
 
-  // Cache the result
+  // Cache the result (LRU cache automatically handles eviction)
   schemaCache.set(cacheKey, result);
   return result;
 }

@@ -46,10 +46,14 @@ describe("Performance Tests", () => {
       },
     };
 
-    // Create deeply nested JSON data
+    // Create deeply nested JSON data with proper typing
     let nested: JsonValue = { value: "deep" };
     for (let i = 0; i < 50; i++) {
-      nested = { [`level${i}`]: nested, data: `Level ${i} data` } as JsonValue;
+      const newLevel: Record<string, JsonValue> = {
+        [`level${i}`]: nested,
+        data: `Level ${i} data`,
+      };
+      nested = newLevel as JsonValue;
     }
     complexJsonData = nested;
   });
