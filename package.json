@@ -30,11 +30,15 @@
     "cli",
     "viewer",
     "jq",
-    "jsonata"
+    "jsonata",
+    "schema",
+    "interactive",
+    "tree-view",
+    "search"
   ],
   "author": "",
   "license": "MIT",
-  "description": "A Terminal User Interface (TUI) JSON viewer with advanced query capabilities",
+  "description": "Interactive terminal JSON viewer with tree display, search, jq queries, and schema generation",
   "engines": {
     "node": ">=18.0.0",
     "npm": ">=8.0.0"
