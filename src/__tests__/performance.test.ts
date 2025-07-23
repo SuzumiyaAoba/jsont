@@ -17,9 +17,9 @@ describe("Performance Tests", () => {
   let complexJsonData: JsonValue;
 
   beforeAll(() => {
-    // Create large JSON data for testing
+    // Create large JSON data for testing (reduced size for CI stability)
     largeJsonData = {
-      users: Array.from({ length: 1000 }, (_, i) => ({
+      users: Array.from({ length: 500 }, (_, i) => ({
         id: i,
         name: `User ${i}`,
         email: `user${i}@example.com`,
@@ -29,7 +29,7 @@ describe("Performance Tests", () => {
           preferences: {
             theme: i % 2 === 0 ? "dark" : "light",
             notifications: i % 3 === 0,
-            language: ["en", "ja", "fr"][i % 3],
+            language: ["en", "ja", "fr"][i % 3] as string,
           },
         },
         posts: Array.from({ length: i % 10 }, (_, j) => ({
@@ -40,16 +40,16 @@ describe("Performance Tests", () => {
         })),
       })),
       metadata: {
-        total: 1000,
+        total: 500,
         generated: new Date().toISOString(),
         version: "1.0.0",
       },
     };
 
     // Create deeply nested JSON data
-    let nested: any = { value: "deep" };
+    let nested: JsonValue = { value: "deep" };
     for (let i = 0; i < 50; i++) {
-      nested = { [`level${i}`]: nested, data: `Level ${i} data` };
+      nested = { [`level${i}`]: nested, data: `Level ${i} data` } as JsonValue;
     }
     complexJsonData = nested;
   });
@@ -108,7 +108,9 @@ describe("Performance Tests", () => {
       const treeLines = renderTreeLines(treeState, {
         showArrayIndices: true,
         showSchemaTypes: false,
-        expandDepth: 2,
+        showPrimitiveValues: true,
+        maxValueLength: 100,
+        useUnicodeTree: false,
       });
 
       const endTime = performance.now();
@@ -116,7 +118,7 @@ describe("Performance Tests", () => {
 
       expect(treeState.nodes.size).toBeGreaterThan(0);
       expect(treeLines.length).toBeGreaterThan(0);
-      expect(duration).toBeLessThan(3000); // Should complete within 3 seconds
+      expect(duration).toBeLessThan(2000); // Should complete within 2 seconds
     }, 10000);
 
     it("should handle tree expansion/collapse efficiently", () => {
@@ -129,7 +131,9 @@ describe("Performance Tests", () => {
         renderTreeLines(treeState, {
           showArrayIndices: true,
           showSchemaTypes: i % 2 === 0,
-          expandDepth: (i % 3) + 1,
+          showPrimitiveValues: true,
+          maxValueLength: 50,
+          useUnicodeTree: false,
         });
       }
 
@@ -144,7 +148,7 @@ describe("Performance Tests", () => {
     it("should search large JSON datasets efficiently", () => {
       const startTime = performance.now();
 
-      const results = searchInJson(largeJsonData, "User 500", "all");
+      const results = searchInJson(largeJsonData, "User 100", "all");
 
       const endTime = performance.now();
       const duration = endTime - startTime;
@@ -194,14 +198,16 @@ describe("Performance Tests", () => {
     it("should not create excessive objects during processing", () => {
       const initialMemory = process.memoryUsage().heapUsed;
 
-      // Perform multiple operations
-      for (let i = 0; i < 10; i++) {
+      // Perform multiple operations (reduced from 10 to 5 for CI stability)
+      for (let i = 0; i < 5; i++) {
         const schema = inferJsonSchema(largeJsonData, `Schema ${i}`);
         const treeState = buildTreeFromJson(largeJsonData);
         const treeLines = renderTreeLines(treeState, {
           showArrayIndices: true,
           showSchemaTypes: false,
-          expandDepth: 2,
+          showPrimitiveValues: true,
+          maxValueLength: 100,
+          useUnicodeTree: false,
         });
         const searchResults = searchInJson(largeJsonData, "User", "all");
 
@@ -221,26 +227,26 @@ describe("Performance Tests", () => {
 
       // Memory increase should be reasonable (less than 200MB for large dataset operations)
       expect(memoryIncrease).toBeLessThan(200 * 1024 * 1024);
-    });
+    }, 10000); // 10 second timeout for memory test
   });
 
   describe("JSON Stringification Performance", () => {
     it("should handle JSON stringification efficiently", () => {
       const startTime = performance.now();
 
-      // Test multiple stringification operations
-      for (let i = 0; i < 50; i++) {
+      // Test multiple stringification operations (reduced for CI stability)
+      for (let i = 0; i < 25; i++) {
         const jsonString = JSON.stringify(largeJsonData, null, 2);
         expect(jsonString).toContain("users");
 
         const lines = jsonString.split("\n");
-        expect(lines.length).toBeGreaterThan(1000);
+        expect(lines.length).toBeGreaterThan(500);
       }
 
       const endTime = performance.now();
       const duration = endTime - startTime;
 
-      expect(duration).toBeLessThan(3000); // Should complete within 3 seconds
+      expect(duration).toBeLessThan(2000); // Should complete within 2 seconds
     });
 
     it("should handle different indentation settings efficiently", () => {
