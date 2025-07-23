@@ -876,6 +876,7 @@ export function App({
                       ? searchModeVisibleLines
                       : visibleLines
                   }
+                  scrollOffset={scrollOffset}
                   searchTerm={searchState.searchTerm}
                   options={{
                     showArrayIndices: true,
