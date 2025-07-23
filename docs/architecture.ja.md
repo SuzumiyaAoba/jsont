@@ -1,27 +1,26 @@
-# アーキテクチャ設計書（改訂版）
+# アーキテクチャ実装詳細
 
 ## システム概要
 
-`jsont` は React と Ink フレームワークを基盤とした高性能 TUI アプリケーションです。モジュラーな設計により、各機能が独立して開発・テスト・保守できる構造を採用し、最適化されたライブラリを活用してパフォーマンスと機能性を向上させています。
+`jsont` は React 19 と Ink 6.0 フレームワークを基盤とした高性能 TUI アプリケーションです。フィーチャー駆動のクリーンアーキテクチャにより、各機能が独立して開発・テスト・保守できる構造を実装しています。
 
-## 採用ライブラリスタック（2024-2025年版）
+## 実装済み技術スタック
 
 ### コア技術スタック
-- **TUI Framework**: Ink 6.0+ (React-based TUI)
-- **State Management**: Jotai 2.0+ (アトミック・軽量)
-- **JSON Processing**: es-toolkit + JSON5 (高性能・軽量)
-- **JSON Query**: jq-web + JSONata (ハイブリッド方式)
-- **Virtual Scrolling**: @tanstack/react-virtual 3.0+ (最新・高機能)
-- **Syntax Highlighting**: react-syntax-highlighter 15.0+ (多テーマ対応)
-- **Clipboard**: clipboardy 4.0+ (クロスプラットフォーム)
-- **File System**: node:fs/promises (Node.js標準)
+- **TUI Framework**: Ink 6.0 (React 19-based TUI)
+- **State Management**: Jotai 2.12+ (アトミック状態管理)
+- **JSON Processing**: es-toolkit + JSON5 (高性能ユーティリティ)
+- **JSON Query**: node-jq (jqクエリ変換)
+- **Configuration**: js-yaml + Zod (YAML設定・バリデーション)
+- **Error Handling**: neverthrow (Result型パターン)
+- **Immutable Updates**: mutative (効率的な更新)
+- **Type Safety**: TypeScript strictest (最大限の型安全性)
 
-### 選定理由と期待効果
-| ライブラリ | 選定理由 | 期待効果 |
-|-----------|---------|----------|
-| **Jotai** | CLIアプリ最適化、アトミック設計 | バンドルサイズ削減、細粒度管理 |
-| **es-toolkit** | Lodashより高性能・軽量 | 20-30%性能向上、軽量化 |
-| **ハイブリッドクエリ** | 使いやすさと高機能の両立 | 学習コスト削減、柔軟性向上 |
+### パフォーマンス最適化
+- **LRUキャッシュ**: 自作実装による効率的メモリ管理
+- **React最適化**: memo, useMemo, useCallback戦略的活用
+- **アルゴリズム最適化**: for-loopによる大規模データ処理
+- **メモリ管理**: 自動ガベージコレクション最適化
 
 ## アーキテクチャ図（改訂版）
 
