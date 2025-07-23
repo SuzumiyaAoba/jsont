@@ -36,7 +36,6 @@ describe("Stdin Handler", () => {
   let mockParseJson: any;
   let mockReadFile: any;
   let originalStdin: any;
-  let originalProcess: any;
 
   beforeEach(() => {
     mockParseJson = vi.mocked(parseJsonWithValidation);
@@ -44,7 +43,6 @@ describe("Stdin Handler", () => {
 
     // Save original process.stdin
     originalStdin = process.stdin;
-    originalProcess = { ...process };
 
     // Mock process.stdin
     const mockStdin = {

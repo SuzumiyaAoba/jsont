@@ -13,7 +13,7 @@ describe("JqQueryInput Types and Interfaces", () => {
       transformedData: { result: "data" },
       error: null,
       showOriginal: false,
-      isLoading: false,
+      isProcessing: false,
     };
 
     expect(validJqState.isActive).toBe(true);
@@ -21,7 +21,7 @@ describe("JqQueryInput Types and Interfaces", () => {
     expect(validJqState.transformedData).toEqual({ result: "data" });
     expect(validJqState.error).toBe(null);
     expect(validJqState.showOriginal).toBe(false);
-    expect(validJqState.isLoading).toBe(false);
+    expect(validJqState.isProcessing).toBe(false);
   });
 
   it("should handle JqState with error", () => {
@@ -31,7 +31,7 @@ describe("JqQueryInput Types and Interfaces", () => {
       transformedData: null,
       error: "jq: syntax error",
       showOriginal: false,
-      isLoading: false,
+      isProcessing: false,
     };
 
     expect(errorState.error).toBe("jq: syntax error");
@@ -45,10 +45,10 @@ describe("JqQueryInput Types and Interfaces", () => {
       transformedData: null,
       error: null,
       showOriginal: false,
-      isLoading: true,
+      isProcessing: true,
     };
 
-    expect(loadingState.isLoading).toBe(true);
+    expect(loadingState.isProcessing).toBe(true);
   });
 
   it("should handle inactive state", () => {
@@ -58,7 +58,7 @@ describe("JqQueryInput Types and Interfaces", () => {
       transformedData: null,
       error: null,
       showOriginal: false,
-      isLoading: false,
+      isProcessing: false,
     };
 
     expect(inactiveState.isActive).toBe(false);

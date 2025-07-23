@@ -27,7 +27,9 @@ vi.mock("../useExportHandlers", () => ({
 }));
 
 vi.mock("../useSearchHandlers", () => ({
-  useSearchHandlers: vi.fn(),
+  useSearchHandlers: vi.fn(() => ({
+    scrollToSearchResult: vi.fn(),
+  })),
 }));
 
 import { useExportHandlers } from "../useExportHandlers";
@@ -107,7 +109,7 @@ describe("Custom Hooks Interfaces", () => {
 
       // Should not throw
       expect(() => {
-        result.handleExportConfirm("test.json", "json");
+        result.handleExportConfirm({ filename: "test.json", format: "json" });
       }).not.toThrow();
     });
 
@@ -121,39 +123,40 @@ describe("Custom Hooks Interfaces", () => {
 
   describe("useSearchHandlers", () => {
     it("should be callable with required props", () => {
-      expect(() => {
-        useSearchHandlers({
-          initialData: {},
-          schemaVisible: false,
-          visibleLines: 20,
-          maxScroll: 50,
-          maxScrollSearchMode: 45,
-        });
-      }).not.toThrow();
+      const result = useSearchHandlers({
+        initialData: {},
+        schemaVisible: false,
+        visibleLines: 20,
+        maxScroll: 50,
+        maxScrollSearchMode: 45,
+      });
+
+      expect(result).toHaveProperty("scrollToSearchResult");
+      expect(typeof result.scrollToSearchResult).toBe("function");
     });
 
     it("should handle null data", () => {
-      expect(() => {
-        useSearchHandlers({
-          initialData: null,
-          schemaVisible: false,
-          visibleLines: 20,
-          maxScroll: 50,
-          maxScrollSearchMode: 45,
-        });
-      }).not.toThrow();
+      const result = useSearchHandlers({
+        initialData: null,
+        schemaVisible: false,
+        visibleLines: 20,
+        maxScroll: 50,
+        maxScrollSearchMode: 45,
+      });
+
+      expect(result).toHaveProperty("scrollToSearchResult");
     });
 
     it("should handle schema mode", () => {
-      expect(() => {
-        useSearchHandlers({
-          initialData: {},
-          schemaVisible: true,
-          visibleLines: 20,
-          maxScroll: 50,
-          maxScrollSearchMode: 45,
-        });
-      }).not.toThrow();
+      const result = useSearchHandlers({
+        initialData: {},
+        schemaVisible: true,
+        visibleLines: 20,
+        maxScroll: 50,
+        maxScrollSearchMode: 45,
+      });
+
+      expect(result).toHaveProperty("scrollToSearchResult");
     });
   });
 
@@ -187,7 +190,8 @@ describe("Custom Hooks Interfaces", () => {
         maxScrollSearchMode: 45,
       };
 
-      expect(() => useSearchHandlers(validProps)).not.toThrow();
+      const result = useSearchHandlers(validProps);
+      expect(result).toHaveProperty("scrollToSearchResult");
     });
   });
 
@@ -221,7 +225,8 @@ describe("Custom Hooks Interfaces", () => {
         maxScrollSearchMode: 49000,
       };
 
-      expect(() => useSearchHandlers(propsWithLargeNumbers)).not.toThrow();
+      const result = useSearchHandlers(propsWithLargeNumbers);
+      expect(result).toHaveProperty("scrollToSearchResult");
     });
   });
 });
