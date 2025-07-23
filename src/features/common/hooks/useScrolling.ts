@@ -9,11 +9,11 @@ export function useScrolling(
   scrollOffset: number = 0,
   visibleLines?: number,
 ) {
-  // Calculate effective visible lines with fallback, subtract 1 like TreeView does
+  // Calculate effective visible lines with fallback
   const effectiveVisibleLines = useMemo(() => {
     return Math.max(
       1,
-      (visibleLines || Math.max(1, (process.stdout.rows || 24) - 3)) - 1,
+      visibleLines || Math.max(1, (process.stdout.rows || 24) - 3),
     );
   }, [visibleLines]);
 

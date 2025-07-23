@@ -21,8 +21,8 @@ export interface HeightCalculations {
 export function calculateComponentHeights(
   totalHeight: number,
 ): HeightCalculations {
-  const baseContentHeight = Math.max(0, totalHeight - 1); // Account for header line
-  const safeContentHeight = Math.max(1, baseContentHeight - 1); // Additional safety margin
+  const baseContentHeight = Math.max(1, totalHeight - 1); // Account for header line
+  const safeContentHeight = Math.max(1, baseContentHeight); // Keep same as base for better visibility
   const conservativeContentHeight = Math.max(1, totalHeight - 2); // Conservative approach
   const halfPageHeight = Math.max(1, Math.floor(conservativeContentHeight / 2));
 
@@ -42,8 +42,8 @@ export function calculateTreeViewHeights(
   totalHeight: number,
 ): HeightCalculations {
   // Tree view has specific requirements for line display
-  const baseContentHeight = Math.max(0, totalHeight - 1); // Account for header line
-  const safeContentHeight = Math.max(1, baseContentHeight - 1); // Additional safety margin for Ink.js layout
+  const baseContentHeight = Math.max(1, totalHeight - 1); // Account for header line
+  const safeContentHeight = Math.max(1, baseContentHeight); // Keep same as base for better visibility
   const conservativeContentHeight = Math.max(1, totalHeight - 2); // Conservative for scroll calculations
   const halfPageHeight = Math.max(1, Math.floor(conservativeContentHeight / 2));
 
