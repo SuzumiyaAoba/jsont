@@ -2,6 +2,7 @@
  * Comprehensive Help System Component
  */
 
+import type { KeyBindings } from "@core/config/types";
 import type { AppMode } from "@core/types/app";
 import { Box, Text } from "ink";
 import { useMemo } from "react";
@@ -10,16 +11,23 @@ import { getHelpContentForMode } from "../utils/helpUtils";
 export interface HelpViewerProps {
   /** Current application mode */
   mode: AppMode;
+  /** Keybindings configuration */
+  keybindings: KeyBindings;
   /** Height of the help viewer in terminal lines */
   height?: number;
   /** Width of the help viewer in characters */
   width?: number;
 }
 
-export function HelpViewer({ mode, height = 20, width = 80 }: HelpViewerProps) {
+export function HelpViewer({
+  mode,
+  keybindings,
+  height = 20,
+  width = 80,
+}: HelpViewerProps) {
   const helpContent = useMemo(
-    () => getHelpContentForMode(mode).sections,
-    [mode],
+    () => getHelpContentForMode(mode, keybindings).sections,
+    [mode, keybindings],
   );
 
   return (

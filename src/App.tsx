@@ -770,6 +770,7 @@ export function App({
             <Box width="100%" height="100%">
               <HelpViewer
                 mode={currentMode}
+                keybindings={config.keybindings}
                 height={terminalSize.height}
                 width={terminalSize.width}
               />

@@ -2,6 +2,7 @@
  * Help system utilities
  */
 
+import type { KeyBindings } from "@core/config/types";
 import type { AppMode } from "@core/types/app";
 import type {
   HelpContent,
@@ -11,11 +12,32 @@ import type {
 } from "../types/help";
 
 /**
+ * Get the primary key for display (first key in the array)
+ */
+function getPrimaryKey(keys: string[]): string {
+  return keys[0] || "?";
+}
+
+/**
+ * Format key combinations for display
+ */
+function formatKeyForDisplay(keys: string[]): string {
+  const primary = getPrimaryKey(keys);
+  if (keys.length > 1) {
+    return `${primary} (${keys.slice(1).join(", ")})`;
+  }
+  return primary;
+}
+
+/**
  * Get comprehensive help content for a specific mode
  */
-export function getHelpContentForMode(mode: AppMode): HelpContent {
-  const commonSections = getCommonHelpSections();
-  const modeSpecificSections = getModeSpecificHelpSections(mode);
+export function getHelpContentForMode(
+  mode: AppMode,
+  keybindings: KeyBindings,
+): HelpContent {
+  const commonSections = getCommonHelpSections(keybindings);
+  const modeSpecificSections = getModeSpecificHelpSections(mode, keybindings);
 
   return {
     mode,
@@ -26,27 +48,67 @@ export function getHelpContentForMode(mode: AppMode): HelpContent {
 /**
  * Get help sections that are common across all modes
  */
-function getCommonHelpSections(): HelpSection[] {
+function getCommonHelpSections(keybindings: KeyBindings): HelpSection[] {
   return [
     {
       title: "Mode Switching",
       shortcuts: [
-        { key: "T", description: "Toggle Tree View mode", category: "mode" },
-        { key: "/", description: "Start Search mode", category: "mode" },
-        { key: "J", description: "Toggle jq Filter mode", category: "mode" },
-        { key: "C", description: "Toggle Collapsible mode", category: "mode" },
-        { key: "S", description: "Toggle Schema view", category: "mode" },
-        { key: "D", description: "Toggle Debug Log Viewer", category: "mode" },
+        {
+          key: formatKeyForDisplay(keybindings.modes.tree),
+          description: "Toggle Tree View mode",
+          category: "mode",
+        },
+        {
+          key: formatKeyForDisplay(keybindings.modes.search),
+          description: "Start Search mode",
+          category: "mode",
+        },
+        {
+          key: formatKeyForDisplay(keybindings.modes.jq),
+          description: "Toggle jq Filter mode",
+          category: "mode",
+        },
+        {
+          key: formatKeyForDisplay(keybindings.modes.collapsible),
+          description: "Toggle Collapsible mode",
+          category: "mode",
+        },
+        {
+          key: formatKeyForDisplay(keybindings.modes.schema),
+          description: "Toggle Schema view",
+          category: "mode",
+        },
+        {
+          key: formatKeyForDisplay(keybindings.modes.debug),
+          description: "Toggle Debug Log Viewer",
+          category: "mode",
+        },
       ],
     },
     {
       title: "Global Controls",
       shortcuts: [
-        { key: "?", description: "Toggle this help", category: "global" },
-        { key: "q", description: "Quit application", category: "global" },
+        {
+          key: formatKeyForDisplay(keybindings.modes.help),
+          description: "Toggle this help",
+          category: "global",
+        },
+        {
+          key: formatKeyForDisplay(keybindings.modes.quit),
+          description: "Quit application",
+          category: "global",
+        },
         { key: "Ctrl+C", description: "Exit application", category: "global" },
-        { key: "E", description: "Export JSON Schema", category: "global" },
-        { key: "L", description: "Toggle line numbers", category: "global" },
+        {
+          key: formatKeyForDisplay(keybindings.modes.export),
+          description: "Export JSON Schema",
+          category: "global",
+        },
+        {
+          key: formatKeyForDisplay(keybindings.modes.lineNumbers),
+          description: "Toggle line numbers",
+          category: "global",
+        },
       ],
     },
   ];
@@ -55,32 +117,43 @@ function getCommonHelpSections(): HelpSection[] {
 /**
  * Get help sections specific to a mode
  */
-function getModeSpecificHelpSections(mode: AppMode): HelpSection[] {
+function getModeSpecificHelpSections(
+  mode: AppMode,
+  keybindings: KeyBindings,
+): HelpSection[] {
   switch (mode) {
     case "tree":
       return [
         {
           title: "Tree Navigation",
           shortcuts: [
-            { key: "j / ↓", description: "Move down", category: "navigation" },
-            { key: "k / ↑", description: "Move up", category: "navigation" },
             {
-              key: "Ctrl+b",
+              key: formatKeyForDisplay(keybindings.navigation.down),
+              description: "Move down",
+              category: "navigation",
+            },
+            {
+              key: formatKeyForDisplay(keybindings.navigation.up),
+              description: "Move up",
+              category: "navigation",
+            },
+            {
+              key: formatKeyForDisplay(keybindings.navigation.pageUp),
               description: "Page up",
               category: "navigation",
             },
             {
-              key: "Ctrl+f",
+              key: formatKeyForDisplay(keybindings.navigation.pageDown),
               description: "Page down",
               category: "navigation",
             },
             {
-              key: "g",
+              key: formatKeyForDisplay(keybindings.navigation.top),
               description: "Go to first item",
               category: "navigation",
             },
             {
-              key: "G",
+              key: formatKeyForDisplay(keybindings.navigation.bottom),
               description: "Go to last item",
               category: "navigation",
             },
@@ -129,7 +202,7 @@ function getModeSpecificHelpSections(mode: AppMode): HelpSection[] {
               category: "search",
             },
             {
-              key: "Esc",
+              key: formatKeyForDisplay(keybindings.search.exit),
               description: "Exit search mode",
               category: "search",
             },
@@ -139,16 +212,20 @@ function getModeSpecificHelpSections(mode: AppMode): HelpSection[] {
               category: "search",
             },
             {
-              key: "n",
+              key: formatKeyForDisplay(keybindings.search.next),
               description: "Go to next result",
               category: "navigation",
             },
             {
-              key: "N",
+              key: formatKeyForDisplay(keybindings.search.previous),
               description: "Go to previous result",
               category: "navigation",
             },
-            { key: "/", description: "Start new search", category: "search" },
+            {
+              key: formatKeyForDisplay(keybindings.modes.search),
+              description: "Start new search",
+              category: "search",
+            },
             {
               key: "q",
               description: "Return to search input",
@@ -388,18 +465,32 @@ function getModeSpecificHelpSections(mode: AppMode): HelpSection[] {
 /**
  * Get a quick reference help text for status bar
  */
-export function getQuickHelpText(mode: AppMode): string {
+export function getQuickHelpText(
+  mode: AppMode,
+  keybindings: KeyBindings,
+): string {
+  const up = getPrimaryKey(keybindings.navigation.up);
+  const down = getPrimaryKey(keybindings.navigation.down);
+  const pageUp = getPrimaryKey(keybindings.navigation.pageUp);
+  const pageDown = getPrimaryKey(keybindings.navigation.pageDown);
+  const top = getPrimaryKey(keybindings.navigation.top);
+  const bottom = getPrimaryKey(keybindings.navigation.bottom);
+  const search = getPrimaryKey(keybindings.modes.search);
+  const searchNext = getPrimaryKey(keybindings.search.next);
+  const searchPrev = getPrimaryKey(keybindings.search.previous);
+  const export_ = getPrimaryKey(keybindings.modes.export);
+  const help = getPrimaryKey(keybindings.modes.help);
+
   const quickHelp: Record<AppMode, string> = {
-    tree: "j/k: move, Space: toggle, e/c: expand/collapse all, ?: help",
-    search: "Enter: search, n/N: next/prev, Tab: scope, /: new search, ?: help",
-    filter: "Enter: apply, Tab: switch, i: input, o: toggle view, ?: help",
-    collapsible:
-      "j/k: move, Space: toggle, o/c: expand/collapse, O: all, ?: help",
-    schema: "j/k: scroll, Ctrl+f/b: page, E: export, ?: help",
-    raw: "j/k: scroll, Ctrl+f/b: page, gg/G: top/bottom, ?: help",
+    tree: `${up}/${down}: move, Space: toggle, e/c: expand/collapse all, ${help}: help`,
+    search: `Enter: search, ${searchNext}/${searchPrev}: next/prev, Tab: scope, ${search}: new search, ${help}: help`,
+    filter: `Enter: apply, Tab: switch, i: input, o: toggle view, ${help}: help`,
+    collapsible: `${up}/${down}: move, Space: toggle, o/c: expand/collapse, O: all, ${help}: help`,
+    schema: `${up}/${down}: scroll, ${pageUp}/${pageDown}: page, ${export_}: export, ${help}: help`,
+    raw: `${up}/${down}: scroll, ${pageUp}/${pageDown}: page, ${top}/${bottom}: top/bottom, ${help}: help`,
   };
 
-  return quickHelp[mode] || "?: help";
+  return quickHelp[mode] || `${help}: help`;
 }
 
 /**

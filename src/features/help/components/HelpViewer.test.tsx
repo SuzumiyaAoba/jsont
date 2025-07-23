@@ -2,19 +2,53 @@
  * Tests for the enhanced HelpViewer component
  */
 
+import type { KeyBindings } from "@core/config/types";
 import { render } from "ink-testing-library";
 import { describe, expect, it } from "vitest";
 import { HelpViewer } from "./HelpViewer";
 
+const mockKeybindings: KeyBindings = {
+  navigation: {
+    up: ["k", "ArrowUp"],
+    down: ["j", "ArrowDown"],
+    pageUp: ["Ctrl+b", "PageUp"],
+    pageDown: ["Ctrl+f", "PageDown"],
+    top: ["g"],
+    bottom: ["G"],
+  },
+  modes: {
+    search: ["/"],
+    schema: ["S"],
+    tree: ["T"],
+    collapsible: ["C"],
+    jq: ["J"],
+    lineNumbers: ["L"],
+    debug: ["D"],
+    help: ["?"],
+    export: ["E"],
+    quit: ["q"],
+  },
+  search: {
+    next: ["n"],
+    previous: ["N"],
+    exit: ["Escape"],
+  },
+};
+
 describe("HelpViewer", () => {
   it("should render help content for tree mode", () => {
     const { lastFrame } = render(
-      <HelpViewer mode="tree" height={20} width={80} />,
+      <HelpViewer
+        mode="tree"
+        keybindings={mockKeybindings}
+        height={20}
+        width={80}
+      />,
     );
 
     const output = lastFrame();
     expect(output).toContain("HELP - TREE MODE");
-    expect(output).toContain("k / ↑");
+    expect(output).toContain("k (ArrowUp)");
     expect(output).toContain("Move up");
     expect(output).toContain("Expand all nodes");
     expect(output).toContain("Toggle schema type display");
@@ -22,7 +56,12 @@ describe("HelpViewer", () => {
 
   it("should render help content for search mode", () => {
     const { lastFrame } = render(
-      <HelpViewer mode="search" height={20} width={80} />,
+      <HelpViewer
+        mode="search"
+        keybindings={mockKeybindings}
+        height={20}
+        width={80}
+      />,
     );
 
     const output = lastFrame();
@@ -34,7 +73,12 @@ describe("HelpViewer", () => {
 
   it("should render help content for filter mode", () => {
     const { lastFrame } = render(
-      <HelpViewer mode="filter" height={20} width={80} />,
+      <HelpViewer
+        mode="filter"
+        keybindings={mockKeybindings}
+        height={20}
+        width={80}
+      />,
     );
 
     const output = lastFrame();
@@ -45,7 +89,12 @@ describe("HelpViewer", () => {
 
   it("should render help content for schema mode", () => {
     const { lastFrame } = render(
-      <HelpViewer mode="schema" height={20} width={80} />,
+      <HelpViewer
+        mode="schema"
+        keybindings={mockKeybindings}
+        height={20}
+        width={80}
+      />,
     );
 
     const output = lastFrame();
@@ -56,7 +105,12 @@ describe("HelpViewer", () => {
 
   it("should render help content for collapsible mode", () => {
     const { lastFrame } = render(
-      <HelpViewer mode="collapsible" height={20} width={80} />,
+      <HelpViewer
+        mode="collapsible"
+        keybindings={mockKeybindings}
+        height={20}
+        width={80}
+      />,
     );
 
     const output = lastFrame();
@@ -67,7 +121,12 @@ describe("HelpViewer", () => {
 
   it("should render help content for raw mode", () => {
     const { lastFrame } = render(
-      <HelpViewer mode="raw" height={20} width={80} />,
+      <HelpViewer
+        mode="raw"
+        keybindings={mockKeybindings}
+        height={20}
+        width={80}
+      />,
     );
 
     const output = lastFrame();
@@ -88,7 +147,12 @@ describe("HelpViewer", () => {
 
     for (const mode of modes) {
       const { lastFrame } = render(
-        <HelpViewer mode={mode} height={20} width={80} />,
+        <HelpViewer
+          mode={mode}
+          keybindings={mockKeybindings}
+          height={20}
+          width={80}
+        />,
       );
 
       const output = lastFrame();
