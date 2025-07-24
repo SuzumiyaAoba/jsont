@@ -2,12 +2,12 @@
  * Individual Settings Field Component
  */
 
-import { Box, Text } from 'ink';
-import type { SettingsFieldDefinition } from '../types/settings';
-import { BooleanField } from './fields/BooleanField';
-import { NumberField } from './fields/NumberField';
-import { StringField } from './fields/StringField';
-import { ArrayField } from './fields/ArrayField';
+import { Box, Text } from "ink";
+import type { SettingsFieldDefinition } from "../types/settings";
+import { ArrayField } from "./fields/ArrayField";
+import { BooleanField } from "./fields/BooleanField";
+import { NumberField } from "./fields/NumberField";
+import { StringField } from "./fields/StringField";
 
 interface SettingsFieldProps {
   field: SettingsFieldDefinition;
@@ -16,11 +16,16 @@ interface SettingsFieldProps {
   isEditing: boolean;
 }
 
-export function SettingsField({ field, value, isActive, isEditing }: SettingsFieldProps) {
+export function SettingsField({
+  field,
+  value,
+  isActive,
+  isEditing,
+}: SettingsFieldProps) {
   // Render field editor based on type
   const renderFieldEditor = () => {
     switch (field.type) {
-      case 'boolean':
+      case "boolean":
         return (
           <BooleanField
             field={field}
@@ -28,7 +33,7 @@ export function SettingsField({ field, value, isActive, isEditing }: SettingsFie
             isEditing={isEditing}
           />
         );
-      case 'number':
+      case "number":
         return (
           <NumberField
             field={field}
@@ -36,7 +41,7 @@ export function SettingsField({ field, value, isActive, isEditing }: SettingsFie
             isEditing={isEditing}
           />
         );
-      case 'string':
+      case "string":
         return (
           <StringField
             field={field}
@@ -44,7 +49,7 @@ export function SettingsField({ field, value, isActive, isEditing }: SettingsFie
             isEditing={isEditing}
           />
         );
-      case 'array':
+      case "array":
         return (
           <ArrayField
             field={field}
@@ -58,38 +63,44 @@ export function SettingsField({ field, value, isActive, isEditing }: SettingsFie
   };
 
   return (
-    <Box 
-      flexDirection="column" 
-      borderStyle={isActive ? 'single' : undefined}
-      borderColor={isActive ? (isEditing ? 'yellow' : 'cyan') : undefined}
-      paddingX={isActive ? 1 : 0}
-      paddingY={isActive ? 0 : 0}
+    <Box
+      flexDirection="column"
+      backgroundColor={isActive ? (isEditing ? "yellow" : "blue") : undefined}
+      paddingX={1}
+      paddingY={0}
+      marginBottom={0}
     >
-      {/* Field Label and Description */}
-      <Box flexDirection="column" marginBottom={1}>
-        <Box justifyContent="space-between">
-          <Text bold color={isActive ? 'cyan' : 'white'}>
-            {field.label}
+      {/* Field Label and Value on same line for compact view */}
+      <Box justifyContent="space-between">
+        <Box minWidth="50%">
+          <Text 
+            bold 
+            color={isActive ? (isEditing ? "black" : "white") : "white"}
+          >
+            {isActive ? "► " : "  "}{field.label}
           </Text>
-          {isActive && (
-            <Text color="gray" dimColor>
-              {field.key}
-            </Text>
-          )}
         </Box>
-        <Text color="gray" wrap="wrap">
-          {field.description}
-        </Text>
+        <Box minWidth="50%">
+          {renderFieldEditor()}
+        </Box>
       </Box>
 
-      {/* Field Editor */}
-      <Box>
-        {renderFieldEditor()}
-      </Box>
-
-      {/* Default Value Info */}
+      {/* Description - only show when active */}
       {isActive && (
         <Box marginTop={1}>
+          <Text 
+            color={isActive ? (isEditing ? "black" : "gray") : "gray"} 
+            wrap="wrap"
+            dimColor
+          >
+            {field.description}
+          </Text>
+        </Box>
+      )}
+
+      {/* Default Value Info - only show when active but not editing */}
+      {isActive && !isEditing && (
+        <Box>
           <Text color="gray" dimColor>
             Default: {JSON.stringify(field.defaultValue)}
           </Text>

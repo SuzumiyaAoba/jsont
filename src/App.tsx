@@ -25,9 +25,9 @@ import { TreeView } from "@features/tree/components/TreeView";
 import { useExportHandlers } from "@hooks/useExportHandlers";
 import { useSearchHandlers } from "@hooks/useSearchHandlers";
 import { useTerminalCalculations } from "@hooks/useTerminalCalculations";
-import { useSetAtom, useAtomValue } from "@store/atoms";
+import { useAtomValue, useSetAtom } from "@store/atoms";
 import { isSearchingAtom } from "@store/atoms/search";
-import { settingsVisibleAtom, openSettingsAtom, closeSettingsAtom } from "@store/atoms/settings";
+import { openSettingsAtom, settingsVisibleAtom } from "@store/atoms/settings";
 import { useUpdateDebugInfo } from "@store/hooks";
 import { useDebugInfo } from "@store/hooks/useDebug";
 import { useExportDialog, useExportStatus } from "@store/hooks/useExport";
@@ -649,7 +649,7 @@ export function App({
           // Toggle help visibility
           setHelpVisible((prev) => !prev);
           updateDebugInfo(`Toggle help ${helpVisible ? "OFF" : "ON"}`, input);
-        } else if (input === 'P' && !key.ctrl && !key.meta) {
+        } else if (input === "P" && !key.ctrl && !key.meta) {
           // Open settings (P for Preferences)
           openSettings();
           updateDebugInfo("Open settings", input);
@@ -800,7 +800,10 @@ export function App({
     },
     {
       isActive:
-        keyboardEnabled && !exportDialog.isVisible && !debugLogViewerVisible && !settingsVisible,
+        keyboardEnabled &&
+        !exportDialog.isVisible &&
+        !debugLogViewerVisible &&
+        !settingsVisible,
     },
   );
 
@@ -978,10 +981,7 @@ export function App({
 
           {/* Settings Dialog - fullscreen modal overlay */}
           {settingsVisible && (
-            <Box
-              width="100%"
-              height="100%"
-            >
+            <Box width="100%" height="100%">
               <SettingsViewer
                 width={terminalSize.width}
                 height={terminalSize.height}

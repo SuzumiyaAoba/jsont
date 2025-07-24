@@ -5,7 +5,7 @@
 export interface SettingsFieldDefinition {
   key: string;
   label: string;
-  type: 'string' | 'number' | 'boolean' | 'array' | 'select';
+  type: "string" | "number" | "boolean" | "array" | "select";
   description: string;
   defaultValue: unknown;
   options?: string[]; // For select type
@@ -31,7 +31,14 @@ export interface SettingsState {
 }
 
 export interface SettingsAction {
-  type: 'SET_ACTIVE_CATEGORY' | 'SET_ACTIVE_FIELD' | 'START_EDITING' | 'STOP_EDITING' 
-       | 'UPDATE_VALUE' | 'SAVE_CHANGES' | 'CANCEL_CHANGES' | 'RESET_TO_DEFAULT';
+  type:
+    | "SET_ACTIVE_CATEGORY"
+    | "SET_ACTIVE_FIELD"
+    | "START_EDITING"
+    | "STOP_EDITING"
+    | "UPDATE_VALUE"
+    | "SAVE_CHANGES"
+    | "CANCEL_CHANGES"
+    | "RESET_TO_DEFAULT";
   payload?: any;
 }

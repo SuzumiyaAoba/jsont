@@ -2,20 +2,20 @@
  * Settings hooks
  */
 
-import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import {
-  settingsStateAtom,
-  settingsVisibleAtom,
-  openSettingsAtom,
   closeSettingsAtom,
+  openSettingsAtom,
+  resetPreviewValuesAtom,
+  saveSettingsAtom,
   setActiveCategoryAtom,
   setActiveFieldAtom,
+  settingsStateAtom,
+  settingsVisibleAtom,
   startEditingAtom,
   stopEditingAtom,
   updatePreviewValueAtom,
-  resetPreviewValuesAtom,
-  saveSettingsAtom,
-} from '@store/atoms/settings';
+} from "@store/atoms/settings";
+import { useAtom, useAtomValue, useSetAtom } from "jotai";
 
 export const useSettingsVisible = () => useAtomValue(settingsVisibleAtom);
 

@@ -24,7 +24,9 @@ export const JsonViewer = memo(function JsonViewer(
           ? "\t"
           : " ".repeat(config.display.json.indent);
         const formattedJson = JSON.stringify(data, null, indent);
-        return formattedJson.split("\n");
+        const lines = formattedJson.split("\n");
+
+        return lines;
       } catch {
         return ["Error: Unable to format JSON"];
       }
