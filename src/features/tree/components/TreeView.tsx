@@ -50,6 +50,8 @@ export interface TreeViewProps {
   width?: number;
   /** Search term to filter tree nodes */
   searchTerm?: string;
+  /** Initial scroll offset for the tree view */
+  scrollOffset?: number;
   /** Display options for customizing tree appearance */
   options?: Partial<TreeDisplayOptions>;
   /** Callback to register keyboard input handler with parent component */
@@ -76,6 +78,7 @@ export function TreeView({
   height = 20,
   width = 80,
   searchTerm = "",
+  scrollOffset: initialScrollOffset = 0,
   options = {},
   onKeyboardHandlerReady,
 }: TreeViewProps) {
@@ -85,8 +88,8 @@ export function TreeView({
     buildTreeFromJson(data || null, { expandLevel: 1 }),
   );
 
-  // Always start at the top
-  const [scrollOffset, setScrollOffset] = useState(0);
+  // Initialize scroll offset from props, then manage internally
+  const [scrollOffset, setScrollOffset] = useState(initialScrollOffset);
 
   const [selectedLineIndex, setSelectedLineIndex] = useState(0);
   const [showSchemaTypes, setShowSchemaTypes] = useState(
@@ -775,10 +778,15 @@ export function TreeView({
     const newTreeState = buildTreeFromJson(data || null, { expandLevel: 1 });
     setTreeState(newTreeState);
 
-    // Always start at the top when data changes
-    setScrollOffset(0);
+    // Use initial scroll offset when data changes
+    setScrollOffset(initialScrollOffset);
     setSelectedLineIndex(0);
-  }, [data]);
+  }, [data, initialScrollOffset]);
+
+  // Update scroll offset when initialScrollOffset changes
+  useEffect(() => {
+    setScrollOffset(initialScrollOffset);
+  }, [initialScrollOffset]);
 
   // Ensure selected index is valid when filtered lines change
   useEffect(() => {

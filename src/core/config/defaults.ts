@@ -15,7 +15,7 @@ export const DEFAULT_CONFIG: JsontConfig = {
       bottom: ["G"],
     },
     modes: {
-      search: ["/"],
+      search: ["/", "s"],
       schema: ["S"],
       tree: ["T"],
       collapsible: ["C"],
