@@ -41,10 +41,14 @@ export const closeSettingsAtom = atom(null, (_, set) => {
 export const setActiveCategoryAtom = atom(
   null,
   (_, set, categoryId: string) => {
+    // Find the category and set first field as active
+    const category = SETTINGS_CATEGORIES.find(cat => cat.id === categoryId);
+    const firstFieldKey = category?.fields[0]?.key || null;
+    
     set(settingsStateAtom, (prev) => ({
       ...prev,
       activeCategory: categoryId,
-      activeField: null,
+      activeField: firstFieldKey,
       isEditing: false,
     }));
   },

@@ -35,14 +35,7 @@ export function SettingsViewer({ width, height }: SettingsViewerProps) {
   const closeSettings = useSetAtom(closeSettingsAtom);
   const currentConfigValues = useCurrentConfigValues();
 
-  // Initialize with current config values
-  useEffect(() => {
-    setSettingsState((prev) => ({
-      ...prev,
-      previewValues: currentConfigValues,
-      originalValues: currentConfigValues,
-    }));
-  }, [currentConfigValues, setSettingsState]);
+  // Memoized setters to prevent unnecessary re-renders
   const setActiveCategory = useSetAtom(setActiveCategoryAtom);
   const setActiveField = useSetAtom(setActiveFieldAtom);
   const startEditing = useSetAtom(startEditingAtom);
@@ -51,25 +44,44 @@ export function SettingsViewer({ width, height }: SettingsViewerProps) {
   const resetPreview = useSetAtom(resetPreviewValuesAtom);
   const resetToDefaults = useSetAtom(resetToDefaultsAtom);
 
-  // Get current category
+  // Initialize with current config values - only once
+  useEffect(() => {
+    setSettingsState((prev) => ({
+      ...prev,
+      previewValues: currentConfigValues,
+      originalValues: currentConfigValues,
+    }));
+  }, [currentConfigValues, setSettingsState]);
+
+  // Memoize current category to prevent re-calculations
   const currentCategory = useMemo(() => {
     return getCategoryById(settingsState.activeCategory);
   }, [settingsState.activeCategory]);
 
-  // Get current field index for navigation
-  const currentFieldIndex = useMemo(() => {
-    if (!currentCategory || !settingsState.activeField) return -1;
-    return currentCategory.fields.findIndex(
-      (f) => f.key === settingsState.activeField,
-    );
-  }, [currentCategory, settingsState.activeField]);
+  // Memoize field indices to prevent unnecessary navigation calculations
+  const navigationData = useMemo(() => {
+    if (!currentCategory) {
+      return {
+        currentFieldIndex: -1,
+        currentCategoryIndex: 0,
+        hasFields: false,
+      };
+    }
 
-  // Category navigation
-  const currentCategoryIndex = useMemo(() => {
-    return SETTINGS_CATEGORIES.findIndex(
+    const currentFieldIndex = settingsState.activeField
+      ? currentCategory.fields.findIndex((f) => f.key === settingsState.activeField)
+      : -1;
+    
+    const currentCategoryIndex = SETTINGS_CATEGORIES.findIndex(
       (cat) => cat.id === settingsState.activeCategory,
     );
-  }, [settingsState.activeCategory]);
+
+    return {
+      currentFieldIndex,
+      currentCategoryIndex,
+      hasFields: currentCategory.fields.length > 0,
+    };
+  }, [currentCategory, settingsState.activeField, settingsState.activeCategory]);
 
   // Handle keyboard input
   const handleKeyInput = useCallback(
@@ -111,6 +123,7 @@ export function SettingsViewer({ width, height }: SettingsViewerProps) {
 
       // Category navigation (Tab/Shift+Tab)
       if (key.tab) {
+        const { currentCategoryIndex } = navigationData;
         const nextIndex = key.shift
           ? (currentCategoryIndex - 1 + SETTINGS_CATEGORIES.length) %
             SETTINGS_CATEGORIES.length
@@ -123,7 +136,9 @@ export function SettingsViewer({ width, height }: SettingsViewerProps) {
       }
 
       // Field navigation within category
-      if (!currentCategory) return;
+      if (!currentCategory || !navigationData.hasFields) return;
+
+      const { currentFieldIndex } = navigationData;
 
       if (key.downArrow || input === "j") {
         const nextIndex =
@@ -152,8 +167,7 @@ export function SettingsViewer({ width, height }: SettingsViewerProps) {
       settingsState.hasUnsavedChanges,
       settingsState.activeField,
       currentCategory,
-      currentFieldIndex,
-      currentCategoryIndex,
+      navigationData,
       closeSettings,
       setActiveCategory,
       setActiveField,

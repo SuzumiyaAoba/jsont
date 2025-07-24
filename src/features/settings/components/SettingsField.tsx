@@ -3,6 +3,7 @@
  */
 
 import { Box, Text } from "ink";
+import { memo } from "react";
 import type { SettingsFieldDefinition } from "../types/settings";
 import { ArrayField } from "./fields/ArrayField";
 import { BooleanField } from "./fields/BooleanField";
@@ -16,7 +17,7 @@ interface SettingsFieldProps {
   isEditing: boolean;
 }
 
-export function SettingsField({
+function SettingsFieldComponent({
   field,
   value,
   isActive,
@@ -109,3 +110,13 @@ export function SettingsField({
     </Box>
   );
 }
+
+// Memoize the component to prevent unnecessary re-renders when props haven't changed
+export const SettingsField = memo(SettingsFieldComponent, (prevProps, nextProps) => {
+  return (
+    prevProps.field.key === nextProps.field.key &&
+    prevProps.value === nextProps.value &&
+    prevProps.isActive === nextProps.isActive &&
+    prevProps.isEditing === nextProps.isEditing
+  );
+});

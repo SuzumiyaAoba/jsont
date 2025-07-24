@@ -5,7 +5,7 @@
 import { stopEditingAtom, updatePreviewValueAtom } from "@store/atoms/settings";
 import { Box, Text, useInput } from "ink";
 import { useSetAtom } from "jotai";
-import { useCallback, useState } from "react";
+import { useCallback, useState, memo } from "react";
 import type { SettingsFieldDefinition } from "../../types/settings";
 
 interface ArrayFieldProps {
@@ -14,7 +14,7 @@ interface ArrayFieldProps {
   isEditing: boolean;
 }
 
-export function ArrayField({ field, value, isEditing }: ArrayFieldProps) {
+function ArrayFieldComponent({ field, value, isEditing }: ArrayFieldProps) {
   const updatePreviewValue = useSetAtom(updatePreviewValueAtom);
   const stopEditing = useSetAtom(stopEditingAtom);
   const [editingIndex, setEditingIndex] = useState<number>(-1);
@@ -184,3 +184,5 @@ export function ArrayField({ field, value, isEditing }: ArrayFieldProps) {
     </Box>
   );
 }
+
+export const ArrayField = memo(ArrayFieldComponent);

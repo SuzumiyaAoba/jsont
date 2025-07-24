@@ -5,7 +5,7 @@
 import { stopEditingAtom, updatePreviewValueAtom } from "@store/atoms/settings";
 import { Box, Text, useInput } from "ink";
 import { useSetAtom } from "jotai";
-import { useCallback } from "react";
+import { useCallback, memo } from "react";
 import type { SettingsFieldDefinition } from "../../types/settings";
 
 interface BooleanFieldProps {
@@ -14,7 +14,7 @@ interface BooleanFieldProps {
   isEditing: boolean;
 }
 
-export function BooleanField({ field, value, isEditing }: BooleanFieldProps) {
+function BooleanFieldComponent({ field, value, isEditing }: BooleanFieldProps) {
   const updatePreviewValue = useSetAtom(updatePreviewValueAtom);
   const stopEditing = useSetAtom(stopEditingAtom);
 
@@ -58,3 +58,5 @@ export function BooleanField({ field, value, isEditing }: BooleanFieldProps) {
     </Box>
   );
 }
+
+export const BooleanField = memo(BooleanFieldComponent);

@@ -3,7 +3,7 @@
  */
 
 import { Box, Text } from "ink";
-import { useMemo } from "react";
+import { useMemo, useCallback } from "react";
 import type { SettingsCategory as SettingsCategoryType } from "../types/settings";
 import { SettingsField } from "./SettingsField";
 
@@ -22,19 +22,42 @@ export function SettingsCategory({
   previewValues,
   height,
 }: SettingsCategoryProps) {
-  // Calculate scroll position based on active field
-  const { visibleFields, scrollOffset } = useMemo(() => {
+  // Memoize scroll calculations to prevent unnecessary re-renders
+  const scrollData = useMemo(() => {
+    if (!activeField || category.fields.length === 0) {
+      // Show first few fields when no active field
+      const fieldsPerPage = Math.max(1, Math.floor((height - 5) / 3));
+      return {
+        visibleFields: category.fields.slice(0, fieldsPerPage),
+        scrollOffset: 0,
+        activeIndex: -1,
+      };
+    }
+
     const activeIndex = category.fields.findIndex(f => f.key === activeField);
+    if (activeIndex === -1) {
+      // Field not found, show from beginning
+      const fieldsPerPage = Math.max(1, Math.floor((height - 5) / 3));
+      return {
+        visibleFields: category.fields.slice(0, fieldsPerPage),
+        scrollOffset: 0,
+        activeIndex: -1,
+      };
+    }
+
     const availableHeight = height - 5; // Account for header, description, scroll indicators
-    const fieldsPerPage = Math.max(1, Math.floor(availableHeight / 3)); // ~3 lines per field (more compact)
+    const fieldsPerPage = Math.max(1, Math.floor(availableHeight / 3)); // ~3 lines per field
     const startIndex = Math.max(0, activeIndex - Math.floor(fieldsPerPage / 2));
     const endIndex = Math.min(category.fields.length, startIndex + fieldsPerPage);
     
     return {
       visibleFields: category.fields.slice(startIndex, endIndex),
       scrollOffset: startIndex,
+      activeIndex,
     };
   }, [category.fields, activeField, height]);
+
+  const { visibleFields, scrollOffset } = scrollData;
 
   const totalFields = category.fields.length;
   const hasMore = scrollOffset + visibleFields.length < totalFields;
