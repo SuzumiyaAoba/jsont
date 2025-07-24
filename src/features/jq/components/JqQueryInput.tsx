@@ -59,6 +59,7 @@ export function JqQueryInput({
       padding={1}
       width="100%"
       flexDirection="column"
+      flexShrink={0}
     >
       <Box marginBottom={1}>
         <Text bold color="cyan">

@@ -21,10 +21,27 @@ export function useScrolling(
     return Math.max(1, visibleLines || finalHeight);
   }, [visibleLines]);
 
-  // Calculate visible line range
+  // Calculate visible line range with absolute first-line guarantee
   const { startLine, endLine, visibleLineIndices } = useMemo(() => {
-    const start = scrollOffset;
+    if (totalLines === 0) {
+      return {
+        startLine: 0,
+        endLine: 0,
+        visibleLineIndices: [],
+      };
+    }
+
+    // Absolute guarantee: always allow viewing from line 0
+    const maxScrollOffset = Math.max(0, totalLines - effectiveVisibleLines);
+    const boundedScrollOffset = Math.max(
+      0,
+      Math.min(scrollOffset, maxScrollOffset),
+    );
+
+    // Simple, bulletproof calculation
+    const start = boundedScrollOffset;
     const end = Math.min(totalLines, start + effectiveVisibleLines);
+
     const indices = Array.from({ length: end - start }, (_, i) => start + i);
 
     return {

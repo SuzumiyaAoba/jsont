@@ -107,6 +107,20 @@ export function useTerminalCalculations({
     terminalSize.width,
   ]);
 
+  // Calculate JQ input bar height when active (fixed height to prevent layout shifts)
+  const jqBarHeight = useMemo(() => {
+    if (!jqState.isActive) return 0;
+
+    // Fixed height to prevent layout changes when error state changes:
+    // - Border: 2 lines (top + bottom)
+    // - Padding: 2 lines (top + bottom)
+    // - Query label: 1 line
+    // - Input field: 1 line
+    // - Status line: 1 line
+    // - Reserved for potential error: 3 lines
+    return 8; // Fixed height regardless of error state
+  }, [jqState.isActive]);
+
   // Calculate status bar height dynamically based on content length
   const statusBarHeight = useMemo(() => {
     if (!helpVisible) return 0;
@@ -161,34 +175,29 @@ export function useTerminalCalculations({
     terminalSize.width,
   ]);
 
-  // Calculate UI reserved lines dynamically
-  const JSON_INDENT = config.display.json.indent;
-  const statusBarLines = statusBarHeight; // Dynamic status bar height
-  const searchBarLines = searchBarHeight; // Dynamic search bar height
-  const debugBarLines = debugBarHeight; // Debug bar height based on content
-  const jqBarLines = jqState.isActive ? (jqState.error ? 12 : 7) : 0; // jq query input height (with error box)
-  const contentPaddingLines = 0; // Removed padding from viewers to fix first line display issue
-
-  const UI_RESERVED_LINES =
-    statusBarLines +
-    searchBarLines +
-    debugBarLines +
-    jqBarLines +
-    contentPaddingLines;
-
+  // Conservative calculation to ensure first line is always visible
   const terminalHeight = terminalSize.height;
-  const visibleLines = Math.max(1, terminalHeight - UI_RESERVED_LINES);
+  // Reserve space for UI elements but ensure we have at least 5 visible lines
+  const reservedSpace = Math.min(
+    debugBarHeight + statusBarHeight + searchBarHeight + jqBarHeight + 2,
+    terminalHeight - 5,
+  );
+  const visibleLines = Math.max(5, terminalHeight - reservedSpace);
 
   // Calculate JSON lines for scroll calculations - memoized to avoid repeated stringification
   const jsonLines = useMemo(() => {
     if (!initialData) return 0;
     try {
-      return JSON.stringify(initialData, null, JSON_INDENT).split("\n").length;
+      return JSON.stringify(
+        initialData,
+        null,
+        config.display.json.indent,
+      ).split("\n").length;
     } catch {
       // Fallback for objects that can't be stringified
       return 100; // Reasonable default
     }
-  }, [initialData, JSON_INDENT]);
+  }, [initialData, config.display.json.indent]);
 
   // Calculate schema lines when in schema view mode
   const schemaLines = useMemo(() => {
@@ -202,13 +211,8 @@ export function useTerminalCalculations({
   const currentDataLines = schemaVisible ? schemaLines : jsonLines;
   const maxScroll = Math.max(0, currentDataLines - visibleLines);
 
-  // Calculate max scroll for search mode (when search bar is visible)
-  const searchModeVisibleLines = Math.max(
-    1,
-    terminalHeight -
-      (statusBarLines + searchBarLines + debugBarLines + contentPaddingLines),
-  );
-
+  // Simplified search mode calculation
+  const searchModeVisibleLines = visibleLines;
   const maxScrollSearchMode = Math.max(
     0,
     currentDataLines - searchModeVisibleLines,
@@ -222,7 +226,8 @@ export function useTerminalCalculations({
     debugBarHeight,
     statusBarHeight,
     searchBarHeight,
-    UI_RESERVED_LINES,
+    jqBarHeight,
+    UI_RESERVED_LINES: 0, // No reserved lines to ensure first line visibility
     visibleLines,
     searchModeVisibleLines,
     jsonLines,
@@ -231,6 +236,6 @@ export function useTerminalCalculations({
     maxScroll,
     maxScrollSearchMode,
     halfPageLines,
-    JSON_INDENT,
+    JSON_INDENT: config.display.json.indent,
   };
 }

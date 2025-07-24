@@ -116,6 +116,7 @@ export function App({
 
   // Navigation and scroll state
   const [scrollOffset, setScrollOffset] = useScrollOffset();
+
   const [waitingForSecondG] = useWaitingForSecondG();
   const resetScroll = useResetScroll();
   const scrollToTop = useScrollToTop();
@@ -182,7 +183,6 @@ export function App({
   // Extract terminal calculations
   const {
     terminalSize,
-    searchBarHeight,
     visibleLines,
     searchModeVisibleLines,
     maxScroll,
@@ -294,6 +294,32 @@ export function App({
   useEffect(() => {
     setJqErrorScrollOffset(0);
   }, [setJqErrorScrollOffset]);
+
+  // Force scroll reset when data changes to ensure first line visibility
+  const initialDataRef = useRef(initialData);
+  const displayDataRef = useRef(displayData);
+  useEffect(() => {
+    if (initialDataRef.current !== initialData) {
+      initialDataRef.current = initialData;
+      resetScroll();
+    }
+    if (displayDataRef.current !== displayData) {
+      displayDataRef.current = displayData;
+      resetScroll();
+    }
+  });
+
+  // Initialize scroll to 0 on mount
+  useEffect(() => {
+    resetScroll();
+  }, [resetScroll]);
+
+  // Emergency scroll correction
+  useEffect(() => {
+    if (scrollOffset < 0 || !Number.isFinite(scrollOffset)) {
+      resetScroll();
+    }
+  }, [scrollOffset, resetScroll]);
 
   // Helper function to update debug info (using jotai)
   const updateDebugInfoCallback = useCallback(
@@ -474,11 +500,14 @@ export function App({
             const currentMaxScroll = searchState.isSearching
               ? maxScrollSearchMode
               : maxScroll;
-            setScrollOffset((prev) => Math.min(currentMaxScroll, prev + 1));
+            adjustScroll(1, currentMaxScroll);
             updateDebugInfo("JQ JSON: Scroll down", input);
           } else if (keybindings.isUp(input, key)) {
             // Scroll JSON result up
-            setScrollOffset((prev) => Math.max(0, prev - 1));
+            const currentMaxScroll = searchState.isSearching
+              ? maxScrollSearchMode
+              : maxScroll;
+            adjustScroll(-1, currentMaxScroll);
             updateDebugInfo("JQ JSON: Scroll up", input);
           } else if (keybindings.isTop(input, key)) {
             // Go to top in JSON result (simplified, no gg sequence in JQ mode)
@@ -593,14 +622,19 @@ export function App({
           const currentMaxScroll = searchState.isSearching
             ? maxScrollSearchMode
             : maxScroll;
-          setScrollOffset((prev) => Math.min(currentMaxScroll, prev + 1));
+          adjustScroll(1, currentMaxScroll);
         } else if (keybindings.isUp(input, key)) {
           // Line up
           updateDebugInfo("Scroll up", input);
-          setScrollOffset((prev) => Math.max(0, prev - 1));
+          const currentMaxScroll = searchState.isSearching
+            ? maxScrollSearchMode
+            : maxScroll;
+          adjustScroll(-1, currentMaxScroll);
         } else if (keybindings.isJq(input, key)) {
           // Toggle jq mode
           toggleJqMode();
+          // Reset scroll when entering/exiting jq mode to ensure first line visibility
+          resetScroll();
           updateDebugInfo(
             `Toggle jq mode ${jqState.isActive ? "OFF" : "ON"}`,
             input,
@@ -721,7 +755,6 @@ export function App({
       setIsSearching,
       setSearchInput,
       setSearchCursorPosition,
-      setScrollOffset,
       resetScroll,
       startSearch,
       cancelSearch,
@@ -789,7 +822,7 @@ export function App({
           {(searchState.isSearching || searchState.searchTerm) &&
             !exportDialog.isVisible &&
             !helpVisible && (
-              <Box flexShrink={0} width="100%" height={searchBarHeight}>
+              <Box flexShrink={0} width="100%">
                 <SearchBar
                   searchState={searchState}
                   searchInput={searchInput}
@@ -799,7 +832,7 @@ export function App({
             )}
           {/* jq transformation bar */}
           {jqState.isActive && !exportDialog.isVisible && !helpVisible && (
-            <Box flexShrink={0} width="100%" height={jqState.error ? 12 : 7}>
+            <Box flexShrink={0} width="100%">
               <JqQueryInput
                 jqState={jqState}
                 queryInput={jqInput}
@@ -811,7 +844,7 @@ export function App({
           )}
           {/* Keyboard unavailable warning */}
           {!keyboardEnabled && !exportDialog.isVisible && !helpVisible && (
-            <Box flexShrink={0} width="100%" height={1}>
+            <Box flexShrink={0} width="100%">
               <Box
                 borderStyle="single"
                 borderColor="yellow"
@@ -831,7 +864,7 @@ export function App({
           {(exportStatus.isExporting || exportStatus.message) &&
             !exportDialog.isVisible &&
             !helpVisible && (
-              <Box flexShrink={0} width="100%" height={1}>
+              <Box flexShrink={0} width="100%">
                 <Box
                   borderStyle="single"
                   borderColor={
@@ -859,15 +892,7 @@ export function App({
               </Box>
             )}
           {!exportDialog.isVisible && !helpVisible && (
-            <Box
-              flexGrow={1}
-              width="100%"
-              minHeight={
-                searchState.isSearching || searchState.searchTerm
-                  ? searchModeVisibleLines
-                  : 1
-              }
-            >
+            <Box flexGrow={1} width="100%">
               {treeViewMode ? (
                 <TreeView
                   data={displayData as JsonValue | null}

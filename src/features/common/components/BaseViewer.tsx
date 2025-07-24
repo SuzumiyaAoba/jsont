@@ -170,14 +170,18 @@ export function BaseViewer({
           return (
             <Box key={originalIndex} flexDirection="row">
               {showLineNumbers && (
-                <Text color="gray">{formatLineNumber(originalIndex)}: </Text>
+                <Box marginRight={1}>
+                  <Text color="gray">{formatLineNumber(originalIndex)}:</Text>
+                </Box>
               )}
-              {renderLineWithHighlighting(
-                line,
-                originalIndex,
-                searchTerm,
-                isCurrentResult,
-              )}
+              <Box flexGrow={1}>
+                {renderLineWithHighlighting(
+                  line,
+                  originalIndex,
+                  searchTerm,
+                  isCurrentResult,
+                )}
+              </Box>
             </Box>
           );
         })}
@@ -189,7 +193,7 @@ export function BaseViewer({
   const renderContent = contentRenderer || defaultContentRenderer;
 
   return (
-    <Box flexGrow={1} flexDirection="column">
+    <Box flexDirection="column">
       {renderContent(
         lines,
         visibleLineData,
