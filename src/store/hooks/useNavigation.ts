@@ -9,13 +9,18 @@ import {
   scrollOffsetAtom,
   scrollToBottomAtom,
   scrollToTopAtom,
+  setScrollOffsetAtom,
   startGSequenceAtom,
   waitingForSecondGAtom,
 } from "@store/atoms/navigation";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 
-// Individual state hooks
-export const useScrollOffset = () => useAtom(scrollOffsetAtom);
+// Individual state hooks with validation
+export const useScrollOffset = () => {
+  const scrollOffset = useAtomValue(scrollOffsetAtom);
+  const setScrollOffset = useSetAtom(setScrollOffsetAtom);
+  return [scrollOffset, setScrollOffset] as const;
+};
 export const useWaitingForSecondG = () => useAtom(waitingForSecondGAtom);
 
 // Read-only hooks

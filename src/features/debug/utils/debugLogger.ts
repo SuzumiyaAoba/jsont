@@ -16,8 +16,8 @@ export interface DebugLogEntry {
 class DebugLoggerClass {
   private logs: DebugLogEntry[] = [];
   private maxLogs = 1000; // 最大ログ数
-  private idCounter = 0;
   private isDebugViewerActive = false; // デバッグビューアーがアクティブかどうか
+  private idCounter = 0; // ID counter for log entries
 
   /**
    * デバッグビューアーの状態を設定

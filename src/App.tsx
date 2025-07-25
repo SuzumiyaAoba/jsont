@@ -20,12 +20,14 @@ import { SchemaViewer } from "@features/schema/components/SchemaViewer";
 import { generateDefaultFilename } from "@features/schema/utils/fileExport";
 // Schema utilities available when needed
 import { SearchBar } from "@features/search/components/SearchBar";
+import { SettingsViewer } from "@features/settings/components/SettingsViewer";
 import { TreeView } from "@features/tree/components/TreeView";
 import { useExportHandlers } from "@hooks/useExportHandlers";
 import { useSearchHandlers } from "@hooks/useSearchHandlers";
 import { useTerminalCalculations } from "@hooks/useTerminalCalculations";
-import { useSetAtom } from "@store/atoms";
+import { useAtomValue, useSetAtom } from "@store/atoms";
 import { isSearchingAtom } from "@store/atoms/search";
+import { openSettingsAtom, settingsVisibleAtom } from "@store/atoms/settings";
 import { useUpdateDebugInfo } from "@store/hooks";
 import { useDebugInfo } from "@store/hooks/useDebug";
 import { useExportDialog, useExportStatus } from "@store/hooks/useExport";
@@ -155,6 +157,10 @@ export function App({
     debugLogViewerVisible,
     setDebugLogViewerVisible,
   } = useUI();
+
+  // Settings state
+  const settingsVisible = useAtomValue(settingsVisibleAtom);
+  const openSettings = useSetAtom(openSettingsAtom);
 
   // UI toggle functions
   const toggleTreeView = useToggleTreeView();
@@ -643,6 +649,10 @@ export function App({
           // Toggle help visibility
           setHelpVisible((prev) => !prev);
           updateDebugInfo(`Toggle help ${helpVisible ? "OFF" : "ON"}`, input);
+        } else if (input === "P" && !key.ctrl && !key.meta) {
+          // Open settings (P for Preferences)
+          openSettings();
+          updateDebugInfo("Open settings", input);
         } else if (keybindings.isTree(input, key)) {
           // Toggle tree view mode
           toggleTreeView();
@@ -778,6 +788,7 @@ export function App({
       toggleCollapsible,
       toggleLineNumbers,
       toggleDebugLogViewer,
+      openSettings,
     ],
   );
 
@@ -789,7 +800,10 @@ export function App({
     },
     {
       isActive:
-        keyboardEnabled && !exportDialog.isVisible && !debugLogViewerVisible,
+        keyboardEnabled &&
+        !exportDialog.isVisible &&
+        !debugLogViewerVisible &&
+        !settingsVisible,
     },
   );
 
@@ -962,6 +976,23 @@ export function App({
           {debugVisible && !exportDialog.isVisible && !helpVisible && (
             <Box flexShrink={0} width="100%">
               <DebugBar keyboardEnabled={keyboardEnabled} />
+            </Box>
+          )}
+
+          {/* Settings Dialog - fullscreen modal overlay */}
+          {settingsVisible && (
+            <Box
+              width="100%"
+              height="100%"
+              justifyContent="center"
+              alignItems="center"
+              paddingX={1}
+              paddingY={1}
+            >
+              <SettingsViewer
+                width={terminalSize.width - 2}
+                height={terminalSize.height - 2}
+              />
             </Box>
           )}
 
