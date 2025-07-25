@@ -981,10 +981,10 @@ export function App({
 
           {/* Settings Dialog - fullscreen modal overlay */}
           {settingsVisible && (
-            <Box width="100%" height="100%">
+            <Box width="100%" height="100%" justifyContent="center" alignItems="center" paddingX={1} paddingY={1}>
               <SettingsViewer
-                width={terminalSize.width}
-                height={terminalSize.height}
+                width={terminalSize.width - 2}
+                height={terminalSize.height - 2}
               />
             </Box>
           )}

@@ -3,6 +3,7 @@
  */
 
 import { Box, Text } from "ink";
+import { memo } from "react";
 import type { SettingsCategory } from "../types/settings";
 
 interface SettingsHeaderProps {
@@ -11,7 +12,7 @@ interface SettingsHeaderProps {
   categories: SettingsCategory[];
 }
 
-export function SettingsHeader({
+function SettingsHeaderComponent({
   currentCategory,
   hasUnsavedChanges,
   categories,
@@ -22,29 +23,31 @@ export function SettingsHeader({
       borderStyle="single"
       borderColor="cyan"
       paddingX={1}
+      height={4}
     >
       {/* Title Bar */}
-      <Box justifyContent="space-between">
+      <Box justifyContent="space-between" height={1}>
         <Text bold color="cyan">
-          ⚙️ jsont Settings
+          jsont Settings
         </Text>
-        {hasUnsavedChanges && <Text color="yellow">● Unsaved changes</Text>}
+        <Box minWidth={20}>
+          {hasUnsavedChanges && <Text color="yellow">[Unsaved changes]</Text>}
+        </Box>
       </Box>
 
-      {/* Category Tabs */}
-      <Box marginTop={1} gap={1}>
+      {/* Category Tabs - Fixed width for consistent positioning */}
+      <Box height={1}>
         {categories.map((category, index) => {
           const isActive = category.id === currentCategory;
           return (
-            <Box key={category.id}>
+            <Box key={category.id} marginRight={1}>
               <Text
                 color={isActive ? "black" : "gray"}
                 backgroundColor={isActive ? "cyan" : ""}
                 bold={isActive}
               >
-                {` ${category.name} `}
+                {isActive ? `[${category.name}]` : category.name}
               </Text>
-              {index < categories.length - 1 && <Text color="gray"> │ </Text>}
             </Box>
           );
         })}
@@ -52,3 +55,12 @@ export function SettingsHeader({
     </Box>
   );
 }
+
+// Memoize header component to prevent unnecessary re-renders
+export const SettingsHeader = memo(SettingsHeaderComponent, (prevProps, nextProps) => {
+  return (
+    prevProps.currentCategory === nextProps.currentCategory &&
+    prevProps.hasUnsavedChanges === nextProps.hasUnsavedChanges &&
+    prevProps.categories.length === nextProps.categories.length
+  );
+});

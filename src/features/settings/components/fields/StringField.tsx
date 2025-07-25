@@ -97,7 +97,9 @@ function StringFieldComponent({ field, value, isEditing }: StringFieldProps) {
           </Text>
           {afterCursor}"
         </Text>
-        <Text color="black" marginLeft={1}>(←/→)</Text>
+        <Box marginLeft={1}>
+          <Text color="black">(←/→)</Text>
+        </Box>
       </Box>
     );
   };

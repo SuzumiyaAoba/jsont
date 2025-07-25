@@ -48,7 +48,9 @@ function BooleanFieldComponent({ field, value, isEditing }: BooleanFieldProps) {
           <Text color={value ? "green" : "red"} bold>
             [{value ? "●" : "○"}] {value ? "true" : "false"}
           </Text>
-          <Text color="black" marginLeft={1}>(Space to toggle)</Text>
+          <Box marginLeft={1}>
+            <Text color="black">(Space to toggle)</Text>
+          </Box>
         </Box>
       ) : (
         <Text color={value ? "green" : "red"}>

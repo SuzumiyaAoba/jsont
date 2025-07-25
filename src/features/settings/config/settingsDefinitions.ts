@@ -5,13 +5,14 @@
 import type {
   SettingsCategory,
   SettingsFieldDefinition,
+  SettingsSection,
 } from "../types/settings";
 
 export const SETTINGS_CATEGORIES: SettingsCategory[] = [
   {
-    id: "display",
-    name: "Display",
-    description: "Visual appearance and layout settings",
+    id: "interface",
+    name: "Interface",
+    description: "General interface and display settings",
     fields: [
       {
         key: "display.interface.showLineNumbers",
@@ -43,6 +44,13 @@ export const SETTINGS_CATEGORIES: SettingsCategory[] = [
         min: 10,
         max: 100,
       },
+    ],
+  },
+  {
+    id: "json",
+    name: "JSON", 
+    description: "JSON formatting and display settings",
+    fields: [
       {
         key: "display.json.indent",
         label: "JSON Indentation",
@@ -68,6 +76,13 @@ export const SETTINGS_CATEGORIES: SettingsCategory[] = [
         min: 40,
         max: 200,
       },
+    ],
+  },
+  {
+    id: "tree",
+    name: "Tree",
+    description: "Tree navigation and display settings",
+    fields: [
       {
         key: "display.tree.showArrayIndices",
         label: "Show Array Indices",
@@ -285,4 +300,89 @@ export function getFieldByKey(
     }
   }
   return undefined;
+}
+
+// Improved UX: Grouped sections for better organization
+export const SETTINGS_SECTIONS: SettingsSection[] = [
+  {
+    id: "interface",
+    name: "Interface",
+    icon: "🖥️",
+    description: "General interface and display settings",
+    fields: [
+      {
+        key: "display.interface.showLineNumbers",
+        label: "Line Numbers",
+        type: "boolean",
+        description: "Show line numbers in the left margin",
+        defaultValue: false,
+      },
+      {
+        key: "display.interface.debugMode",
+        label: "Debug Mode",
+        type: "boolean",
+        description: "Show debug information bar",
+        defaultValue: false,
+      },
+      {
+        key: "display.interface.showStatusBar",
+        label: "Status Bar",
+        type: "boolean",
+        description: "Show help status bar at bottom",
+        defaultValue: true,
+      },
+      {
+        key: "display.interface.defaultHeight",
+        label: "Terminal Height",
+        type: "number",
+        description: "Default height when detection fails",
+        defaultValue: 24,
+        min: 10,
+        max: 100,
+      },
+    ],
+  },
+  {
+    id: "navigation",
+    name: "Navigation",
+    icon: "⌨️",
+    description: "Keyboard shortcuts and movement",
+    fields: [
+      {
+        key: "keybindings.navigation.up",
+        label: "Move Up",
+        type: "array",
+        description: "Keys to move cursor up",
+        defaultValue: ["k", "ArrowUp"],
+      },
+      {
+        key: "keybindings.navigation.down",
+        label: "Move Down",
+        type: "array",
+        description: "Keys to move cursor down",
+        defaultValue: ["j", "ArrowDown"],
+      },
+      {
+        key: "keybindings.navigation.pageUp",
+        label: "Page Up",
+        type: "array",
+        description: "Keys to scroll up by half page",
+        defaultValue: ["Ctrl+b", "PageUp"],
+      },
+      {
+        key: "keybindings.navigation.pageDown",
+        label: "Page Down",
+        type: "array",
+        description: "Keys to scroll down by half page",
+        defaultValue: ["Ctrl+f", "PageDown"],
+      },
+    ],
+  },
+];
+
+/**
+ * Get section by ID
+ */
+export function getSectionById(id: string): SettingsSection | undefined {
+  return SETTINGS_SECTIONS.find((section) => section.id === id);
 }

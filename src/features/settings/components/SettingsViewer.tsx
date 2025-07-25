@@ -7,11 +7,10 @@ import {
   resetPreviewValuesAtom,
   resetToDefaultsAtom,
   saveSettingsAtom,
-  setActiveCategoryAtom,
-  setActiveFieldAtom,
   settingsStateAtom,
-  startEditingAtom,
   stopEditingAtom,
+  debouncedNavigationUpdateAtom,
+  batchNavigationUpdateAtom,
 } from "@store/atoms/settings";
 import { Box, useInput } from "ink";
 import { useAtom, useSetAtom } from "jotai";
@@ -24,6 +23,8 @@ import { useCurrentConfigValues } from "../utils/configMapper";
 import { SettingsCategory } from "./SettingsCategory";
 import { SettingsFooter } from "./SettingsFooter";
 import { SettingsHeader } from "./SettingsHeader";
+import { SettingsDescriptionPanel } from "./SettingsDescriptionPanel";
+import { getFieldByKey } from "../config/settingsDefinitions";
 
 interface SettingsViewerProps {
   width: number;
@@ -36,22 +37,27 @@ export function SettingsViewer({ width, height }: SettingsViewerProps) {
   const currentConfigValues = useCurrentConfigValues();
 
   // Memoized setters to prevent unnecessary re-renders
-  const setActiveCategory = useSetAtom(setActiveCategoryAtom);
-  const setActiveField = useSetAtom(setActiveFieldAtom);
-  const startEditing = useSetAtom(startEditingAtom);
+  const debouncedNavigationUpdate = useSetAtom(debouncedNavigationUpdateAtom);
+  const batchNavigationUpdate = useSetAtom(batchNavigationUpdateAtom);
   const stopEditing = useSetAtom(stopEditingAtom);
   const saveSettings = useSetAtom(saveSettingsAtom);
   const resetPreview = useSetAtom(resetPreviewValuesAtom);
   const resetToDefaults = useSetAtom(resetToDefaultsAtom);
 
-  // Initialize with current config values - only once
+  // Initialize with current config values - only once on mount
   useEffect(() => {
-    setSettingsState((prev) => ({
-      ...prev,
-      previewValues: currentConfigValues,
-      originalValues: currentConfigValues,
-    }));
-  }, [currentConfigValues, setSettingsState]);
+    setSettingsState((prev) => {
+      // Initialize preview values if empty
+      if (Object.keys(prev.previewValues).length === 0) {
+        return {
+          ...prev,
+          previewValues: currentConfigValues,
+          originalValues: currentConfigValues,
+        };
+      }
+      return prev;
+    });
+  }, []); // No dependencies - initialize only once
 
   // Memoize current category to prevent re-calculations
   const currentCategory = useMemo(() => {
@@ -130,7 +136,7 @@ export function SettingsViewer({ width, height }: SettingsViewerProps) {
           : (currentCategoryIndex + 1) % SETTINGS_CATEGORIES.length;
         const nextCategory = SETTINGS_CATEGORIES[nextIndex];
         if (nextCategory) {
-          setActiveCategory(nextCategory.id);
+          batchNavigationUpdate({ categoryId: nextCategory.id });
         }
         return;
       }
@@ -145,7 +151,7 @@ export function SettingsViewer({ width, height }: SettingsViewerProps) {
           (currentFieldIndex + 1) % currentCategory.fields.length;
         const nextField = currentCategory.fields[nextIndex];
         if (nextField) {
-          setActiveField(nextField.key);
+          debouncedNavigationUpdate({ fieldKey: nextField.key });
         }
       } else if (key.upArrow || input === "k") {
         const prevIndex =
@@ -153,12 +159,12 @@ export function SettingsViewer({ width, height }: SettingsViewerProps) {
           currentCategory.fields.length;
         const prevField = currentCategory.fields[prevIndex];
         if (prevField) {
-          setActiveField(prevField.key);
+          debouncedNavigationUpdate({ fieldKey: prevField.key });
         }
       } else if (key.return || input === "e") {
         // Start editing current field
         if (settingsState.activeField) {
-          startEditing();
+          debouncedNavigationUpdate({ isEditing: true });
         }
       }
     },
@@ -169,9 +175,8 @@ export function SettingsViewer({ width, height }: SettingsViewerProps) {
       currentCategory,
       navigationData,
       closeSettings,
-      setActiveCategory,
-      setActiveField,
-      startEditing,
+      debouncedNavigationUpdate,
+      batchNavigationUpdate,
       stopEditing,
       saveSettings,
       resetPreview,
@@ -181,13 +186,26 @@ export function SettingsViewer({ width, height }: SettingsViewerProps) {
 
   useInput(handleKeyInput, { isActive: true });
 
-  // Calculate layout dimensions
+  // Calculate layout dimensions for 2-pane layout - maximize screen usage
   const headerHeight = 4; // Header with title and tabs
-  const footerHeight = settingsState.isEditing ? 3 : 4; // Footer changes based on editing state
-  const contentHeight = Math.max(10, height - headerHeight - footerHeight); // Ensure minimum height
+  const footerHeight = settingsState.isEditing ? 3 : 4; // Compact footer
+  const contentHeight = Math.max(10, height - headerHeight - footerHeight); // Use most of available height
+  
+  // Split content area: 60% for settings list, 40% for description panel
+  const settingsWidth = Math.floor(width * 0.6);
+  const descriptionWidth = width - settingsWidth;
+
+  // Get current field information for description panel
+  const currentField = settingsState.activeField ? getFieldByKey(settingsState.activeField) : null;
+  const currentValue = settingsState.activeField 
+    ? settingsState.previewValues[settingsState.activeField] ?? currentField?.field.defaultValue
+    : undefined;
+  const originalValue = settingsState.activeField 
+    ? settingsState.originalValues[settingsState.activeField]
+    : undefined;
 
   return (
-    <Box flexDirection="column" width={width} height={height}>
+    <Box flexDirection="column" width={width} height={height} justifyContent="flex-start">
       {/* Header */}
       <SettingsHeader
         currentCategory={settingsState.activeCategory}
@@ -195,17 +213,33 @@ export function SettingsViewer({ width, height }: SettingsViewerProps) {
         categories={SETTINGS_CATEGORIES}
       />
 
-      {/* Main Content */}
-      <Box flexGrow={1} height={contentHeight}>
-        {currentCategory && (
-          <SettingsCategory
-            category={currentCategory}
-            activeField={settingsState.activeField}
+      {/* Main Content - Two Pane Layout */}
+      <Box flexGrow={1} flexDirection="row">
+        {/* Left Pane - Settings List */}
+        <Box width={settingsWidth}>
+          {currentCategory && (
+            <SettingsCategory
+              category={currentCategory}
+              activeField={settingsState.activeField}
+              isEditing={settingsState.isEditing}
+              previewValues={settingsState.previewValues}
+              originalValues={settingsState.originalValues}
+              height={contentHeight}
+            />
+          )}
+        </Box>
+
+        {/* Right Pane - Description Panel */}
+        <Box width={descriptionWidth}>
+          <SettingsDescriptionPanel
+            field={currentField?.field || null}
+            currentValue={currentValue}
+            originalValue={originalValue}
             isEditing={settingsState.isEditing}
-            previewValues={settingsState.previewValues}
+            width={descriptionWidth}
             height={contentHeight}
           />
-        )}
+        </Box>
       </Box>
 
       {/* Footer */}

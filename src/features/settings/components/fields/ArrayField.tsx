@@ -133,54 +133,52 @@ function ArrayFieldComponent({ field, value, isEditing }: ArrayFieldProps) {
 
   return (
     <Box flexDirection="column">
-      {!isEditing ? (
-        // Compact display when not editing
-        <Box flexDirection="row" alignItems="center">
-          <Text color="cyan">
-            [{value.length} items] {value.length > 0 ? value.join(", ") : "(empty)"}
-          </Text>
+      {/* Compact display when not editing */}
+      <Box flexDirection="row" alignItems="center" display={!isEditing ? "flex" : "none"}>
+        <Text color="cyan">
+          [{value.length} items] {value.length > 0 ? value.join(", ") : "(empty)"}
+        </Text>
+      </Box>
+
+      {/* Detailed view when editing */}
+      <Box flexDirection="column" display={isEditing ? "flex" : "none"}>
+        <Box>
+          <Text color="black">Values ({value.length} items):</Text>
         </Box>
-      ) : (
-        // Detailed view when editing
-        <Box flexDirection="column">
-          <Box>
-            <Text color="black">Values ({value.length} items):</Text>
-          </Box>
 
-          {/* Array items */}
-          <Box flexDirection="column" marginLeft={2} marginTop={1}>
-            {value.map((item, index) => (
-              <Box key={index}>
-                <Text color="black">[{index}]</Text>
-                <Box marginLeft={1}>
-                  <Text color="cyan">"{item}"</Text>
-                </Box>
+        {/* Array items */}
+        <Box flexDirection="column" marginLeft={2} marginTop={1}>
+          {value.map((item, index) => (
+            <Box key={index}>
+              <Text color="black">[{index}]</Text>
+              <Box marginLeft={1}>
+                <Text color="cyan">"{item}"</Text>
               </Box>
-            ))}
-
-            {value.length === 0 && (
-              <Text color="black" italic>
-                (empty array)
-              </Text>
-            )}
-          </Box>
-
-          {/* Editing interface */}
-          {editingIndex >= 0 && renderEditingItem()}
-
-          {/* Help text */}
-          {editingIndex < 0 && (
-            <Box marginTop={1}>
-              <Text color="black">
-                Commands: <Text color="black" bold>a</Text> add •{" "}
-                <Text color="black" bold>e</Text> edit first •{" "}
-                <Text color="black" bold>d</Text> delete first •{" "}
-                <Text color="black" bold>0-9</Text> edit by index
-              </Text>
             </Box>
+          ))}
+
+          {value.length === 0 && (
+            <Text color="black" italic>
+              (empty array)
+            </Text>
           )}
         </Box>
-      )}
+
+        {/* Editing interface */}
+        <Box display={editingIndex >= 0 ? "flex" : "none"}>
+          {renderEditingItem()}
+        </Box>
+
+        {/* Help text */}
+        <Box marginTop={1} display={editingIndex < 0 ? "flex" : "none"}>
+          <Text color="black">
+            Commands: <Text color="black" bold>a</Text> add •{" "}
+            <Text color="black" bold>e</Text> edit first •{" "}
+            <Text color="black" bold>d</Text> delete first •{" "}
+            <Text color="black" bold>0-9</Text> edit by index
+          </Text>
+        </Box>
+      </Box>
     </Box>
   );
 }

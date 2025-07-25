@@ -6,13 +6,17 @@ import { SETTINGS_CATEGORIES } from "@features/settings/config/settingsDefinitio
 import type { SettingsState } from "@features/settings/types/settings";
 import { atom } from "jotai";
 
+// Debounce state for navigation updates
+let navigationTimeout: NodeJS.Timeout | null = null;
+const NAVIGATION_DEBOUNCE_MS = 50;
+
 // Settings TUI visibility
 export const settingsVisibleAtom = atom<boolean>(false);
 
-// Current settings state
+// Current settings state - ensure we start with the very first field
 export const settingsStateAtom = atom<SettingsState>({
-  activeCategory: SETTINGS_CATEGORIES[0]?.id || "display",
-  activeField: null,
+  activeCategory: "interface", // Start with interface category
+  activeField: "display.interface.showLineNumbers", // Hard-code the first field
   isEditing: false,
   hasUnsavedChanges: false,
   previewValues: {},
@@ -22,15 +26,16 @@ export const settingsStateAtom = atom<SettingsState>({
 // Settings actions
 export const openSettingsAtom = atom(null, (_, set) => {
   set(settingsVisibleAtom, true);
-  // Initialize with current config values - will be populated by component
+  // Force reset to the very first field every time
   set(settingsStateAtom, (prev) => ({
     ...prev,
-    activeCategory: SETTINGS_CATEGORIES[0]?.id || "display",
-    activeField: SETTINGS_CATEGORIES[0]?.fields[0]?.key || null,
+    activeCategory: "interface",
+    activeField: "display.interface.showLineNumbers", // Always start with the first field
     isEditing: false,
     hasUnsavedChanges: false,
-    previewValues: {},
-    originalValues: {},
+    // Keep existing preview values if any
+    previewValues: prev.previewValues || {},
+    originalValues: prev.originalValues || {},
   }));
 });
 
@@ -62,6 +67,81 @@ export const setActiveFieldAtom = atom(
       activeField: fieldKey,
       isEditing: false,
     }));
+  },
+);
+
+// Debounced navigation update to prevent flickering
+export const debouncedNavigationUpdateAtom = atom(
+  null,
+  (_, set, update: { categoryId?: string; fieldKey?: string; isEditing?: boolean }) => {
+    // Clear any pending navigation updates
+    if (navigationTimeout) {
+      clearTimeout(navigationTimeout);
+    }
+    
+    // For immediate updates (editing state changes), apply directly
+    if (update.isEditing !== undefined) {
+      set(settingsStateAtom, (prev) => ({
+        ...prev,
+        isEditing: update.isEditing!,
+      }));
+      return;
+    }
+    
+    // Debounce navigation updates to prevent rapid state changes
+    navigationTimeout = setTimeout(() => {
+      set(settingsStateAtom, (prev) => {
+        const newState = { ...prev };
+        
+        if (update.categoryId !== undefined) {
+          newState.activeCategory = update.categoryId;
+          // Auto-select first field when changing category
+          const category = SETTINGS_CATEGORIES.find(cat => cat.id === update.categoryId);
+          if (category && category.fields.length > 0) {
+            newState.activeField = category.fields[0]?.key || null;
+          }
+          newState.isEditing = false;
+        }
+        
+        if (update.fieldKey !== undefined) {
+          newState.activeField = update.fieldKey;
+          newState.isEditing = false;
+        }
+        
+        return newState;
+      });
+    }, NAVIGATION_DEBOUNCE_MS);
+  },
+);
+
+// Immediate batch navigation update for cases where debouncing is not desired
+export const batchNavigationUpdateAtom = atom(
+  null,
+  (_, set, update: { categoryId?: string; fieldKey?: string; isEditing?: boolean }) => {
+    set(settingsStateAtom, (prev) => {
+      const newState = { ...prev };
+      
+      if (update.categoryId !== undefined) {
+        newState.activeCategory = update.categoryId;
+        // Auto-select first field when changing category
+        const category = SETTINGS_CATEGORIES.find(cat => cat.id === update.categoryId);
+        if (category && category.fields.length > 0) {
+          newState.activeField = category.fields[0]?.key || null;
+        }
+      }
+      
+      if (update.fieldKey !== undefined) {
+        newState.activeField = update.fieldKey;
+      }
+      
+      if (update.isEditing !== undefined) {
+        newState.isEditing = update.isEditing;
+      } else {
+        newState.isEditing = false;
+      }
+      
+      return newState;
+    });
   },
 );
 

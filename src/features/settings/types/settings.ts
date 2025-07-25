@@ -21,6 +21,14 @@ export interface SettingsCategory {
   fields: SettingsFieldDefinition[];
 }
 
+export interface SettingsSection {
+  id: string;
+  name: string;
+  icon: string;
+  description: string;
+  fields: SettingsFieldDefinition[];
+}
+
 export interface SettingsState {
   activeCategory: string;
   activeField: string | null;

@@ -15,6 +15,7 @@ interface SettingsFieldProps {
   value: unknown;
   isActive: boolean;
   isEditing: boolean;
+  originalValue?: unknown; // For showing changes
 }
 
 function SettingsFieldComponent({
@@ -22,7 +23,11 @@ function SettingsFieldComponent({
   value,
   isActive,
   isEditing,
+  originalValue,
 }: SettingsFieldProps) {
+  // Check if value has been changed from original
+  const hasChanged = originalValue !== undefined && originalValue !== value;
+  const isDefault = value === field.defaultValue;
   // Render field editor based on type
   const renderFieldEditor = () => {
     switch (field.type) {
@@ -66,47 +71,37 @@ function SettingsFieldComponent({
   return (
     <Box
       flexDirection="column"
-      backgroundColor={isActive ? (isEditing ? "yellow" : "blue") : undefined}
       paddingX={1}
       paddingY={0}
       marginBottom={0}
     >
       {/* Field Label and Value on same line for compact view */}
       <Box justifyContent="space-between">
-        <Box minWidth="50%">
+        <Box minWidth="50%" flexDirection="row" alignItems="center">
           <Text 
             bold 
             color={isActive ? (isEditing ? "black" : "white") : "white"}
           >
             {isActive ? "► " : "  "}{field.label}
           </Text>
+          {/* Status indicators */}
+          {hasChanged && (
+            <Box marginLeft={1}>
+              <Text color="yellow">[M]</Text>
+            </Box>
+          )}
+          {!isDefault && !hasChanged && (
+            <Box marginLeft={1}>
+              <Text color="blue">[C]</Text>
+            </Box>
+          )}
         </Box>
         <Box minWidth="50%">
           {renderFieldEditor()}
         </Box>
       </Box>
 
-      {/* Description - only show when active */}
-      {isActive && (
-        <Box marginTop={1}>
-          <Text 
-            color={isActive ? (isEditing ? "black" : "gray") : "gray"} 
-            wrap="wrap"
-            dimColor
-          >
-            {field.description}
-          </Text>
-        </Box>
-      )}
-
-      {/* Default Value Info - only show when active but not editing */}
-      {isActive && !isEditing && (
-        <Box>
-          <Text color="gray" dimColor>
-            Default: {JSON.stringify(field.defaultValue)}
-          </Text>
-        </Box>
-      )}
+      {/* Status indicators only - descriptions moved to side panel */}
     </Box>
   );
 }

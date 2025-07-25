@@ -86,16 +86,24 @@ function NumberFieldComponent({ field, value, isEditing }: NumberFieldProps) {
           >
             {inputValue}|
           </Text>
-          <Text color="black" marginLeft={1}>(↑/↓)</Text>
-          {!isValidInput() && <Text color="red" marginLeft={1}>⚠️</Text>}
+          <Box marginLeft={1}>
+            <Text color="black">(↑/↓)</Text>
+          </Box>
+          {!isValidInput() && (
+            <Box marginLeft={1}>
+              <Text color="red">⚠️</Text>
+            </Box>
+          )}
         </Box>
       ) : (
         <Box flexDirection="row" alignItems="center">
           <Text color="cyan">{value}</Text>
           {(field.min !== undefined || field.max !== undefined) && (
-            <Text color="gray" marginLeft={1} dimColor>
-              ({field.min ?? "∞"}-{field.max ?? "∞"})
-            </Text>
+            <Box marginLeft={1}>
+              <Text color="gray" dimColor>
+                ({field.min ?? "∞"}-{field.max ?? "∞"})
+              </Text>
+            </Box>
           )}
         </Box>
       )}

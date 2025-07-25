@@ -3,13 +3,14 @@
  */
 
 import { Box, Text } from "ink";
+import { memo } from "react";
 
 interface SettingsFooterProps {
   isEditing: boolean;
   hasUnsavedChanges: boolean;
 }
 
-export function SettingsFooter({
+function SettingsFooterComponent({
   isEditing,
   hasUnsavedChanges,
 }: SettingsFooterProps) {
@@ -19,12 +20,13 @@ export function SettingsFooter({
         borderStyle="single"
         borderColor="yellow"
         paddingX={1}
-        justifyContent="center"
+        flexDirection="column"
       >
-        <Text color="yellow">
-          Editing: <Text color="white">Enter</Text> save •{" "}
-          <Text color="white">Esc</Text> cancel
-        </Text>
+        <Box justifyContent="center">
+          <Text color="yellow" bold>
+            Editing Mode - <Text color="white" bold>Enter</Text> Apply • <Text color="white" bold>Esc</Text> Cancel
+          </Text>
+        </Box>
       </Box>
     );
   }
@@ -32,28 +34,28 @@ export function SettingsFooter({
   return (
     <Box
       borderStyle="single"
-      borderColor="gray"
+      borderColor={hasUnsavedChanges ? "yellow" : "gray"}
       paddingX={1}
       flexDirection="column"
     >
+      {/* Navigation Help */}
       <Box justifyContent="space-between">
         <Text color="gray">
-          <Text color="white">Tab/Shift+Tab</Text> switch category •{" "}
-          <Text color="white">j/k</Text> navigate •{" "}
-          <Text color="white">Enter/e</Text> edit
+          <Text color="white" bold>Tab</Text> Categories • <Text color="white" bold>j/k</Text> Navigate • <Text color="white" bold>Enter</Text> Edit
         </Text>
         <Text color="gray">
-          <Text color="white">Ctrl+S</Text> save •{" "}
-          <Text color="white">Ctrl+R</Text> reset •{" "}
-          <Text color="white">Ctrl+D</Text> defaults •{" "}
-          <Text color="white">q/Esc</Text> exit
+          <Text color="white" bold>Ctrl+S</Text> Save • <Text color="white" bold>q</Text> Exit
+          {hasUnsavedChanges && <Text color="yellow" bold> [UNSAVED]</Text>}
         </Text>
       </Box>
-      {hasUnsavedChanges && (
-        <Box justifyContent="center" marginTop={1}>
-          <Text color="yellow">⚠️ You have unsaved changes</Text>
-        </Box>
-      )}
     </Box>
   );
 }
+
+// Memoize footer component to prevent unnecessary re-renders
+export const SettingsFooter = memo(SettingsFooterComponent, (prevProps, nextProps) => {
+  return (
+    prevProps.isEditing === nextProps.isEditing &&
+    prevProps.hasUnsavedChanges === nextProps.hasUnsavedChanges
+  );
+});
