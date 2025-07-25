@@ -22,7 +22,7 @@ function SettingsCategoryComponent({
   isEditing,
   previewValues,
   originalValues,
-  height,
+  height: _height,
 }: SettingsCategoryProps) {
   // Unified display for all categories - no special sections
   const visibleFields = category.fields;
@@ -64,12 +64,17 @@ function SettingsCategoryComponent({
 }
 
 // Memoize component to prevent unnecessary re-renders
-export const SettingsCategory = memo(SettingsCategoryComponent, (prevProps, nextProps) => {
-  return (
-    prevProps.category.id === nextProps.category.id &&
-    prevProps.activeField === nextProps.activeField &&
-    prevProps.isEditing === nextProps.isEditing &&
-    JSON.stringify(prevProps.previewValues) === JSON.stringify(nextProps.previewValues) &&
-    JSON.stringify(prevProps.originalValues) === JSON.stringify(nextProps.originalValues)
-  );
-});
+export const SettingsCategory = memo(
+  SettingsCategoryComponent,
+  (prevProps, nextProps) => {
+    return (
+      prevProps.category.id === nextProps.category.id &&
+      prevProps.activeField === nextProps.activeField &&
+      prevProps.isEditing === nextProps.isEditing &&
+      JSON.stringify(prevProps.previewValues) ===
+        JSON.stringify(nextProps.previewValues) &&
+      JSON.stringify(prevProps.originalValues) ===
+        JSON.stringify(nextProps.originalValues)
+    );
+  },
+);

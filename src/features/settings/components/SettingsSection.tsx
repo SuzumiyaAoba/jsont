@@ -24,9 +24,7 @@ function SettingsSectionComponent({
   originalValues,
   isExpanded = true,
 }: SettingsSectionProps) {
-  // Check if any field in this section is active
-  const hasActiveField = section.fields.some(field => field.key === activeField);
-  
+
   return (
     <Box flexDirection="column" marginBottom={1}>
       {/* Section Header */}
@@ -63,19 +61,23 @@ function SettingsSectionComponent({
           })}
         </Box>
       )}
-
     </Box>
   );
 }
 
 // Memoize component to prevent unnecessary re-renders
-export const SettingsSection = memo(SettingsSectionComponent, (prevProps, nextProps) => {
-  return (
-    prevProps.section.id === nextProps.section.id &&
-    prevProps.activeField === nextProps.activeField &&
-    prevProps.isEditing === nextProps.isEditing &&
-    prevProps.isExpanded === nextProps.isExpanded &&
-    JSON.stringify(prevProps.previewValues) === JSON.stringify(nextProps.previewValues) &&
-    JSON.stringify(prevProps.originalValues) === JSON.stringify(nextProps.originalValues)
-  );
-});
+export const SettingsSection = memo(
+  SettingsSectionComponent,
+  (prevProps, nextProps) => {
+    return (
+      prevProps.section.id === nextProps.section.id &&
+      prevProps.activeField === nextProps.activeField &&
+      prevProps.isEditing === nextProps.isEditing &&
+      prevProps.isExpanded === nextProps.isExpanded &&
+      JSON.stringify(prevProps.previewValues) ===
+        JSON.stringify(nextProps.previewValues) &&
+      JSON.stringify(prevProps.originalValues) ===
+        JSON.stringify(nextProps.originalValues)
+    );
+  },
+);

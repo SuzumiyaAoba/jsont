@@ -48,7 +48,7 @@ export const SETTINGS_CATEGORIES: SettingsCategory[] = [
   },
   {
     id: "json",
-    name: "JSON", 
+    name: "JSON",
     description: "JSON formatting and display settings",
     fields: [
       {

@@ -69,20 +69,16 @@ function SettingsFieldComponent({
   };
 
   return (
-    <Box
-      flexDirection="column"
-      paddingX={1}
-      paddingY={0}
-      marginBottom={0}
-    >
+    <Box flexDirection="column" paddingX={1} paddingY={0} marginBottom={0}>
       {/* Field Label and Value on same line for compact view */}
       <Box justifyContent="space-between">
         <Box minWidth="50%" flexDirection="row" alignItems="center">
-          <Text 
-            bold 
+          <Text
+            bold
             color={isActive ? (isEditing ? "black" : "white") : "white"}
           >
-            {isActive ? "► " : "  "}{field.label}
+            {isActive ? "► " : "  "}
+            {field.label}
           </Text>
           {/* Status indicators */}
           {hasChanged && (
@@ -96,9 +92,7 @@ function SettingsFieldComponent({
             </Box>
           )}
         </Box>
-        <Box minWidth="50%">
-          {renderFieldEditor()}
-        </Box>
+        <Box minWidth="50%">{renderFieldEditor()}</Box>
       </Box>
 
       {/* Status indicators only - descriptions moved to side panel */}
@@ -107,11 +101,14 @@ function SettingsFieldComponent({
 }
 
 // Memoize the component to prevent unnecessary re-renders when props haven't changed
-export const SettingsField = memo(SettingsFieldComponent, (prevProps, nextProps) => {
-  return (
-    prevProps.field.key === nextProps.field.key &&
-    prevProps.value === nextProps.value &&
-    prevProps.isActive === nextProps.isActive &&
-    prevProps.isEditing === nextProps.isEditing
-  );
-});
+export const SettingsField = memo(
+  SettingsFieldComponent,
+  (prevProps, nextProps) => {
+    return (
+      prevProps.field.key === nextProps.field.key &&
+      prevProps.value === nextProps.value &&
+      prevProps.isActive === nextProps.isActive &&
+      prevProps.isEditing === nextProps.isEditing
+    );
+  },
+);

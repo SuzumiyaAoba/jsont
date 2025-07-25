@@ -24,7 +24,15 @@ function SettingsFooterComponent({
       >
         <Box justifyContent="center">
           <Text color="yellow" bold>
-            Editing Mode - <Text color="white" bold>Enter</Text> Apply • <Text color="white" bold>Esc</Text> Cancel
+            Editing Mode -{" "}
+            <Text color="white" bold>
+              Enter
+            </Text>{" "}
+            Apply •{" "}
+            <Text color="white" bold>
+              Esc
+            </Text>{" "}
+            Cancel
           </Text>
         </Box>
       </Box>
@@ -41,11 +49,34 @@ function SettingsFooterComponent({
       {/* Navigation Help */}
       <Box justifyContent="space-between">
         <Text color="gray">
-          <Text color="white" bold>Tab</Text> Categories • <Text color="white" bold>j/k</Text> Navigate • <Text color="white" bold>Enter</Text> Edit
+          <Text color="white" bold>
+            Tab
+          </Text>{" "}
+          Categories •{" "}
+          <Text color="white" bold>
+            j/k
+          </Text>{" "}
+          Navigate •{" "}
+          <Text color="white" bold>
+            Enter
+          </Text>{" "}
+          Edit
         </Text>
         <Text color="gray">
-          <Text color="white" bold>Ctrl+S</Text> Save • <Text color="white" bold>q</Text> Exit
-          {hasUnsavedChanges && <Text color="yellow" bold> [UNSAVED]</Text>}
+          <Text color="white" bold>
+            Ctrl+S
+          </Text>{" "}
+          Save •{" "}
+          <Text color="white" bold>
+            q
+          </Text>{" "}
+          Exit
+          {hasUnsavedChanges && (
+            <Text color="yellow" bold>
+              {" "}
+              [UNSAVED]
+            </Text>
+          )}
         </Text>
       </Box>
     </Box>
@@ -53,9 +84,12 @@ function SettingsFooterComponent({
 }
 
 // Memoize footer component to prevent unnecessary re-renders
-export const SettingsFooter = memo(SettingsFooterComponent, (prevProps, nextProps) => {
-  return (
-    prevProps.isEditing === nextProps.isEditing &&
-    prevProps.hasUnsavedChanges === nextProps.hasUnsavedChanges
-  );
-});
+export const SettingsFooter = memo(
+  SettingsFooterComponent,
+  (prevProps, nextProps) => {
+    return (
+      prevProps.isEditing === nextProps.isEditing &&
+      prevProps.hasUnsavedChanges === nextProps.hasUnsavedChanges
+    );
+  },
+);

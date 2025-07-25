@@ -5,7 +5,7 @@
 import { stopEditingAtom, updatePreviewValueAtom } from "@store/atoms/settings";
 import { Box, Text, useInput } from "ink";
 import { useSetAtom } from "jotai";
-import { useCallback, useState, memo } from "react";
+import { memo, useCallback, useState } from "react";
 import type { SettingsFieldDefinition } from "../../types/settings";
 
 interface StringFieldProps {
@@ -104,11 +104,7 @@ function StringFieldComponent({ field, value, isEditing }: StringFieldProps) {
     );
   };
 
-  return (
-    <Box>
-      {renderInputWithCursor()}
-    </Box>
-  );
+  return <Box>{renderInputWithCursor()}</Box>;
 }
 
 export const StringField = memo(StringFieldComponent);

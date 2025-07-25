@@ -43,7 +43,8 @@ function SettingsDescriptionPanelComponent({
     );
   }
 
-  const hasChanged = originalValue !== undefined && originalValue !== currentValue;
+  const hasChanged =
+    originalValue !== undefined && originalValue !== currentValue;
   const isDefault = currentValue === field.defaultValue;
 
   return (
@@ -77,11 +78,14 @@ function SettingsDescriptionPanelComponent({
           <Text color={isEditing ? "yellow" : "cyan"} bold>
             {JSON.stringify(currentValue)}
           </Text>
-          {field.type === "number" && field.min !== undefined && field.max !== undefined && (
-            <Text color="gray" dimColor>
-              {" "}(Range: {field.min}-{field.max})
-            </Text>
-          )}
+          {field.type === "number" &&
+            field.min !== undefined &&
+            field.max !== undefined && (
+              <Text color="gray" dimColor>
+                {" "}
+                (Range: {field.min}-{field.max})
+              </Text>
+            )}
         </Box>
       </Box>
 
@@ -105,21 +109,17 @@ function SettingsDescriptionPanelComponent({
             </Text>
           )}
           {!isDefault && !hasChanged && (
-            <Text color="blue">
-              Custom value (non-default)
-            </Text>
+            <Text color="blue">Custom value (non-default)</Text>
           )}
-          {isDefault && (
-            <Text color="green">
-              Using default value
-            </Text>
-          )}
+          {isDefault && <Text color="green">Using default value</Text>}
         </Box>
       </Box>
 
       {/* Type and Constraints */}
       <Box flexDirection="column">
-        <Text color="gray">Type: <Text color="white">{field.type}</Text></Text>
+        <Text color="gray">
+          Type: <Text color="white">{field.type}</Text>
+        </Text>
         {field.type === "array" && (
           <Text color="gray" dimColor>
             Press 'a' to add, 'e' to edit, 'd' to delete items
@@ -157,13 +157,16 @@ function SettingsDescriptionPanelComponent({
 }
 
 // Memoize component to prevent unnecessary re-renders
-export const SettingsDescriptionPanel = memo(SettingsDescriptionPanelComponent, (prevProps, nextProps) => {
-  return (
-    prevProps.field?.key === nextProps.field?.key &&
-    prevProps.currentValue === nextProps.currentValue &&
-    prevProps.originalValue === nextProps.originalValue &&
-    prevProps.isEditing === nextProps.isEditing &&
-    prevProps.width === nextProps.width &&
-    prevProps.height === nextProps.height
-  );
-});
+export const SettingsDescriptionPanel = memo(
+  SettingsDescriptionPanelComponent,
+  (prevProps, nextProps) => {
+    return (
+      prevProps.field?.key === nextProps.field?.key &&
+      prevProps.currentValue === nextProps.currentValue &&
+      prevProps.originalValue === nextProps.originalValue &&
+      prevProps.isEditing === nextProps.isEditing &&
+      prevProps.width === nextProps.width &&
+      prevProps.height === nextProps.height
+    );
+  },
+);

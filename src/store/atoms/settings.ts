@@ -47,9 +47,9 @@ export const setActiveCategoryAtom = atom(
   null,
   (_, set, categoryId: string) => {
     // Find the category and set first field as active
-    const category = SETTINGS_CATEGORIES.find(cat => cat.id === categoryId);
+    const category = SETTINGS_CATEGORIES.find((cat) => cat.id === categoryId);
     const firstFieldKey = category?.fields[0]?.key || null;
-    
+
     set(settingsStateAtom, (prev) => ({
       ...prev,
       activeCategory: categoryId,
@@ -73,12 +73,16 @@ export const setActiveFieldAtom = atom(
 // Debounced navigation update to prevent flickering
 export const debouncedNavigationUpdateAtom = atom(
   null,
-  (_, set, update: { categoryId?: string; fieldKey?: string; isEditing?: boolean }) => {
+  (
+    _,
+    set,
+    update: { categoryId?: string; fieldKey?: string; isEditing?: boolean },
+  ) => {
     // Clear any pending navigation updates
     if (navigationTimeout) {
       clearTimeout(navigationTimeout);
     }
-    
+
     // For immediate updates (editing state changes), apply directly
     if (update.isEditing !== undefined) {
       set(settingsStateAtom, (prev) => ({
@@ -87,27 +91,29 @@ export const debouncedNavigationUpdateAtom = atom(
       }));
       return;
     }
-    
+
     // Debounce navigation updates to prevent rapid state changes
     navigationTimeout = setTimeout(() => {
       set(settingsStateAtom, (prev) => {
         const newState = { ...prev };
-        
+
         if (update.categoryId !== undefined) {
           newState.activeCategory = update.categoryId;
           // Auto-select first field when changing category
-          const category = SETTINGS_CATEGORIES.find(cat => cat.id === update.categoryId);
+          const category = SETTINGS_CATEGORIES.find(
+            (cat) => cat.id === update.categoryId,
+          );
           if (category && category.fields.length > 0) {
             newState.activeField = category.fields[0]?.key || null;
           }
           newState.isEditing = false;
         }
-        
+
         if (update.fieldKey !== undefined) {
           newState.activeField = update.fieldKey;
           newState.isEditing = false;
         }
-        
+
         return newState;
       });
     }, NAVIGATION_DEBOUNCE_MS);
@@ -117,29 +123,35 @@ export const debouncedNavigationUpdateAtom = atom(
 // Immediate batch navigation update for cases where debouncing is not desired
 export const batchNavigationUpdateAtom = atom(
   null,
-  (_, set, update: { categoryId?: string; fieldKey?: string; isEditing?: boolean }) => {
+  (
+    _,
+    set,
+    update: { categoryId?: string; fieldKey?: string; isEditing?: boolean },
+  ) => {
     set(settingsStateAtom, (prev) => {
       const newState = { ...prev };
-      
+
       if (update.categoryId !== undefined) {
         newState.activeCategory = update.categoryId;
         // Auto-select first field when changing category
-        const category = SETTINGS_CATEGORIES.find(cat => cat.id === update.categoryId);
+        const category = SETTINGS_CATEGORIES.find(
+          (cat) => cat.id === update.categoryId,
+        );
         if (category && category.fields.length > 0) {
           newState.activeField = category.fields[0]?.key || null;
         }
       }
-      
+
       if (update.fieldKey !== undefined) {
         newState.activeField = update.fieldKey;
       }
-      
+
       if (update.isEditing !== undefined) {
         newState.isEditing = update.isEditing;
       } else {
         newState.isEditing = false;
       }
-      
+
       return newState;
     });
   },

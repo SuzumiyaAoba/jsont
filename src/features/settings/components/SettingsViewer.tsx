@@ -3,28 +3,28 @@
  */
 
 import {
+  batchNavigationUpdateAtom,
   closeSettingsAtom,
+  debouncedNavigationUpdateAtom,
   resetPreviewValuesAtom,
   resetToDefaultsAtom,
   saveSettingsAtom,
   settingsStateAtom,
   stopEditingAtom,
-  debouncedNavigationUpdateAtom,
-  batchNavigationUpdateAtom,
 } from "@store/atoms/settings";
 import { Box, useInput } from "ink";
 import { useAtom, useSetAtom } from "jotai";
 import { useCallback, useEffect, useMemo } from "react";
 import {
   getCategoryById,
+  getFieldByKey,
   SETTINGS_CATEGORIES,
 } from "../config/settingsDefinitions";
 import { useCurrentConfigValues } from "../utils/configMapper";
 import { SettingsCategory } from "./SettingsCategory";
+import { SettingsDescriptionPanel } from "./SettingsDescriptionPanel";
 import { SettingsFooter } from "./SettingsFooter";
 import { SettingsHeader } from "./SettingsHeader";
-import { SettingsDescriptionPanel } from "./SettingsDescriptionPanel";
-import { getFieldByKey } from "../config/settingsDefinitions";
 
 interface SettingsViewerProps {
   width: number;
@@ -75,9 +75,11 @@ export function SettingsViewer({ width, height }: SettingsViewerProps) {
     }
 
     const currentFieldIndex = settingsState.activeField
-      ? currentCategory.fields.findIndex((f) => f.key === settingsState.activeField)
+      ? currentCategory.fields.findIndex(
+          (f) => f.key === settingsState.activeField,
+        )
       : -1;
-    
+
     const currentCategoryIndex = SETTINGS_CATEGORIES.findIndex(
       (cat) => cat.id === settingsState.activeCategory,
     );
@@ -87,7 +89,11 @@ export function SettingsViewer({ width, height }: SettingsViewerProps) {
       currentCategoryIndex,
       hasFields: currentCategory.fields.length > 0,
     };
-  }, [currentCategory, settingsState.activeField, settingsState.activeCategory]);
+  }, [
+    currentCategory,
+    settingsState.activeField,
+    settingsState.activeCategory,
+  ]);
 
   // Handle keyboard input
   const handleKeyInput = useCallback(
@@ -190,22 +196,30 @@ export function SettingsViewer({ width, height }: SettingsViewerProps) {
   const headerHeight = 4; // Header with title and tabs
   const footerHeight = settingsState.isEditing ? 3 : 4; // Compact footer
   const contentHeight = Math.max(10, height - headerHeight - footerHeight); // Use most of available height
-  
+
   // Split content area: 60% for settings list, 40% for description panel
   const settingsWidth = Math.floor(width * 0.6);
   const descriptionWidth = width - settingsWidth;
 
   // Get current field information for description panel
-  const currentField = settingsState.activeField ? getFieldByKey(settingsState.activeField) : null;
-  const currentValue = settingsState.activeField 
-    ? settingsState.previewValues[settingsState.activeField] ?? currentField?.field.defaultValue
+  const currentField = settingsState.activeField
+    ? getFieldByKey(settingsState.activeField)
+    : null;
+  const currentValue = settingsState.activeField
+    ? (settingsState.previewValues[settingsState.activeField] ??
+      currentField?.field.defaultValue)
     : undefined;
-  const originalValue = settingsState.activeField 
+  const originalValue = settingsState.activeField
     ? settingsState.originalValues[settingsState.activeField]
     : undefined;
 
   return (
-    <Box flexDirection="column" width={width} height={height} justifyContent="flex-start">
+    <Box
+      flexDirection="column"
+      width={width}
+      height={height}
+      justifyContent="flex-start"
+    >
       {/* Header */}
       <SettingsHeader
         currentCategory={settingsState.activeCategory}

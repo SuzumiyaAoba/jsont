@@ -5,7 +5,7 @@
 import { stopEditingAtom, updatePreviewValueAtom } from "@store/atoms/settings";
 import { Box, Text, useInput } from "ink";
 import { useSetAtom } from "jotai";
-import { useCallback, memo } from "react";
+import { memo, useCallback } from "react";
 import type { SettingsFieldDefinition } from "../../types/settings";
 
 interface BooleanFieldProps {

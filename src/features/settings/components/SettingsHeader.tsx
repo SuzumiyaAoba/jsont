@@ -37,7 +37,7 @@ function SettingsHeaderComponent({
 
       {/* Category Tabs - Fixed width for consistent positioning */}
       <Box height={1}>
-        {categories.map((category, index) => {
+        {categories.map((category, _index) => {
           const isActive = category.id === currentCategory;
           return (
             <Box key={category.id} marginRight={1}>
@@ -57,10 +57,13 @@ function SettingsHeaderComponent({
 }
 
 // Memoize header component to prevent unnecessary re-renders
-export const SettingsHeader = memo(SettingsHeaderComponent, (prevProps, nextProps) => {
-  return (
-    prevProps.currentCategory === nextProps.currentCategory &&
-    prevProps.hasUnsavedChanges === nextProps.hasUnsavedChanges &&
-    prevProps.categories.length === nextProps.categories.length
-  );
-});
+export const SettingsHeader = memo(
+  SettingsHeaderComponent,
+  (prevProps, nextProps) => {
+    return (
+      prevProps.currentCategory === nextProps.currentCategory &&
+      prevProps.hasUnsavedChanges === nextProps.hasUnsavedChanges &&
+      prevProps.categories.length === nextProps.categories.length
+    );
+  },
+);

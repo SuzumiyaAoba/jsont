@@ -5,7 +5,7 @@
 import { stopEditingAtom, updatePreviewValueAtom } from "@store/atoms/settings";
 import { Box, Text, useInput } from "ink";
 import { useSetAtom } from "jotai";
-import { useCallback, useState, memo } from "react";
+import { memo, useCallback, useState } from "react";
 import type { SettingsFieldDefinition } from "../../types/settings";
 
 interface ArrayFieldProps {
@@ -117,7 +117,9 @@ function ArrayFieldComponent({ field, value, isEditing }: ArrayFieldProps) {
 
     return (
       <Box marginLeft={2} marginTop={1}>
-        <Text color="black" bold>Editing item {editingIndex}:</Text>
+        <Text color="black" bold>
+          Editing item {editingIndex}:
+        </Text>
         <Box marginLeft={1}>
           <Text color="black" backgroundColor="white">
             "{beforeCursor}
@@ -134,9 +136,14 @@ function ArrayFieldComponent({ field, value, isEditing }: ArrayFieldProps) {
   return (
     <Box flexDirection="column">
       {/* Compact display when not editing */}
-      <Box flexDirection="row" alignItems="center" display={!isEditing ? "flex" : "none"}>
+      <Box
+        flexDirection="row"
+        alignItems="center"
+        display={!isEditing ? "flex" : "none"}
+      >
         <Text color="cyan">
-          [{value.length} items] {value.length > 0 ? value.join(", ") : "(empty)"}
+          [{value.length} items]{" "}
+          {value.length > 0 ? value.join(", ") : "(empty)"}
         </Text>
       </Box>
 
@@ -172,10 +179,23 @@ function ArrayFieldComponent({ field, value, isEditing }: ArrayFieldProps) {
         {/* Help text */}
         <Box marginTop={1} display={editingIndex < 0 ? "flex" : "none"}>
           <Text color="black">
-            Commands: <Text color="black" bold>a</Text> add •{" "}
-            <Text color="black" bold>e</Text> edit first •{" "}
-            <Text color="black" bold>d</Text> delete first •{" "}
-            <Text color="black" bold>0-9</Text> edit by index
+            Commands:{" "}
+            <Text color="black" bold>
+              a
+            </Text>{" "}
+            add •{" "}
+            <Text color="black" bold>
+              e
+            </Text>{" "}
+            edit first •{" "}
+            <Text color="black" bold>
+              d
+            </Text>{" "}
+            delete first •{" "}
+            <Text color="black" bold>
+              0-9
+            </Text>{" "}
+            edit by index
           </Text>
         </Box>
       </Box>
