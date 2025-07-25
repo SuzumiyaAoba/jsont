@@ -36,12 +36,28 @@ export interface KeyboardInput {
 }
 
 /**
+ * Available view modes for the application
+ */
+export type ViewMode = "raw" | "tree" | "collapsible" | "schema" | "settings";
+
+/**
  * Props for the main App component
  */
 export interface AppProps {
   initialData?: JsonValue | null;
   initialError?: string | null;
   keyboardEnabled?: boolean;
+  initialViewMode?: ViewMode;
+}
+
+/**
+ * CLI arguments parsing result
+ */
+export interface CliArgs {
+  filePath?: string | undefined;
+  viewMode?: ViewMode | undefined;
+  help?: boolean;
+  version?: boolean;
 }
 
 /**

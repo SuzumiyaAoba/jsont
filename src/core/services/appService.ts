@@ -4,7 +4,8 @@
  */
 
 import { ConfigProvider } from "@core/context/ConfigContext";
-import type { JsonValue } from "@core/types/index";
+import type { JsonValue, ViewMode } from "@core/types/index";
+import { parseCliArgs, showHelp, showVersion } from "@core/utils/cliParser";
 import { ProcessManager } from "@core/utils/processManager";
 import {
   readFromFile,
@@ -24,35 +25,54 @@ export class AppService {
    * Initialize and run the application
    */
   async run(): Promise<void> {
-    const filePath = this.getFilePath();
+    try {
+      // Parse CLI arguments
+      const cliArgs = parseCliArgs();
 
-    let result: Awaited<ReturnType<typeof readFromFile>>;
+      // Handle help and version options
+      if (cliArgs.help) {
+        showHelp();
+        return;
+      }
 
-    if (filePath) {
-      // File input mode - read from file, stdin should be available for keyboard
-      result = await readFromFile(filePath);
-    } else {
-      // Stdin input mode - read completely then try to reinitialize for keyboard
-      result = await readStdinThenReinitialize();
+      if (cliArgs.version) {
+        showVersion();
+        return;
+      }
+
+      const filePath = cliArgs.filePath;
+
+      let result: Awaited<ReturnType<typeof readFromFile>>;
+
+      if (filePath) {
+        // File input mode - read from file, stdin should be available for keyboard
+        result = await readFromFile(filePath);
+      } else {
+        // Stdin input mode - read completely then try to reinitialize for keyboard
+        result = await readStdinThenReinitialize();
+      }
+
+      const { data, error, canUseKeyboard } = result;
+
+      // Setup terminal and process management
+      this.setupEnvironment();
+
+      // Render the application with appropriate keyboard support
+      const app = await this.renderApp(
+        data,
+        error,
+        canUseKeyboard,
+        cliArgs.viewMode,
+      );
+
+      // Setup exit handling
+      this.setupExitHandling(app);
+    } catch (error) {
+      console.error(
+        `Error: ${error instanceof Error ? error.message : "Unknown error"}`,
+      );
+      process.exit(1);
     }
-
-    const { data, error, canUseKeyboard } = result;
-
-    // Setup terminal and process management
-    this.setupEnvironment();
-
-    // Render the application with appropriate keyboard support
-    const app = await this.renderApp(data, error, canUseKeyboard);
-
-    // Setup exit handling
-    this.setupExitHandling(app);
-  }
-
-  /**
-   * Get file path from command line arguments
-   */
-  private getFilePath(): string | undefined {
-    return process.argv[2];
   }
 
   /**
@@ -70,6 +90,7 @@ export class AppService {
     data: JsonValue | null,
     error: string | null,
     enableKeyboard: boolean = false,
+    viewMode?: ViewMode,
   ): Promise<Instance> {
     // Check if we're in test environment
     const isTestEnvironment =
@@ -108,6 +129,7 @@ export class AppService {
             initialData: data,
             initialError: error,
             keyboardEnabled: actualKeyboardEnabled,
+            ...(viewMode && { initialViewMode: viewMode }),
           }),
         ),
       ),

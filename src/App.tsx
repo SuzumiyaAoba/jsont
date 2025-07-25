@@ -85,6 +85,7 @@ export function App({
   initialData,
   initialError,
   keyboardEnabled = false,
+  initialViewMode,
 }: AppProps) {
   // Check if we're in test environment - moved to top to avoid dependency issues
   const isTestEnvironment =
@@ -174,6 +175,45 @@ export function App({
 
   const [treeViewKeyboardHandler, setTreeViewKeyboardHandler] =
     useState<KeyboardHandler | null>(null);
+
+  // Set initial view mode if specified
+  useEffect(() => {
+    if (initialViewMode) {
+      switch (initialViewMode) {
+        case "tree":
+          if (!treeViewMode) {
+            toggleTreeView();
+          }
+          break;
+        case "collapsible":
+          if (!collapsibleMode) {
+            toggleCollapsible();
+          }
+          break;
+        case "schema":
+          if (!schemaVisible) {
+            toggleSchema();
+          }
+          break;
+        case "settings":
+          if (!settingsVisible) {
+            openSettings();
+          }
+          break;
+        // "raw" is the default, no action needed
+      }
+    }
+  }, [
+    initialViewMode,
+    treeViewMode,
+    collapsibleMode,
+    schemaVisible,
+    settingsVisible,
+    toggleTreeView,
+    toggleCollapsible,
+    toggleSchema,
+    openSettings,
+  ]);
 
   // Clear TreeView handler when TreeView is disabled
   useEffect(() => {
