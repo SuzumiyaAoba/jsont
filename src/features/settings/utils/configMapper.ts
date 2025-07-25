@@ -60,7 +60,7 @@ export function useCurrentConfigValues(): Record<string, unknown> {
 export function flatToNestedConfig(
   flat: Record<string, unknown>,
 ): Partial<JsontConfig> {
-  const config: any = {};
+  const config: Record<string, unknown> = {};
 
   for (const [key, value] of Object.entries(flat)) {
     const parts = key.split(".");
@@ -72,7 +72,7 @@ export function flatToNestedConfig(
       if (!current[part]) {
         current[part] = {};
       }
-      current = current[part];
+      current = current[part] as Record<string, unknown>;
     }
 
     const lastPart = parts[parts.length - 1];

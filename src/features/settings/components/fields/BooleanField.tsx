@@ -2,6 +2,7 @@
  * Boolean Settings Field Component
  */
 
+import type { KeyboardInput } from "@core/types/app";
 import { stopEditingAtom, updatePreviewValueAtom } from "@store/atoms/settings";
 import { Box, Text, useInput } from "ink";
 import { useSetAtom } from "jotai";
@@ -20,7 +21,7 @@ function BooleanFieldComponent({ field, value, isEditing }: BooleanFieldProps) {
 
   // Handle keyboard input for boolean toggle
   const handleKeyInput = useCallback(
-    (input: string, key: any) => {
+    (input: string, key: KeyboardInput) => {
       if (!isEditing) return;
 
       if (key.return) {

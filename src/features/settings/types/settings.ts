@@ -48,5 +48,5 @@ export interface SettingsAction {
     | "SAVE_CHANGES"
     | "CANCEL_CHANGES"
     | "RESET_TO_DEFAULT";
-  payload?: any;
+  payload?: unknown;
 }

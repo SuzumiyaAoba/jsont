@@ -2,6 +2,7 @@
  * Interactive Settings TUI Main Component
  */
 
+import type { KeyboardInput } from "@core/types/app";
 import {
   batchNavigationUpdateAtom,
   closeSettingsAtom,
@@ -57,7 +58,7 @@ export function SettingsViewer({ width, height }: SettingsViewerProps) {
       }
       return prev;
     });
-  }, []); // No dependencies - initialize only once
+  }, [currentConfigValues, setSettingsState]); // Initialize when config values are available
 
   // Memoize current category to prevent re-calculations
   const currentCategory = useMemo(() => {
@@ -97,7 +98,7 @@ export function SettingsViewer({ width, height }: SettingsViewerProps) {
 
   // Handle keyboard input
   const handleKeyInput = useCallback(
-    (input: string, key: any) => {
+    (input: string, key: KeyboardInput) => {
       // Global shortcuts
       if (key.escape || input === "q") {
         if (settingsState.isEditing) {

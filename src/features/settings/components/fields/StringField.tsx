@@ -2,6 +2,7 @@
  * String Settings Field Component
  */
 
+import type { KeyboardInput } from "@core/types/app";
 import { stopEditingAtom, updatePreviewValueAtom } from "@store/atoms/settings";
 import { Box, Text, useInput } from "ink";
 import { useSetAtom } from "jotai";
@@ -22,7 +23,7 @@ function StringFieldComponent({ field, value, isEditing }: StringFieldProps) {
 
   // Handle keyboard input for string editing
   const handleKeyInput = useCallback(
-    (input: string, key: any) => {
+    (input: string, key: KeyboardInput) => {
       if (!isEditing) return;
 
       if (key.return) {

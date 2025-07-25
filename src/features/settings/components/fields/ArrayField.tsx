@@ -2,6 +2,7 @@
  * Array Settings Field Component
  */
 
+import type { KeyboardInput } from "@core/types/app";
 import { stopEditingAtom, updatePreviewValueAtom } from "@store/atoms/settings";
 import { Box, Text, useInput } from "ink";
 import { useSetAtom } from "jotai";
@@ -23,7 +24,7 @@ function ArrayFieldComponent({ field, value, isEditing }: ArrayFieldProps) {
 
   // Handle keyboard input for array editing
   const handleKeyInput = useCallback(
-    (input: string, key: any) => {
+    (input: string, key: KeyboardInput) => {
       if (!isEditing) return;
 
       // If editing an item
@@ -156,7 +157,7 @@ function ArrayFieldComponent({ field, value, isEditing }: ArrayFieldProps) {
         {/* Array items */}
         <Box flexDirection="column" marginLeft={2} marginTop={1}>
           {value.map((item, index) => (
-            <Box key={index}>
+            <Box key={`${field.key}-item-${index}-${item}`}>
               <Text color="black">[{index}]</Text>
               <Box marginLeft={1}>
                 <Text color="cyan">"{item}"</Text>

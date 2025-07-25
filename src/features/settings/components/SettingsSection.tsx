@@ -24,7 +24,6 @@ function SettingsSectionComponent({
   originalValues,
   isExpanded = true,
 }: SettingsSectionProps) {
-
   return (
     <Box flexDirection="column" marginBottom={1}>
       {/* Section Header */}

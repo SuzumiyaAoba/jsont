@@ -2,6 +2,7 @@
  * Number Settings Field Component
  */
 
+import type { KeyboardInput } from "@core/types/app";
 import { stopEditingAtom, updatePreviewValueAtom } from "@store/atoms/settings";
 import { Box, Text, useInput } from "ink";
 import { useSetAtom } from "jotai";
@@ -21,7 +22,7 @@ function NumberFieldComponent({ field, value, isEditing }: NumberFieldProps) {
 
   // Handle keyboard input for number editing
   const handleKeyInput = useCallback(
-    (input: string, key: any) => {
+    (input: string, key: KeyboardInput) => {
       if (!isEditing) return;
 
       if (key.return) {

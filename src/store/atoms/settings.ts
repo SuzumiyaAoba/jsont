@@ -87,7 +87,7 @@ export const debouncedNavigationUpdateAtom = atom(
     if (update.isEditing !== undefined) {
       set(settingsStateAtom, (prev) => ({
         ...prev,
-        isEditing: update.isEditing!,
+        isEditing: Boolean(update.isEditing),
       }));
       return;
     }

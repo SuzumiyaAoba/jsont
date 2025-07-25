@@ -67,7 +67,7 @@ export async function backupConfigFile(): Promise<string> {
     return backupPath;
   } catch (error) {
     // If original doesn't exist, that's OK
-    if ((error as any).code === "ENOENT") {
+    if ((error as NodeJS.ErrnoException)?.code === "ENOENT") {
       return "";
     }
     throw error;
