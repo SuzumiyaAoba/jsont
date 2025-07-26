@@ -118,19 +118,22 @@ export const showNotificationAtom = atom(
     const id = `notification-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
     set(notificationAtom, { ...notification, id });
 
-    // Auto-dismiss after duration (default 5 seconds for success/info, 10 seconds for error/warning)
-    if (notification.duration !== undefined || notification.type !== "error") {
-      const duration =
-        notification.duration ??
-        (notification.type === "error" || notification.type === "warning"
-          ? 10000
-          : 5000);
-      setTimeout(() => {
-        set(notificationAtom, (current) =>
-          current?.id === id ? null : current,
-        );
-      }, duration);
+    // Handle auto-dismiss logic
+    if (notification.duration === undefined && notification.type === "error") {
+      // Sticky error notification, do not auto-dismiss
+      return;
     }
+
+    // Auto-dismiss after specified duration or default based on type
+    const duration =
+      notification.duration ??
+      (notification.type === "error" || notification.type === "warning"
+        ? 10000 // 10 seconds for errors/warnings
+        : 5000); // 5 seconds for success/info
+
+    setTimeout(() => {
+      set(notificationAtom, (current) => (current?.id === id ? null : current));
+    }, duration);
   },
 );
 

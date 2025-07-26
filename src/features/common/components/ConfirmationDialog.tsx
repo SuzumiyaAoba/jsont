@@ -10,7 +10,13 @@ import { Box, Text, useInput } from "ink";
 import { useAtom, useSetAtom } from "jotai";
 import { useCallback } from "react";
 
-export function ConfirmationDialog() {
+interface ConfirmationDialogProps {
+  terminalWidth?: number;
+}
+
+export function ConfirmationDialog({
+  terminalWidth = 80,
+}: ConfirmationDialogProps = {}) {
   const [dialog] = useAtom(confirmationDialogAtom);
   const dismissConfirmation = useSetAtom(dismissConfirmationAtom);
 
@@ -49,9 +55,15 @@ export function ConfirmationDialog() {
   const confirmText = dialog.confirmText ?? "Yes";
   const cancelText = dialog.cancelText ?? "No";
 
+  // Calculate responsive width (max 80, min 40, or 80% of terminal width)
+  const dialogWidth = Math.min(
+    80,
+    Math.max(40, Math.floor(terminalWidth * 0.8)),
+  );
+
   return (
     <Box
-      width={80}
+      width={dialogWidth}
       paddingX={3}
       paddingY={2}
       flexDirection="column"

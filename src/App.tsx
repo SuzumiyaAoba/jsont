@@ -708,7 +708,7 @@ export function App({
       <NotificationToast />
 
       {/* Global confirmation dialog - always rendered last to be on top */}
-      <ConfirmationDialog />
+      <ConfirmationDialog terminalWidth={terminalSize.width} />
     </Box>
   );
 }
