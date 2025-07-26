@@ -197,6 +197,7 @@ function convertToCSV(
   }
 
   // Handle primitive values
+  // Primitives are exported as a single column with header "value"
   if (typeof data !== "object") {
     return includeHeaders
       ? `value\n${escapeCsvValue(String(data), delimiter)}`
@@ -210,6 +211,7 @@ function convertToCSV(
     }
 
     // If array contains objects, flatten them
+    // Each object becomes a row, with all unique keys as columns
     if (typeof data[0] === "object" && data[0] !== null) {
       return convertObjectArrayToCSV(
         data as Record<string, unknown>[],
@@ -220,6 +222,7 @@ function convertToCSV(
     }
 
     // Simple array of primitives
+    // Each primitive becomes a row in a single "value" column
     const header = includeHeaders ? "value\n" : "";
     const rows = data
       .map((item) => escapeCsvValue(String(item), delimiter))
@@ -307,7 +310,8 @@ function flattenObject(
         flattenObject(value as Record<string, unknown>, newKey),
       );
     } else if (Array.isArray(value)) {
-      // Convert arrays to comma-separated strings
+      // Convert arrays to semicolon-separated strings
+      // Note: Using semicolon to avoid conflicts with comma delimiter
       flattened[newKey] = value
         .map((item) =>
           typeof item === "object" ? JSON.stringify(item) : String(item),

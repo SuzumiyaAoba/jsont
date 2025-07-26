@@ -161,4 +161,19 @@ describe("HelpViewer", () => {
       expect(output).toContain("Press ? again or Esc to close help");
     }
   });
+
+  it("should display export data keybinding in help", () => {
+    const { lastFrame } = render(
+      <HelpViewer
+        mode="raw"
+        keybindings={mockKeybindings}
+        height={20}
+        width={80}
+      />,
+    );
+
+    const output = lastFrame();
+    expect(output).toContain("Shift+E");
+    expect(output).toContain("Export data");
+  });
 });

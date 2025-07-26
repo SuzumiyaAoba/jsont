@@ -127,6 +127,7 @@ describe("Enhanced File Export", () => {
 
       const content = await fs.readFile(result.filePath!, "utf8");
       const lines = content.split("\n");
+      // Note: Headers are sorted alphabetically for consistent output
       expect(lines[0]).toBe("age,city,name"); // Headers sorted alphabetically
       expect(lines[1]).toBe("30,New York,Alice");
       expect(lines[2]).toBe("25,London,Bob");
