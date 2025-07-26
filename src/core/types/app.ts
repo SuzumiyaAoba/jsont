@@ -2,7 +2,7 @@
  * Application-specific type definitions
  */
 
-import type { JsonValue } from "@core/types/index";
+import type { JsonValue, ViewMode } from "@core/types/index";
 
 /**
  * Application modes for the JSON viewer
@@ -42,6 +42,17 @@ export interface AppProps {
   initialData?: JsonValue | null;
   initialError?: string | null;
   keyboardEnabled?: boolean;
+  initialViewMode?: ViewMode;
+}
+
+/**
+ * CLI arguments parsing result
+ */
+export interface CliArgs {
+  filePath?: string | undefined;
+  viewMode?: ViewMode | undefined;
+  help?: boolean;
+  version?: boolean;
 }
 
 /**

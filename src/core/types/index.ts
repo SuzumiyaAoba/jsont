@@ -24,7 +24,7 @@ export interface AppState {
   error: string | null;
   selectedPath: string[];
   isFilterMode: boolean;
-  viewMode: "compact" | "detail" | "presentation";
+  viewMode: ViewMode;
 }
 
 // JSON statistics types
@@ -60,8 +60,15 @@ export interface EnhancedParseResult extends ParseResult {
 // Theme types
 export type Theme = "dark" | "light";
 
-// View mode types
-export type ViewMode = "compact" | "detail" | "presentation";
+// View mode types - single source of truth
+export const VIEW_MODES = [
+  "raw",
+  "tree",
+  "collapsible",
+  "schema",
+  "settings",
+] as const;
+export type ViewMode = (typeof VIEW_MODES)[number];
 
 // Filter result types
 export interface FilterResult {
