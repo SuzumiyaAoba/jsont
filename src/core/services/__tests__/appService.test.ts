@@ -405,8 +405,36 @@ describe("AppService", () => {
     });
 
     it("should auto-exit in non-TTY environment", async () => {
-      Object.defineProperty(process.stdin, "isTTY", {
-        value: false,
+      // Ensure no CI environment variables are set
+      const ciEnvVars = [
+        "CI",
+        "GITHUB_ACTIONS",
+        "JENKINS_URL",
+        "TRAVIS",
+        "CIRCLECI",
+        "GITLAB_CI",
+        "BUILDKITE",
+        "DRONE",
+        "CONTINUOUS_INTEGRATION",
+      ];
+
+      ciEnvVars.forEach((env) => {
+        delete process.env[env];
+      });
+
+      // Set non-TTY environment
+      const mockStdin = {
+        isTTY: false,
+        readable: true,
+        readableHighWaterMark: 16384,
+        setRawMode: vi.fn().mockReturnThis(),
+        ref: vi.fn().mockReturnThis(),
+        unref: vi.fn().mockReturnThis(),
+        resume: vi.fn(),
+      };
+
+      Object.defineProperty(process, "stdin", {
+        value: mockStdin,
         configurable: true,
       });
 
@@ -419,7 +447,7 @@ describe("AppService", () => {
       (readStdinThenReinitialize as any).mockResolvedValue({
         data: null,
         error: null,
-        canUseKeyboard: true,
+        canUseKeyboard: false,
       });
       (render as any).mockReturnValue(mockApp);
 

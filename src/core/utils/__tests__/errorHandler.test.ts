@@ -209,7 +209,7 @@ describe("Error Handler", () => {
       handleNoInput();
 
       expect(consoleSpy).toHaveBeenCalledWith(
-        expect.stringContaining("No input provided"),
+        expect.stringContaining("No JSON input provided"),
       );
       expect(consoleSpy).toHaveBeenCalledWith(
         expect.stringContaining("Usage:"),
@@ -344,18 +344,24 @@ describe("Error Handler", () => {
     it("should preserve error stack traces in development", () => {
       process.env["NODE_ENV"] = "development";
 
+      const exitSpy = vi.spyOn(process, "exit").mockImplementation(() => {
+        throw new Error("process.exit called");
+      });
+
       const error = new Error("Development error");
       error.stack = "Error: Development error\n    at test.js:1:1";
 
       expect(() => {
         handleFatalError(error);
-      }).toThrow("Fatal error: Development error");
+      }).toThrow("process.exit called");
 
       // Error message should be preserved
       expect(consoleSpy).toHaveBeenCalledWith(
         expect.stringContaining("Fatal error"),
         "Development error",
       );
+
+      exitSpy.mockRestore();
     });
   });
 });

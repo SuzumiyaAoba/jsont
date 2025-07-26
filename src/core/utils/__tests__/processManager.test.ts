@@ -315,8 +315,8 @@ describe("ProcessManager", () => {
 
       processManager.setup();
 
-      // Empty string should still be truthy for CI detection
-      expect(setIntervalSpy).not.toHaveBeenCalled();
+      // Empty string is falsy, so should NOT be detected as CI environment
+      expect(setIntervalSpy).toHaveBeenCalled();
 
       setIntervalSpy.mockRestore();
     });
@@ -365,9 +365,11 @@ describe("ProcessManager", () => {
 
       // App exit
       const callback = vi.fn();
+      const nextTickSpy = vi.spyOn(process, "nextTick");
       processManager.onAppExit(callback);
 
-      const nextTickCallback = vi.spyOn(process, "nextTick").mock.calls[0]?.[0];
+      expect(nextTickSpy).toHaveBeenCalled();
+      const nextTickCallback = nextTickSpy.mock.calls[0]?.[0];
       if (nextTickCallback) {
         nextTickCallback();
       }
@@ -375,6 +377,8 @@ describe("ProcessManager", () => {
       expect(callback).toHaveBeenCalled();
       expect(clearIntervalSpy).toHaveBeenCalled();
       expect(mockTerminalManager.cleanup).toHaveBeenCalled();
+
+      nextTickSpy.mockRestore();
 
       setIntervalSpy.mockRestore();
       clearIntervalSpy.mockRestore();
