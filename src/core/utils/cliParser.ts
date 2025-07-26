@@ -3,7 +3,8 @@
  * Handles command line argument parsing for jsont
  */
 
-import type { CliArgs, ViewMode } from "@core/types/app";
+import type { CliArgs } from "@core/types/app";
+import { VIEW_MODES, type ViewMode } from "@core/types/index";
 
 /**
  * Parse command line arguments
@@ -27,7 +28,7 @@ export function parseCliArgs(argv: string[] = process.argv): CliArgs {
         );
       }
       if (isValidViewMode(mode)) {
-        result.viewMode = mode as ViewMode;
+        result.viewMode = mode;
         i++; // Skip next argument as it's the mode value
       } else {
         throw new Error(
@@ -56,15 +57,8 @@ export function parseCliArgs(argv: string[] = process.argv): CliArgs {
 /**
  * Check if a string is a valid view mode
  */
-function isValidViewMode(mode: string): boolean {
-  const validModes: ViewMode[] = [
-    "raw",
-    "tree",
-    "collapsible",
-    "schema",
-    "settings",
-  ];
-  return validModes.includes(mode as ViewMode);
+function isValidViewMode(mode: string): mode is ViewMode {
+  return VIEW_MODES.includes(mode as ViewMode);
 }
 
 /**
@@ -120,7 +114,10 @@ KEYBOARD SHORTCUTS:
 export function showVersion(): void {
   // Try to read package.json version
   try {
-    const packageJson = require("../../../package.json");
+    const fs = require("node:fs");
+    const path = require("node:path");
+    const packagePath = path.join(__dirname, "../../../package.json");
+    const packageJson = JSON.parse(fs.readFileSync(packagePath, "utf8"));
     console.log(`jsont v${packageJson.version}`);
   } catch {
     console.log("jsont v1.0.0");

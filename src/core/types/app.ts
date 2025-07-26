@@ -2,7 +2,7 @@
  * Application-specific type definitions
  */
 
-import type { JsonValue } from "@core/types/index";
+import type { JsonValue, ViewMode } from "@core/types/index";
 
 /**
  * Application modes for the JSON viewer
@@ -34,11 +34,6 @@ export interface KeyboardInput {
   delete?: boolean;
   meta?: boolean;
 }
-
-/**
- * Available view modes for the application
- */
-export type ViewMode = "raw" | "tree" | "collapsible" | "schema" | "settings";
 
 /**
  * Props for the main App component

@@ -60,8 +60,15 @@ export interface EnhancedParseResult extends ParseResult {
 // Theme types
 export type Theme = "dark" | "light";
 
-// View mode types
-export type ViewMode = "raw" | "tree" | "collapsible" | "schema" | "settings";
+// View mode types - single source of truth
+export const VIEW_MODES = [
+  "raw",
+  "tree",
+  "collapsible",
+  "schema",
+  "settings",
+] as const;
+export type ViewMode = (typeof VIEW_MODES)[number];
 
 // Filter result types
 export interface FilterResult {
