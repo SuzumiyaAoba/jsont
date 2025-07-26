@@ -10,7 +10,7 @@ export class CsvConverter implements DataConverter<CsvOptions> {
   readonly extension = ".csv";
   readonly displayName = "CSV";
 
-  convert(data: JsonValue, options?: CsvOptions): ConversionResult {
+  convert(data: JsonValue, options?: CsvOptions | Record<string, unknown>): ConversionResult {
     try {
       const csvOptions = { ...this.getDefaultOptions(), ...options };
       const result = this.convertToCSV(data, csvOptions);

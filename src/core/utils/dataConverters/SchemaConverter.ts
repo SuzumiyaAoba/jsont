@@ -11,10 +11,11 @@ export class SchemaConverter implements DataConverter<SchemaOptions> {
   readonly extension = ".json";
   readonly displayName = "JSON Schema";
 
-  convert(data: JsonValue, options?: SchemaOptions): ConversionResult {
+  convert(data: JsonValue, options?: SchemaOptions | Record<string, unknown>): ConversionResult {
     try {
-      const { title = "Exported Schema", baseUrl } = options || this.getDefaultOptions();
-      const schema = inferJsonSchema(data, title, baseUrl);
+      const finalOptions = { ...this.getDefaultOptions(), ...options };
+      const { title = "Exported Schema", baseUrl } = finalOptions;
+      const schema = inferJsonSchema(data, String(title), baseUrl ? String(baseUrl) : undefined);
       const result = formatJsonSchema(schema);
       
       return {

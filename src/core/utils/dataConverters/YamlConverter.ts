@@ -11,7 +11,7 @@ export class YamlConverter implements DataConverter<YamlOptions> {
   readonly extension = ".yaml";
   readonly displayName = "YAML";
 
-  convert(data: JsonValue, options?: YamlOptions): ConversionResult {
+  convert(data: JsonValue, options?: YamlOptions | Record<string, unknown>): ConversionResult {
     try {
       const yamlOptions = { ...this.getDefaultOptions(), ...options };
       const result = yamlDump(data, yamlOptions);

@@ -10,10 +10,11 @@ export class JsonConverter implements DataConverter<JsonOptions> {
   readonly extension = ".json";
   readonly displayName = "JSON";
 
-  convert(data: JsonValue, options?: JsonOptions): ConversionResult {
+  convert(data: JsonValue, options?: JsonOptions | Record<string, unknown>): ConversionResult {
     try {
-      const { indent = 2 } = options || this.getDefaultOptions();
-      const result = JSON.stringify(data, null, indent);
+      const finalOptions = { ...this.getDefaultOptions(), ...options };
+      const { indent = 2 } = finalOptions;
+      const result = JSON.stringify(data, null, Number(indent));
       
       return {
         success: true,

@@ -5,11 +5,7 @@
 import { writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import type { JsonValue } from "@core/types/index";
-import {
-  dataConverterRegistry,
-  dataConverters,
-} from "@core/utils/dataConverters";
-import type { Result } from "@core/utils/errors";
+import { dataConverterRegistry } from "@core/utils/dataConverters";
 import {
   createExportErrorHandler,
   ExportError,
@@ -134,9 +130,9 @@ export async function exportToFile(
     };
   } catch (error) {
     const exportError = errorHandler.normalize(error, {
-      filename: options.filename,
-      directory: options.outputDir,
-      format: options.format,
+      ...(options.filename && { filename: options.filename }),
+      ...(options.outputDir && { directory: options.outputDir }),
+      ...(options.format && { format: options.format }),
       operation: "exportToFile",
     });
 
