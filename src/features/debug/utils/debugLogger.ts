@@ -40,7 +40,7 @@ class DebugLoggerClass {
     }
 
     const entry: DebugLogEntry = {
-      id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      id: `${Date.now()}-${Math.random().toString(36).slice(2, 11)}`,
       timestamp: new Date(),
       level,
       category,

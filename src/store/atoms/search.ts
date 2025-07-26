@@ -75,7 +75,7 @@ export const cycleScopeAtom = atom(null, (get, set) => {
   const currentScope = get(searchScopeAtom);
   const currentIndex = SEARCH_SCOPES.indexOf(currentScope);
   const nextIndex = (currentIndex + 1) % SEARCH_SCOPES.length;
-  const nextScope = SEARCH_SCOPES[nextIndex] ?? SEARCH_SCOPES[0] ?? "keys";
+  const nextScope = SEARCH_SCOPES[nextIndex] ?? "keys";
   set(searchScopeAtom, nextScope);
 });
 

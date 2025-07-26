@@ -208,11 +208,9 @@ describe("Error Handler", () => {
 
       handleNoInput();
 
+      expect(consoleSpy).toHaveBeenCalledWith("No JSON input provided.");
       expect(consoleSpy).toHaveBeenCalledWith(
-        expect.stringContaining("No JSON input provided"),
-      );
-      expect(consoleSpy).toHaveBeenCalledWith(
-        expect.stringContaining("Usage:"),
+        "Usage: jsont [file.json] or echo '{...}' | jsont",
       );
     });
 

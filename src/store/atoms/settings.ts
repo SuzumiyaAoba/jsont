@@ -235,6 +235,6 @@ export const saveSettingsAtom = atom(null, async (get, set) => {
     if (process.env["NODE_ENV"] === "development") {
       console.error("Failed to save settings:", error);
     }
-    // TODO: Show error message in UI
+    throw error;
   }
 });
