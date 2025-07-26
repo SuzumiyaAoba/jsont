@@ -189,32 +189,6 @@ export function TreeView({
     );
   }, [filteredLines, heightCalculations, scrollCalculations]);
 
-  // Debug info for verification
-  if (process.env["NODE_ENV"] === "development" && showLineNumbers) {
-    console.log("=== CONSERVATIVE TREE VIEW CALCULATION ===");
-    console.log(`Total lines: ${filteredLines.length}`);
-    console.log(
-      `Height: ${height}, Base: ${heightCalculations.baseContentHeight}, Safe: ${heightCalculations.safeContentHeight}, Conservative: ${heightCalculations.conservativeContentHeight}`,
-    );
-    console.log(`Max scroll: ${scrollCalculations.maxScroll}`);
-    console.log(
-      `Bounded scroll offset: ${scrollCalculations.boundedScrollOffset}`,
-    );
-    console.log(`Is near end: ${scrollCalculations.isNearEnd}`);
-    console.log(`Visible lines count: ${visibleLines.length}`);
-    if (visibleLines.length > 0) {
-      const firstLine = visibleLines[0];
-      const lastLine = visibleLines[visibleLines.length - 1];
-      if (firstLine && lastLine) {
-        const firstIndex = filteredLines.indexOf(firstLine);
-        const lastIndex = filteredLines.indexOf(lastLine);
-        console.log(
-          `Displaying lines ${firstIndex + 1} to ${lastIndex + 1} (1-based)`,
-        );
-      }
-    }
-  }
-
   // Ensure stable rendering by adding a key that forces proper reconciliation
   const renderKey = useMemo(() => {
     return `${treeState.rootNodes.length}-${filteredLines.length}`;
@@ -393,93 +367,6 @@ export function TreeView({
       // Toggle line numbers display (with extensive debug logging)
       setShowLineNumbers((prev) => {
         const newValue = !prev;
-        // Debug info for real app debugging
-        if (process.env["NODE_ENV"] === "development" && newValue) {
-          const {
-            filteredLines,
-            scrollOffset,
-            selectedLineIndex,
-            height,
-            maxScroll,
-            heightCalculations,
-          } = stateRef.current;
-
-          console.log("=== LINE NUMBERS DEBUG ===");
-          console.log("Total filtered lines:", filteredLines.length);
-          console.log("Scroll offset:", scrollOffset);
-          console.log("Selected index:", selectedLineIndex);
-          console.log("Viewport height:", height);
-          console.log("Max scroll:", maxScroll);
-          console.log(
-            "Visible range:",
-            scrollOffset,
-            "to",
-            scrollOffset + heightCalculations.baseContentHeight,
-          );
-
-          // Show first 10 lines for reference
-          console.log("First 10 lines:");
-          filteredLines.slice(0, 10).forEach((line, i) => {
-            console.log(
-              `  ${i + 1}: ${line.id} - "${getTreeLineText(line).substring(0, 40)}"`,
-            );
-          });
-
-          // Debug visible lines calculation
-          const currentScrollOffset = stateRef.current.scrollOffset;
-          const currentHeight =
-            stateRef.current.heightCalculations.baseContentHeight;
-          const calculatedVisibleLines = getVisibleTreeLines(
-            filteredLines,
-            currentScrollOffset,
-            currentScrollOffset + currentHeight,
-          );
-          console.log("Visible lines calculation:");
-          console.log(`  Current scroll offset: ${currentScrollOffset}`);
-          console.log(`  End index: ${currentScrollOffset + currentHeight}`);
-          console.log(
-            `  Calculated visible lines: ${calculatedVisibleLines.length}`,
-          );
-
-          // Show what should be visible
-          console.log("Should be visible (slice result):");
-          for (
-            let i = currentScrollOffset;
-            i <
-            Math.min(currentScrollOffset + currentHeight, filteredLines.length);
-            i++
-          ) {
-            if (filteredLines[i]) {
-              const lineNum = i + 1;
-              const line = filteredLines[i];
-              if (line) {
-                console.log(
-                  `  ${lineNum}: ${line.id} - "${getTreeLineText(line)}"`,
-                );
-              }
-            }
-          }
-
-          // Show lines around keywords
-          const keywordsIndex = filteredLines.findIndex(
-            (line) => line.id === "__root__.keywords",
-          );
-          if (keywordsIndex >= 0) {
-            console.log(`Keywords section at line ${keywordsIndex + 1}:`);
-            for (
-              let i = Math.max(0, keywordsIndex - 2);
-              i < Math.min(filteredLines.length, keywordsIndex + 8);
-              i++
-            ) {
-              const line = filteredLines[i];
-              if (line) {
-                console.log(
-                  `  ${i + 1}: ${line.id} - "${getTreeLineText(line)}"`,
-                );
-              }
-            }
-          }
-        }
         return newValue;
       });
       return true;
@@ -586,8 +473,6 @@ export function TreeView({
                   newState,
                   currentState.displayOptions,
                 );
-                console.log("=== TREE LINES RENDERED ===");
-                console.log("New lines count:", newLines.length);
                 const newFilteredLines = !currentState.searchTerm
                   ? newLines
                   : newLines.filter((line) => {
@@ -596,13 +481,10 @@ export function TreeView({
                       const text = getTreeLineText(line).toLowerCase();
                       return text.includes(lowerSearchTerm);
                     });
-                console.log("=== LINES FILTERED ===");
-                console.log("Filtered lines count:", newFilteredLines.length);
 
                 // Try to find the previously selected line by ID in the new tree
                 const oldSelectedLine =
                   currentState.filteredLines[currentState.selectedLineIndex];
-                console.log("=== STARTING SELECTION CALCULATION ===");
                 let newSelectedIndex = 0;
 
                 if (oldSelectedLine) {
@@ -821,17 +703,6 @@ export function TreeView({
               const isSelected =
                 lineIndex === scrollCalculations.boundedSelectedIndex;
               const isMatched = matchingNodes.has(line.id);
-
-              // Debug logging for line rendering
-              if (
-                process.env["NODE_ENV"] === "development" &&
-                showLineNumbers &&
-                lineIndex + 1 === 22
-              ) {
-                console.log(
-                  `RENDERING LINE 22: ${line.id} - "${getTreeLineText(line)}"`,
-                );
-              }
 
               return (
                 <Box key={line.id} width={width}>

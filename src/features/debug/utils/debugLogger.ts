@@ -17,7 +17,6 @@ class DebugLoggerClass {
   private logs: DebugLogEntry[] = [];
   private maxLogs = 1000; // 最大ログ数
   private isDebugViewerActive = false; // デバッグビューアーがアクティブかどうか
-  private idCounter = 0; // ID counter for log entries
 
   /**
    * デバッグビューアーの状態を設定
@@ -41,7 +40,7 @@ class DebugLoggerClass {
     }
 
     const entry: DebugLogEntry = {
-      id: (++this.idCounter).toString(),
+      id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       timestamp: new Date(),
       level,
       category,
@@ -124,7 +123,6 @@ class DebugLoggerClass {
    */
   clearLogs(): void {
     this.logs = [];
-    this.idCounter = 0;
   }
 
   /**

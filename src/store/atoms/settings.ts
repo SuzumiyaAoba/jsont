@@ -229,9 +229,12 @@ export const saveSettingsAtom = atom(null, async (get, set) => {
       hasUnsavedChanges: false,
     }));
 
-    console.log("✅ Settings saved successfully");
+    // Settings saved successfully - could add UI feedback here
   } catch (error) {
-    console.error("❌ Failed to save settings:", error);
+    // TODO: Show error message in UI
+    if (process.env["NODE_ENV"] === "development") {
+      console.error("Failed to save settings:", error);
+    }
     // TODO: Show error message in UI
   }
 });

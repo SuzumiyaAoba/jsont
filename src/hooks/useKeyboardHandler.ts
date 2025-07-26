@@ -64,23 +64,23 @@ export function useKeyboardHandler(_deps: KeyboardHandlerDependencies) {
   // For now, returning a placeholder
 
   const handleNavigationInput = useCallback(
-    (input: string, key: KeyboardInput) => {
-      // Placeholder - will be implemented with actual logic from App.tsx
-      console.log("Navigation input:", input, key);
+    (_input: string, _key: KeyboardInput) => {
+      // TODO: Implement with actual logic from App.tsx
       return false;
     },
     [],
   );
 
-  const handleSearchInput = useCallback((input: string, key: KeyboardInput) => {
-    // Placeholder - will be implemented with actual logic from App.tsx
-    console.log("Search input:", input, key);
-    return false;
-  }, []);
+  const handleSearchInput = useCallback(
+    (_input: string, _key: KeyboardInput) => {
+      // TODO: Implement with actual logic from App.tsx
+      return false;
+    },
+    [],
+  );
 
-  const handleJqInput = useCallback((input: string, key: KeyboardInput) => {
-    // Placeholder - will be implemented with actual logic from App.tsx
-    console.log("JQ input:", input, key);
+  const handleJqInput = useCallback((_input: string, _key: KeyboardInput) => {
+    // TODO: Implement with actual logic from App.tsx
     return false;
   }, []);
 
