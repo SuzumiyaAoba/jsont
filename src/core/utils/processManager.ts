@@ -15,6 +15,9 @@ export class ProcessManager {
    * Setup process management and keep-alive mechanism
    */
   setup(): void {
+    // Increase max listeners to prevent warnings in tests
+    process.setMaxListeners(30);
+
     this.setupKeepAlive();
     this.setupSignalHandlers();
     this.setupStdinHandlers();
