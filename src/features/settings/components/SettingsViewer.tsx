@@ -13,6 +13,7 @@ import {
   settingsStateAtom,
   stopEditingAtom,
 } from "@store/atoms/settings";
+import { showConfirmationAtom } from "@store/atoms/ui";
 import { Box, useInput } from "ink";
 import { useAtom, useSetAtom } from "jotai";
 import { useCallback, useEffect, useMemo } from "react";
@@ -44,6 +45,7 @@ export function SettingsViewer({ width, height }: SettingsViewerProps) {
   const saveSettings = useSetAtom(saveSettingsAtom);
   const resetPreview = useSetAtom(resetPreviewValuesAtom);
   const resetToDefaults = useSetAtom(resetToDefaultsAtom);
+  const showConfirmation = useSetAtom(showConfirmationAtom);
 
   // Initialize with current config values - only once on mount
   useEffect(() => {
@@ -106,8 +108,18 @@ export function SettingsViewer({ width, height }: SettingsViewerProps) {
           return;
         }
         if (settingsState.hasUnsavedChanges) {
-          // TODO: Show confirmation dialog
-          resetPreview();
+          showConfirmation({
+            title: "Unsaved Changes",
+            message:
+              "You have unsaved changes. Are you sure you want to exit without saving?",
+            confirmText: "Exit without saving",
+            cancelText: "Continue editing",
+            onConfirm: () => {
+              resetPreview();
+              closeSettings();
+            },
+          });
+          return;
         }
         closeSettings();
         return;
@@ -188,6 +200,7 @@ export function SettingsViewer({ width, height }: SettingsViewerProps) {
       saveSettings,
       resetPreview,
       resetToDefaults,
+      showConfirmation,
     ],
   );
 

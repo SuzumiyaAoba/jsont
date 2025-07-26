@@ -229,9 +229,23 @@ export const saveSettingsAtom = atom(null, async (get, set) => {
       hasUnsavedChanges: false,
     }));
 
-    // Settings saved successfully - could add UI feedback here
+    // Show success notification
+    const { showNotificationAtom } = await import("./ui");
+    set(showNotificationAtom, {
+      type: "success",
+      message: "Settings saved successfully to config file",
+      duration: 3000,
+    });
   } catch (error) {
-    // TODO: Show error message in UI
+    // Show error notification in UI
+    const { showNotificationAtom } = await import("./ui");
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown error occurred";
+    set(showNotificationAtom, {
+      type: "error",
+      message: `Failed to save settings: ${errorMessage}`,
+    });
+
     if (process.env["NODE_ENV"] === "development") {
       console.error("Failed to save settings:", error);
     }

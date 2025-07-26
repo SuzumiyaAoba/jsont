@@ -100,3 +100,69 @@ export const toggleDebugLogViewerAtom = atom(null, (get, set) => {
 
   set(debugLogViewerVisibleAtom, newValue);
 });
+
+// Notification system atoms
+export interface Notification {
+  id: string;
+  message: string;
+  type: "success" | "error" | "warning" | "info";
+  duration?: number; // milliseconds, undefined means persistent until dismissed
+}
+
+export const notificationAtom = atom<Notification | null>(null);
+
+// Action atom to show notifications
+export const showNotificationAtom = atom(
+  null,
+  (_get, set, notification: Omit<Notification, "id">) => {
+    const id = `notification-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+    set(notificationAtom, { ...notification, id });
+
+    // Handle auto-dismiss logic
+    if (notification.duration === undefined && notification.type === "error") {
+      // Sticky error notification, do not auto-dismiss
+      return;
+    }
+
+    // Auto-dismiss after specified duration or default based on type
+    const duration =
+      notification.duration ??
+      (notification.type === "error" || notification.type === "warning"
+        ? 10000 // 10 seconds for errors/warnings
+        : 5000); // 5 seconds for success/info
+
+    setTimeout(() => {
+      set(notificationAtom, (current) => (current?.id === id ? null : current));
+    }, duration);
+  },
+);
+
+// Action atom to dismiss notification
+export const dismissNotificationAtom = atom(null, (_get, set) => {
+  set(notificationAtom, null);
+});
+
+// Confirmation dialog atoms
+export interface ConfirmationDialog {
+  title: string;
+  message: string;
+  confirmText?: string;
+  cancelText?: string;
+  onConfirm: () => void;
+  onCancel?: () => void;
+}
+
+export const confirmationDialogAtom = atom<ConfirmationDialog | null>(null);
+
+// Action atom to show confirmation dialog
+export const showConfirmationAtom = atom(
+  null,
+  (_get, set, dialog: ConfirmationDialog) => {
+    set(confirmationDialogAtom, dialog);
+  },
+);
+
+// Action atom to dismiss confirmation dialog
+export const dismissConfirmationAtom = atom(null, (_get, set) => {
+  set(confirmationDialogAtom, null);
+});
