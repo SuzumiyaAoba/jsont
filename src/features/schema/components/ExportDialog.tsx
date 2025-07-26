@@ -19,8 +19,13 @@ export interface ExportDialogProps {
 interface ExportConfig {
   filename: string;
   outputDir: string;
-  format: "json" | "schema";
+  format: "json" | "schema" | "yaml" | "csv";
   baseUrl?: string;
+  csvOptions?: {
+    delimiter: string;
+    includeHeaders: boolean;
+    flattenArrays: boolean;
+  };
 }
 
 export function ExportDialog({
@@ -34,10 +39,21 @@ export function ExportDialog({
     outputDir: process.cwd(),
     format: "json",
     baseUrl: "https://json-schema.org/draft/2020-12/schema",
+    csvOptions: {
+      delimiter: ",",
+      includeHeaders: true,
+      flattenArrays: true,
+    },
   });
 
   const [inputMode, setInputMode] = useState<
-    "filename" | "directory" | "baseUrl" | "format" | "quickDir" | null
+    | "filename"
+    | "directory"
+    | "baseUrl"
+    | "format"
+    | "quickDir"
+    | "csvOptions"
+    | null
   >("filename");
 
   // Use TextInput hooks for filename, directory, and baseUrl inputs
@@ -196,19 +212,26 @@ export function ExportDialog({
         if (finalBaseUrl) {
           exportOptions.baseUrl = finalBaseUrl;
         }
+        if (config.format === "csv" && config.csvOptions) {
+          exportOptions.csvOptions = config.csvOptions;
+        }
         onConfirm(exportOptions);
         return;
       }
 
-      // Format selection (j/s) - available when not in text input mode or in format mode
+      // Format selection (j/s/y/c) - available when not in text input mode or in format mode
       if (
-        (input === "j" || input === "s") &&
+        (input === "j" || input === "s" || input === "y" || input === "c") &&
         (inputMode === null || inputMode === "format")
       ) {
         if (input === "j") {
           setConfig((prev) => ({ ...prev, format: "json" }));
         } else if (input === "s") {
           setConfig((prev) => ({ ...prev, format: "schema" }));
+        } else if (input === "y") {
+          setConfig((prev) => ({ ...prev, format: "yaml" }));
+        } else if (input === "c") {
+          setConfig((prev) => ({ ...prev, format: "csv" }));
         }
         return;
       }
@@ -343,7 +366,11 @@ export function ExportDialog({
     >
       <Box marginBottom={1}>
         <Text color="yellow" bold>
-          📁 Export {config.format === "json" ? "JSON Data" : "JSON Schema"}
+          📁 Export Data
+          {config.format === "json" && " (JSON)"}
+          {config.format === "schema" && " (JSON Schema)"}
+          {config.format === "yaml" && " (YAML)"}
+          {config.format === "csv" && " (CSV)"}
         </Text>
       </Box>
 
@@ -384,8 +411,13 @@ export function ExportDialog({
         <Box>
           <Text color="cyan">Format: </Text>
           <Text color={inputMode === "format" ? "yellow" : "gray"}>
-            {config.format === "json" ? "JSON Data" : "JSON Schema"}
-            {inputMode === "format" ? " (j: JSON, s: Schema)" : ""}
+            {config.format === "json" && "JSON Data"}
+            {config.format === "schema" && "JSON Schema"}
+            {config.format === "yaml" && "YAML"}
+            {config.format === "csv" && "CSV"}
+            {inputMode === "format"
+              ? " (j: JSON, s: Schema, y: YAML, c: CSV)"
+              : ""}
           </Text>
         </Box>
 
@@ -435,7 +467,7 @@ export function ExportDialog({
         <Box marginTop={1} borderStyle="single" borderColor="gray" padding={1}>
           <Box flexDirection="column">
             <Text color="gray" dimColor>
-              Tab: Switch field | j/s: Format | 1-6: Quick directory | j/k:
+              Tab: Switch field | j/s/y/c: Format | 1-6: Quick directory | j/k:
               Navigate dirs | Enter: Confirm/Select | Esc: Exit/Cancel
             </Text>
             <Text color="gray" dimColor>

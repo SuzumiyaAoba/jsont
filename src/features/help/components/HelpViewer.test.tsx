@@ -26,6 +26,7 @@ const mockKeybindings: KeyBindings = {
     debug: ["D"],
     help: ["?"],
     export: ["E"],
+    exportData: ["Shift+E"],
     quit: ["q"],
   },
   search: {
@@ -159,5 +160,21 @@ describe("HelpViewer", () => {
       expect(output).toContain(`HELP - ${mode.toUpperCase()} MODE`);
       expect(output).toContain("Press ? again or Esc to close help");
     }
+  });
+
+  it("should handle new exportData keybinding gracefully", () => {
+    const { lastFrame } = render(
+      <HelpViewer
+        mode="raw"
+        keybindings={mockKeybindings}
+        height={20}
+        width={80}
+      />,
+    );
+
+    const output = lastFrame();
+    // Verify help renders without corruption
+    expect(output).toContain("HELP - RAW MODE");
+    expect(output).toContain("Export JSON Schema");
   });
 });

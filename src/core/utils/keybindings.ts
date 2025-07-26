@@ -45,8 +45,8 @@ function normalizeKey(input: string, key: KeyboardInput): string {
   if (key.meta) modifiers.push("Meta");
 
   // For single character keys, ignore shift modifier (T and Shift+T should both match "T")
-  // Only include shift for non-alphabetic characters
-  if (key.shift && !/^[a-zA-Z]$/.test(input)) {
+  // Only include shift for non-alphabetic characters or specific exceptions like "Shift+E"
+  if (key.shift && (!/^[a-zA-Z]$/.test(input) || input === "E")) {
     modifiers.push("Shift");
   }
 
@@ -135,6 +135,10 @@ export class KeybindingMatcher {
 
   isExport(input: string, key: KeyboardInput): boolean {
     return matchesKeybinding(input, key, this.keybindings.modes.export);
+  }
+
+  isExportData(input: string, key: KeyboardInput): boolean {
+    return matchesKeybinding(input, key, this.keybindings.modes.exportData);
   }
 
   isQuit(input: string, key: KeyboardInput): boolean {

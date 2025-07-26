@@ -18,7 +18,11 @@ import { transformWithJq } from "@features/jq/utils/jqTransform";
 import { JsonViewer } from "@features/json-rendering/components/JsonViewer";
 import { ExportDialog } from "@features/schema/components/ExportDialog";
 import { SchemaViewer } from "@features/schema/components/SchemaViewer";
-import { generateDefaultFilename } from "@features/schema/utils/fileExport";
+import type { ExportOptions } from "@features/schema/utils/fileExport";
+import {
+  exportToFile,
+  generateDefaultFilename,
+} from "@features/schema/utils/fileExport";
 // Schema utilities available when needed
 import { SearchBar } from "@features/search/components/SearchBar";
 import { SettingsViewer } from "@features/settings/components/SettingsViewer";
@@ -146,6 +150,9 @@ export function App({
   // Export and debug state
   const [exportStatus] = useExportStatus();
   const exportDialog = useExportDialog();
+  const [dataExportDialog, setDataExportDialog] = useState({
+    isVisible: false,
+  });
   void useDebugInfo();
 
   // UI state
@@ -306,6 +313,34 @@ export function App({
     jqState.showOriginal,
     initialData,
   ]);
+
+  // Data export handlers
+  const handleExportData = useCallback(() => {
+    setDataExportDialog({ isVisible: true });
+  }, []);
+
+  const handleDataExportConfirm = useCallback(
+    async (options: ExportOptions) => {
+      try {
+        const result = await exportToFile(displayData as JsonValue, options);
+        if (result.success) {
+          // Show success notification
+          console.log(`Data exported successfully to ${result.filePath}`);
+        } else {
+          console.error(`Export failed: ${result.error}`);
+        }
+      } catch (error) {
+        console.error("Export error:", error);
+      } finally {
+        setDataExportDialog({ isVisible: false });
+      }
+    },
+    [displayData],
+  );
+
+  const handleDataExportCancel = useCallback(() => {
+    setDataExportDialog({ isVisible: false });
+  }, []);
 
   // Helper function to handle collapsible navigation
   // Collapsible navigation handler available when needed
@@ -476,6 +511,7 @@ export function App({
     keybindings,
     handleTextInput,
     handleExportSchema,
+    handleExportData,
     exit,
   });
 
@@ -489,6 +525,7 @@ export function App({
       isActive:
         keyboardEnabled &&
         !exportDialog.isVisible &&
+        !dataExportDialog.isVisible &&
         !debugLogViewerVisible &&
         !settingsVisible,
     },
@@ -698,6 +735,25 @@ export function App({
                 onConfirm={handleExportConfirm}
                 onCancel={handleExportCancel}
                 defaultFilename={generateDefaultFilename()}
+              />
+            </Box>
+          )}
+
+          {/* Data Export Dialog - fullscreen modal overlay */}
+          {dataExportDialog.isVisible && (
+            <Box
+              flexGrow={1}
+              width="100%"
+              justifyContent="center"
+              alignItems="center"
+              paddingX={2}
+              paddingY={2}
+            >
+              <ExportDialog
+                isVisible={dataExportDialog.isVisible}
+                onConfirm={handleDataExportConfirm}
+                onCancel={handleDataExportCancel}
+                defaultFilename={generateDefaultFilename("json")}
               />
             </Box>
           )}

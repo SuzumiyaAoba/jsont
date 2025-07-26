@@ -29,6 +29,7 @@ describe("Keybinding Utilities", () => {
       debug: ["D"],
       help: ["?"],
       export: ["E"],
+      exportData: ["Shift+E"],
       quit: ["q"],
     },
     search: {
@@ -117,6 +118,9 @@ describe("Keybinding Utilities", () => {
         expect(matcher.isDebug("D", { ctrl: false })).toBe(true);
         expect(matcher.isHelp("?", { ctrl: false })).toBe(true);
         expect(matcher.isExport("E", { ctrl: false })).toBe(true);
+        expect(matcher.isExportData("E", { ctrl: false, shift: true })).toBe(
+          true,
+        );
         expect(matcher.isQuit("q", { ctrl: false })).toBe(true);
       });
 

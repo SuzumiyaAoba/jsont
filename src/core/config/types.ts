@@ -21,6 +21,7 @@ export interface ModeKeys {
   debug: string[];
   help: string[];
   export: string[];
+  exportData: string[];
   quit: string[];
 }
 

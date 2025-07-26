@@ -115,7 +115,7 @@ describe("File Export Utils", () => {
       const result = await exportJsonSchemaToFile(testData);
 
       expect(result.success).toBe(true);
-      expect(result.filePath).toMatch(/export\.json$/); // Now defaults to export
+      expect(result.filePath).toMatch(/schema\.json$/); // Schema format defaults to schema.json
     });
 
     it("should add .json extension if missing", async () => {

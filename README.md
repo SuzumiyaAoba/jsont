@@ -57,6 +57,7 @@ curl -s https://api.example.com/data | jsont
 - `L`: Toggle line numbers
 - `S`: Schema view
 - `E`: Export schema
+- `Shift+E`: Export data (JSON/YAML/CSV)
 - `q`: Quit
 
 #### Search
@@ -105,6 +106,13 @@ curl -s https://jsonplaceholder.typicode.com/posts/1 | jsont
 1. View JSON data
 2. Press `S` for schema view
 3. Press `E` to export schema to file
+
+### Exporting Data
+1. View JSON data (original or jq-transformed)
+2. Press `Shift+E` to open export dialog
+3. Choose format: JSON, YAML, or CSV
+4. Specify filename and output directory
+5. Press `Enter` to export
 
 ## Requirements
 

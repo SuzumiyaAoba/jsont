@@ -91,6 +91,7 @@ export interface KeyboardHandlerDependencies {
     input: string,
   ) => boolean;
   handleExportSchema: () => void;
+  handleExportData: () => void;
   exit: () => void;
 }
 
@@ -148,6 +149,7 @@ export function useKeyboardHandler(deps: KeyboardHandlerDependencies) {
     keybindings,
     handleTextInput,
     handleExportSchema,
+    handleExportData,
     exit,
   } = deps;
 
@@ -172,6 +174,11 @@ export function useKeyboardHandler(deps: KeyboardHandlerDependencies) {
         updateDebugInfo("Export schema", input);
         handleExportSchema();
         return true;
+      } else if (keybindings.isExportData(input, key)) {
+        // Export current data to file - always available regardless of search mode
+        updateDebugInfo("Export data", input);
+        handleExportData();
+        return true;
       }
       return false;
     },
@@ -182,6 +189,7 @@ export function useKeyboardHandler(deps: KeyboardHandlerDependencies) {
       searchState.isSearching,
       searchState.searchTerm,
       handleExportSchema,
+      handleExportData,
     ],
   );
 
