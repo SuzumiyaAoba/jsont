@@ -69,6 +69,7 @@ Organized by feature domains, each containing:
 - `navigation/` - Goto navigation (gg/G) and keyboard shortcuts
 - `help/` - Context-sensitive help system
 - `status/` - Status bar and line number display
+- `settings/` - Interactive settings TUI with live preview and validation
 
 ### State Management
 - React hooks for local component state
@@ -109,13 +110,14 @@ Organized by feature domains, each containing:
 
 ### Import Standards
 - **Always use extensionless imports** for TypeScript files
-- **Use path aliases**: `@core/*` and `@features/*` instead of relative paths
+- **Use path aliases**: `@core/*`, `@features/*`, `@store/*`, `@components/*`, `@hooks/*` instead of relative paths
 - **Organize imports**: external → aliases → relative
 - **Example**:
   ```typescript
   import { Box, Text } from "ink";
   import type { JsonValue } from "@core/types/index";
   import { TreeView } from "@features/tree/components/TreeView";
+  import { useUI } from "@store/hooks/useUI";
   import { formatData } from "./utils/formatter";
   ```
 
@@ -148,7 +150,7 @@ The application implements sophisticated stdin processing to enable keyboard nav
 - **Line Navigation**: j/k, arrow keys for precise movement
 - **Page Navigation**: Ctrl+f/b for half-page scrolling
 - **Goto Navigation**: gg (top), G (bottom) for instant positioning
-- **Feature Toggle**: T (tree view), S (schema), D (debug), etc.
+- **Feature Toggle**: T (tree view), S (schema), D (debug), comma (settings), etc.
 
 ## Performance Optimization
 
@@ -198,6 +200,14 @@ keybindings:
     pageDown: string
 ```
 
+### Interactive Settings TUI
+- **Access**: Comma (`,`) key opens interactive settings editor
+- **Two-pane Layout**: Settings list on left, description/help on right  
+- **Live Preview**: Changes shown immediately with unsaved state tracking
+- **Navigation**: Tab to switch categories, j/k to navigate fields, Enter/e to edit
+- **Validation**: Real-time validation with error messages and type checking
+- **Persistence**: Ctrl+S to save, Ctrl+R to reset, Ctrl+D for defaults
+
 ## Testing Strategy
 
 - **Comprehensive Coverage**: 150+ tests across all utilities and components
@@ -222,6 +232,13 @@ keybindings:
 3. Add mode toggle logic to App.tsx
 4. Use conditional rendering for mode switching
 5. Follow existing patterns for search integration
+
+### Adding Settings Fields
+1. Add field definition to `settingsDefinitions.ts` with validation
+2. Create field component in `settings/components/fields/` if needed
+3. Update configuration schema in `@core/config/schema.ts`
+4. Add corresponding configuration mapper in `configMapper.ts`
+5. Test live preview and validation behavior
 
 ### Keyboard Handler Integration
 ```typescript
