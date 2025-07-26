@@ -138,7 +138,9 @@ describe("File Export Utils", () => {
       const result = await exportJsonSchemaToFile(testData);
 
       expect(result.success).toBe(false);
-      expect(result.error).toBe("Permission denied");
+      expect(result.error).toBe(
+        "Permission denied. You don't have permission to write to this location.",
+      );
     });
 
     it("should export complex nested data", async () => {
