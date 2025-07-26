@@ -47,9 +47,12 @@ export async function saveConfigToFile(
     const configPath = getConfigPath();
     await fs.writeFile(configPath, yamlContent, "utf8");
 
-    console.log(`Settings saved to ${configPath}`);
+    // Settings saved successfully
   } catch (error) {
-    console.error("Failed to save settings:", error);
+    // TODO: Show error message in UI
+    if (process.env["NODE_ENV"] === "development") {
+      console.error("Failed to save settings:", error);
+    }
     throw error;
   }
 }

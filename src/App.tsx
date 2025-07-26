@@ -23,6 +23,7 @@ import { SearchBar } from "@features/search/components/SearchBar";
 import { SettingsViewer } from "@features/settings/components/SettingsViewer";
 import { TreeView } from "@features/tree/components/TreeView";
 import { useExportHandlers } from "@hooks/useExportHandlers";
+import { useKeyboardHandler } from "@hooks/useKeyboardHandler";
 import { useSearchHandlers } from "@hooks/useSearchHandlers";
 import { useTerminalCalculations } from "@hooks/useTerminalCalculations";
 import { useAtomValue, useSetAtom } from "@store/atoms";
@@ -405,423 +406,77 @@ export function App({
     ],
   );
 
-  // Consolidated keyboard input handling
-  const handleKeyInput = useCallback(
-    (
-      input: string,
-      key: {
-        ctrl: boolean;
-        meta?: boolean;
-        shift?: boolean;
-        return?: boolean;
-        escape?: boolean;
-        backspace?: boolean;
-        delete?: boolean;
-        tab?: boolean;
-        upArrow?: boolean;
-        downArrow?: boolean;
-        leftArrow?: boolean;
-        rightArrow?: boolean;
-        pageUp?: boolean;
-        pageDown?: boolean;
-      },
-    ) => {
-      // Always allow exit commands
-      if (key.ctrl && input === "c") {
-        updateDebugInfo("Exit (Ctrl+C)", input);
-        exit();
-      } else if (helpVisible) {
-        // Handle help mode inputs - only allow help close or exit
-        if (keybindings.isHelp(input, key)) {
-          if (process.stdout.write) {
-            // Restore main screen buffer and clear
-            process.stdout.write("\x1b[?1049l"); // Switch back to main screen buffer
-            process.stdout.write("\x1b[2J\x1b[H\x1b[0m"); // Clear and reset
-          }
-          setHelpVisible(false);
-          updateDebugInfo("Close help (?)", input);
-        } else if (key.escape) {
-          if (process.stdout.write) {
-            // Restore main screen buffer and clear
-            process.stdout.write("\x1b[?1049l"); // Switch back to main screen buffer
-            process.stdout.write("\x1b[2J\x1b[H\x1b[0m"); // Clear and reset
-          }
-          setHelpVisible(false);
-          updateDebugInfo("Close help (Esc)", input);
-        }
-        // Ignore all other keys when help is visible
-        return;
-      } else if (
-        keybindings.isQuit(input, key) &&
-        !searchState.isSearching &&
-        !searchState.searchTerm
-      ) {
-        updateDebugInfo("Quit", input);
-        exit();
-      } else if (keybindings.isExport(input, key)) {
-        // Export JSON Schema to file - always available regardless of search mode
-        updateDebugInfo("Export schema", input);
-        handleExportSchema();
-      } else if (searchState.isSearching) {
-        // Search input mode
-        if (key.return) {
-          // Confirm search
-          updateDebugInfoCallback("Confirm search", input);
-          startSearch(searchInput);
-          resetScroll(); // Reset scroll to top after search
-        } else if (keybindings.isSearchExit(input, key)) {
-          // Cancel search - exit search mode entirely and clear all search state
-          updateDebugInfoCallback("Cancel search", input);
-          cancelSearch();
-          resetScroll(); // Reset scroll to top after canceling search
-        } else if (key.tab) {
-          // Toggle search scope
-          updateDebugInfoCallback("Toggle search scope", input);
-          cycleScope();
-        } else if (
-          handleTextInput(
-            { text: searchInput, cursorPosition: searchCursorPosition },
-            {
-              setText: setSearchInput,
-              setCursorPosition: setSearchCursorPosition,
-            },
-            key,
-            input,
-          )
-        ) {
-          // Text input handled by utility
-        } else {
-          // In search mode, ignore other keys
-          updateDebugInfoCallback(`Ignored in search mode: "${input}"`, input);
-        }
-      } else if (jqState.isActive) {
-        // JQ mode - complete implementation with all documented shortcuts
+  // Use the keyboard handler hook for modular keyboard input handling
+  const { handleKeyInput } = useKeyboardHandler({
+    // Debug utilities
+    updateDebugInfo,
+    updateDebugInfoCallback,
 
-        // Handle Enter key first (before text input) to execute jq transformation
-        if (key.return) {
-          handleJqTransformation(jqInput);
-        } else if (
-          jqFocusMode === "input" &&
-          handleTextInput(
-            { text: jqInput, cursorPosition: jqCursorPosition },
-            { setText: setJqInput, setCursorPosition: setJqCursorPosition },
-            key,
-            input,
-          )
-        ) {
-          // Text input handled by utility
-        } else if (key.escape) {
-          exitJqMode();
-        } else if (key.tab) {
-          setJqFocusMode((prev) => (prev === "input" ? "json" : "input"));
-        } else if (input === "i" && !key.ctrl && !key.meta) {
-          // Return to input mode (only when not in input mode or text input didn't handle it)
-          setJqFocusMode("input");
-          updateDebugInfo("JQ: Return to input mode", input);
-        } else if (input === "o" && !key.ctrl && !key.meta) {
-          // Toggle original/result view
-          toggleJqView();
-          updateDebugInfo("JQ: Toggle original/result view", input);
-        } else if (key.shift && key.upArrow) {
-          // Scroll error messages up
-          setJqErrorScrollOffset((prev) => Math.max(0, prev - 1));
-          updateDebugInfo("JQ: Scroll error up", "Shift+↑");
-        } else if (key.shift && key.downArrow) {
-          // Scroll error messages down
-          setJqErrorScrollOffset((prev) => prev + 1);
-          updateDebugInfo("JQ: Scroll error down", "Shift+↓");
-        } else if (jqFocusMode === "json") {
-          // JSON output navigation when focus is on result
-          if (keybindings.isDown(input, key)) {
-            // Scroll JSON result down
-            const currentMaxScroll = searchState.isSearching
-              ? maxScrollSearchMode
-              : maxScroll;
-            adjustScroll(1, currentMaxScroll);
-            updateDebugInfo("JQ JSON: Scroll down", input);
-          } else if (keybindings.isUp(input, key)) {
-            // Scroll JSON result up
-            const currentMaxScroll = searchState.isSearching
-              ? maxScrollSearchMode
-              : maxScroll;
-            adjustScroll(-1, currentMaxScroll);
-            updateDebugInfo("JQ JSON: Scroll up", input);
-          } else if (keybindings.isTop(input, key)) {
-            // Go to top in JSON result (simplified, no gg sequence in JQ mode)
-            scrollToTop();
-            updateDebugInfo("JQ JSON: Go to top", input);
-          } else if (keybindings.isBottom(input, key)) {
-            // Go to bottom in JSON result
-            const currentMaxScroll = searchState.isSearching
-              ? maxScrollSearchMode
-              : maxScroll;
-            scrollToBottom(currentMaxScroll);
-            updateDebugInfo("JQ JSON: Go to bottom", input);
-          } else if (keybindings.isPageDown(input, key)) {
-            // Page down in JSON result
-            const currentMaxScroll = searchState.isSearching
-              ? maxScrollSearchMode
-              : maxScroll;
-            adjustScroll(halfPageLines, currentMaxScroll);
-            updateDebugInfo("JQ JSON: Page down", "Ctrl+f");
-          } else if (keybindings.isPageUp(input, key)) {
-            // Page up in JSON result
-            const currentMaxScroll = searchState.isSearching
-              ? maxScrollSearchMode
-              : maxScroll;
-            adjustScroll(-halfPageLines, currentMaxScroll);
-            updateDebugInfo("JQ JSON: Page up", "Ctrl+b");
-          }
-        }
-      } else {
-        // Navigation mode - check TreeView handler first
-        if (treeViewMode && treeViewKeyboardHandler) {
-          // Let TreeView handle the input first
-          if (treeViewKeyboardHandler(input, key)) {
-            updateDebugInfo("TreeView handled", input);
-            return; // TreeView handled the input
-          }
-        }
+    // App state
+    helpVisible,
+    setHelpVisible,
 
-        // Check Collapsible mode handler
-        if (collapsibleMode && collapsibleViewerRef.current) {
-          // Handle collapsible-specific navigation
-          if (keybindings.isDown(input, key)) {
-            // Move cursor down
-            collapsibleViewerRef.current.navigate({ type: "move_down" });
-            updateDebugInfo("Collapsible: Move cursor down", input);
-            return;
-          } else if (keybindings.isUp(input, key)) {
-            // Move cursor up
-            collapsibleViewerRef.current.navigate({ type: "move_up" });
-            updateDebugInfo("Collapsible: Move cursor up", input);
-            return;
-          } else if (key.return || input === " ") {
-            // Toggle node
-            collapsibleViewerRef.current.navigate({ type: "toggle_node" });
-            updateDebugInfo("Collapsible: Toggle node", input);
-            return;
-          } else if (input === "o" && !key.ctrl && !key.meta) {
-            // Expand node
-            collapsibleViewerRef.current.navigate({ type: "expand_node" });
-            updateDebugInfo("Collapsible: Expand node", input);
-            return;
-          } else if (input === "c" && !key.ctrl && !key.meta) {
-            // Collapse node
-            collapsibleViewerRef.current.navigate({ type: "collapse_node" });
-            updateDebugInfo("Collapsible: Collapse node", input);
-            return;
-          } else if (input === "O" && !key.ctrl && !key.meta) {
-            // Expand all
-            collapsibleViewerRef.current.navigate({ type: "expand_all" });
-            updateDebugInfo("Collapsible: Expand all", input);
-            return;
-          } else if (keybindings.isPageDown(input, key)) {
-            // Page down
-            collapsibleViewerRef.current.navigate({
-              type: "page_down",
-              count: halfPageLines,
-            });
-            updateDebugInfo("Collapsible: Page down", "Ctrl+f");
-            return;
-          } else if (keybindings.isPageUp(input, key)) {
-            // Page up
-            collapsibleViewerRef.current.navigate({
-              type: "page_up",
-              count: halfPageLines,
-            });
-            updateDebugInfo("Collapsible: Page up", "Ctrl+b");
-            return;
-          } else if (keybindings.isTop(input, key)) {
-            // Go to top (simplified, no gg sequence in collapsible mode)
-            collapsibleViewerRef.current.navigate({ type: "goto_top" });
-            updateDebugInfo("Collapsible: Go to top", input);
-            return;
-          } else if (keybindings.isBottom(input, key)) {
-            // Go to bottom
-            collapsibleViewerRef.current.navigate({ type: "goto_bottom" });
-            updateDebugInfo("Collapsible: Go to bottom", input);
-            return;
-          }
-        }
+    // Search state
+    searchState,
+    searchInput,
+    searchCursorPosition,
+    setSearchInput,
+    setSearchCursorPosition,
+    setIsSearching,
+    startSearch,
+    cancelSearch,
+    cycleScope,
+    nextSearchResult,
+    previousSearchResult,
 
-        // Standard navigation mode
-        if (keybindings.isSearch(input, key)) {
-          // Start search mode
-          updateDebugInfo("Start search mode", input);
-          setIsSearching(true);
-          setSearchInput(searchState.searchTerm); // Preserve previous search term
-          setSearchCursorPosition(searchState.searchTerm.length); // Position cursor at end
-          resetScroll();
-        } else if (keybindings.isDown(input, key)) {
-          // Line down
-          updateDebugInfo("Scroll down", input);
-          const currentMaxScroll = searchState.isSearching
-            ? maxScrollSearchMode
-            : maxScroll;
-          adjustScroll(1, currentMaxScroll);
-        } else if (keybindings.isUp(input, key)) {
-          // Line up
-          updateDebugInfo("Scroll up", input);
-          const currentMaxScroll = searchState.isSearching
-            ? maxScrollSearchMode
-            : maxScroll;
-          adjustScroll(-1, currentMaxScroll);
-        } else if (keybindings.isJq(input, key)) {
-          // Toggle jq mode
-          toggleJqMode();
-          // Reset scroll when entering/exiting jq mode to ensure first line visibility
-          resetScroll();
-          updateDebugInfo(
-            `Toggle jq mode ${jqState.isActive ? "OFF" : "ON"}`,
-            input,
-          );
-        } else if (keybindings.isHelp(input, key)) {
-          // Toggle help visibility
-          setHelpVisible((prev) => !prev);
-          updateDebugInfo(`Toggle help ${helpVisible ? "OFF" : "ON"}`, input);
-        } else if (input === "P" && !key.ctrl && !key.meta) {
-          // Open settings (P for Preferences)
-          openSettings();
-          updateDebugInfo("Open settings", input);
-        } else if (keybindings.isTree(input, key)) {
-          // Toggle tree view mode
-          toggleTreeView();
-          updateDebugInfo(
-            `Toggle tree view ${treeViewMode ? "OFF" : "ON"}`,
-            input,
-          );
-        } else if (keybindings.isSchema(input, key)) {
-          // Toggle schema view
-          toggleSchema();
-          updateDebugInfo(
-            `Toggle schema view ${schemaVisible ? "OFF" : "ON"}`,
-            input,
-          );
-        } else if (keybindings.isCollapsible(input, key)) {
-          // Toggle collapsible mode
-          toggleCollapsible();
-          updateDebugInfo(
-            `Toggle collapsible mode ${collapsibleMode ? "OFF" : "ON"}`,
-            input,
-          );
-        } else if (keybindings.isLineNumbers(input, key)) {
-          // Toggle line numbers
-          toggleLineNumbers();
-          updateDebugInfo(
-            `Toggle line numbers ${lineNumbersVisible ? "OFF" : "ON"}`,
-            input,
-          );
-        } else if (keybindings.isDebug(input, key)) {
-          // Toggle debug log viewer
-          toggleDebugLogViewer();
-          updateDebugInfo("Toggle debug log viewer", input);
-        } else if (keybindings.isTop(input, key)) {
-          // Start G sequence for 'gg' command
-          if (waitingForSecondG) {
-            // Second 'g' pressed - go to top
-            updateDebugInfo("Go to top (gg)", input);
-            scrollToTop();
-            resetGSequence();
-          } else {
-            // First 'g' pressed - start sequence
-            updateDebugInfo("Start G sequence (g)", input);
-            startGSequence();
-          }
-        } else if (keybindings.isBottom(input, key)) {
-          // Go to bottom
-          updateDebugInfo("Go to bottom (G)", input);
-          const currentMaxScroll = searchState.isSearching
-            ? maxScrollSearchMode
-            : maxScroll;
-          scrollToBottom(currentMaxScroll);
-          resetGSequence();
-        } else if (keybindings.isPageDown(input, key)) {
-          // Page down
-          updateDebugInfo("Page down (Ctrl+f)", input);
-          const currentMaxScroll = searchState.isSearching
-            ? maxScrollSearchMode
-            : maxScroll;
-          adjustScroll(halfPageLines, currentMaxScroll);
-        } else if (keybindings.isPageUp(input, key)) {
-          // Page up
-          updateDebugInfo("Page up (Ctrl+b)", input);
-          const currentMaxScroll = searchState.isSearching
-            ? maxScrollSearchMode
-            : maxScroll;
-          adjustScroll(-halfPageLines, currentMaxScroll);
-        } else if (
-          keybindings.isSearchNext(input, key) &&
-          searchState.searchTerm
-        ) {
-          // Next search result
-          updateDebugInfo("Next search result (n)", input);
-          nextSearchResult();
-        } else if (
-          keybindings.isSearchPrevious(input, key) &&
-          searchState.searchTerm
-        ) {
-          // Previous search result
-          updateDebugInfo("Previous search result (N)", input);
-          previousSearchResult();
-        }
-      }
-    },
-    [
-      exit,
-      keybindings,
-      searchState.isSearching,
-      searchState.searchTerm,
-      jqState.isActive,
-      jqFocusMode,
-      helpVisible,
-      treeViewMode,
-      schemaVisible,
-      collapsibleMode,
-      lineNumbersVisible,
-      treeViewKeyboardHandler,
-      waitingForSecondG,
-      searchInput,
-      searchCursorPosition,
-      jqInput,
-      jqCursorPosition,
-      maxScroll,
-      maxScrollSearchMode,
-      halfPageLines,
-      updateDebugInfo,
-      updateDebugInfoCallback,
-      handleExportSchema,
-      handleJqTransformation,
-      setHelpVisible,
-      setIsSearching,
-      setSearchInput,
-      setSearchCursorPosition,
-      resetScroll,
-      startSearch,
-      cancelSearch,
-      cycleScope,
-      exitJqMode,
-      setJqFocusMode,
-      setJqInput,
-      setJqCursorPosition,
-      toggleJqMode,
-      toggleJqView,
-      setJqErrorScrollOffset,
-      scrollToTop,
-      scrollToBottom,
-      adjustScroll,
-      startGSequence,
-      resetGSequence,
-      nextSearchResult,
-      previousSearchResult,
-      toggleTreeView,
-      toggleSchema,
-      toggleCollapsible,
-      toggleLineNumbers,
-      toggleDebugLogViewer,
-      openSettings,
-    ],
-  );
+    // JQ state
+    jqState,
+    jqInput,
+    jqCursorPosition,
+    jqFocusMode,
+    setJqInput,
+    setJqCursorPosition,
+    setJqFocusMode,
+    setJqErrorScrollOffset,
+    handleJqTransformation,
+    exitJqMode,
+    toggleJqMode,
+    toggleJqView,
+
+    // Navigation state
+    maxScroll,
+    maxScrollSearchMode,
+    halfPageLines,
+    waitingForSecondG,
+    adjustScroll,
+    scrollToTop,
+    scrollToBottom,
+    resetScroll,
+    resetGSequence,
+    startGSequence,
+
+    // View modes
+    treeViewMode,
+    collapsibleMode,
+    schemaVisible,
+    lineNumbersVisible,
+    toggleTreeView,
+    toggleCollapsible,
+    toggleSchema,
+    toggleLineNumbers,
+    toggleDebugLogViewer,
+    openSettings,
+
+    // Handlers from child components
+    treeViewKeyboardHandler,
+    collapsibleViewerRef,
+
+    // Utilities
+    keybindings,
+    handleTextInput,
+    handleExportSchema,
+    exit,
+  });
 
   // Use Ink's useInput hook for keyboard handling
   useInput(

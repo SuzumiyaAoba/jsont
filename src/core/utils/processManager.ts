@@ -95,7 +95,11 @@ export class ProcessManager {
       this.keepAliveTimer = null;
     }
 
-    this.terminalManager.cleanup();
+    try {
+      this.terminalManager.cleanup();
+    } catch (error) {
+      // Silently ignore cleanup errors to prevent crashing during shutdown
+    }
   }
 
   /**

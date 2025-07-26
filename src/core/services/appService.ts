@@ -20,12 +20,16 @@ import { App } from "@/App";
 export class AppService {
   private terminalManager = new TerminalManager();
   private processManager = new ProcessManager(this.terminalManager);
+  private originalIsTTY = false;
 
   /**
    * Initialize and run the application
    */
   async run(): Promise<void> {
     try {
+      // Store original TTY state before any modifications
+      this.originalIsTTY = !!process.stdin.isTTY;
+
       // Parse CLI arguments
       const cliArgs = parseCliArgs();
 
@@ -146,7 +150,7 @@ export class AppService {
     });
 
     // In CI environments or non-TTY environments, auto-exit after a short delay
-    if (this.isCIEnvironment() || !process.stdin.isTTY) {
+    if (this.isCIEnvironment() || !this.originalIsTTY) {
       setTimeout(() => {
         app.unmount();
         this.processManager.cleanup();
