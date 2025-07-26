@@ -29,6 +29,7 @@ describe("Keybinding Utilities", () => {
       debug: ["D"],
       help: ["?"],
       export: ["E"],
+      exportData: ["Shift+E"],
       quit: ["q"],
     },
     search: {

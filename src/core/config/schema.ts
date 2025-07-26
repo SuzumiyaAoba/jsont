@@ -45,6 +45,7 @@ const modeKeysSchema = z.object({
   debug: stringArraySchema,
   help: stringArraySchema,
   export: stringArraySchema,
+  exportData: stringArraySchema,
   quit: stringArraySchema,
 }) satisfies z.ZodType<ModeKeys>;
 

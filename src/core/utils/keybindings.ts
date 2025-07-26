@@ -137,6 +137,10 @@ export class KeybindingMatcher {
     return matchesKeybinding(input, key, this.keybindings.modes.export);
   }
 
+  isExportData(input: string, key: KeyboardInput): boolean {
+    return matchesKeybinding(input, key, this.keybindings.modes.exportData);
+  }
+
   isQuit(input: string, key: KeyboardInput): boolean {
     return matchesKeybinding(input, key, this.keybindings.modes.quit);
   }

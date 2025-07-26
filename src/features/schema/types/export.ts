@@ -10,6 +10,18 @@ export interface ExportDialogState {
 export interface ExportPreferences {
   lastDirectory: string;
   defaultFilename: string;
-  format: "json" | "schema";
+  format: "json" | "schema" | "yaml" | "csv";
   rememberLocation: boolean;
+}
+
+export interface DataExportOptions {
+  includeTransformed: boolean;
+  includeOriginal: boolean;
+  includeFiltered: boolean;
+  format: "json" | "schema" | "yaml" | "csv";
+  csvOptions?: {
+    delimiter: string;
+    includeHeaders: boolean;
+    flattenArrays: boolean;
+  };
 }
