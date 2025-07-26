@@ -105,11 +105,6 @@ function getCommonHelpSections(keybindings: KeyBindings): HelpSection[] {
           category: "global",
         },
         {
-          key: formatKeyForDisplay(keybindings.modes.exportData),
-          description: "Export data",
-          category: "global",
-        },
-        {
           key: formatKeyForDisplay(keybindings.modes.lineNumbers),
           description: "Toggle line numbers",
           category: "global",
