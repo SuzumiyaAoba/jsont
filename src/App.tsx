@@ -8,6 +8,7 @@ import type { JsonValue } from "@core/types/index";
 import { createKeybindingMatcher } from "@core/utils/keybindings";
 import { CollapsibleJsonViewer } from "@features/collapsible/components/CollapsibleJsonViewer";
 import type { NavigationAction } from "@features/collapsible/types/collapsible";
+import { ConfirmationDialog, NotificationToast } from "@features/common";
 import { handleTextInput } from "@features/common/components/TextInput";
 import { DebugBar } from "@features/debug/components/DebugBar";
 import { DebugLogViewer } from "@features/debug/components/DebugLogViewer";
@@ -702,6 +703,12 @@ export function App({
           )}
         </>
       )}
+
+      {/* Global notification toast - always rendered last to be on top */}
+      <NotificationToast />
+
+      {/* Global confirmation dialog - always rendered last to be on top */}
+      <ConfirmationDialog />
     </Box>
   );
 }

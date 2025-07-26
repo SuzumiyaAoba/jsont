@@ -48,8 +48,10 @@ export async function saveConfigToFile(
     await fs.writeFile(configPath, yamlContent, "utf8");
 
     // Settings saved successfully
+    // Note: Success notification is handled by the calling atom to avoid duplication
   } catch (error) {
-    // TODO: Show error message in UI
+    // Error handling is done by the calling atom for consistency
+    // Just log in development and re-throw to maintain error propagation
     if (process.env["NODE_ENV"] === "development") {
       console.error("Failed to save settings:", error);
     }

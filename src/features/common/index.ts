@@ -1,5 +1,7 @@
 // Components
 export { BaseViewer } from "./components/BaseViewer";
+export { ConfirmationDialog } from "./components/ConfirmationDialog";
+export { NotificationToast } from "./components/NotificationToast";
 
 // Hooks
 export { useLineFormatting } from "./hooks/useLineFormatting";
