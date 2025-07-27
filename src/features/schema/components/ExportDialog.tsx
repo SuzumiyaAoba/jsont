@@ -15,6 +15,8 @@ export interface ExportDialogProps {
   onCancel: () => void;
   defaultFilename?: string;
   defaultFormat?: "json" | "schema" | "yaml" | "csv" | "xml" | "sql";
+  width?: number;
+  height?: number;
 }
 
 interface ExportConfig {
@@ -72,6 +74,8 @@ export function ExportDialog({
   onCancel,
   defaultFilename = "schema.json",
   defaultFormat = "json",
+  width = 80,
+  height = 24,
 }: ExportDialogProps) {
   const [config, setConfig] = useState<ExportConfig>(() => {
     const initialFormat = defaultFormat;
@@ -479,19 +483,31 @@ export function ExportDialog({
   );
   const baseUrlDisplay = baseUrlInput.getDisplayText(inputMode === "baseUrl");
 
+  // Determine layout based on terminal size
+  const isSmallScreen = width < 80 || height < 20;
+  const isVerySmallScreen = width < 60 || height < 15;
+
+  // Responsive layout configuration
+  const showQuickDirectories = !isVerySmallScreen;
+  const showFullInstructions = !isSmallScreen;
+  const showFullPath = !isVerySmallScreen;
+  const maxDialogWidth = isVerySmallScreen
+    ? width - 4
+    : Math.min(width - 8, 100);
+
   return (
     <Box
       borderStyle="double"
       borderColor="yellow"
       padding={1}
       flexDirection="column"
-      width="100%"
-      minHeight={12}
+      width={maxDialogWidth}
+      height={Math.min(height - 4, 30)}
     >
       <Box marginBottom={1}>
         <Text color="yellow" bold>
           📁 Export Data
-          {config.format === "json" && " (Data)"}
+          {config.format === "json" && " (JSON)"}
           {config.format === "schema" && " (Schema)"}
           {config.format === "yaml" && " (YAML)"}
           {config.format === "csv" && " (CSV)"}
@@ -513,7 +529,11 @@ export function ExportDialog({
               <Text color="white">{filenameDisplay.afterCursor}</Text>
             </Box>
           ) : (
-            <Text color="gray">{currentFilename}</Text>
+            <Text color="gray">
+              {isSmallScreen && currentFilename.length > 40
+                ? `...${currentFilename.slice(-37)}`
+                : currentFilename}
+            </Text>
           )}
         </Box>
 
@@ -529,7 +549,11 @@ export function ExportDialog({
               <Text color="white">{directoryDisplay.afterCursor}</Text>
             </Box>
           ) : (
-            <Text color="gray">{currentDirectory}</Text>
+            <Text color="gray">
+              {isSmallScreen && currentDirectory.length > 40
+                ? `...${currentDirectory.slice(-37)}`
+                : currentDirectory}
+            </Text>
           )}
         </Box>
 
@@ -537,15 +561,17 @@ export function ExportDialog({
         <Box>
           <Text color="cyan">Format: </Text>
           <Text color={inputMode === "format" ? "yellow" : "gray"}>
-            {config.format === "json" && "Data"}
+            {config.format === "json" && "JSON"}
             {config.format === "schema" && "Schema"}
             {config.format === "yaml" && "YAML"}
             {config.format === "csv" && "CSV"}
             {config.format === "xml" && "XML"}
             {config.format === "sql" && "SQL"}
-            {inputMode === "format"
-              ? " (j: Data, s: Schema, y: YAML, c: CSV, x: XML, q: SQL)"
-              : ""}
+            {inputMode === "format" && !isVerySmallScreen
+              ? " (j: JSON, s: Schema, y: YAML, c: CSV, x: XML, q: SQL)"
+              : inputMode === "format" && isVerySmallScreen
+                ? " (j/s/y/c/x/q)"
+                : ""}
           </Text>
         </Box>
 
@@ -567,47 +593,75 @@ export function ExportDialog({
           </Box>
         )}
 
-        {/* Full Path Preview */}
-        <Box marginTop={1}>
-          <Text color="green">Full Path: </Text>
-          <Text color="white" dimColor>
-            {fullPath}
-          </Text>
-        </Box>
+        {/* Full Path Preview - only show on larger screens */}
+        {showFullPath && (
+          <Box marginTop={1}>
+            <Text color="green">Full Path: </Text>
+            <Text color="white" dimColor>
+              {fullPath.length > maxDialogWidth - 20
+                ? `...${fullPath.slice(-(maxDialogWidth - 23))}`
+                : fullPath}
+            </Text>
+          </Box>
+        )}
 
-        {/* Quick Directory Selection */}
-        <Box flexDirection="column" marginTop={1}>
-          <Text color="yellow">
-            Quick Directories
-            {inputMode === "quickDir" ? " (j/k: navigate, Enter: select)" : ":"}
-          </Text>
-          {quickDirectories.map((dir, index) => (
-            <Box key={dir.name}>
-              <Text color="cyan">{index + 1}. </Text>
-              <Text color={selectedDirIndex === index ? "yellow" : "gray"}>
-                {dir.name}: {dir.path}
-              </Text>
-            </Box>
-          ))}
-        </Box>
+        {/* Quick Directory Selection - hide on very small screens */}
+        {showQuickDirectories && (
+          <Box flexDirection="column" marginTop={1}>
+            <Text color="yellow">
+              Quick Directories
+              {inputMode === "quickDir"
+                ? " (j/k: navigate, Enter: select)"
+                : ":"}
+            </Text>
+            {quickDirectories.map((dir, index) => (
+              <Box key={dir.name}>
+                <Text color="cyan">{index + 1}. </Text>
+                <Text color={selectedDirIndex === index ? "yellow" : "gray"}>
+                  {isSmallScreen
+                    ? `${dir.name}: ${dir.path.length > 30 ? `...${dir.path.slice(-30)}` : dir.path}`
+                    : `${dir.name}: ${dir.path}`}
+                </Text>
+              </Box>
+            ))}
+          </Box>
+        )}
 
         {/* Instructions */}
         <Box marginTop={1} borderStyle="single" borderColor="gray" padding={1}>
           <Box flexDirection="column">
-            <Text color="gray" dimColor>
-              Tab: Switch field | j/s/y/c: Format | 1-6: Quick directory | j/k:
-              Navigate dirs | Enter: Confirm/Select | Esc: Exit/Cancel
-            </Text>
-            <Text color="gray" dimColor>
-              Type to edit | C-a: Start | C-e: End | C-f: Forward | C-b: Back
-            </Text>
-            <Text color="gray" dimColor>
-              C-k: Kill to end | C-u: Kill to start | C-w: Kill word | C-d:
-              Delete char
-            </Text>
-            <Text color="gray" dimColor>
-              Backspace/Del: Delete left/right
-            </Text>
+            {showFullInstructions ? (
+              <>
+                <Text color="gray" dimColor>
+                  Tab: Switch field | j/s/y/c/x/q: Format | 1-6: Quick directory
+                  | j/k: Navigate dirs | Enter: Confirm/Select | Esc:
+                  Exit/Cancel
+                </Text>
+                <Text color="gray" dimColor>
+                  Type to edit | C-a: Start | C-e: End | C-f: Forward | C-b:
+                  Back
+                </Text>
+                <Text color="gray" dimColor>
+                  C-k: Kill to end | C-u: Kill to start | C-w: Kill word | C-d:
+                  Delete char
+                </Text>
+                <Text color="gray" dimColor>
+                  Backspace/Del: Delete left/right
+                </Text>
+              </>
+            ) : (
+              <>
+                <Text color="gray" dimColor>
+                  Tab: Switch | j/s/y/c/x/q: Format | 1-6: Dir | Enter: Confirm
+                  | Esc: Cancel
+                </Text>
+                {!isVerySmallScreen && (
+                  <Text color="gray" dimColor>
+                    Type to edit | C-a/e: Start/End | C-k/u: Kill
+                  </Text>
+                )}
+              </>
+            )}
           </Box>
         </Box>
       </Box>

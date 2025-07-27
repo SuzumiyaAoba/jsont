@@ -742,6 +742,8 @@ export function App({
             onCancel={handleExportCancel}
             defaultFilename={generateDefaultFilename("schema")}
             defaultFormat="schema"
+            width={terminalSize.width}
+            height={terminalSize.height}
           />
         </Box>
       )}
@@ -761,6 +763,8 @@ export function App({
             onConfirm={handleDataExportConfirm}
             onCancel={handleDataExportCancel}
             defaultFilename={generateDefaultFilename("json")}
+            width={terminalSize.width}
+            height={terminalSize.height}
           />
         </Box>
       )}

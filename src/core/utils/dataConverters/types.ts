@@ -77,4 +77,5 @@ export interface SqlOptions extends Record<string, unknown> {
   includeCreateTable: boolean;
   batchSize: number;
   escapeIdentifiers: boolean;
+  useMultiTableStructure?: boolean;
 }

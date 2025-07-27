@@ -22,6 +22,11 @@ interface TableSchema {
   columns: ColumnInfo[];
 }
 
+interface TableStructure {
+  schema: TableSchema;
+  data: Record<string, JsonValue>[];
+}
+
 export class SqlConverter implements DataConverter<SqlOptions> {
   readonly format = "sql";
   readonly extension = ".sql";
@@ -105,6 +110,7 @@ export class SqlConverter implements DataConverter<SqlOptions> {
       includeCreateTable: true,
       batchSize: 1000,
       escapeIdentifiers: true,
+      useMultiTableStructure: true,
     };
   }
 
@@ -124,7 +130,15 @@ export class SqlConverter implements DataConverter<SqlOptions> {
       return sql;
     }
 
-    // Normalize data to array of objects
+    // Check if we should use multi-table structure
+    if (
+      options.useMultiTableStructure &&
+      this.shouldUseMultiTableStructure(data)
+    ) {
+      return this.convertToMultiTableSQL(data, options);
+    }
+
+    // Use original single-table logic for simple cases
     const normalizedData = this.normalizeDataForSQL(data);
 
     if (normalizedData.length === 0) {
@@ -148,6 +162,221 @@ export class SqlConverter implements DataConverter<SqlOptions> {
     sql += this.generateInsertStatements(normalizedData, schema, options);
 
     return sql;
+  }
+
+  /**
+   * Determine if data structure requires multi-table approach
+   */
+  private shouldUseMultiTableStructure(data: JsonValue): boolean {
+    if (typeof data === "object" && data !== null && !Array.isArray(data)) {
+      const obj = data as Record<string, JsonValue>;
+      // Check if object has nested objects or arrays
+      return Object.values(obj).some(
+        (value) =>
+          Array.isArray(value) || (typeof value === "object" && value !== null),
+      );
+    }
+
+    if (Array.isArray(data)) {
+      // Check if array has objects with different structures
+      const objectItems = data.filter(
+        (item) =>
+          typeof item === "object" && item !== null && !Array.isArray(item),
+      ) as Record<string, JsonValue>[];
+
+      if (objectItems.length > 1) {
+        const structures = new Set(
+          objectItems.map((obj) => Object.keys(obj).sort().join(",")),
+        );
+        return structures.size > 1;
+      }
+    }
+
+    return false;
+  }
+
+  /**
+   * Convert data using multi-table structure
+   */
+  private convertToMultiTableSQL(data: JsonValue, options: SqlOptions): string {
+    let sql = "";
+
+    // Add header comment
+    sql += `-- Generated SQL with multi-table structure\n`;
+    sql += `-- Generated at: ${new Date().toISOString()}\n\n`;
+
+    // Generate multi-table SQL structure
+    const tableStructures = this.extractTableStructures(
+      data,
+      options.tableName || "data",
+    );
+
+    if (tableStructures.length === 0) {
+      sql += `-- No valid table structures found\n`;
+      return sql;
+    }
+
+    // Generate SQL for each table
+    for (const structure of tableStructures) {
+      // Generate CREATE TABLE statement if requested
+      if (options.includeCreateTable) {
+        sql += this.generateCreateTable(structure.schema, options);
+        sql += "\n";
+      }
+
+      // Generate INSERT statements
+      if (structure.data.length > 0) {
+        sql += this.generateInsertStatements(
+          structure.data,
+          structure.schema,
+          options,
+        );
+        sql += "\n";
+      } else {
+        sql += `-- No data to insert for table: ${structure.schema.tableName}\n\n`;
+      }
+    }
+
+    return sql;
+  }
+
+  /**
+   * Extract table structures from JSON data, creating separate tables for different object types
+   */
+  private extractTableStructures(
+    data: JsonValue,
+    baseTableName: string,
+  ): TableStructure[] {
+    const structures: TableStructure[] = [];
+
+    if (Array.isArray(data)) {
+      // Group array items by their structure (object keys)
+      const groupedByStructure = this.groupByObjectStructure(data);
+
+      let tableIndex = 0;
+      for (const [, items] of groupedByStructure.entries()) {
+        const tableName =
+          groupedByStructure.size > 1
+            ? `${baseTableName}_${tableIndex}`
+            : baseTableName;
+
+        const schema = this.inferSchema(items, tableName);
+        structures.push({
+          schema,
+          data: items,
+        });
+
+        tableIndex++;
+      }
+    } else if (typeof data === "object" && data !== null) {
+      // Single object - analyze nested objects
+      const flattenedStructures = this.flattenObjectToTables(
+        data,
+        baseTableName,
+      );
+      structures.push(...flattenedStructures);
+    } else {
+      // Primitive value - create single table
+      const primitiveData = [{ value: data }];
+      const schema = this.inferSchema(primitiveData, baseTableName);
+      structures.push({
+        schema,
+        data: primitiveData,
+      });
+    }
+
+    return structures;
+  }
+
+  /**
+   * Group array items by their object structure (set of keys)
+   */
+  private groupByObjectStructure(
+    array: JsonValue[],
+  ): Map<string, Record<string, JsonValue>[]> {
+    const groups = new Map<string, Record<string, JsonValue>[]>();
+
+    for (const item of array) {
+      if (typeof item === "object" && item !== null && !Array.isArray(item)) {
+        const obj = item as Record<string, JsonValue>;
+        const keys = Object.keys(obj).sort().join(",");
+
+        if (!groups.has(keys)) {
+          groups.set(keys, []);
+        }
+        groups.get(keys)!.push(obj);
+      }
+    }
+
+    return groups;
+  }
+
+  /**
+   * Flatten object into multiple tables based on nested structure
+   */
+  private flattenObjectToTables(
+    obj: Record<string, JsonValue>,
+    baseTableName: string,
+  ): TableStructure[] {
+    const structures: TableStructure[] = [];
+    const mainObjectData: Record<string, JsonValue> = {};
+    const nestedTables: Array<{ name: string; data: JsonValue }> = [];
+
+    // Separate primitive/simple values from nested objects/arrays
+    for (const [key, value] of Object.entries(obj)) {
+      if (Array.isArray(value)) {
+        // Handle arrays as separate tables
+        nestedTables.push({ name: `${baseTableName}_${key}`, data: value });
+      } else if (typeof value === "object" && value !== null) {
+        // Handle nested objects as separate tables - each object gets its own table
+        nestedTables.push({ name: `${baseTableName}_${key}`, data: value });
+      } else {
+        // Include primitive values in main table
+        mainObjectData[key] = value;
+      }
+    }
+
+    // Create main table if it has data
+    if (Object.keys(mainObjectData).length > 0) {
+      const mainSchema = this.inferSchema([mainObjectData], baseTableName);
+      structures.push({
+        schema: mainSchema,
+        data: [mainObjectData],
+      });
+    }
+
+    // Create tables for nested data recursively
+    for (const nestedTable of nestedTables) {
+      if (Array.isArray(nestedTable.data)) {
+        // Handle arrays
+        const nestedStructures = this.extractTableStructures(
+          nestedTable.data,
+          nestedTable.name,
+        );
+        structures.push(...nestedStructures);
+      } else if (
+        typeof nestedTable.data === "object" &&
+        nestedTable.data !== null
+      ) {
+        // Handle nested objects - create individual tables for each nested object
+        const nestedObj = nestedTable.data as Record<string, JsonValue>;
+        const nestedStructures = this.flattenObjectToTables(
+          nestedObj,
+          nestedTable.name,
+        );
+        structures.push(...nestedStructures);
+      } else {
+        // Handle primitive values - create single value table
+        const primitiveData = [{ value: nestedTable.data }];
+        const schema = this.inferSchema(primitiveData, nestedTable.name);
+        structures.push({
+          schema,
+          data: primitiveData,
+        });
+      }
+    }
+
+    return structures;
   }
 
   private normalizeDataForSQL(data: JsonValue): Record<string, JsonValue>[] {
@@ -306,7 +535,8 @@ export class SqlConverter implements DataConverter<SqlOptions> {
     schema: TableSchema,
     options: SqlOptions,
   ): string {
-    const { tableName, batchSize, dialect, escapeIdentifiers } = options;
+    const { batchSize, dialect, escapeIdentifiers } = options;
+    const tableName = schema.tableName;
     const escapeId = escapeIdentifiers
       ? this.getIdentifierEscaper(dialect)
       : (id: string) => id;

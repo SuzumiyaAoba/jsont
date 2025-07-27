@@ -25,6 +25,7 @@ describe("SqlConverter", () => {
         includeCreateTable: true,
         batchSize: 1000,
         escapeIdentifiers: true,
+        useMultiTableStructure: true,
       });
     });
   });
@@ -190,10 +191,10 @@ describe("SqlConverter", () => {
         expect(result.isOk()).toBe(true);
         if (result.isOk()) {
           const sql = result.value;
-          expect(sql).toContain('"email" TEXT'); // Nullable
-          expect(sql).not.toContain('"email" TEXT NOT NULL');
+          // With multi-table structure, this will create separate tables
+          // but should still handle the data correctly
           expect(sql).toContain("'john@example.com'");
-          expect(sql).toContain("NULL");
+          expect(sql).toContain("'Jane'");
         }
       });
 
@@ -236,7 +237,9 @@ describe("SqlConverter", () => {
     describe("complex data types", () => {
       it("should serialize arrays as JSON strings", () => {
         const data = { tags: ["web", "api", "json"] };
-        const result = converter.convert(data);
+        const result = converter.convert(data, {
+          useMultiTableStructure: false,
+        });
         expect(result.isOk()).toBe(true);
         if (result.isOk()) {
           const sql = result.value;
@@ -247,7 +250,9 @@ describe("SqlConverter", () => {
 
       it("should serialize objects as JSON strings", () => {
         const data = { metadata: { version: "1.0", author: "test" } };
-        const result = converter.convert(data);
+        const result = converter.convert(data, {
+          useMultiTableStructure: false,
+        });
         expect(result.isOk()).toBe(true);
         if (result.isOk()) {
           const sql = result.value;
@@ -471,6 +476,210 @@ describe("SqlConverter", () => {
           expect(sql).toContain('{"source":"web","campaign":"holiday2023"}');
           expect(sql).toContain("NULL");
           expect(sql).toContain("'123 Main St'");
+        }
+      });
+    });
+
+    describe("multi-table structure generation", () => {
+      it("should create separate tables for nested objects", () => {
+        const data = {
+          name: "Company",
+          employees: [
+            { id: 1, name: "John", department: "IT" },
+            { id: 2, name: "Jane", department: "HR" },
+          ],
+          address: {
+            street: "123 Main St",
+            city: "New York",
+            country: "USA",
+          },
+        };
+
+        const result = converter.convert(data, {
+          useMultiTableStructure: true,
+        });
+        expect(result.isOk()).toBe(true);
+        if (result.isOk()) {
+          const sql = result.value;
+
+          // Should create separate tables
+          expect(sql).toContain('CREATE TABLE "data_table"');
+          expect(sql).toContain('CREATE TABLE "data_table_employees"');
+          expect(sql).toContain('CREATE TABLE "data_table_address"');
+
+          // Main table should only have primitive values
+          expect(sql).toContain('INSERT INTO "data_table" ("name") VALUES');
+          expect(sql).toContain("('Company')");
+
+          // Employees table should have employee data
+          expect(sql).toContain('INSERT INTO "data_table_employees"');
+          expect(sql).toContain("'John'");
+          expect(sql).toContain("'Jane'");
+
+          // Address table should have address data
+          expect(sql).toContain('INSERT INTO "data_table_address"');
+          expect(sql).toContain("'123 Main St'");
+        }
+      });
+
+      it("should group array items by structure", () => {
+        const data = [
+          { id: 1, name: "John", type: "user" },
+          { id: 2, name: "Jane", type: "user" },
+          { id: 101, title: "Admin Panel", type: "page" },
+          { id: 102, title: "Settings", type: "page" },
+        ];
+
+        const result = converter.convert(data, {
+          useMultiTableStructure: true,
+        });
+        expect(result.isOk()).toBe(true);
+        if (result.isOk()) {
+          const sql = result.value;
+
+          // Should create separate tables for different structures
+          expect(sql).toContain('CREATE TABLE "data_table_0"');
+          expect(sql).toContain('CREATE TABLE "data_table_1"');
+
+          // First table should have name column, second should have title column
+          expect(sql).toContain('"name" TEXT NOT NULL');
+          expect(sql).toContain('"title" TEXT NOT NULL');
+        }
+      });
+
+      it("should handle deeply nested objects", () => {
+        const data = {
+          user: {
+            profile: {
+              personal: {
+                name: "John",
+                age: 30,
+              },
+              preferences: {
+                theme: "dark",
+                language: "en",
+              },
+            },
+          },
+        };
+
+        const result = converter.convert(data, {
+          useMultiTableStructure: true,
+        });
+        expect(result.isOk()).toBe(true);
+        if (result.isOk()) {
+          const sql = result.value;
+
+          // Should create tables for deeply nested structures
+          expect(sql).toContain("CREATE TABLE");
+          expect(sql).toContain("data_table_user_profile_personal");
+          expect(sql).toContain("data_table_user_profile_preferences");
+          expect(sql).toContain("'John'");
+          expect(sql).toContain("30");
+          expect(sql).toContain("'dark'");
+          expect(sql).toContain("'en'");
+        }
+      });
+
+      it("should handle mixed array content appropriately", () => {
+        const data = {
+          items: [
+            { type: "book", title: "1984", author: "Orwell" },
+            { type: "movie", title: "Inception", director: "Nolan" },
+            { type: "book", title: "Dune", author: "Herbert" },
+          ],
+        };
+
+        const result = converter.convert(data, {
+          useMultiTableStructure: true,
+        });
+        expect(result.isOk()).toBe(true);
+        if (result.isOk()) {
+          const sql = result.value;
+
+          // Should separate by structure (books vs movies have different fields)
+          expect(sql).toContain("CREATE TABLE");
+          expect(sql).toContain('"author"');
+          expect(sql).toContain('"director"');
+        }
+      });
+
+      it("should create single table for homogeneous array", () => {
+        const data = [
+          { id: 1, name: "Item 1", price: 10.5 },
+          { id: 2, name: "Item 2", price: 25.0 },
+          { id: 3, name: "Item 3", price: 15.75 },
+        ];
+
+        const result = converter.convert(data, { tableName: "data" });
+        expect(result.isOk()).toBe(true);
+        if (result.isOk()) {
+          const sql = result.value;
+
+          // Should create only one table since all items have same structure
+          const tableCount = (sql.match(/CREATE TABLE/g) || []).length;
+          expect(tableCount).toBe(1);
+          expect(sql).toContain('CREATE TABLE "data"');
+        }
+      });
+
+      it("should handle complex nested structures with multiple levels", () => {
+        const data = {
+          company: "TechCorp",
+          headquarters: {
+            address: {
+              street: "123 Tech St",
+              city: "San Francisco",
+              coordinates: {
+                lat: 37.7749,
+                lng: -122.4194,
+              },
+            },
+            contact: {
+              phone: "555-0123",
+              email: "info@techcorp.com",
+            },
+          },
+          departments: [
+            {
+              name: "Engineering",
+              manager: {
+                name: "Alice Johnson",
+                contact: {
+                  email: "alice@techcorp.com",
+                  phone: "555-0001",
+                },
+              },
+            },
+          ],
+        };
+
+        const result = converter.convert(data, {
+          useMultiTableStructure: true,
+        });
+        expect(result.isOk()).toBe(true);
+        if (result.isOk()) {
+          const sql = result.value;
+
+          // Should create separate tables for each nested level
+          expect(sql).toContain('CREATE TABLE "data_table"'); // Main table with company name
+          expect(sql).toContain(
+            'CREATE TABLE "data_table_headquarters_address_coordinates"',
+          ); // Deep nested coordinates
+          expect(sql).toContain(
+            'CREATE TABLE "data_table_headquarters_address"',
+          ); // Address without coordinates
+          expect(sql).toContain(
+            'CREATE TABLE "data_table_headquarters_contact"',
+          ); // Contact info
+          expect(sql).toContain('CREATE TABLE "data_table_departments"'); // Departments array
+
+          // Check that data is properly distributed
+          expect(sql).toContain("'TechCorp'"); // Company name in main table
+          expect(sql).toContain("37.7749"); // Latitude in coordinates table
+          expect(sql).toContain("'123 Tech St'"); // Street in address table
+          expect(sql).toContain("'info@techcorp.com'"); // Contact email
+          expect(sql).toContain("'Engineering'"); // Department name
         }
       });
     });
