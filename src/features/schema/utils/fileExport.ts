@@ -63,18 +63,12 @@ export async function exportToFile(
       );
     }
 
-    // Prepare format-specific options
-    let converterOptions: Record<string, unknown> = {};
-    switch (format) {
-      case "schema":
-        converterOptions = { title: "Exported Schema", baseUrl };
-        break;
-      case "csv":
-        converterOptions = csvOptions || converter.getDefaultOptions();
-        break;
-      default:
-        converterOptions = converter.getDefaultOptions();
-    }
+    // Prepare format-specific options by merging with converter defaults
+    const converterOptions = {
+      ...converter.getDefaultOptions(),
+      ...(format === "schema" && { title: "Exported Schema", baseUrl }),
+      ...(format === "csv" && csvOptions),
+    };
 
     // Validate data before conversion
     const validation = converter.validate(data);
@@ -122,7 +116,7 @@ export async function exportToFile(
     const filePath = join(outputDir, finalFilename);
 
     // Write file
-    await writeFile(filePath, conversionResult.data!, "utf8");
+    await writeFile(filePath, conversionResult.data, "utf8");
 
     return {
       success: true,
@@ -149,11 +143,21 @@ export async function exportToFile(
  * Validate filename for security and compatibility
  */
 function isValidFilename(filename: string): boolean {
-  // Check for invalid characters - block only problematic characters
+  // Disallow filenames that are special directory references
+  if (filename === "." || filename === "..") {
+    return false;
+  }
+
+  // Check for invalid characters, including path separators
   // Disable biome warning for intentional control character regex
   // biome-ignore lint/suspicious/noControlCharactersInRegex: Control chars intentionally blocked for security
-  const invalidChars = /[<>:"|?*\u0000-\u001f]/;
-  return !invalidChars.test(filename) && filename.trim().length > 0;
+  const invalidChars = /[<>:"/\\|?*\u0000-\u001f]/;
+  if (invalidChars.test(filename)) {
+    return false;
+  }
+
+  // Ensure the filename is not empty after trimming
+  return filename.trim().length > 0;
 }
 
 /**

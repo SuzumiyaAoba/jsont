@@ -9,11 +9,9 @@ export interface ValidationResult {
   error?: string;
 }
 
-export interface ConversionResult {
-  success: boolean;
-  data?: string;
-  error?: string;
-}
+export type ConversionResult =
+  | { success: true; data: string }
+  | { success: false; error: string };
 
 export interface DataConverter<TOptions = Record<string, unknown>> {
   readonly format: string;

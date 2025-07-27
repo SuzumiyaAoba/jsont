@@ -96,6 +96,16 @@ export class CsvConverter implements DataConverter<CsvOptions> {
       // If array contains objects, flatten them
       // Each object becomes a row, with all unique keys as columns
       if (typeof data[0] === "object" && data[0] !== null) {
+        // Validate all elements are objects
+        const allObjects = data.every(
+          (item) =>
+            typeof item === "object" && item !== null && !Array.isArray(item),
+        );
+        if (!allObjects) {
+          throw new Error(
+            "Mixed types in array: CSV requires all elements to be objects or all to be primitives",
+          );
+        }
         return this.convertObjectArrayToCSV(
           data as Record<string, unknown>[],
           delimiter,
