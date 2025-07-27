@@ -1,13 +1,18 @@
 /**
- * File export utilities for JSON, JSON Schema, YAML, and CSV
+ * File export utilities - Refactored to use data converters
  */
 
 import { writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import type { JsonValue } from "@core/types/index";
-import { dump as yamlDump } from "js-yaml";
-import { formatJsonSchema, inferJsonSchema } from "./schemaUtils";
+import { dataConverterRegistry } from "@core/utils/dataConverters";
+import {
+  createExportErrorHandler,
+  ExportError,
+  ExportErrorCode,
+} from "@core/utils/errors";
 
+// Legacy interfaces for backward compatibility
 export interface ExportOptions {
   filename?: string;
   outputDir?: string;
@@ -27,21 +32,18 @@ export interface ExportResult {
 }
 
 /**
- * Export data to various formats
+ * Export data to various formats using the new converter architecture
  *
  * @param data - The JSON data to export
  * @param options - Export configuration options
- * @param options.filename - Output filename (defaults based on format)
- * @param options.outputDir - Output directory (defaults to current working directory)
- * @param options.format - Export format: "json", "schema", "yaml", or "csv" (defaults to "json")
- * @param options.baseUrl - Base URL for JSON Schema (only used when format is "schema")
- * @param options.csvOptions - CSV-specific options (delimiter, headers, array flattening)
  * @returns Promise resolving to export result with success status and file path
  */
 export async function exportToFile(
   data: JsonValue,
   options: ExportOptions = {},
 ): Promise<ExportResult> {
+  const errorHandler = createExportErrorHandler();
+
   try {
     const {
       filename,
@@ -51,64 +53,113 @@ export async function exportToFile(
       csvOptions,
     } = options;
 
-    // Generate content based on format
-    let content: string;
-    let defaultExtension: string;
-    let defaultFilename: string;
+    // Get the appropriate converter
+    const converter = dataConverterRegistry.get(format);
+    if (!converter) {
+      throw new ExportError(
+        `Unsupported format: ${format}`,
+        ExportErrorCode.UNSUPPORTED_FORMAT,
+        { format },
+      );
+    }
 
-    switch (format) {
-      case "schema":
-        content = formatJsonSchema(
-          inferJsonSchema(data, "Exported Schema", baseUrl),
-        );
-        defaultExtension = ".json";
-        defaultFilename = "schema.json";
-        break;
-      case "yaml":
-        content = yamlDump(data, {
-          indent: 2,
-          lineWidth: -1, // No line wrapping
-          noRefs: true, // Avoid references
-          skipInvalid: true, // Skip invalid values
-        });
-        defaultExtension = ".yaml";
-        defaultFilename = "export.yaml";
-        break;
-      case "csv":
-        content = convertToCSV(data, csvOptions);
-        defaultExtension = ".csv";
-        defaultFilename = "export.csv";
-        break;
-      case "json":
-      default:
-        content = JSON.stringify(data, null, 2);
-        defaultExtension = ".json";
-        defaultFilename = "export.json";
-        break;
+    // Prepare format-specific options by merging with converter defaults
+    const converterOptions = {
+      ...converter.getDefaultOptions(),
+      ...(format === "schema" && { title: "Exported Schema", baseUrl }),
+      ...(format === "csv" && csvOptions),
+    };
+
+    // Validate data before conversion
+    const validation = converter.validate(data);
+    if (validation.isErr()) {
+      const validationError = validation.error;
+      throw new ExportError(
+        validationError.message || "Data validation failed",
+        ExportErrorCode.INVALID_DATA,
+        { format, validationError: validationError.message },
+      );
+    }
+
+    // Convert data
+    const conversionResult = converter.convert(data, converterOptions);
+    if (conversionResult.isErr()) {
+      const conversionError = conversionResult.error;
+      throw new ExportError(
+        conversionError.message || "Conversion failed",
+        ExportErrorCode.CONVERSION_FAILED,
+        { format, conversionError: conversionError.message },
+      );
     }
 
     // Determine final filename
+    const extension = converter.extension;
+    let defaultFilename = `export${extension}`;
+    if (format === "schema") {
+      defaultFilename = `schema${extension}`;
+    }
+
     const finalFilename = filename
       ? filename.includes(".")
         ? filename
-        : `${filename}${defaultExtension}`
+        : `${filename}${extension}`
       : defaultFilename;
 
-    // Construct full file path
+    // Validate filename
+    if (!isValidFilename(finalFilename)) {
+      throw new ExportError(
+        "Invalid filename",
+        ExportErrorCode.INVALID_FILENAME,
+        { filename: finalFilename },
+      );
+    }
+
+    // Construct and validate full file path
     const filePath = join(outputDir, finalFilename);
+
     // Write file
-    await writeFile(filePath, content, "utf8");
+    await writeFile(filePath, conversionResult.value, "utf8");
 
     return {
       success: true,
       filePath,
     };
   } catch (error) {
+    const exportError = errorHandler.normalize(error, {
+      ...(options.filename && { filename: options.filename }),
+      ...(options.outputDir && { directory: options.outputDir }),
+      ...(options.format && { format: options.format }),
+      operation: "exportToFile",
+    });
+
+    errorHandler.log(exportError);
+
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Unknown export error",
+      error: exportError.userMessage,
     };
   }
+}
+
+/**
+ * Validate filename for security and compatibility
+ */
+function isValidFilename(filename: string): boolean {
+  // Disallow filenames that are special directory references
+  if (filename === "." || filename === "..") {
+    return false;
+  }
+
+  // Check for invalid characters, including path separators
+  // Disable biome warning for intentional control character regex
+  // biome-ignore lint/suspicious/noControlCharactersInRegex: Control chars intentionally blocked for security
+  const invalidChars = /[<>:"/\\|?*\u0000-\u001f]/;
+  if (invalidChars.test(filename)) {
+    return false;
+  }
+
+  // Ensure the filename is not empty after trimming
+  return filename.trim().length > 0;
 }
 
 /**
@@ -172,172 +223,4 @@ export function validateExportOptions(options: ExportOptions): {
   }
 
   return { isValid: true };
-}
-
-/**
- * Convert JSON data to CSV format
- *
- * @param data - JSON data to convert
- * @param options - CSV conversion options
- * @returns CSV string representation
- */
-function convertToCSV(
-  data: JsonValue,
-  options: ExportOptions["csvOptions"] = {},
-): string {
-  const {
-    delimiter = ",",
-    includeHeaders = true,
-    flattenArrays = true,
-  } = options;
-
-  // Handle null or undefined data
-  if (data === null || data === undefined) {
-    return "";
-  }
-
-  // Handle primitive values
-  // Primitives are exported as a single column with header "value"
-  if (typeof data !== "object") {
-    return includeHeaders
-      ? `value\n${escapeCsvValue(String(data), delimiter)}`
-      : String(data);
-  }
-
-  // Handle arrays
-  if (Array.isArray(data)) {
-    if (data.length === 0) {
-      return "";
-    }
-
-    // If array contains objects, flatten them
-    // Each object becomes a row, with all unique keys as columns
-    if (typeof data[0] === "object" && data[0] !== null) {
-      return convertObjectArrayToCSV(
-        data as Record<string, unknown>[],
-        delimiter,
-        includeHeaders,
-        flattenArrays,
-      );
-    }
-
-    // Simple array of primitives
-    // Each primitive becomes a row in a single "value" column
-    const header = includeHeaders ? "value\n" : "";
-    const rows = data
-      .map((item) => escapeCsvValue(String(item), delimiter))
-      .join("\n");
-    return header + rows;
-  }
-
-  // Handle single object
-  if (typeof data === "object" && !Array.isArray(data)) {
-    return convertObjectArrayToCSV(
-      [data as Record<string, unknown>],
-      delimiter,
-      includeHeaders,
-      flattenArrays,
-    );
-  }
-
-  return "";
-}
-
-/**
- * Convert array of objects to CSV
- */
-function convertObjectArrayToCSV(
-  objects: Record<string, unknown>[],
-  delimiter: string,
-  includeHeaders: boolean,
-  flattenArrays: boolean,
-): string {
-  if (objects.length === 0) {
-    return "";
-  }
-
-  // Collect all unique keys from all objects
-  const allKeys = new Set<string>();
-  const flattenedObjects = objects.map((obj) => {
-    const flattened = flattenArrays ? flattenObject(obj) : obj;
-    Object.keys(flattened).forEach((key) => allKeys.add(key));
-    return flattened;
-  });
-
-  const headers = Array.from(allKeys).sort();
-
-  // Build CSV content
-  const lines: string[] = [];
-
-  if (includeHeaders) {
-    lines.push(
-      headers
-        .map((header) => escapeCsvValue(header, delimiter))
-        .join(delimiter),
-    );
-  }
-
-  flattenedObjects.forEach((obj) => {
-    const row = headers.map((header) => {
-      const value = obj[header];
-      return escapeCsvValue(
-        value !== undefined ? String(value) : "",
-        delimiter,
-      );
-    });
-    lines.push(row.join(delimiter));
-  });
-
-  return lines.join("\n");
-}
-
-/**
- * Flatten nested object for CSV conversion
- */
-function flattenObject(
-  obj: Record<string, unknown>,
-  prefix = "",
-): Record<string, unknown> {
-  const flattened: Record<string, unknown> = {};
-
-  Object.entries(obj).forEach(([key, value]) => {
-    const newKey = prefix ? `${prefix}.${key}` : key;
-
-    if (value !== null && typeof value === "object" && !Array.isArray(value)) {
-      // Recursively flatten nested objects
-      Object.assign(
-        flattened,
-        flattenObject(value as Record<string, unknown>, newKey),
-      );
-    } else if (Array.isArray(value)) {
-      // Convert arrays to semicolon-separated strings
-      // Note: Using semicolon to avoid conflicts with comma delimiter
-      flattened[newKey] = value
-        .map((item) =>
-          typeof item === "object" ? JSON.stringify(item) : String(item),
-        )
-        .join("; ");
-    } else {
-      flattened[newKey] = value;
-    }
-  });
-
-  return flattened;
-}
-
-/**
- * Escape CSV value by adding quotes and escaping internal quotes
- */
-function escapeCsvValue(value: string, delimiter: string): string {
-  // Check if value needs escaping (contains delimiter, quotes, or newlines)
-  if (
-    value.includes(delimiter) ||
-    value.includes('"') ||
-    value.includes("\n")
-  ) {
-    // Escape internal quotes by doubling them
-    const escaped = value.replace(/"/g, '""');
-    return `"${escaped}"`;
-  }
-  return value;
 }
