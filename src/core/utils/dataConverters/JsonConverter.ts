@@ -3,11 +3,12 @@
  */
 
 import type { JsonValue } from "@core/types/index";
+import { err, ok } from "neverthrow";
 import type {
   ConversionResult,
   DataConverter,
+  DataValidationResult,
   JsonOptions,
-  ValidationResult,
 } from "./types";
 
 export class JsonConverter implements DataConverter<JsonOptions> {
@@ -24,28 +25,27 @@ export class JsonConverter implements DataConverter<JsonOptions> {
       const { indent = 2 } = finalOptions;
       const result = JSON.stringify(data, null, Number(indent));
 
-      return {
-        success: true,
-        data: result,
-      };
+      return ok(result);
     } catch (error) {
-      return {
-        success: false,
-        error:
+      return err({
+        type: "CONVERSION_ERROR" as const,
+        message:
           error instanceof Error ? error.message : "JSON conversion failed",
-      };
+        format: this.format,
+      });
     }
   }
 
-  validate(data: JsonValue): ValidationResult {
+  validate(data: JsonValue): DataValidationResult {
     try {
       JSON.stringify(data);
-      return { isValid: true };
+      return ok(undefined);
     } catch (error) {
-      return {
-        isValid: false,
-        error: error instanceof Error ? error.message : "Invalid JSON data",
-      };
+      return err({
+        type: "VALIDATION_ERROR" as const,
+        message: error instanceof Error ? error.message : "Invalid JSON data",
+        format: this.format,
+      });
     }
   }
 

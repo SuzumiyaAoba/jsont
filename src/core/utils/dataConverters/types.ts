@@ -3,15 +3,29 @@
  */
 
 import type { JsonValue } from "@core/types/index";
+import type { Result } from "neverthrow";
 
 export interface ValidationResult {
   isValid: boolean;
   error?: string;
 }
 
-export type ConversionResult =
-  | { success: true; data: string }
-  | { success: false; error: string };
+// neverthrow Result types for data conversion
+export type ConversionError = {
+  readonly type: "CONVERSION_ERROR";
+  readonly message: string;
+  readonly format?: string;
+  readonly context?: Record<string, unknown>;
+};
+
+export type ValidationError = {
+  readonly type: "VALIDATION_ERROR";
+  readonly message: string;
+  readonly format?: string;
+};
+
+export type ConversionResult = Result<string, ConversionError>;
+export type DataValidationResult = Result<void, ValidationError>;
 
 export interface DataConverter<TOptions = Record<string, unknown>> {
   readonly format: string;
@@ -22,7 +36,7 @@ export interface DataConverter<TOptions = Record<string, unknown>> {
     data: JsonValue,
     options?: TOptions | Record<string, unknown>,
   ): ConversionResult;
-  validate(data: JsonValue): ValidationResult;
+  validate(data: JsonValue): DataValidationResult;
   getDefaultOptions(): TOptions;
 }
 

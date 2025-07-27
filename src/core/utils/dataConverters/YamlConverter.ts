@@ -4,10 +4,11 @@
 
 import type { JsonValue } from "@core/types/index";
 import { dump as yamlDump } from "js-yaml";
+import { err, ok } from "neverthrow";
 import type {
   ConversionResult,
   DataConverter,
-  ValidationResult,
+  DataValidationResult,
   YamlOptions,
 } from "./types";
 
@@ -24,31 +25,30 @@ export class YamlConverter implements DataConverter<YamlOptions> {
       const yamlOptions = { ...this.getDefaultOptions(), ...options };
       const result = yamlDump(data, yamlOptions);
 
-      return {
-        success: true,
-        data: result,
-      };
+      return ok(result);
     } catch (error) {
-      return {
-        success: false,
-        error:
+      return err({
+        type: "CONVERSION_ERROR" as const,
+        message:
           error instanceof Error ? error.message : "YAML conversion failed",
-      };
+        format: this.format,
+      });
     }
   }
 
-  validate(data: JsonValue): ValidationResult {
+  validate(data: JsonValue): DataValidationResult {
     try {
       yamlDump(data);
-      return { isValid: true };
+      return ok(undefined);
     } catch (error) {
-      return {
-        isValid: false,
-        error:
+      return err({
+        type: "VALIDATION_ERROR" as const,
+        message:
           error instanceof Error
             ? error.message
             : "Invalid data for YAML conversion",
-      };
+        format: this.format,
+      });
     }
   }
 

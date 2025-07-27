@@ -3,11 +3,12 @@
  */
 
 import type { JsonValue } from "@core/types/index";
+import { err, ok } from "neverthrow";
 import type {
   ConversionResult,
   CsvOptions,
   DataConverter,
-  ValidationResult,
+  DataValidationResult,
 } from "./types";
 
 export class CsvConverter implements DataConverter<CsvOptions> {
@@ -23,30 +24,30 @@ export class CsvConverter implements DataConverter<CsvOptions> {
       const csvOptions = { ...this.getDefaultOptions(), ...options };
       const result = this.convertToCSV(data, csvOptions);
 
-      return {
-        success: true,
-        data: result,
-      };
+      return ok(result);
     } catch (error) {
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : "CSV conversion failed",
-      };
+      return err({
+        type: "CONVERSION_ERROR" as const,
+        message:
+          error instanceof Error ? error.message : "CSV conversion failed",
+        format: this.format,
+        context: { options },
+      });
     }
   }
 
-  validate(data: JsonValue): ValidationResult {
+  validate(data: JsonValue): DataValidationResult {
     if (data === null || data === undefined) {
-      return { isValid: true }; // Empty data is valid for CSV
+      return ok(undefined); // Empty data is valid for CSV
     }
 
     // CSV works best with array of objects or simple arrays
     if (Array.isArray(data)) {
-      return { isValid: true };
+      return ok(undefined);
     }
 
     if (typeof data === "object" && data !== null) {
-      return { isValid: true };
+      return ok(undefined);
     }
 
     if (
@@ -54,13 +55,14 @@ export class CsvConverter implements DataConverter<CsvOptions> {
       typeof data === "number" ||
       typeof data === "boolean"
     ) {
-      return { isValid: true };
+      return ok(undefined);
     }
 
-    return {
-      isValid: false,
-      error: "Data type not suitable for CSV conversion",
-    };
+    return err({
+      type: "VALIDATION_ERROR" as const,
+      message: "Data type not suitable for CSV conversion",
+      format: this.format,
+    });
   }
 
   getDefaultOptions(): CsvOptions {

@@ -72,21 +72,23 @@ export async function exportToFile(
 
     // Validate data before conversion
     const validation = converter.validate(data);
-    if (!validation.isValid) {
+    if (validation.isErr()) {
+      const validationError = validation.error;
       throw new ExportError(
-        validation.error || "Data validation failed",
+        validationError.message || "Data validation failed",
         ExportErrorCode.INVALID_DATA,
-        { format, validationError: validation.error },
+        { format, validationError: validationError.message },
       );
     }
 
     // Convert data
     const conversionResult = converter.convert(data, converterOptions);
-    if (!conversionResult.success) {
+    if (conversionResult.isErr()) {
+      const conversionError = conversionResult.error;
       throw new ExportError(
-        conversionResult.error || "Conversion failed",
+        conversionError.message || "Conversion failed",
         ExportErrorCode.CONVERSION_FAILED,
-        { format, conversionError: conversionResult.error },
+        { format, conversionError: conversionError.message },
       );
     }
 
@@ -116,7 +118,7 @@ export async function exportToFile(
     const filePath = join(outputDir, finalFilename);
 
     // Write file
-    await writeFile(filePath, conversionResult.data, "utf8");
+    await writeFile(filePath, conversionResult.value, "utf8");
 
     return {
       success: true,
