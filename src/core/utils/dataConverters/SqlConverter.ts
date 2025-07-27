@@ -379,11 +379,19 @@ export class SqlConverter implements DataConverter<SqlOptions> {
     // For TEXT, TIMESTAMP, and complex types, escape as string
     const stringValue =
       typeof value === "object" ? JSON.stringify(value) : String(value);
-    return this.escapeSqlString(stringValue);
+    return this.escapeSqlString(stringValue, dialect);
   }
 
-  private escapeSqlString(str: string): string {
-    return `'${str.replace(/'/g, "''")}'`;
+  private escapeSqlString(str: string, dialect?: string): string {
+    // Escape single quotes for all dialects
+    let escaped = str.replace(/'/g, "''");
+
+    // Additional escaping for specific dialects
+    if (dialect === "mysql") {
+      escaped = escaped.replace(/\\/g, "\\\\");
+    }
+
+    return `'${escaped}'`;
   }
 
   private getIdentifierEscaper(

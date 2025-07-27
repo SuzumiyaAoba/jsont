@@ -372,6 +372,26 @@ describe("SqlConverter", () => {
         }
       });
 
+      it("should escape backslashes in MySQL", () => {
+        const data = { path: "C:\\Program Files\\App" };
+        const result = converter.convert(data, { dialect: "mysql" });
+        expect(result.isOk()).toBe(true);
+        if (result.isOk()) {
+          const sql = result.value;
+          expect(sql).toContain("'C:\\\\Program Files\\\\App'");
+        }
+      });
+
+      it("should not escape backslashes in PostgreSQL", () => {
+        const data = { path: "C:\\Program Files\\App" };
+        const result = converter.convert(data, { dialect: "postgresql" });
+        expect(result.isOk()).toBe(true);
+        if (result.isOk()) {
+          const sql = result.value;
+          expect(sql).toContain("'C:\\Program Files\\App'");
+        }
+      });
+
       it("should handle special characters in identifiers", () => {
         const data = { "user-name": "test", "user.email": "test@example.com" };
         const result = converter.convert(data);
