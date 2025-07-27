@@ -101,7 +101,7 @@ function getCommonHelpSections(keybindings: KeyBindings): HelpSection[] {
         { key: "Ctrl+C", description: "Exit application", category: "global" },
         {
           key: formatKeyForDisplay(keybindings.modes.export),
-          description: "Export JSON Schema",
+          description: "Export data (JSON Schema, XML, SQL)",
           category: "global",
         },
         {
@@ -425,7 +425,11 @@ function getModeSpecificHelpSections(
         {
           title: "Schema Operations",
           shortcuts: [
-            { key: "E", description: "Export schema", category: "operation" },
+            {
+              key: "E",
+              description: "Export data (JSON Schema, XML, SQL)",
+              category: "operation",
+            },
           ],
         },
       ];
@@ -486,7 +490,7 @@ export function getQuickHelpText(
     search: `Enter: search, ${searchNext}/${searchPrev}: next/prev, Tab: scope, ${search}: new search, ${help}: help`,
     filter: `Enter: apply, Tab: switch, i: input, o: toggle view, ${help}: help`,
     collapsible: `${up}/${down}: move, Space: toggle, o/c: expand/collapse, O: all, ${help}: help`,
-    schema: `${up}/${down}: scroll, ${pageUp}/${pageDown}: page, ${export_}: export, ${help}: help`,
+    schema: `${up}/${down}: scroll, ${pageUp}/${pageDown}: page, ${export_}: export (Schema/XML/SQL), ${help}: help`,
     raw: `${up}/${down}: scroll, ${pageUp}/${pageDown}: page, ${top}/${bottom}: top/bottom, ${help}: help`,
   };
 

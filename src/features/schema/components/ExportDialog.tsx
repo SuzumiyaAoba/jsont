@@ -14,18 +14,56 @@ export interface ExportDialogProps {
   onConfirm: (options: ExportOptions) => void;
   onCancel: () => void;
   defaultFilename?: string;
+  defaultFormat?: "json" | "schema" | "yaml" | "csv" | "xml" | "sql";
 }
 
 interface ExportConfig {
   filename: string;
   outputDir: string;
-  format: "json" | "schema" | "yaml" | "csv";
+  format: "json" | "schema" | "yaml" | "csv" | "xml" | "sql";
   baseUrl?: string;
   csvOptions?: {
     delimiter: string;
     includeHeaders: boolean;
     flattenArrays: boolean;
   };
+  xmlOptions?: {
+    rootElement: string;
+    arrayItemElement: string;
+    indent: number;
+    declaration: boolean;
+  };
+  sqlOptions?: {
+    tableName: string;
+    dialect: "postgresql" | "mysql" | "sqlite" | "mssql";
+    includeCreateTable: boolean;
+    batchSize: number;
+    escapeIdentifiers: boolean;
+  };
+}
+
+/**
+ * Get file extension for the given format
+ */
+function getExtensionForFormat(format: string): string {
+  const extensionMap: Record<string, string> = {
+    json: ".json",
+    schema: ".json",
+    yaml: ".yaml",
+    csv: ".csv",
+    xml: ".xml",
+    sql: ".sql",
+  };
+  return extensionMap[format] || ".json";
+}
+
+/**
+ * Update filename extension based on format
+ */
+function updateFilenameExtension(filename: string, newFormat: string): string {
+  const newExtension = getExtensionForFormat(newFormat);
+  const baseName = filename.replace(/\.[^/.]+$/, ""); // Remove existing extension
+  return `${baseName}${newExtension}`;
 }
 
 export function ExportDialog({
@@ -33,17 +71,39 @@ export function ExportDialog({
   onConfirm,
   onCancel,
   defaultFilename = "schema.json",
+  defaultFormat = "json",
 }: ExportDialogProps) {
-  const [config, setConfig] = useState<ExportConfig>({
-    filename: defaultFilename,
-    outputDir: process.cwd(),
-    format: "json",
-    baseUrl: "https://json-schema.org/draft/2020-12/schema",
-    csvOptions: {
-      delimiter: ",",
-      includeHeaders: true,
-      flattenArrays: true,
-    },
+  const [config, setConfig] = useState<ExportConfig>(() => {
+    const initialFormat = defaultFormat;
+    const initialFilename = updateFilenameExtension(
+      defaultFilename,
+      initialFormat,
+    );
+
+    return {
+      filename: initialFilename,
+      outputDir: process.cwd(),
+      format: initialFormat,
+      baseUrl: "https://json-schema.org/draft/2020-12/schema",
+      csvOptions: {
+        delimiter: ",",
+        includeHeaders: true,
+        flattenArrays: true,
+      },
+      xmlOptions: {
+        rootElement: "root",
+        arrayItemElement: "item",
+        indent: 2,
+        declaration: true,
+      },
+      sqlOptions: {
+        tableName: "data",
+        dialect: "postgresql",
+        includeCreateTable: true,
+        batchSize: 1000,
+        escapeIdentifiers: true,
+      },
+    };
   });
 
   const [inputMode, setInputMode] = useState<
@@ -53,11 +113,34 @@ export function ExportDialog({
     | "format"
     | "quickDir"
     | "csvOptions"
+    | "xmlOptions"
+    | "sqlOptions"
     | null
   >("filename");
 
   // Use TextInput hooks for filename, directory, and baseUrl inputs
-  const filenameInput = useTextInput(defaultFilename);
+  const filenameInput = useTextInput(config.filename);
+
+  // Update filename when defaultFilename or defaultFormat changes
+  useEffect(() => {
+    const updatedFormat = defaultFormat;
+    const updatedFilename = updateFilenameExtension(
+      defaultFilename,
+      updatedFormat,
+    );
+    setConfig((prev) => ({
+      ...prev,
+      filename: updatedFilename,
+      format: updatedFormat,
+    }));
+    filenameInput.setValue(updatedFilename);
+    filenameInput.setCursorPosition(updatedFilename.length);
+  }, [
+    defaultFilename,
+    defaultFormat,
+    filenameInput.setValue,
+    filenameInput.setCursorPosition,
+  ]);
   const directoryInput = useTextInput(process.cwd());
   const baseUrlInput = useTextInput(
     "https://json-schema.org/draft/2020-12/schema",
@@ -215,24 +298,65 @@ export function ExportDialog({
         if (config.format === "csv" && config.csvOptions) {
           exportOptions.csvOptions = config.csvOptions;
         }
+        if (config.format === "xml" && config.xmlOptions) {
+          exportOptions.xmlOptions = config.xmlOptions;
+        }
+        if (config.format === "sql" && config.sqlOptions) {
+          exportOptions.sqlOptions = config.sqlOptions;
+        }
         onConfirm(exportOptions);
         return;
       }
 
       // Format selection (j/s/y/c) - available when not in text input mode or in format mode
       if (
-        (input === "j" || input === "s" || input === "y" || input === "c") &&
+        (input === "j" ||
+          input === "s" ||
+          input === "y" ||
+          input === "c" ||
+          input === "x" ||
+          input === "q") &&
         (inputMode === null || inputMode === "format")
       ) {
+        let newFormat: string;
         if (input === "j") {
-          setConfig((prev) => ({ ...prev, format: "json" }));
+          newFormat = "json";
         } else if (input === "s") {
-          setConfig((prev) => ({ ...prev, format: "schema" }));
+          newFormat = "schema";
         } else if (input === "y") {
-          setConfig((prev) => ({ ...prev, format: "yaml" }));
+          newFormat = "yaml";
         } else if (input === "c") {
-          setConfig((prev) => ({ ...prev, format: "csv" }));
+          newFormat = "csv";
+        } else if (input === "x") {
+          newFormat = "xml";
+        } else if (input === "q") {
+          newFormat = "sql";
+        } else {
+          return;
         }
+
+        // Update format and filename extension
+        setConfig((prev) => {
+          const currentFilename = prev.filename;
+          const updatedFilename = updateFilenameExtension(
+            currentFilename,
+            newFormat,
+          );
+
+          return {
+            ...prev,
+            format: newFormat as ExportConfig["format"],
+            filename: updatedFilename,
+          };
+        });
+
+        // Update the filename input to reflect the new extension
+        const updatedFilename = updateFilenameExtension(
+          filenameInput.state.text,
+          newFormat,
+        );
+        filenameInput.setValue(updatedFilename);
+        filenameInput.setCursorPosition(updatedFilename.length);
         return;
       }
 
@@ -367,10 +491,12 @@ export function ExportDialog({
       <Box marginBottom={1}>
         <Text color="yellow" bold>
           📁 Export Data
-          {config.format === "json" && " (JSON)"}
-          {config.format === "schema" && " (JSON Schema)"}
+          {config.format === "json" && " (Data)"}
+          {config.format === "schema" && " (Schema)"}
           {config.format === "yaml" && " (YAML)"}
           {config.format === "csv" && " (CSV)"}
+          {config.format === "xml" && " (XML)"}
+          {config.format === "sql" && " (SQL)"}
         </Text>
       </Box>
 
@@ -411,12 +537,14 @@ export function ExportDialog({
         <Box>
           <Text color="cyan">Format: </Text>
           <Text color={inputMode === "format" ? "yellow" : "gray"}>
-            {config.format === "json" && "JSON Data"}
-            {config.format === "schema" && "JSON Schema"}
+            {config.format === "json" && "Data"}
+            {config.format === "schema" && "Schema"}
             {config.format === "yaml" && "YAML"}
             {config.format === "csv" && "CSV"}
+            {config.format === "xml" && "XML"}
+            {config.format === "sql" && "SQL"}
             {inputMode === "format"
-              ? " (j: JSON, s: Schema, y: YAML, c: CSV)"
+              ? " (j: Data, s: Schema, y: YAML, c: CSV, x: XML, q: SQL)"
               : ""}
           </Text>
         </Box>
