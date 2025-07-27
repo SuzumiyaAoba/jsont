@@ -6,6 +6,8 @@
 import type { KeyboardInput } from "@core/types/app";
 import { useCallback } from "react";
 import {
+  type ICollapsibleViewerRef,
+  type IKeybindingMatcher,
   useGlobalHandler,
   useHelpHandler,
   useJqHandler,
@@ -82,12 +84,10 @@ export interface KeyboardHandlerDependencies {
   treeViewKeyboardHandler?:
     | ((input: string, key: KeyboardInput) => boolean)
     | null;
-  collapsibleViewerRef?: React.RefObject<{
-    navigate: (action: any) => void;
-  } | null>;
+  collapsibleViewerRef?: React.RefObject<ICollapsibleViewerRef | null>;
 
   // Utilities
-  keybindings: any;
+  keybindings: IKeybindingMatcher;
   handleTextInput: (
     textState: { text: string; cursorPosition: number },
     setters: {

@@ -4,6 +4,7 @@
 
 import type { KeyboardInput } from "@core/types/app";
 import { useCallback } from "react";
+import type { IKeybindingMatcher } from "./types";
 
 export interface JqHandlerDependencies {
   jqState: { isActive: boolean };
@@ -20,7 +21,7 @@ export interface JqHandlerDependencies {
   exitJqMode: () => void;
   toggleJqView: () => void;
   updateDebugInfo: (action: string, input: string) => void;
-  keybindings: any;
+  keybindings: IKeybindingMatcher;
   searchState: {
     isSearching: boolean;
     searchTerm: string;

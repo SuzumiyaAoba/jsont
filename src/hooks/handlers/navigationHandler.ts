@@ -4,6 +4,7 @@
 
 import type { KeyboardInput } from "@core/types/app";
 import { useCallback } from "react";
+import type { ICollapsibleViewerRef, IKeybindingMatcher } from "./types";
 
 export interface NavigationHandlerDependencies {
   treeViewMode: boolean;
@@ -13,12 +14,10 @@ export interface NavigationHandlerDependencies {
     | undefined;
   collapsibleMode: boolean;
   collapsibleViewerRef?:
-    | React.RefObject<{
-        navigate: (action: any) => void;
-      } | null>
+    | React.RefObject<ICollapsibleViewerRef | null>
     | undefined;
   updateDebugInfo: (action: string, input: string) => void;
-  keybindings: any;
+  keybindings: IKeybindingMatcher;
   halfPageLines: number;
   setIsSearching: (searching: boolean) => void;
   setSearchInput: (input: string) => void;

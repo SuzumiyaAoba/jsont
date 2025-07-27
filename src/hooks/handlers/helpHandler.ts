@@ -4,11 +4,12 @@
 
 import type { KeyboardInput } from "@core/types/app";
 import { useCallback } from "react";
+import type { IKeybindingMatcher } from "./types";
 
 export interface HelpHandlerDependencies {
   helpVisible: boolean;
   setHelpVisible: (visible: boolean | ((prev: boolean) => boolean)) => void;
-  keybindings: any;
+  keybindings: IKeybindingMatcher;
   updateDebugInfo: (action: string, input: string) => void;
 }
 

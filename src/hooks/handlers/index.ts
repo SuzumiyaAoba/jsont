@@ -12,3 +12,10 @@ export type { NavigationHandlerDependencies } from "./navigationHandler";
 export { useNavigationHandler } from "./navigationHandler";
 export type { SearchHandlerDependencies } from "./searchHandler";
 export { useSearchHandler } from "./searchHandler";
+
+// Export shared types
+export type {
+  ICollapsibleViewerRef,
+  IKeybindingMatcher,
+  NavigationAction,
+} from "./types";

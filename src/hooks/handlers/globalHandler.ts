@@ -4,10 +4,11 @@
 
 import type { KeyboardInput } from "@core/types/app";
 import { useCallback } from "react";
+import type { IKeybindingMatcher } from "./types";
 
 export interface GlobalHandlerDependencies {
   updateDebugInfo: (action: string, input: string) => void;
-  keybindings: any;
+  keybindings: IKeybindingMatcher;
   searchState: {
     isSearching: boolean;
     searchTerm: string;
@@ -59,8 +60,7 @@ export function useGlobalHandler(deps: GlobalHandlerDependencies) {
       exit,
       updateDebugInfo,
       keybindings,
-      searchState.isSearching,
-      searchState.searchTerm,
+      searchState,
       handleExportSchema,
       handleExportData,
     ],

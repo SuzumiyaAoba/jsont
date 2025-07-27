@@ -4,6 +4,7 @@
 
 import type { KeyboardInput } from "@core/types/app";
 import { useCallback } from "react";
+import type { IKeybindingMatcher } from "./types";
 
 export interface SearchHandlerDependencies {
   searchState: {
@@ -18,7 +19,7 @@ export interface SearchHandlerDependencies {
   cancelSearch: () => void;
   cycleScope: () => void;
   resetScroll: () => void;
-  keybindings: any;
+  keybindings: IKeybindingMatcher;
   updateDebugInfoCallback: (action: string, input: string) => void;
   handleTextInput: (
     textState: { text: string; cursorPosition: number },
