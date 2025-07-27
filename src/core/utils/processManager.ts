@@ -100,7 +100,7 @@ export class ProcessManager {
 
     try {
       this.terminalManager.cleanup();
-    } catch (error) {
+    } catch (_error) {
       // Silently ignore cleanup errors to prevent crashing during shutdown
     }
   }

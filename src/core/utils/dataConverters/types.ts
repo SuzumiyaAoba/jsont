@@ -61,3 +61,20 @@ export interface SchemaOptions extends Record<string, unknown> {
   title: string;
   baseUrl?: string;
 }
+
+export interface XmlOptions extends Record<string, unknown> {
+  rootElement: string;
+  arrayItemElement: string;
+  indent: number;
+  declaration: boolean;
+  attributePrefix: string;
+  textNodeName: string;
+}
+
+export interface SqlOptions extends Record<string, unknown> {
+  tableName: string;
+  dialect: "mysql" | "postgresql" | "sqlite" | "mssql";
+  includeCreateTable: boolean;
+  batchSize: number;
+  escapeIdentifiers: boolean;
+}

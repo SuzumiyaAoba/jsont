@@ -16,12 +16,27 @@ import {
 export interface ExportOptions {
   filename?: string;
   outputDir?: string;
-  format?: "json" | "schema" | "yaml" | "csv";
+  format?: "json" | "schema" | "yaml" | "csv" | "xml" | "sql";
   baseUrl?: string;
   csvOptions?: {
     delimiter?: string;
     includeHeaders?: boolean;
     flattenArrays?: boolean;
+  };
+  xmlOptions?: {
+    rootElement?: string;
+    arrayItemElement?: string;
+    indent?: number;
+    declaration?: boolean;
+    attributePrefix?: string;
+    textNodeName?: string;
+  };
+  sqlOptions?: {
+    tableName?: string;
+    dialect?: "mysql" | "postgresql" | "sqlite" | "mssql";
+    includeCreateTable?: boolean;
+    batchSize?: number;
+    escapeIdentifiers?: boolean;
   };
 }
 
@@ -51,6 +66,8 @@ export async function exportToFile(
       format = "json",
       baseUrl,
       csvOptions,
+      xmlOptions,
+      sqlOptions,
     } = options;
 
     // Get the appropriate converter
@@ -68,6 +85,8 @@ export async function exportToFile(
       ...converter.getDefaultOptions(),
       ...(format === "schema" && { title: "Exported Schema", baseUrl }),
       ...(format === "csv" && csvOptions),
+      ...(format === "xml" && xmlOptions),
+      ...(format === "sql" && sqlOptions),
     };
 
     // Validate data before conversion
@@ -180,7 +199,7 @@ export async function exportJsonSchemaToFile(
  * @returns Generated filename with timestamp
  */
 export function generateDefaultFilename(
-  format: "json" | "schema" | "yaml" | "csv" = "json",
+  format: "json" | "schema" | "yaml" | "csv" | "xml" | "sql" = "json",
 ): string {
   const now = new Date();
   const timestamp = now
@@ -190,7 +209,15 @@ export function generateDefaultFilename(
     .slice(0, 19); // Remove milliseconds and timezone
 
   const extension =
-    format === "yaml" ? ".yaml" : format === "csv" ? ".csv" : ".json";
+    {
+      yaml: ".yaml",
+      csv: ".csv",
+      xml: ".xml",
+      sql: ".sql",
+      json: ".json",
+      schema: ".json",
+    }[format] || ".json";
+
   return `export_${timestamp}${extension}`;
 }
 
