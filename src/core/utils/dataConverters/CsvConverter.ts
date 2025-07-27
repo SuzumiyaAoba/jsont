@@ -3,18 +3,26 @@
  */
 
 import type { JsonValue } from "@core/types/index";
-import type { ConversionResult, CsvOptions, DataConverter, ValidationResult } from "./types";
+import type {
+  ConversionResult,
+  CsvOptions,
+  DataConverter,
+  ValidationResult,
+} from "./types";
 
 export class CsvConverter implements DataConverter<CsvOptions> {
   readonly format = "csv";
   readonly extension = ".csv";
   readonly displayName = "CSV";
 
-  convert(data: JsonValue, options?: CsvOptions | Record<string, unknown>): ConversionResult {
+  convert(
+    data: JsonValue,
+    options?: CsvOptions | Record<string, unknown>,
+  ): ConversionResult {
     try {
       const csvOptions = { ...this.getDefaultOptions(), ...options };
       const result = this.convertToCSV(data, csvOptions);
-      
+
       return {
         success: true,
         data: result,
@@ -41,7 +49,11 @@ export class CsvConverter implements DataConverter<CsvOptions> {
       return { isValid: true };
     }
 
-    if (typeof data === "string" || typeof data === "number" || typeof data === "boolean") {
+    if (
+      typeof data === "string" ||
+      typeof data === "number" ||
+      typeof data === "boolean"
+    ) {
       return { isValid: true };
     }
 
@@ -168,7 +180,11 @@ export class CsvConverter implements DataConverter<CsvOptions> {
     Object.entries(obj).forEach(([key, value]) => {
       const newKey = prefix ? `${prefix}.${key}` : key;
 
-      if (value !== null && typeof value === "object" && !Array.isArray(value)) {
+      if (
+        value !== null &&
+        typeof value === "object" &&
+        !Array.isArray(value)
+      ) {
         // Recursively flatten nested objects
         Object.assign(
           flattened,

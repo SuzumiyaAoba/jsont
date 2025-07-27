@@ -4,18 +4,26 @@
 
 import type { JsonValue } from "@core/types/index";
 import { dump as yamlDump } from "js-yaml";
-import type { ConversionResult, DataConverter, ValidationResult, YamlOptions } from "./types";
+import type {
+  ConversionResult,
+  DataConverter,
+  ValidationResult,
+  YamlOptions,
+} from "./types";
 
 export class YamlConverter implements DataConverter<YamlOptions> {
   readonly format = "yaml";
   readonly extension = ".yaml";
   readonly displayName = "YAML";
 
-  convert(data: JsonValue, options?: YamlOptions | Record<string, unknown>): ConversionResult {
+  convert(
+    data: JsonValue,
+    options?: YamlOptions | Record<string, unknown>,
+  ): ConversionResult {
     try {
       const yamlOptions = { ...this.getDefaultOptions(), ...options };
       const result = yamlDump(data, yamlOptions);
-      
+
       return {
         success: true,
         data: result,
@@ -23,7 +31,8 @@ export class YamlConverter implements DataConverter<YamlOptions> {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "YAML conversion failed",
+        error:
+          error instanceof Error ? error.message : "YAML conversion failed",
       };
     }
   }
@@ -35,7 +44,10 @@ export class YamlConverter implements DataConverter<YamlOptions> {
     } catch (error) {
       return {
         isValid: false,
-        error: error instanceof Error ? error.message : "Invalid data for YAML conversion",
+        error:
+          error instanceof Error
+            ? error.message
+            : "Invalid data for YAML conversion",
       };
     }
   }

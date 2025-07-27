@@ -19,8 +19,11 @@ export interface DataConverter<TOptions = Record<string, unknown>> {
   readonly format: string;
   readonly extension: string;
   readonly displayName: string;
-  
-  convert(data: JsonValue, options?: TOptions | Record<string, unknown>): ConversionResult;
+
+  convert(
+    data: JsonValue,
+    options?: TOptions | Record<string, unknown>,
+  ): ConversionResult;
   validate(data: JsonValue): ValidationResult;
   getDefaultOptions(): TOptions;
 }

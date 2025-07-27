@@ -5,7 +5,7 @@
 export * from "./ExportError";
 
 // Result pattern for safer error handling
-export type Result<T, E = Error> = 
+export type Result<T, E = Error> =
   | { success: true; data: T }
   | { success: false; error: E };
 
@@ -17,17 +17,21 @@ export function failure<E>(error: E): Result<never, E> {
   return { success: false, error };
 }
 
-export function isSuccess<T, E>(result: Result<T, E>): result is { success: true; data: T } {
+export function isSuccess<T, E>(
+  result: Result<T, E>,
+): result is { success: true; data: T } {
   return result.success;
 }
 
-export function isFailure<T, E>(result: Result<T, E>): result is { success: false; error: E } {
+export function isFailure<T, E>(
+  result: Result<T, E>,
+): result is { success: false; error: E } {
   return !result.success;
 }
 
 // Async result wrapper
 export async function wrapAsync<T>(
-  promise: Promise<T>
+  promise: Promise<T>,
 ): Promise<Result<T, Error>> {
   try {
     const data = await promise;

@@ -2,7 +2,12 @@
  * Strict export type definitions with discriminated unions
  */
 
-import type { CsvOptions, JsonOptions, SchemaOptions, YamlOptions } from "@core/utils/dataConverters";
+import type {
+  CsvOptions,
+  JsonOptions,
+  SchemaOptions,
+  YamlOptions,
+} from "@core/utils/dataConverters";
 
 export type ExportFormat = "json" | "schema" | "yaml" | "csv";
 
@@ -106,29 +111,40 @@ export interface FormatOptionBuilder<T> {
 }
 
 // Type guards for discriminated unions
-export function isJsonExport(options: StrictExportOptions): options is JsonExportOptions {
+export function isJsonExport(
+  options: StrictExportOptions,
+): options is JsonExportOptions {
   return options.format === "json";
 }
 
-export function isSchemaExport(options: StrictExportOptions): options is SchemaExportOptions {
+export function isSchemaExport(
+  options: StrictExportOptions,
+): options is SchemaExportOptions {
   return options.format === "schema";
 }
 
-export function isYamlExport(options: StrictExportOptions): options is YamlExportOptions {
+export function isYamlExport(
+  options: StrictExportOptions,
+): options is YamlExportOptions {
   return options.format === "yaml";
 }
 
-export function isCsvExport(options: StrictExportOptions): options is CsvExportOptions {
+export function isCsvExport(
+  options: StrictExportOptions,
+): options is CsvExportOptions {
   return options.format === "csv";
 }
 
 // Utility type for extracting options type from format
-export type OptionsForFormat<T extends ExportFormat> = 
-  T extends "json" ? JsonOptions :
-  T extends "schema" ? SchemaOptions :
-  T extends "yaml" ? YamlOptions :
-  T extends "csv" ? CsvOptions :
-  never;
+export type OptionsForFormat<T extends ExportFormat> = T extends "json"
+  ? JsonOptions
+  : T extends "schema"
+    ? SchemaOptions
+    : T extends "yaml"
+      ? YamlOptions
+      : T extends "csv"
+        ? CsvOptions
+        : never;
 
 // Helper type for creating format-specific export options
 export type CreateExportOptions<T extends ExportFormat> = BaseExportOptions & {

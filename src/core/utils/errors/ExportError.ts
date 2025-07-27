@@ -9,16 +9,16 @@ export enum ExportErrorCode {
   PERMISSION_DENIED = "PERMISSION_DENIED",
   DISK_SPACE_FULL = "DISK_SPACE_FULL",
   FILE_ALREADY_EXISTS = "FILE_ALREADY_EXISTS",
-  
+
   // Data errors
   INVALID_DATA = "INVALID_DATA",
   CONVERSION_FAILED = "CONVERSION_FAILED",
   UNSUPPORTED_FORMAT = "UNSUPPORTED_FORMAT",
-  
+
   // Configuration errors
   INVALID_OPTIONS = "INVALID_OPTIONS",
   MISSING_REQUIRED_OPTION = "MISSING_REQUIRED_OPTION",
-  
+
   // System errors
   UNKNOWN_ERROR = "UNKNOWN_ERROR",
   OPERATION_CANCELLED = "OPERATION_CANCELLED",
@@ -111,7 +111,10 @@ export function createExportErrorHandler() {
     /**
      * Convert any error to a standardized ExportError
      */
-    normalize: (error: unknown, context: ExportErrorContext = {}): ExportError => {
+    normalize: (
+      error: unknown,
+      context: ExportErrorContext = {},
+    ): ExportError => {
       if (error instanceof ExportError) {
         return error;
       }
@@ -119,11 +122,10 @@ export function createExportErrorHandler() {
       if (error instanceof Error) {
         // Try to classify the error based on the message
         const code = classifyErrorMessage(error.message);
-        return new ExportError(
-          error.message,
-          code,
-          { ...context, originalError: error },
-        );
+        return new ExportError(error.message, code, {
+          ...context,
+          originalError: error,
+        });
       }
 
       return new ExportError(
