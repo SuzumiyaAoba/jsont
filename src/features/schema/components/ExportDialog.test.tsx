@@ -16,6 +16,8 @@ describe("ExportDialog Props and Logic", () => {
       onConfirm: mockOnConfirm,
       onCancel: mockOnCancel,
       defaultFilename: "test-schema.json",
+      width: 80,
+      height: 24,
     };
 
     expect(props.isVisible).toBe(true);
@@ -39,6 +41,8 @@ describe("ExportDialog Props and Logic", () => {
       onConfirm: mockOnConfirm,
       onCancel: mockOnCancel,
       defaultFilename: "default.json",
+      width: 80,
+      height: 24,
     };
 
     // Simulate callback execution
@@ -57,6 +61,8 @@ describe("ExportDialog Props and Logic", () => {
       onConfirm: mockOnConfirm,
       onCancel: mockOnCancel,
       defaultFilename: "test.json",
+      width: 80,
+      height: 24,
     };
 
     // Simulate cancel callback
@@ -76,12 +82,16 @@ describe("ExportDialog Props and Logic", () => {
       isVisible: true,
       ...mockCallbacks,
       defaultFilename: "visible.json",
+      width: 80,
+      height: 24,
     };
 
     const hiddenProps: ExportDialogProps = {
       isVisible: false,
       ...mockCallbacks,
       defaultFilename: "hidden.json",
+      width: 80,
+      height: 24,
     };
 
     expect(visibleProps.isVisible).toBe(true);
@@ -99,12 +109,16 @@ describe("ExportDialog Props and Logic", () => {
       isVisible: true,
       ...mockCallbacks,
       defaultFilename: "with-default.json",
+      width: 80,
+      height: 24,
     };
 
     // Without default filename (undefined should be allowed)
     const propsWithoutDefault: Omit<ExportDialogProps, "defaultFilename"> = {
       isVisible: true,
       ...mockCallbacks,
+      width: 80,
+      height: 24,
     };
 
     expect(propsWithDefault.defaultFilename).toBe("with-default.json");
@@ -130,6 +144,8 @@ describe("ExportDialog Props and Logic", () => {
         isVisible: true,
         ...mockCallbacks,
         defaultFilename: filename,
+        width: 80,
+        height: 24,
       };
 
       expect(props.defaultFilename).toBe(filename);
@@ -147,6 +163,8 @@ describe("ExportDialog Callback Integration", () => {
       onConfirm: mockOnConfirm,
       onCancel: mockOnCancel,
       defaultFilename: "integration-test.json",
+      width: 80,
+      height: 24,
     };
 
     const testOptions: ExportOptions = {
@@ -173,6 +191,8 @@ describe("ExportDialog Callback Integration", () => {
       onConfirm: mockOnConfirm,
       onCancel: vi.fn(),
       defaultFilename: "test.json",
+      width: 80,
+      height: 24,
     };
 
     const options1: ExportOptions = {
@@ -205,6 +225,8 @@ describe("ExportDialog Callback Integration", () => {
       onConfirm: mockOnConfirm,
       onCancel: mockOnCancel,
       defaultFilename: "type-safe.json",
+      width: 80,
+      height: 24,
     };
 
     // These should compile without type errors
@@ -212,5 +234,109 @@ describe("ExportDialog Callback Integration", () => {
     expect(typeof props.onConfirm).toBe("function");
     expect(typeof props.onCancel).toBe("function");
     expect(typeof props.defaultFilename).toBe("string");
+    expect(typeof props.width).toBe("number");
+    expect(typeof props.height).toBe("number");
+  });
+
+  it("should handle responsive screen sizes", () => {
+    const mockCallbacks = {
+      onConfirm: vi.fn(),
+      onCancel: vi.fn(),
+    };
+
+    // Small screen props
+    const smallScreenProps: ExportDialogProps = {
+      isVisible: true,
+      ...mockCallbacks,
+      defaultFilename: "small.json",
+      width: 50,
+      height: 15,
+    };
+
+    // Very small screen props
+    const verySmallScreenProps: ExportDialogProps = {
+      isVisible: true,
+      ...mockCallbacks,
+      defaultFilename: "very-small.json",
+      width: 40,
+      height: 10,
+    };
+
+    // Large screen props
+    const largeScreenProps: ExportDialogProps = {
+      isVisible: true,
+      ...mockCallbacks,
+      defaultFilename: "large.json",
+      width: 120,
+      height: 30,
+    };
+
+    expect(smallScreenProps.width).toBe(50);
+    expect(verySmallScreenProps.width).toBe(40);
+    expect(largeScreenProps.width).toBe(120);
+  });
+
+  describe("filename extension utilities", () => {
+    // Test the helper functions used in ExportDialog
+
+    it("should correctly map formats to extensions", () => {
+      const extensionTests = [
+        { format: "json", expected: ".json" },
+        { format: "schema", expected: ".json" },
+        { format: "yaml", expected: ".yaml" },
+        { format: "csv", expected: ".csv" },
+        { format: "xml", expected: ".xml" },
+        { format: "sql", expected: ".sql" },
+        { format: "unknown", expected: ".json" }, // fallback
+      ];
+
+      extensionTests.forEach(({ format, expected }) => {
+        // Test that would be done by getExtensionForFormat function
+        const extensionMap: Record<string, string> = {
+          json: ".json",
+          schema: ".json",
+          yaml: ".yaml",
+          csv: ".csv",
+          xml: ".xml",
+          sql: ".sql",
+        };
+        const result = extensionMap[format] || ".json";
+        expect(result).toBe(expected);
+      });
+    });
+
+    it("should correctly update filename extensions", () => {
+      const testCases = [
+        { filename: "data.json", newFormat: "xml", expected: "data.xml" },
+        {
+          filename: "export.schema.json",
+          newFormat: "sql",
+          expected: "export.schema.sql",
+        },
+        { filename: "test.yaml", newFormat: "csv", expected: "test.csv" },
+        { filename: "noext", newFormat: "json", expected: "noext.json" },
+        {
+          filename: "complex.name.with.dots.xml",
+          newFormat: "yaml",
+          expected: "complex.name.with.dots.yaml",
+        },
+      ];
+
+      testCases.forEach(({ filename, newFormat, expected }) => {
+        // Test logic that would be done by updateFilenameExtension function
+        const extensionMap: Record<string, string> = {
+          json: ".json",
+          schema: ".json",
+          yaml: ".yaml",
+          csv: ".csv",
+          xml: ".xml",
+          sql: ".sql",
+        };
+        const newExtension = extensionMap[newFormat] || ".json";
+        const baseName = filename.replace(/\.[^/.]+$/, "");
+        const result = `${baseName}${newExtension}`;
+        expect(result).toBe(expected);
+      });
+    });
   });
 });

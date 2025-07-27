@@ -5,14 +5,23 @@
 import { CsvConverter } from "./CsvConverter";
 import { JsonConverter } from "./JsonConverter";
 import { SchemaConverter } from "./SchemaConverter";
+import { SqlConverter } from "./SqlConverter";
 import type { DataConverter } from "./types";
+import { XmlConverter } from "./XmlConverter";
 import { YamlConverter } from "./YamlConverter";
 
 // Export types
 export type * from "./types";
 
 // Export individual converters
-export { CsvConverter, JsonConverter, SchemaConverter, YamlConverter };
+export {
+  CsvConverter,
+  JsonConverter,
+  SchemaConverter,
+  SqlConverter,
+  XmlConverter,
+  YamlConverter,
+};
 
 // Create converter instances
 export const dataConverters = {
@@ -20,6 +29,8 @@ export const dataConverters = {
   yaml: new YamlConverter(),
   csv: new CsvConverter(),
   schema: new SchemaConverter(),
+  xml: new XmlConverter(),
+  sql: new SqlConverter(),
 } as const;
 
 // Export format type
@@ -35,6 +46,8 @@ export class DataConverterRegistry {
     this.register(dataConverters.yaml);
     this.register(dataConverters.csv);
     this.register(dataConverters.schema);
+    this.register(dataConverters.xml);
+    this.register(dataConverters.sql);
   }
 
   register(converter: DataConverter): void {

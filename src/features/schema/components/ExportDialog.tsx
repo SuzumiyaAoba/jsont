@@ -14,18 +14,58 @@ export interface ExportDialogProps {
   onConfirm: (options: ExportOptions) => void;
   onCancel: () => void;
   defaultFilename?: string;
+  defaultFormat?: "json" | "schema" | "yaml" | "csv" | "xml" | "sql";
+  width?: number;
+  height?: number;
 }
 
 interface ExportConfig {
   filename: string;
   outputDir: string;
-  format: "json" | "schema" | "yaml" | "csv";
+  format: "json" | "schema" | "yaml" | "csv" | "xml" | "sql";
   baseUrl?: string;
   csvOptions?: {
     delimiter: string;
     includeHeaders: boolean;
     flattenArrays: boolean;
   };
+  xmlOptions?: {
+    rootElement: string;
+    arrayItemElement: string;
+    indent: number;
+    declaration: boolean;
+  };
+  sqlOptions?: {
+    tableName: string;
+    dialect: "postgresql" | "mysql" | "sqlite" | "mssql";
+    includeCreateTable: boolean;
+    batchSize: number;
+    escapeIdentifiers: boolean;
+  };
+}
+
+/**
+ * Get file extension for the given format
+ */
+function getExtensionForFormat(format: string): string {
+  const extensionMap: Record<string, string> = {
+    json: ".json",
+    schema: ".json",
+    yaml: ".yaml",
+    csv: ".csv",
+    xml: ".xml",
+    sql: ".sql",
+  };
+  return extensionMap[format] || ".json";
+}
+
+/**
+ * Update filename extension based on format
+ */
+function updateFilenameExtension(filename: string, newFormat: string): string {
+  const newExtension = getExtensionForFormat(newFormat);
+  const baseName = filename.replace(/\.[^/.]+$/, ""); // Remove existing extension
+  return `${baseName}${newExtension}`;
 }
 
 export function ExportDialog({
@@ -33,17 +73,41 @@ export function ExportDialog({
   onConfirm,
   onCancel,
   defaultFilename = "schema.json",
+  defaultFormat = "json",
+  width = 80,
+  height = 24,
 }: ExportDialogProps) {
-  const [config, setConfig] = useState<ExportConfig>({
-    filename: defaultFilename,
-    outputDir: process.cwd(),
-    format: "json",
-    baseUrl: "https://json-schema.org/draft/2020-12/schema",
-    csvOptions: {
-      delimiter: ",",
-      includeHeaders: true,
-      flattenArrays: true,
-    },
+  const [config, setConfig] = useState<ExportConfig>(() => {
+    const initialFormat = defaultFormat;
+    const initialFilename = updateFilenameExtension(
+      defaultFilename,
+      initialFormat,
+    );
+
+    return {
+      filename: initialFilename,
+      outputDir: process.cwd(),
+      format: initialFormat,
+      baseUrl: "https://json-schema.org/draft/2020-12/schema",
+      csvOptions: {
+        delimiter: ",",
+        includeHeaders: true,
+        flattenArrays: true,
+      },
+      xmlOptions: {
+        rootElement: "root",
+        arrayItemElement: "item",
+        indent: 2,
+        declaration: true,
+      },
+      sqlOptions: {
+        tableName: "data",
+        dialect: "postgresql",
+        includeCreateTable: true,
+        batchSize: 1000,
+        escapeIdentifiers: true,
+      },
+    };
   });
 
   const [inputMode, setInputMode] = useState<
@@ -53,11 +117,34 @@ export function ExportDialog({
     | "format"
     | "quickDir"
     | "csvOptions"
+    | "xmlOptions"
+    | "sqlOptions"
     | null
   >("filename");
 
   // Use TextInput hooks for filename, directory, and baseUrl inputs
-  const filenameInput = useTextInput(defaultFilename);
+  const filenameInput = useTextInput(config.filename);
+
+  // Update filename when defaultFilename or defaultFormat changes
+  useEffect(() => {
+    const updatedFormat = defaultFormat;
+    const updatedFilename = updateFilenameExtension(
+      defaultFilename,
+      updatedFormat,
+    );
+    setConfig((prev) => ({
+      ...prev,
+      filename: updatedFilename,
+      format: updatedFormat,
+    }));
+    filenameInput.setValue(updatedFilename);
+    filenameInput.setCursorPosition(updatedFilename.length);
+  }, [
+    defaultFilename,
+    defaultFormat,
+    filenameInput.setValue,
+    filenameInput.setCursorPosition,
+  ]);
   const directoryInput = useTextInput(process.cwd());
   const baseUrlInput = useTextInput(
     "https://json-schema.org/draft/2020-12/schema",
@@ -215,24 +302,65 @@ export function ExportDialog({
         if (config.format === "csv" && config.csvOptions) {
           exportOptions.csvOptions = config.csvOptions;
         }
+        if (config.format === "xml" && config.xmlOptions) {
+          exportOptions.xmlOptions = config.xmlOptions;
+        }
+        if (config.format === "sql" && config.sqlOptions) {
+          exportOptions.sqlOptions = config.sqlOptions;
+        }
         onConfirm(exportOptions);
         return;
       }
 
       // Format selection (j/s/y/c) - available when not in text input mode or in format mode
       if (
-        (input === "j" || input === "s" || input === "y" || input === "c") &&
+        (input === "j" ||
+          input === "s" ||
+          input === "y" ||
+          input === "c" ||
+          input === "x" ||
+          input === "q") &&
         (inputMode === null || inputMode === "format")
       ) {
+        let newFormat: string;
         if (input === "j") {
-          setConfig((prev) => ({ ...prev, format: "json" }));
+          newFormat = "json";
         } else if (input === "s") {
-          setConfig((prev) => ({ ...prev, format: "schema" }));
+          newFormat = "schema";
         } else if (input === "y") {
-          setConfig((prev) => ({ ...prev, format: "yaml" }));
+          newFormat = "yaml";
         } else if (input === "c") {
-          setConfig((prev) => ({ ...prev, format: "csv" }));
+          newFormat = "csv";
+        } else if (input === "x") {
+          newFormat = "xml";
+        } else if (input === "q") {
+          newFormat = "sql";
+        } else {
+          return;
         }
+
+        // Update format and filename extension
+        setConfig((prev) => {
+          const currentFilename = prev.filename;
+          const updatedFilename = updateFilenameExtension(
+            currentFilename,
+            newFormat,
+          );
+
+          return {
+            ...prev,
+            format: newFormat as ExportConfig["format"],
+            filename: updatedFilename,
+          };
+        });
+
+        // Update the filename input to reflect the new extension
+        const updatedFilename = updateFilenameExtension(
+          filenameInput.state.text,
+          newFormat,
+        );
+        filenameInput.setValue(updatedFilename);
+        filenameInput.setCursorPosition(updatedFilename.length);
         return;
       }
 
@@ -355,22 +483,36 @@ export function ExportDialog({
   );
   const baseUrlDisplay = baseUrlInput.getDisplayText(inputMode === "baseUrl");
 
+  // Determine layout based on terminal size
+  const isSmallScreen = width < 80 || height < 20;
+  const isVerySmallScreen = width < 60 || height < 15;
+
+  // Responsive layout configuration
+  const showQuickDirectories = !isVerySmallScreen;
+  const showFullInstructions = !isSmallScreen;
+  const showFullPath = !isVerySmallScreen;
+  const maxDialogWidth = isVerySmallScreen
+    ? width - 4
+    : Math.min(width - 8, 100);
+
   return (
     <Box
       borderStyle="double"
       borderColor="yellow"
       padding={1}
       flexDirection="column"
-      width="100%"
-      minHeight={12}
+      width={maxDialogWidth}
+      height={Math.min(height - 4, 30)}
     >
       <Box marginBottom={1}>
         <Text color="yellow" bold>
           📁 Export Data
           {config.format === "json" && " (JSON)"}
-          {config.format === "schema" && " (JSON Schema)"}
+          {config.format === "schema" && " (Schema)"}
           {config.format === "yaml" && " (YAML)"}
           {config.format === "csv" && " (CSV)"}
+          {config.format === "xml" && " (XML)"}
+          {config.format === "sql" && " (SQL)"}
         </Text>
       </Box>
 
@@ -387,7 +529,11 @@ export function ExportDialog({
               <Text color="white">{filenameDisplay.afterCursor}</Text>
             </Box>
           ) : (
-            <Text color="gray">{currentFilename}</Text>
+            <Text color="gray">
+              {isSmallScreen && currentFilename.length > 40
+                ? `...${currentFilename.slice(-37)}`
+                : currentFilename}
+            </Text>
           )}
         </Box>
 
@@ -403,7 +549,11 @@ export function ExportDialog({
               <Text color="white">{directoryDisplay.afterCursor}</Text>
             </Box>
           ) : (
-            <Text color="gray">{currentDirectory}</Text>
+            <Text color="gray">
+              {isSmallScreen && currentDirectory.length > 40
+                ? `...${currentDirectory.slice(-37)}`
+                : currentDirectory}
+            </Text>
           )}
         </Box>
 
@@ -411,13 +561,17 @@ export function ExportDialog({
         <Box>
           <Text color="cyan">Format: </Text>
           <Text color={inputMode === "format" ? "yellow" : "gray"}>
-            {config.format === "json" && "JSON Data"}
-            {config.format === "schema" && "JSON Schema"}
+            {config.format === "json" && "JSON"}
+            {config.format === "schema" && "Schema"}
             {config.format === "yaml" && "YAML"}
             {config.format === "csv" && "CSV"}
-            {inputMode === "format"
-              ? " (j: JSON, s: Schema, y: YAML, c: CSV)"
-              : ""}
+            {config.format === "xml" && "XML"}
+            {config.format === "sql" && "SQL"}
+            {inputMode === "format" && !isVerySmallScreen
+              ? " (j: JSON, s: Schema, y: YAML, c: CSV, x: XML, q: SQL)"
+              : inputMode === "format" && isVerySmallScreen
+                ? " (j/s/y/c/x/q)"
+                : ""}
           </Text>
         </Box>
 
@@ -439,47 +593,75 @@ export function ExportDialog({
           </Box>
         )}
 
-        {/* Full Path Preview */}
-        <Box marginTop={1}>
-          <Text color="green">Full Path: </Text>
-          <Text color="white" dimColor>
-            {fullPath}
-          </Text>
-        </Box>
+        {/* Full Path Preview - only show on larger screens */}
+        {showFullPath && (
+          <Box marginTop={1}>
+            <Text color="green">Full Path: </Text>
+            <Text color="white" dimColor>
+              {fullPath.length > maxDialogWidth - 20
+                ? `...${fullPath.slice(-(maxDialogWidth - 23))}`
+                : fullPath}
+            </Text>
+          </Box>
+        )}
 
-        {/* Quick Directory Selection */}
-        <Box flexDirection="column" marginTop={1}>
-          <Text color="yellow">
-            Quick Directories
-            {inputMode === "quickDir" ? " (j/k: navigate, Enter: select)" : ":"}
-          </Text>
-          {quickDirectories.map((dir, index) => (
-            <Box key={dir.name}>
-              <Text color="cyan">{index + 1}. </Text>
-              <Text color={selectedDirIndex === index ? "yellow" : "gray"}>
-                {dir.name}: {dir.path}
-              </Text>
-            </Box>
-          ))}
-        </Box>
+        {/* Quick Directory Selection - hide on very small screens */}
+        {showQuickDirectories && (
+          <Box flexDirection="column" marginTop={1}>
+            <Text color="yellow">
+              Quick Directories
+              {inputMode === "quickDir"
+                ? " (j/k: navigate, Enter: select)"
+                : ":"}
+            </Text>
+            {quickDirectories.map((dir, index) => (
+              <Box key={dir.name}>
+                <Text color="cyan">{index + 1}. </Text>
+                <Text color={selectedDirIndex === index ? "yellow" : "gray"}>
+                  {isSmallScreen
+                    ? `${dir.name}: ${dir.path.length > 30 ? `...${dir.path.slice(-30)}` : dir.path}`
+                    : `${dir.name}: ${dir.path}`}
+                </Text>
+              </Box>
+            ))}
+          </Box>
+        )}
 
         {/* Instructions */}
         <Box marginTop={1} borderStyle="single" borderColor="gray" padding={1}>
           <Box flexDirection="column">
-            <Text color="gray" dimColor>
-              Tab: Switch field | j/s/y/c: Format | 1-6: Quick directory | j/k:
-              Navigate dirs | Enter: Confirm/Select | Esc: Exit/Cancel
-            </Text>
-            <Text color="gray" dimColor>
-              Type to edit | C-a: Start | C-e: End | C-f: Forward | C-b: Back
-            </Text>
-            <Text color="gray" dimColor>
-              C-k: Kill to end | C-u: Kill to start | C-w: Kill word | C-d:
-              Delete char
-            </Text>
-            <Text color="gray" dimColor>
-              Backspace/Del: Delete left/right
-            </Text>
+            {showFullInstructions ? (
+              <>
+                <Text color="gray" dimColor>
+                  Tab: Switch field | j/s/y/c/x/q: Format | 1-6: Quick directory
+                  | j/k: Navigate dirs | Enter: Confirm/Select | Esc:
+                  Exit/Cancel
+                </Text>
+                <Text color="gray" dimColor>
+                  Type to edit | C-a: Start | C-e: End | C-f: Forward | C-b:
+                  Back
+                </Text>
+                <Text color="gray" dimColor>
+                  C-k: Kill to end | C-u: Kill to start | C-w: Kill word | C-d:
+                  Delete char
+                </Text>
+                <Text color="gray" dimColor>
+                  Backspace/Del: Delete left/right
+                </Text>
+              </>
+            ) : (
+              <>
+                <Text color="gray" dimColor>
+                  Tab: Switch | j/s/y/c/x/q: Format | 1-6: Dir | Enter: Confirm
+                  | Esc: Cancel
+                </Text>
+                {!isVerySmallScreen && (
+                  <Text color="gray" dimColor>
+                    Type to edit | C-a/e: Start/End | C-k/u: Kill
+                  </Text>
+                )}
+              </>
+            )}
           </Box>
         </Box>
       </Box>

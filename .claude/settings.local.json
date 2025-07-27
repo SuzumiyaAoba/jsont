@@ -77,7 +77,8 @@
       "Bash(NODE_ENV=development npx tsx test_line_numbers.ts)",
       "Bash(git log:*)",
       "Bash(git reset:*)",
-      "Bash(gh issue list:*)"
+      "Bash(gh issue list:*)",
+      "Bash(git rm:*)"
     ],
     "deny": []
   }

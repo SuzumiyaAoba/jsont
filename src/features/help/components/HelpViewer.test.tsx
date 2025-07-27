@@ -101,7 +101,7 @@ describe("HelpViewer", () => {
     const output = lastFrame();
     expect(output).toContain("HELP - SCHEMA MODE");
     expect(output).toContain("Scroll down");
-    expect(output).toContain("Export schema");
+    expect(output).toContain("Export data (JSON Schema, XML, SQL)");
   });
 
   it("should render help content for collapsible mode", () => {
@@ -175,6 +175,6 @@ describe("HelpViewer", () => {
     const output = lastFrame();
     // Verify help renders without corruption
     expect(output).toContain("HELP - RAW MODE");
-    expect(output).toContain("Export JSON Schema");
+    expect(output).toContain("Export data (JSON Schema, XML, SQL)");
   });
 });
