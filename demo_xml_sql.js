@@ -4,8 +4,8 @@
  * Demo script for new XML and SQL export formats
  */
 
-import { SqlConverter } from "./src/core/utils/dataConverters/SqlConverter.js";
-import { XmlConverter } from "./src/core/utils/dataConverters/XmlConverter.js";
+import { SqlConverter } from "./dist/core/utils/dataConverters/SqlConverter.js";
+import { XmlConverter } from "./dist/core/utils/dataConverters/XmlConverter.js";
 
 // Sample data for demonstration
 const sampleData = [

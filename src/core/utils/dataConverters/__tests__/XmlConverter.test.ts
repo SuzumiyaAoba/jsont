@@ -57,8 +57,14 @@ describe("XmlConverter", () => {
     });
 
     it("should reject function values", () => {
-      const result = converter.validate("function test" as any);
-      expect(result.isOk()).toBe(true); // XML converter is very permissive
+      const result = converter.validate((() => {}) as any);
+      expect(result.isErr()).toBe(true);
+      if (result.isErr()) {
+        expect(result.error.message).toContain(
+          "Functions cannot be converted to XML",
+        );
+        expect(result.error.type).toBe("VALIDATION_ERROR");
+      }
     });
   });
 

@@ -102,6 +102,10 @@ export class ProcessManager {
       this.terminalManager.cleanup();
     } catch (_error) {
       // Silently ignore cleanup errors to prevent crashing during shutdown
+      // Emit debug log in dev / verbose mode for easier diagnostics
+      if (process.env["NODE_ENV"] === "development") {
+        console.debug("[ProcessManager] terminal cleanup error:", _error);
+      }
     }
   }
 

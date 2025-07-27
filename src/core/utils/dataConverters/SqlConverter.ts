@@ -58,9 +58,9 @@ export class SqlConverter implements DataConverter<SqlOptions> {
       // Check if array contains objects (ideal for SQL tables)
       if (data.length > 0 && typeof data[0] === "object" && data[0] !== null) {
         // Validate all elements are objects with consistent structure
-        const firstKeys = Object.keys(
-          data[0] as Record<string, unknown>,
-        ).sort();
+        const firstKeys = new Set(
+          Object.keys(data[0] as Record<string, unknown>),
+        );
         const inconsistentStructure = data.some((item) => {
           if (
             typeof item !== "object" ||
@@ -69,8 +69,13 @@ export class SqlConverter implements DataConverter<SqlOptions> {
           ) {
             return true;
           }
-          const itemKeys = Object.keys(item as Record<string, unknown>).sort();
-          return JSON.stringify(itemKeys) !== JSON.stringify(firstKeys);
+          const itemKeys = new Set(
+            Object.keys(item as Record<string, unknown>),
+          );
+          return (
+            firstKeys.size !== itemKeys.size ||
+            ![...firstKeys].every((key) => itemKeys.has(key))
+          );
         });
 
         if (inconsistentStructure) {
