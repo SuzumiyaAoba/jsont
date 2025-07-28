@@ -12,15 +12,14 @@ import { useCallback, useMemo } from "react";
 export function useSearchHighlighting(
   searchTerm: string,
   searchResults: SearchResult[],
-  scrollOffset: number,
 ) {
   // Create a map of search results by line for efficient lookup
   const searchResultsByLine = useMemo(() => {
     const map = new Map<number, SearchResult[]>();
     for (const result of searchResults) {
-      const lineResults = map.get(result.line) || [];
+      const lineResults = map.get(result.lineIndex) || [];
       lineResults.push(result);
-      map.set(result.line, lineResults);
+      map.set(result.lineIndex, lineResults);
     }
     return map;
   }, [searchResults]);
@@ -45,7 +44,7 @@ export function useSearchHighlighting(
       const highlightedTokens = applySearchHighlighting(
         syntaxTokens,
         searchTerm,
-        lineSearchResults,
+        lineSearchResults.length > 0,
       );
 
       return {

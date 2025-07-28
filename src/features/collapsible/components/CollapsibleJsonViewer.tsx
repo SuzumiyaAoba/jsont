@@ -48,7 +48,7 @@ export const CollapsibleJsonViewer = forwardRef<
     useCollapsibleState(data);
   const displayLines = useDisplayLines(collapsibleState, config);
   const { searchResultsByLine, renderLineWithHighlighting } =
-    useSearchHighlighting(searchTerm, searchResults, scrollOffset);
+    useSearchHighlighting(searchTerm, searchResults);
 
   // Calculate effective visible lines
   const effectiveVisibleLines = Math.max(
@@ -101,12 +101,15 @@ export const CollapsibleJsonViewer = forwardRef<
         const uniqueKey = `collapsible-line-${globalLineIndex}`;
         const lineSearchResults =
           searchResultsByLine.get(globalLineIndex) || [];
-        const hasSearchHighlight = searchTerm && lineSearchResults.length > 0;
-        const isCurrentSearchResult =
+        const hasSearchHighlight = Boolean(
+          searchTerm && lineSearchResults.length > 0,
+        );
+        const isCurrentSearchResult = Boolean(
           hasSearchHighlight &&
-          searchResults.length > 0 &&
-          currentSearchIndex < searchResults.length &&
-          searchResults[currentSearchIndex]?.line === globalLineIndex;
+            searchResults.length > 0 &&
+            currentSearchIndex < searchResults.length &&
+            searchResults[currentSearchIndex]?.lineIndex === globalLineIndex,
+        );
 
         const { highlightedTokens, isCursorLine } = renderLineWithHighlighting(
           line,

@@ -3,22 +3,9 @@
  */
 
 import type { SearchResult } from "@core/types/index";
+import type { HighlightToken } from "@features/json-rendering/utils/syntaxHighlight";
 import { Box, Text } from "ink";
 import type { ReactElement } from "react";
-
-interface Token {
-  text: string;
-  style: {
-    color?: string;
-    backgroundColor?: string;
-    dim?: boolean;
-    bold?: boolean;
-    italic?: boolean;
-    underline?: boolean;
-    strikethrough?: boolean;
-    inverse?: boolean;
-  };
-}
 
 interface CollapsibleLineProps {
   line: string;
@@ -28,7 +15,7 @@ interface CollapsibleLineProps {
   isCursorLine: boolean;
   hasSearchHighlight: boolean;
   isCurrentSearchResult: boolean;
-  highlightedTokens: Token[];
+  highlightedTokens: HighlightToken[];
   searchTerm: string;
   searchResults: SearchResult[];
   currentSearchIndex: number;
@@ -53,22 +40,20 @@ export function CollapsibleLine({
       {showLineNumbers && (
         <Text
           color="gray"
-          backgroundColor={isCursorLine ? "blue" : undefined}
+          {...(isCursorLine ? { backgroundColor: "blue" } : {})}
           inverse={isCursorLine}
         >
           {formatLineNumber(globalLineIndex)}{" "}
         </Text>
       )}
       <Text
-        backgroundColor={
-          isCurrentSearchResult
-            ? "yellow"
-            : hasSearchHighlight
-              ? "blue"
-              : isCursorLine
-                ? "blue"
-                : undefined
-        }
+        {...(isCurrentSearchResult
+          ? { backgroundColor: "yellow" }
+          : hasSearchHighlight
+            ? { backgroundColor: "blue" }
+            : isCursorLine
+              ? { backgroundColor: "blue" }
+              : {})}
         inverse={isCursorLine}
       >
         {highlightedTokens.map((token, tokenIndex) => {
@@ -76,17 +61,14 @@ export function CollapsibleLine({
           return (
             <Text
               key={key}
-              {...token.style}
-              backgroundColor={
-                token.style.backgroundColor ||
-                (isCurrentSearchResult
-                  ? "yellow"
-                  : hasSearchHighlight
-                    ? "blue"
-                    : isCursorLine
-                      ? "blue"
-                      : undefined)
-              }
+              color={token.color}
+              {...(isCurrentSearchResult
+                ? { backgroundColor: "yellow" }
+                : hasSearchHighlight
+                  ? { backgroundColor: "blue" }
+                  : isCursorLine
+                    ? { backgroundColor: "blue" }
+                    : {})}
             >
               {token.text}
             </Text>

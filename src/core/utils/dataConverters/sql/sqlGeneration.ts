@@ -2,7 +2,8 @@
  * SQL statement generation utilities
  */
 
-import type { JsonValue, SqlOptions } from "@core/types/index";
+import type { JsonValue } from "@core/types/index";
+import type { SqlOptions } from "../types";
 import { getDialectConfig } from "./dialectSupport";
 import type { TableSchema } from "./types";
 import { formatSqlValue } from "./valueFormatting";
@@ -86,7 +87,7 @@ export function generateInsertStatements(
     // Generate values for each row
     const valueRows = batch.map((row) => {
       const values = columns.map((col) => {
-        const value = row[col.name];
+        const value = row[col.name] ?? null;
         return formatSqlValue(value, dialect);
       });
       return `  (${values.join(", ")})`;

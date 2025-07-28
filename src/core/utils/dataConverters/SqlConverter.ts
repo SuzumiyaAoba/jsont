@@ -11,7 +11,6 @@ import {
   inferSchema,
   normalizeDataForSQL,
   shouldUseMultiTableStructure,
-  type TableStructure,
 } from "./sql";
 import type {
   ConversionResult,

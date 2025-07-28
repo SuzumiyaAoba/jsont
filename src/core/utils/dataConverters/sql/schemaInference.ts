@@ -93,7 +93,7 @@ function inferSqlTypeFromValues(values: JsonValue[]): string {
   }
 
   // Use first value for type detection
-  return inferSqlType(values[0]);
+  return inferSqlType(values[0] ?? null);
 }
 
 /**

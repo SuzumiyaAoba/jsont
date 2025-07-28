@@ -2,18 +2,18 @@
  * Hook for calculating display lines from collapsible state
  */
 
-import type { Config } from "@core/config/schema";
+import type { JsontConfig } from "@core/config/types";
 import type { CollapsibleState } from "@features/collapsible/types/collapsible";
 import { getNodeDisplayText } from "@features/collapsible/utils/collapsibleJson";
 import { useMemo } from "react";
 
 export function useDisplayLines(
   collapsibleState: CollapsibleState,
-  config: Config,
+  config: JsontConfig,
 ) {
   const displayLines = useMemo(() => {
     const indentConfig = {
-      size: config.display.json.indent,
+      indent: config.display.json.indent,
       useTabs: config.display.json.useTabs,
     };
 
