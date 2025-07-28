@@ -23,6 +23,7 @@ export function getDialectConfig(dialect: string): SqlDialectConfig {
         adaptType: (type: string) => adaptTypeForSQLite(type),
       };
 
+    case "mssql":
     case "sqlserver":
       return {
         escapeIdentifier: (id: string) => `[${id}]`,
@@ -47,14 +48,10 @@ function adaptTypeForMySQL(type: string): string {
   switch (type) {
     case "INTEGER":
       return "INT";
-    case "BOOLEAN":
-      return "TINYINT(1)";
-    case "JSONB":
-      return "JSON";
+    case "REAL":
+      return "DOUBLE";
     case "TIMESTAMP":
       return "DATETIME";
-    case "DECIMAL":
-      return "DECIMAL(10,2)";
     default:
       return type;
   }
@@ -85,6 +82,10 @@ function adaptTypeForSQLServer(type: string): string {
   switch (type) {
     case "TEXT":
       return "NVARCHAR(MAX)";
+    case "INTEGER":
+      return "INT";
+    case "REAL":
+      return "FLOAT";
     case "BOOLEAN":
       return "BIT";
     case "JSONB":

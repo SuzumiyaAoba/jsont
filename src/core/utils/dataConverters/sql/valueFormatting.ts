@@ -22,6 +22,7 @@ export function formatSqlValue(
         return value ? "TRUE" : "FALSE";
       case "sqlite":
         return value ? "1" : "0";
+      case "mssql":
       case "sqlserver":
         return value ? "1" : "0";
       case "postgresql":

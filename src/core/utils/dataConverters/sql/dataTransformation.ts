@@ -113,7 +113,7 @@ function flattenObjectToTables(
 ): TableStructure[] {
   const structures: TableStructure[] = [];
   const mainTableData: Record<string, JsonValue> = {};
-  let nestedTableIndex = 0;
+  const nestedTableIndex = 0;
 
   for (const [key, value] of Object.entries(obj)) {
     if (Array.isArray(value)) {
@@ -121,28 +121,21 @@ function flattenObjectToTables(
       const nestedTableName = `${baseTableName}_${key}`;
       const arrayStructures = extractTableStructures(value, nestedTableName);
       structures.push(...arrayStructures);
-
-      // Add reference in main table
-      mainTableData[`${key}_table`] = nestedTableName;
     } else if (typeof value === "object" && value !== null) {
-      // Create separate table for nested object
-      const nestedTableName = `${baseTableName}_nested_${nestedTableIndex}`;
+      // Create separate table for nested object using the key name
+      const nestedTableName = `${baseTableName}_${key}`;
       const nestedStructures = flattenObjectToTables(
         value as Record<string, JsonValue>,
         nestedTableName,
       );
       structures.push(...nestedStructures);
-
-      // Add reference in main table
-      mainTableData[`${key}_table`] = nestedTableName;
-      nestedTableIndex++;
     } else {
       // Keep primitive values in main table
       mainTableData[key] = value;
     }
   }
 
-  // Create main table
+  // Create main table only if it has primitive values
   if (Object.keys(mainTableData).length > 0) {
     const mainSchema = inferSchema([mainTableData], baseTableName);
     structures.unshift({
