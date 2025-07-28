@@ -113,7 +113,6 @@ function flattenObjectToTables(
 ): TableStructure[] {
   const structures: TableStructure[] = [];
   const mainTableData: Record<string, JsonValue> = {};
-  const nestedTableIndex = 0;
 
   for (const [key, value] of Object.entries(obj)) {
     if (Array.isArray(value)) {
