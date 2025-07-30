@@ -62,20 +62,20 @@ interface AppStateContextValue {
   // Configuration
   config: ReturnType<typeof useConfig>;
   keybindings: ReturnType<typeof createKeybindingMatcher>;
-  
+
   // Search state
   searchState: ReturnType<typeof useSearchState>;
   searchInput: ReturnType<typeof useSearchInput>[0];
   setSearchInput: ReturnType<typeof useSearchInput>[1];
   searchCursorPosition: ReturnType<typeof useSearchCursorPosition>[0];
   setSearchCursorPosition: ReturnType<typeof useSearchCursorPosition>[1];
-  setIsSearching: ReturnType<typeof useSetAtom<boolean>>;
+  setIsSearching: (searching: boolean) => void;
   startSearch: ReturnType<typeof useStartSearch>;
   cancelSearch: ReturnType<typeof useCancelSearch>;
   cycleScope: ReturnType<typeof useCycleScope>;
   nextSearchResult: ReturnType<typeof useNextSearchResult>;
   previousSearchResult: ReturnType<typeof usePreviousSearchResult>;
-  
+
   // Navigation and scroll state
   scrollOffset: ReturnType<typeof useScrollOffset>[0];
   setScrollOffset: ReturnType<typeof useScrollOffset>[1];
@@ -86,7 +86,7 @@ interface AppStateContextValue {
   adjustScroll: ReturnType<typeof useAdjustScroll>;
   startGSequence: ReturnType<typeof useStartGSequence>;
   resetGSequence: ReturnType<typeof useResetGSequence>;
-  
+
   // JQ transformation state
   jqState: ReturnType<typeof useJqState>;
   jqInput: ReturnType<typeof useJqInput>[0];
@@ -102,28 +102,28 @@ interface AppStateContextValue {
   toggleJqView: ReturnType<typeof useToggleJqView>;
   startJqTransformation: ReturnType<typeof useStartJqTransformation>;
   completeJqTransformation: ReturnType<typeof useCompleteJqTransformation>;
-  
+
   // Export and debug state
   exportStatus: ReturnType<typeof useExportStatus>[0];
   exportDialog: ReturnType<typeof useExportDialog>;
   dataExportDialog: { isVisible: boolean };
   setDataExportDialog: (dialog: { isVisible: boolean }) => void;
   updateDebugInfo: ReturnType<typeof useUpdateDebugInfo>;
-  
+
   // UI state
   ui: ReturnType<typeof useUI>;
-  
+
   // Settings state
   settingsVisible: boolean;
-  openSettings: ReturnType<typeof useSetAtom<boolean>>;
-  
+  openSettings: () => void;
+
   // UI toggle functions
   toggleTreeView: ReturnType<typeof useToggleTreeView>;
   toggleSchema: ReturnType<typeof useToggleSchema>;
   toggleCollapsible: ReturnType<typeof useToggleCollapsible>;
   toggleLineNumbers: ReturnType<typeof useToggleLineNumbers>;
   toggleDebugLogViewer: ReturnType<typeof useToggleDebugLogViewer>;
-  
+
   // Utility handlers
   terminalCalculations: ReturnType<typeof useTerminalCalculations>;
   searchHandlers: ReturnType<typeof useSearchHandlers>;
@@ -234,7 +234,7 @@ export function AppStateProvider({
       // Configuration
       config,
       keybindings,
-      
+
       // Search state
       searchState,
       searchInput,
@@ -247,7 +247,7 @@ export function AppStateProvider({
       cycleScope,
       nextSearchResult,
       previousSearchResult,
-      
+
       // Navigation and scroll state
       scrollOffset,
       setScrollOffset,
@@ -258,7 +258,7 @@ export function AppStateProvider({
       adjustScroll,
       startGSequence,
       resetGSequence,
-      
+
       // JQ transformation state
       jqState,
       jqInput,
@@ -274,28 +274,28 @@ export function AppStateProvider({
       toggleJqView,
       startJqTransformation,
       completeJqTransformation,
-      
+
       // Export and debug state
       exportStatus,
       exportDialog,
       dataExportDialog,
       setDataExportDialog,
       updateDebugInfo,
-      
+
       // UI state
       ui,
-      
+
       // Settings state
       settingsVisible,
       openSettings,
-      
+
       // UI toggle functions
       toggleTreeView,
       toggleSchema,
       toggleCollapsible,
       toggleLineNumbers,
       toggleDebugLogViewer,
-      
+
       // Utility handlers
       terminalCalculations,
       searchHandlers,
@@ -341,7 +341,6 @@ export function AppStateProvider({
       exportStatus,
       exportDialog,
       dataExportDialog,
-      setDataExportDialog,
       updateDebugInfo,
       ui,
       settingsVisible,

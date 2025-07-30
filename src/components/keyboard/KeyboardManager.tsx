@@ -3,39 +3,44 @@
  * Handles all keyboard events and delegates to appropriate handlers
  */
 
+import { useAppState } from "@components/providers/AppStateProvider";
+import type {
+  AppMode,
+  KeyboardHandler,
+  KeyboardHandlerRegistration,
+} from "@core/types/app";
 import type { JsonValue } from "@core/types/index";
 import type { NavigationAction } from "@features/collapsible/types/collapsible";
 import { handleTextInput } from "@features/common/components/TextInput";
 import { transformWithJq } from "@features/jq/utils/jqTransform";
 import { useKeyboardHandler } from "@hooks/useKeyboardHandler";
-import { useAppState } from "@components/providers/AppStateProvider";
-import { useInput, useApp } from "ink";
+import { useApp, useInput } from "ink";
 import type { ReactElement, RefObject } from "react";
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback } from "react";
 
 interface KeyboardManagerProps {
   keyboardEnabled: boolean;
   initialData: JsonValue;
   displayData: JsonValue;
-  currentMode: string;
-  treeViewKeyboardHandler: any;
+  currentMode: AppMode;
+  treeViewKeyboardHandler: KeyboardHandler | null;
   collapsibleViewerRef: RefObject<{
     navigate: (action: NavigationAction) => void;
-  }>;
-  safeSetTreeViewKeyboardHandler: (handler: any) => void;
+  } | null>;
+  safeSetTreeViewKeyboardHandler: KeyboardHandlerRegistration;
 }
 
 export function KeyboardManager({
   keyboardEnabled,
   initialData,
-  displayData,
-  currentMode,
+  displayData: _displayData,
+  currentMode: _currentMode,
   treeViewKeyboardHandler,
   collapsibleViewerRef,
-  safeSetTreeViewKeyboardHandler,
-}: KeyboardManagerProps): ReactElement {
+  safeSetTreeViewKeyboardHandler: _safeSetTreeViewKeyboardHandler,
+}: KeyboardManagerProps): ReactElement | null {
   const {
-    config,
+    config: _config,
     keybindings,
     searchState,
     searchInput,
@@ -80,11 +85,13 @@ export function KeyboardManager({
     exportDialog,
     dataExportDialog,
     setDataExportDialog,
+    settingsVisible,
     terminalCalculations,
   } = useAppState();
 
   const { helpVisible, setHelpVisible } = ui;
-  const { maxScroll, maxScrollSearchMode, halfPageLines } = terminalCalculations;
+  const { maxScroll, maxScrollSearchMode, halfPageLines } =
+    terminalCalculations;
 
   const { exit } = useApp();
 
@@ -225,9 +232,9 @@ export function KeyboardManager({
         !exportDialog.isVisible &&
         !dataExportDialog.isVisible &&
         !ui.debugLogViewerVisible &&
-        !ui.settingsVisible,
+        !settingsVisible,
     },
   );
 
-  return <></>;
+  return null;
 }

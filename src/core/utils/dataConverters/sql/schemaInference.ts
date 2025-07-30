@@ -101,7 +101,7 @@ function inferSqlTypeFromValues(values: JsonValue[]): string {
  */
 function isDateString(str: string): boolean {
   const date = new Date(str);
-  return !isNaN(date.getTime()) && str.includes("-");
+  return !Number.isNaN(date.getTime()) && str.includes("-");
 }
 
 /**

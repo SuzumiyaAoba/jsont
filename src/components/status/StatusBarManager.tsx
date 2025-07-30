@@ -3,9 +3,9 @@
  * Manages search bar, JQ input, warnings, export status
  */
 
+import { useAppState } from "@components/providers/AppStateProvider";
 import { JqQueryInput } from "@features/jq/components/JqQueryInput";
 import { SearchBar } from "@features/search/components/SearchBar";
-import { useAppState } from "@components/providers/AppStateProvider";
 import { Box, Text } from "ink";
 import type { ReactElement } from "react";
 
@@ -102,9 +102,7 @@ export function StatusBarManager({
               {exportStatus.isExporting ? (
                 <Text color="yellow">Exporting...</Text>
               ) : (
-                <Text
-                  color={exportStatus.type === "success" ? "green" : "red"}
-                >
+                <Text color={exportStatus.type === "success" ? "green" : "red"}>
                   {exportStatus.message}
                 </Text>
               )}

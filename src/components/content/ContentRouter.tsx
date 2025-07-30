@@ -3,13 +3,15 @@
  * Handles switching between TreeView, CollapsibleView, SchemaView, and JsonView
  */
 
+import { useAppState } from "@components/providers/AppStateProvider";
+import type { AppMode, KeyboardHandlerRegistration } from "@core/types/app";
 import type { JsonValue } from "@core/types/index";
 import { CollapsibleJsonViewer } from "@features/collapsible/components/CollapsibleJsonViewer";
+import type { NavigationAction } from "@features/collapsible/types/collapsible";
 import { DebugBar } from "@features/debug/components/DebugBar";
 import { JsonViewer } from "@features/json-rendering/components/JsonViewer";
 import { SchemaViewer } from "@features/schema/components/SchemaViewer";
 import { TreeView } from "@features/tree/components/TreeView";
-import { useAppState } from "@components/providers/AppStateProvider";
 import { Box } from "ink";
 import type { ReactElement } from "react";
 import { useCallback, useRef } from "react";
@@ -17,16 +19,16 @@ import { useCallback, useRef } from "react";
 interface ContentRouterProps {
   displayData: JsonValue;
   keyboardEnabled: boolean;
-  currentMode: string;
-  safeSetTreeViewKeyboardHandler: (handler: any) => void;
+  currentMode: AppMode;
+  safeSetTreeViewKeyboardHandler: KeyboardHandlerRegistration;
 }
 
 export function ContentRouter({
   displayData,
   keyboardEnabled,
-  currentMode,
+  currentMode: _currentMode,
   safeSetTreeViewKeyboardHandler,
-}: ContentRouterProps): ReactElement {
+}: ContentRouterProps): ReactElement | null {
   const {
     ui,
     searchState,
@@ -47,9 +49,9 @@ export function ContentRouter({
 
   const { visibleLines, searchModeVisibleLines } = terminalCalculations;
 
-  const collapsibleViewerRef = useRef<{ scrollToLine: (line: number) => void }>(
-    null,
-  );
+  const collapsibleViewerRef = useRef<{
+    navigate: (action: NavigationAction) => void;
+  }>(null);
 
   // Handle scroll changes for collapsible viewer
   const handleCollapsibleScrollChange = useCallback(
@@ -67,7 +69,7 @@ export function ContentRouter({
 
   // Don't show content when help is visible (it's handled by ModalManager)
   if (helpVisible) {
-    return <></>;
+    return null;
   }
 
   return (

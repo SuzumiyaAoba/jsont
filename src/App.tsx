@@ -1,4 +1,13 @@
+import { ContentRouter } from "@components/content/ContentRouter";
+import { KeyboardManager } from "@components/keyboard/KeyboardManager";
+import { ModalManager } from "@components/modals/ModalManager";
+import {
+  AppStateProvider,
+  useAppState,
+} from "@components/providers/AppStateProvider";
+import { StatusBarManager } from "@components/status/StatusBarManager";
 import type {
+  AppMode,
   AppProps,
   KeyboardHandler,
   KeyboardHandlerRegistration,
@@ -6,11 +15,6 @@ import type {
 import type { JsonValue } from "@core/types/index";
 import type { NavigationAction } from "@features/collapsible/types/collapsible";
 import { ConfirmationDialog, NotificationToast } from "@features/common";
-import { ContentRouter } from "@components/content/ContentRouter";
-import { KeyboardManager } from "@components/keyboard/KeyboardManager";
-import { ModalManager } from "@components/modals/ModalManager";
-import { AppStateProvider, useAppState } from "@components/providers/AppStateProvider";
-import { StatusBarManager } from "@components/status/StatusBarManager";
 import { Box } from "ink";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
@@ -28,8 +32,8 @@ export function App({
   initialViewMode,
 }: AppProps) {
   return (
-    <AppStateProvider 
-      initialData={initialData ?? null} 
+    <AppStateProvider
+      initialData={initialData ?? null}
       initialError={initialError ?? null}
       keyboardEnabled={keyboardEnabled}
     >
@@ -52,7 +56,16 @@ function AppContent({
   keyboardEnabled,
   initialViewMode,
 }: AppProps) {
-  const { ui, jqState, searchState, toggleTreeView, toggleCollapsible, toggleSchema, openSettings, terminalCalculations } = useAppState();
+  const {
+    ui,
+    jqState,
+    searchState,
+    toggleTreeView,
+    toggleCollapsible,
+    toggleSchema,
+    openSettings,
+    terminalCalculations,
+  } = useAppState();
 
   const [treeViewKeyboardHandler, setTreeViewKeyboardHandler] =
     useState<KeyboardHandler | null>(null);
@@ -114,9 +127,9 @@ function AppContent({
       jqState.transformedData !== null &&
       !jqState.showOriginal
     ) {
-      return jqState.transformedData;
+      return jqState.transformedData as JsonValue;
     }
-    return initialData;
+    return initialData ?? null;
   }, [
     jqState.isActive,
     jqState.transformedData,
@@ -125,7 +138,7 @@ function AppContent({
   ]);
 
   // Determine current mode for help system
-  const currentMode = useMemo(() => {
+  const currentMode = useMemo((): AppMode => {
     if (searchState.isSearching || searchState.searchTerm) {
       return "search" as const;
     } else if (ui.treeViewMode) {
@@ -152,24 +165,24 @@ function AppContent({
     <ModalManager
       currentMode={currentMode}
       displayData={displayData}
-      initialError={initialError}
+      initialError={initialError ?? null}
     >
       <Box flexDirection="column" width="100%">
         {/* Status bars and warnings */}
-        <StatusBarManager keyboardEnabled={keyboardEnabled} />
+        <StatusBarManager keyboardEnabled={keyboardEnabled ?? false} />
 
         {/* Main content router */}
         <ContentRouter
           displayData={displayData}
-          keyboardEnabled={keyboardEnabled}
+          keyboardEnabled={keyboardEnabled ?? false}
           currentMode={currentMode}
           safeSetTreeViewKeyboardHandler={safeSetTreeViewKeyboardHandler}
         />
 
         {/* Keyboard input manager */}
         <KeyboardManager
-          keyboardEnabled={keyboardEnabled}
-          initialData={initialData}
+          keyboardEnabled={keyboardEnabled ?? false}
+          initialData={initialData ?? null}
           displayData={displayData}
           currentMode={currentMode}
           treeViewKeyboardHandler={treeViewKeyboardHandler}
@@ -181,7 +194,9 @@ function AppContent({
         <NotificationToast />
 
         {/* Global confirmation dialog - always rendered last to be on top */}
-        <ConfirmationDialog terminalWidth={terminalCalculations.terminalSize.width} />
+        <ConfirmationDialog
+          terminalWidth={terminalCalculations.terminalSize.width}
+        />
       </Box>
     </ModalManager>
   );
