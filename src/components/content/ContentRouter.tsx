@@ -13,21 +13,25 @@ import { JsonViewer } from "@features/json-rendering/components/JsonViewer";
 import { SchemaViewer } from "@features/schema/components/SchemaViewer";
 import { TreeView } from "@features/tree/components/TreeView";
 import { Box } from "ink";
-import type { ReactElement } from "react";
-import { useCallback, useRef } from "react";
+import type { ReactElement, RefObject } from "react";
+import { useCallback } from "react";
 
 interface ContentRouterProps {
   displayData: JsonValue;
-  keyboardEnabled: boolean;
+  keyboardEnabled?: boolean;
   currentMode: AppMode;
   safeSetTreeViewKeyboardHandler: KeyboardHandlerRegistration;
+  collapsibleViewerRef: RefObject<{
+    navigate: (action: NavigationAction) => void;
+  } | null>;
 }
 
 export function ContentRouter({
   displayData,
-  keyboardEnabled,
+  keyboardEnabled = false,
   currentMode: _currentMode,
   safeSetTreeViewKeyboardHandler,
+  collapsibleViewerRef,
 }: ContentRouterProps): ReactElement | null {
   const {
     ui,
@@ -48,10 +52,6 @@ export function ContentRouter({
   } = ui;
 
   const { visibleLines, searchModeVisibleLines } = terminalCalculations;
-
-  const collapsibleViewerRef = useRef<{
-    navigate: (action: NavigationAction) => void;
-  }>(null);
 
   // Handle scroll changes for collapsible viewer
   const handleCollapsibleScrollChange = useCallback(

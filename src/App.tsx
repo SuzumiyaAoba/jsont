@@ -26,20 +26,20 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
  * @param keyboardEnabled - Whether keyboard navigation is enabled
  */
 export function App({
-  initialData,
-  initialError,
+  initialData = null,
+  initialError = null,
   keyboardEnabled = false,
   initialViewMode,
 }: AppProps) {
   return (
     <AppStateProvider
-      initialData={initialData ?? null}
-      initialError={initialError ?? null}
+      initialData={initialData}
+      initialError={initialError}
       keyboardEnabled={keyboardEnabled}
     >
       <AppContent
-        initialData={initialData ?? null}
-        initialError={initialError ?? null}
+        initialData={initialData}
+        initialError={initialError}
         keyboardEnabled={keyboardEnabled}
         initialViewMode={initialViewMode}
       />
@@ -51,9 +51,9 @@ export function App({
  * Internal component that contains the main app logic
  */
 function AppContent({
-  initialData,
-  initialError,
-  keyboardEnabled,
+  initialData = null,
+  initialError = null,
+  keyboardEnabled = false,
   initialViewMode,
 }: AppProps) {
   const {
@@ -165,24 +165,25 @@ function AppContent({
     <ModalManager
       currentMode={currentMode}
       displayData={displayData}
-      initialError={initialError ?? null}
+      initialError={initialError}
     >
       <Box flexDirection="column" width="100%">
         {/* Status bars and warnings */}
-        <StatusBarManager keyboardEnabled={keyboardEnabled ?? false} />
+        <StatusBarManager keyboardEnabled={keyboardEnabled} />
 
         {/* Main content router */}
         <ContentRouter
           displayData={displayData}
-          keyboardEnabled={keyboardEnabled ?? false}
+          keyboardEnabled={keyboardEnabled}
           currentMode={currentMode}
           safeSetTreeViewKeyboardHandler={safeSetTreeViewKeyboardHandler}
+          collapsibleViewerRef={collapsibleViewerRef}
         />
 
         {/* Keyboard input manager */}
         <KeyboardManager
-          keyboardEnabled={keyboardEnabled ?? false}
-          initialData={initialData ?? null}
+          keyboardEnabled={keyboardEnabled}
+          initialData={initialData}
           displayData={displayData}
           currentMode={currentMode}
           treeViewKeyboardHandler={treeViewKeyboardHandler}

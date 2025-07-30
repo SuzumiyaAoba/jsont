@@ -134,15 +134,15 @@ const AppStateContext = createContext<AppStateContextValue | null>(null);
 
 interface AppStateProviderProps {
   children: ReactNode;
-  initialData: JsonValue;
+  initialData?: JsonValue | null;
   initialError?: string | null;
   keyboardEnabled?: boolean;
 }
 
 export function AppStateProvider({
   children,
-  initialData,
-  initialError,
+  initialData = null,
+  initialError = null,
   keyboardEnabled = false,
 }: AppStateProviderProps): ReactElement {
   // Load configuration and create keybinding matcher
@@ -215,7 +215,7 @@ export function AppStateProvider({
   // Utility handlers
   const terminalCalculations = useTerminalCalculations({
     keyboardEnabled,
-    error: initialError ?? null,
+    error: initialError,
     searchInput: searchInput,
     initialData,
     collapsibleMode: ui.collapsibleMode,

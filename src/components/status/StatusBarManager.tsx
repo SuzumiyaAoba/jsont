@@ -10,11 +10,11 @@ import { Box, Text } from "ink";
 import type { ReactElement } from "react";
 
 interface StatusBarManagerProps {
-  keyboardEnabled: boolean;
+  keyboardEnabled?: boolean;
 }
 
 export function StatusBarManager({
-  keyboardEnabled,
+  keyboardEnabled = false,
 }: StatusBarManagerProps): ReactElement {
   const {
     searchState,

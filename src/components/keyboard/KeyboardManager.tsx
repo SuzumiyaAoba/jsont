@@ -19,8 +19,8 @@ import type { ReactElement, RefObject } from "react";
 import { useCallback } from "react";
 
 interface KeyboardManagerProps {
-  keyboardEnabled: boolean;
-  initialData: JsonValue;
+  keyboardEnabled?: boolean;
+  initialData?: JsonValue | null;
   displayData: JsonValue;
   currentMode: AppMode;
   treeViewKeyboardHandler: KeyboardHandler | null;
@@ -31,8 +31,8 @@ interface KeyboardManagerProps {
 }
 
 export function KeyboardManager({
-  keyboardEnabled,
-  initialData,
+  keyboardEnabled = false,
+  initialData = null,
   displayData: _displayData,
   currentMode: _currentMode,
   treeViewKeyboardHandler,
