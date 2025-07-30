@@ -215,7 +215,7 @@ function TestComponent(): ReactElement {
 
 describe("AppStateProvider", () => {
   const renderWithProvider = (
-    initialData?: any,
+    initialData?: unknown,
     initialError?: string | null,
     keyboardEnabled = false,
   ) => {

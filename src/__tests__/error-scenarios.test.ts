@@ -46,7 +46,7 @@ describe("Critical Error Scenarios", () => {
 
     it("should handle extremely large JSON objects", () => {
       // Create a very large object
-      const largeObject: Record<string, any> = {};
+      const largeObject: Record<string, unknown> = {};
       for (let i = 0; i < 10000; i++) {
         largeObject[`key_${i}`] = {
           id: i,
@@ -68,7 +68,7 @@ describe("Critical Error Scenarios", () => {
     });
 
     it("should handle circular references in objects", () => {
-      const circularObj: any = { name: "test" };
+      const circularObj: { name: string; self?: unknown } = { name: "test" };
       circularObj.self = circularObj;
 
       // JSON.stringify should throw on circular references
@@ -107,9 +107,9 @@ describe("Critical Error Scenarios", () => {
 
       try {
         await writeFile("/root/protected-file.txt", "test data");
-      } catch (error: any) {
-        expect(error.code).toBe("EACCES");
-        expect(error.message).toContain("permission denied");
+      } catch (error: unknown) {
+        expect((error as { code: string }).code).toBe("EACCES");
+        expect((error as Error).message).toContain("permission denied");
       }
     });
 
@@ -125,9 +125,9 @@ describe("Critical Error Scenarios", () => {
 
       try {
         await writeFile("/tmp/test.txt", "x".repeat(1000000));
-      } catch (error: any) {
-        expect(error.code).toBe("ENOSPC");
-        expect(error.message).toContain("no space left on device");
+      } catch (error: unknown) {
+        expect((error as { code: string }).code).toBe("ENOSPC");
+        expect((error as Error).message).toContain("no space left on device");
       }
     });
 
@@ -144,9 +144,9 @@ describe("Critical Error Scenarios", () => {
 
       try {
         await readFile("/nonexistent/path/file.json", "utf8");
-      } catch (error: any) {
-        expect(error.code).toBe("ENOENT");
-        expect(error.message).toContain("no such file or directory");
+      } catch (error: unknown) {
+        expect((error as { code: string }).code).toBe("ENOENT");
+        expect((error as Error).message).toContain("no such file or directory");
       }
     });
 
@@ -163,8 +163,8 @@ describe("Critical Error Scenarios", () => {
 
       try {
         await mkdir("/existing/directory", { recursive: true });
-      } catch (error: any) {
-        expect(error.code).toBe("EEXIST");
+      } catch (error: unknown) {
+        expect((error as { code: string }).code).toBe("EEXIST");
       }
     });
   });
@@ -204,7 +204,7 @@ describe("Critical Error Scenarios", () => {
     });
 
     it("should handle stack overflow in recursive operations", () => {
-      const deeplyNestedObject = (depth: number): any => {
+      const deeplyNestedObject = (depth: number): unknown => {
         if (depth === 0) return { value: "leaf" };
         return { nested: deeplyNestedObject(depth - 1) };
       };
@@ -284,10 +284,10 @@ describe("Critical Error Scenarios", () => {
       const signalHandler = vi.fn();
 
       // Simulate signal handling
-      process.on = vi.fn((event, handler) => {
-        if (event === "SIGTERM") {
-          signalHandler.mockImplementation(handler);
-        }
+      const mockOn = vi.fn(() => process);
+      Object.defineProperty(process, "on", {
+        value: mockOn,
+        writable: true,
       });
 
       // Test signal handler setup
@@ -298,10 +298,10 @@ describe("Critical Error Scenarios", () => {
       const uncaughtHandler = vi.fn();
 
       // Mock uncaught exception handler
-      process.on = vi.fn((event, handler) => {
-        if (event === "uncaughtException") {
-          uncaughtHandler.mockImplementation(handler);
-        }
+      const mockOn2 = vi.fn(() => process);
+      Object.defineProperty(process, "on", {
+        value: mockOn2,
+        writable: true,
       });
 
       // Test that handler can be set up
@@ -312,10 +312,10 @@ describe("Critical Error Scenarios", () => {
       const rejectionHandler = vi.fn();
 
       // Mock unhandled rejection handler
-      process.on = vi.fn((event, handler) => {
-        if (event === "unhandledRejection") {
-          rejectionHandler.mockImplementation(handler);
-        }
+      const mockOn3 = vi.fn(() => process);
+      Object.defineProperty(process, "on", {
+        value: mockOn3,
+        writable: true,
       });
 
       // Test that handler can be set up
@@ -380,9 +380,9 @@ describe("Critical Error Scenarios", () => {
 
       try {
         await writeFile("/tmp/test.txt", "data");
-      } catch (error: any) {
-        expect(error.code).toBe("EMFILE");
-        expect(error.message).toContain("too many open files");
+      } catch (error: unknown) {
+        expect((error as { code: string }).code).toBe("EMFILE");
+        expect((error as Error).message).toContain("too many open files");
       }
     });
 

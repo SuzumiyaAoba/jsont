@@ -14,10 +14,17 @@ import { ContentRouter } from "../ContentRouter";
 
 // Mock all viewer components
 vi.mock("@features/tree/components/TreeView", () => ({
-  TreeView: ({ data, onKeyboardHandlerReady }: any) => (
+  TreeView: ({
+    data,
+    onKeyboardHandlerReady,
+  }: {
+    data: unknown;
+    onKeyboardHandlerReady: (handler: () => void) => void;
+  }) => (
     <div data-testid="tree-view">
       <div data-testid="tree-data">{JSON.stringify(data)}</div>
       <button
+        type="button"
         onClick={() => onKeyboardHandlerReady(vi.fn())}
         data-testid="tree-handler-setup"
       >
@@ -28,10 +35,20 @@ vi.mock("@features/tree/components/TreeView", () => ({
 }));
 
 vi.mock("@features/collapsible/components/CollapsibleJsonViewer", () => ({
-  CollapsibleJsonViewer: ({ data, onScrollChange }: any, ref: any) => (
+  CollapsibleJsonViewer: (
+    {
+      data,
+      onScrollChange,
+    }: { data: unknown; onScrollChange: (offset: number) => void },
+    ref: React.Ref<HTMLDivElement>,
+  ) => (
     <div data-testid="collapsible-view" ref={ref}>
       <div data-testid="collapsible-data">{JSON.stringify(data)}</div>
-      <button onClick={() => onScrollChange(10)} data-testid="scroll-change">
+      <button
+        type="button"
+        onClick={() => onScrollChange(10)}
+        data-testid="scroll-change"
+      >
         Change Scroll
       </button>
     </div>
@@ -39,7 +56,7 @@ vi.mock("@features/collapsible/components/CollapsibleJsonViewer", () => ({
 }));
 
 vi.mock("@features/schema/components/SchemaViewer", () => ({
-  SchemaViewer: ({ data }: any) => (
+  SchemaViewer: ({ data }: { data: unknown }) => (
     <div data-testid="schema-view">
       <div data-testid="schema-data">{JSON.stringify(data)}</div>
     </div>
@@ -47,7 +64,7 @@ vi.mock("@features/schema/components/SchemaViewer", () => ({
 }));
 
 vi.mock("@features/json-rendering/components/JsonViewer", () => ({
-  JsonViewer: ({ data }: any) => (
+  JsonViewer: ({ data }: { data: unknown }) => (
     <div data-testid="json-view">
       <div data-testid="json-data">{JSON.stringify(data)}</div>
     </div>
@@ -253,12 +270,12 @@ function TestWrapper({
   keyboardEnabled = false,
   currentMode = "raw" as AppMode,
 }: {
-  displayData?: any;
+  displayData?: unknown;
   keyboardEnabled?: boolean;
   currentMode?: AppMode;
 }): ReactElement {
   const collapsibleViewerRef = createRef<{
-    navigate: (action: any) => void;
+    navigate: (action: unknown) => void;
   } | null>();
 
   const safeSetTreeViewKeyboardHandler = vi.fn();
@@ -581,7 +598,7 @@ describe("ContentRouter", () => {
       vi.mocked(require("@store/hooks/useUI")).useUI.mockReturnValue(mockUI);
 
       const collapsibleViewerRef = createRef<{
-        navigate: (action: any) => void;
+        navigate: (action: unknown) => void;
       } | null>();
 
       render(

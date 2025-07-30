@@ -15,7 +15,7 @@ import { ModalManager } from "../ModalManager";
 vi.mock("@features/debug/components/DebugLogViewer", () => ({
   DebugLogViewer: ({ onExit }: { onExit: () => void }) => (
     <div data-testid="debug-log-viewer">
-      <button onClick={onExit} data-testid="debug-close">
+      <button type="button" onClick={onExit} data-testid="debug-close">
         Close Debug
       </button>
     </div>
@@ -27,16 +27,25 @@ vi.mock("@features/settings/components/SettingsViewer", () => ({
 }));
 
 vi.mock("@features/schema/components/ExportDialog", () => ({
-  ExportDialog: ({ onConfirm, onCancel, defaultFilename }: any) => (
+  ExportDialog: ({
+    onConfirm,
+    onCancel,
+    defaultFilename,
+  }: {
+    onConfirm: (options: { filename: string; format: string }) => void;
+    onCancel: () => void;
+    defaultFilename: string;
+  }) => (
     <div data-testid="export-dialog">
       <div data-testid="default-filename">{defaultFilename}</div>
       <button
+        type="button"
         onClick={() => onConfirm({ filename: "test.json", format: "json" })}
         data-testid="export-confirm"
       >
         Confirm
       </button>
-      <button onClick={onCancel} data-testid="export-cancel">
+      <button type="button" onClick={onCancel} data-testid="export-cancel">
         Cancel
       </button>
     </div>
@@ -244,7 +253,7 @@ function TestWrapper({
 }: {
   children: React.ReactNode;
   currentMode?: AppMode;
-  displayData?: any;
+  displayData?: unknown;
   initialError?: string | null;
 }): ReactElement {
   return (

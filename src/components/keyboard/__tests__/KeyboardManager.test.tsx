@@ -236,13 +236,13 @@ function TestWrapper({
   treeViewKeyboardHandler = null,
 }: {
   keyboardEnabled?: boolean;
-  initialData?: any;
-  displayData?: any;
+  initialData?: unknown;
+  displayData?: unknown;
   currentMode?: AppMode;
   treeViewKeyboardHandler?: KeyboardHandler | null;
 }): ReactElement {
   const collapsibleViewerRef = createRef<{
-    navigate: (action: any) => void;
+    navigate: (action: unknown) => void;
   } | null>();
 
   const safeSetTreeViewKeyboardHandler = vi.fn();

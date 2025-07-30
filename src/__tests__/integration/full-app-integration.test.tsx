@@ -3,9 +3,10 @@
  * Tests complete workflows from initialization to user interactions
  */
 
-import { defaultConfig } from "@core/config/defaults";
-import { ConfigContext } from "@core/context/ConfigContext";
-import { render, screen } from "@testing-library/react";
+import { DEFAULT_CONFIG as defaultConfig } from "@core/config/defaults";
+import { ConfigProvider } from "@core/context/ConfigContext";
+import type { JsonValue, ViewMode } from "@core/types/index";
+import { render } from "@testing-library/react";
 import type { ReactElement } from "react";
 import { App } from "../../App";
 
@@ -237,20 +238,20 @@ function TestApp({
   keyboardEnabled = true,
   initialViewMode = undefined,
 }: {
-  initialData?: any;
+  initialData?: JsonValue | null;
   initialError?: string | null;
   keyboardEnabled?: boolean;
-  initialViewMode?: string;
+  initialViewMode?: ViewMode;
 } = {}): ReactElement {
   return (
-    <ConfigContext.Provider value={defaultConfig}>
+    <ConfigProvider config={defaultConfig}>
       <App
         initialData={initialData}
         initialError={initialError}
         keyboardEnabled={keyboardEnabled}
         initialViewMode={initialViewMode}
       />
-    </ConfigContext.Provider>
+    </ConfigProvider>
   );
 }
 
@@ -527,7 +528,7 @@ describe("Full Application Integration", () => {
 
     it("should handle invalid initial data", () => {
       const invalidData = {
-        circular: null as any,
+        circular: null as unknown,
       };
       invalidData.circular = invalidData; // Create circular reference
 

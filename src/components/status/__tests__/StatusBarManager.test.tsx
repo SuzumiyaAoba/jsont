@@ -12,7 +12,13 @@ import { StatusBarManager } from "../StatusBarManager";
 
 // Mock status bar components
 vi.mock("@features/search/components/SearchBar", () => ({
-  SearchBar: ({ searchState, searchInput }: any) => (
+  SearchBar: ({
+    searchState,
+    searchInput,
+  }: {
+    searchState: unknown;
+    searchInput: unknown;
+  }) => (
     <div data-testid="search-bar">
       <div data-testid="search-state">{JSON.stringify(searchState)}</div>
       <div data-testid="search-input">{searchInput}</div>
@@ -21,7 +27,13 @@ vi.mock("@features/search/components/SearchBar", () => ({
 }));
 
 vi.mock("@features/jq/components/JqQueryInput", () => ({
-  JqQueryInput: ({ jqState, queryInput }: any) => (
+  JqQueryInput: ({
+    jqState,
+    queryInput,
+  }: {
+    jqState: unknown;
+    queryInput: unknown;
+  }) => (
     <div data-testid="jq-input">
       <div data-testid="jq-state">{JSON.stringify(jqState)}</div>
       <div data-testid="jq-query">{queryInput}</div>
