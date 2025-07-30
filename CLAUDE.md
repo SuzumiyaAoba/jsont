@@ -16,6 +16,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ### Testing
 - `npm run test` - Run tests in watch mode
 - `npm run test:run` - Run tests once and exit
+- `npm run test:watch` - Run tests in explicit watch mode
 - `npm run test:ui` - Open Vitest UI for interactive testing
 - `npm run test -- tree` - Run specific test files matching "tree"
 
@@ -24,7 +25,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `npm run check:write` - Run Biome checks and apply safe fixes
 - `npm run type-check` - Run TypeScript type checking only
 - `npm run lint` - Lint source code only
-- `npm run format:write` - Format source code
+- `npm run lint:fix` - Lint and automatically fix issues
+- `npm run format` - Format source code (read-only)
+- `npm run format:write` - Format and write source code
 
 ### Usage
 ```bash
@@ -62,7 +65,7 @@ Organized by feature domains, each containing:
 - `collapsible/` - Collapsible JSON viewer with syntax highlighting
 - `search/` - Search functionality across JSON data
 - `jq/` - jq query transformation support
-- `schema/` - JSON schema inference and export
+- `schema/` - JSON schema inference and multi-format export (JSON, YAML, CSV, XML, SQL)
 - `json-rendering/` - Core JSON parsing and syntax highlighting
 - `common/` - Shared components (TextInput, BaseViewer, hooks)
 - `debug/` - Debug logging and viewer components
@@ -70,6 +73,12 @@ Organized by feature domains, each containing:
 - `help/` - Context-sensitive help system
 - `status/` - Status bar and line number display
 - `settings/` - Interactive settings TUI with live preview and validation
+
+#### Data Export Capabilities
+- **Supported Formats**: JSON, YAML, CSV, XML, SQL, JSON Schema
+- **Data Converters**: Modular converter system in `@core/utils/dataConverters/`
+- **SQL Export**: Includes schema inference, dialect support, and data transformation
+- **XML Export**: Hierarchical data representation with configurable options
 
 ### State Management
 - React hooks for local component state
@@ -93,8 +102,12 @@ Organized by feature domains, each containing:
 
 ### Code Quality Tools
 - **Linting/Formatting**: Biome (replaces ESLint + Prettier)
+  - Double quotes for JavaScript/TypeScript
+  - 2-space indentation
+  - Automatic import organization
+  - VCS integration with Git
 - **Git Hooks**: Husky + lint-staged for pre-commit quality checks
-- **TypeScript**: Strict mode with path aliases (`@core/*`, `@features/*`)
+- **TypeScript**: Strict mode with path aliases (`@/*`, `@core/*`, `@features/*`, `@store/*`, `@components/*`, `@hooks/*`)
 
 ### Key Dependencies
 - `neverthrow` - Result type pattern for error handling
@@ -105,13 +118,15 @@ Organized by feature domains, each containing:
 - `zod` - Runtime type validation
 - `jotai` - Atomic state management
 - `mutative` - Immutable state updates
+- `defu` - Deep object merging for configuration
 
 ## Development Guidelines
 
 ### Import Standards
 - **Always use extensionless imports** for TypeScript files
-- **Use path aliases**: `@core/*`, `@features/*`, `@store/*`, `@components/*`, `@hooks/*` instead of relative paths
+- **Use path aliases**: `@/*`, `@core/*`, `@features/*`, `@store/*`, `@components/*`, `@hooks/*` instead of relative paths
 - **Organize imports**: external → aliases → relative
+- **Note**: tsup build only supports `@/*`, `@core/*`, and `@features/*` aliases
 - **Example**:
   ```typescript
   import { Box, Text } from "ink";
