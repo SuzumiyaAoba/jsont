@@ -42,7 +42,7 @@ export interface AppProps {
   initialData?: JsonValue | null;
   initialError?: string | null;
   keyboardEnabled?: boolean;
-  initialViewMode?: ViewMode;
+  initialViewMode?: ViewMode | undefined;
 }
 
 /**

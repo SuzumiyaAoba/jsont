@@ -90,14 +90,14 @@ function groupByObjectStructure(
       if (!groups.has(structure)) {
         groups.set(structure, []);
       }
-      groups.get(structure)!.push(obj);
+      groups.get(structure)?.push(obj);
     } else {
       // Non-object items get their own structure
       const structure = `primitive_${typeof item}`;
       if (!groups.has(structure)) {
         groups.set(structure, []);
       }
-      groups.get(structure)!.push({ value: item });
+      groups.get(structure)?.push({ value: item });
     }
   }
 

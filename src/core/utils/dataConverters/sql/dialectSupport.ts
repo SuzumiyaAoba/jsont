@@ -30,8 +30,6 @@ export function getDialectConfig(dialect: string): SqlDialectConfig {
         getAutoIncrementType: () => "INT IDENTITY(1,1) PRIMARY KEY",
         adaptType: (type: string) => adaptTypeForSQLServer(type),
       };
-
-    case "postgresql":
     default:
       return {
         escapeIdentifier: (id: string) => `"${id}"`,

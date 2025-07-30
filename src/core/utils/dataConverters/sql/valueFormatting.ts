@@ -25,7 +25,6 @@ export function formatSqlValue(
       case "mssql":
       case "sqlserver":
         return value ? "1" : "0";
-      case "postgresql":
       default:
         return value ? "true" : "false";
     }
@@ -54,8 +53,6 @@ export function escapeSqlString(str: string, dialect = "postgresql"): string {
   switch (dialect) {
     case "mysql":
       return str.replace(/'/g, "\\'").replace(/\\/g, "\\\\");
-    case "sqlite":
-    case "postgresql":
     default:
       return str.replace(/'/g, "''");
   }
