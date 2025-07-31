@@ -57,7 +57,7 @@ describe("XmlConverter", () => {
     });
 
     it("should reject function values", () => {
-      const result = converter.validate((() => {}) as any);
+      const result = converter.validate(() => {});
       expect(result.isErr()).toBe(true);
       if (result.isErr()) {
         expect(result.error.message).toContain(

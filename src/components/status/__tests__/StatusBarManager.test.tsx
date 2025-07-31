@@ -31,7 +31,7 @@ vi.mock("@features/jq/components/JqQueryInput", () => ({
     jqState,
     queryInput,
   }: {
-    jqState: any;
+    jqState: unknown;
     queryInput: React.ReactNode;
   }) => (
     <div data-testid="jq-input">

@@ -19,7 +19,7 @@ vi.mock("node-jq", () => ({
 import jq from "node-jq";
 
 describe("JQ Transform Utilities", () => {
-  let mockJqRun: any;
+  let mockJqRun: ReturnType<typeof vi.mocked>;
 
   beforeEach(() => {
     mockJqRun = vi.mocked(jq.run);
@@ -164,7 +164,9 @@ describe("JQ Transform Utilities", () => {
 
     it("should handle data serialization errors", async () => {
       // Create circular reference
-      const circularData: any = { prop: "value" };
+      const circularData: { prop: string; circular?: unknown } = {
+        prop: "value",
+      };
       circularData.circular = circularData;
 
       const result = await transformWithJq(circularData, ".");

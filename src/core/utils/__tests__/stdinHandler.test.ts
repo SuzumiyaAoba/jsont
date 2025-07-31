@@ -33,9 +33,9 @@ import { readFile } from "node:fs/promises";
 import { parseJsonWithValidation } from "@features/json-rendering/utils/jsonProcessor";
 
 describe("Stdin Handler", () => {
-  let mockParseJson: any;
-  let mockReadFile: any;
-  let originalStdin: any;
+  let mockParseJson: ReturnType<typeof vi.mocked>;
+  let mockReadFile: ReturnType<typeof vi.mocked>;
+  let originalStdin: typeof process.stdin;
 
   beforeEach(() => {
     mockParseJson = vi.mocked(parseJsonWithValidation);
@@ -99,10 +99,10 @@ describe("Stdin Handler", () => {
       });
 
       // Mock stdin data events
-      const mockStdin = process.stdin as any;
+      const mockStdin = process.stdin;
       mockStdin.isTTY = false;
 
-      mockStdin.on.mockImplementation((event: string, callback: Function) => {
+      mockStdin.on.mockImplementation((event: string, callback: () => void) => {
         if (event === "data") {
           setTimeout(() => callback(Buffer.from(jsonString)), 0);
         } else if (event === "end") {
@@ -121,10 +121,10 @@ describe("Stdin Handler", () => {
     });
 
     it("should handle empty stdin input", async () => {
-      const mockStdin = process.stdin as any;
+      const mockStdin = process.stdin;
       mockStdin.isTTY = false;
 
-      mockStdin.on.mockImplementation((event: string, callback: Function) => {
+      mockStdin.on.mockImplementation((event: string, callback: () => void) => {
         if (event === "data") {
           setTimeout(() => callback(Buffer.from("")), 0);
         } else if (event === "end") {
@@ -150,10 +150,10 @@ describe("Stdin Handler", () => {
         error: "Invalid JSON format",
       });
 
-      const mockStdin = process.stdin as any;
+      const mockStdin = process.stdin;
       mockStdin.isTTY = false;
 
-      mockStdin.on.mockImplementation((event: string, callback: Function) => {
+      mockStdin.on.mockImplementation((event: string, callback: () => void) => {
         if (event === "data") {
           setTimeout(() => callback(Buffer.from(invalidJson)), 0);
         } else if (event === "end") {
@@ -171,7 +171,7 @@ describe("Stdin Handler", () => {
     });
 
     it("should handle stdin read timeout", async () => {
-      const mockStdin = process.stdin as any;
+      const mockStdin = process.stdin;
       mockStdin.isTTY = false;
 
       // Don't emit any events to trigger timeout
@@ -188,10 +188,10 @@ describe("Stdin Handler", () => {
     it("should handle stdin error events", async () => {
       const testError = new Error("Stdin read error");
 
-      const mockStdin = process.stdin as any;
+      const mockStdin = process.stdin;
       mockStdin.isTTY = false;
 
-      mockStdin.on.mockImplementation((event: string, callback: Function) => {
+      mockStdin.on.mockImplementation((event: string, callback: () => void) => {
         if (event === "error") {
           setTimeout(() => callback(testError), 0);
         }
@@ -218,11 +218,11 @@ describe("Stdin Handler", () => {
         error: null,
       });
 
-      const mockStdin = process.stdin as any;
+      const mockStdin = process.stdin;
       mockStdin.isTTY = false;
 
       let dataCallbackCount = 0;
-      mockStdin.on.mockImplementation((event: string, callback: Function) => {
+      mockStdin.on.mockImplementation((event: string, callback: () => void) => {
         if (event === "data") {
           setTimeout(() => {
             dataCallbackCount++;

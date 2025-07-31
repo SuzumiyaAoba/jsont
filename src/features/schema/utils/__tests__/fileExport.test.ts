@@ -58,7 +58,8 @@ describe("Enhanced File Export", () => {
       expect(result.success).toBe(true);
       expect(result.filePath).toBe(join(tempDir, "test-data.json"));
 
-      const content = await fs.readFile(result.filePath!, "utf8");
+      expect(result.filePath).toBeDefined();
+      const content = await fs.readFile(result.filePath as string, "utf8");
       const parsed = JSON.parse(content);
       expect(parsed).toEqual(testData);
     });
@@ -86,7 +87,8 @@ describe("Enhanced File Export", () => {
       expect(result.success).toBe(true);
       expect(result.filePath).toBe(join(tempDir, "test-data.yaml"));
 
-      const content = await fs.readFile(result.filePath!, "utf8");
+      expect(result.filePath).toBeDefined();
+      const content = await fs.readFile(result.filePath as string, "utf8");
       expect(content).toContain("users:");
       expect(content).toContain("- id: 1");
       expect(content).toContain("name: Alice");
@@ -125,7 +127,8 @@ describe("Enhanced File Export", () => {
       expect(result.success).toBe(true);
       expect(result.filePath).toBe(join(tempDir, "users.csv"));
 
-      const content = await fs.readFile(result.filePath!, "utf8");
+      expect(result.filePath).toBeDefined();
+      const content = await fs.readFile(result.filePath as string, "utf8");
       const lines = content.split("\n");
       // Note: Headers are sorted alphabetically for consistent output
       expect(lines[0]).toBe("age,city,name"); // Headers sorted alphabetically
@@ -147,7 +150,8 @@ describe("Enhanced File Export", () => {
       });
 
       expect(result.success).toBe(true);
-      const content = await fs.readFile(result.filePath!, "utf8");
+      expect(result.filePath).toBeDefined();
+      const content = await fs.readFile(result.filePath as string, "utf8");
       expect(content).toContain("profile.age");
       expect(content).toContain("profile.active");
     });
@@ -176,7 +180,8 @@ describe("Enhanced File Export", () => {
       expect(result.success).toBe(true);
       expect(result.filePath).toBe(join(tempDir, "schema.json"));
 
-      const content = await fs.readFile(result.filePath!, "utf8");
+      expect(result.filePath).toBeDefined();
+      const content = await fs.readFile(result.filePath as string, "utf8");
       const schema = JSON.parse(content);
       expect(schema.$schema).toBe("https://example.com/schema");
       expect(schema.type).toBe("object");

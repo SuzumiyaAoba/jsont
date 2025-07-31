@@ -12,7 +12,7 @@ const mockTerminalManager: TerminalManager = {
   cleanup: vi.fn(),
   isInitialized: vi.fn().mockReturnValue(true),
   isTTY: vi.fn().mockReturnValue(true),
-} as any;
+};
 
 describe("ProcessManager", () => {
   let processManager: ProcessManager;
@@ -136,17 +136,19 @@ describe("ProcessManager", () => {
       processManager.setup();
 
       // Simulate stdin end in CI
-      const stdinOnCalls = (process.stdin.on as any).mock.calls;
-      const endHandler = stdinOnCalls.find((call: any) => call[0] === "end")[1];
+      const stdinOnCalls = process.stdin.on.mock.calls;
+      const endHandler = stdinOnCalls.find(
+        (call: unknown[]) => call[0] === "end",
+      )?.[1];
       const closeHandler = stdinOnCalls.find(
-        (call: any) => call[0] === "close",
-      )[1];
+        (call: unknown[]) => call[0] === "close",
+      )?.[1];
 
-      endHandler();
+      if (typeof endHandler === "function") endHandler();
       expect(mockTerminalManager.cleanup).toHaveBeenCalled();
       expect(exitSpy).toHaveBeenCalledWith(0);
 
-      closeHandler();
+      if (typeof closeHandler === "function") closeHandler();
       expect(exitSpy).toHaveBeenCalledTimes(2);
 
       exitSpy.mockRestore();
@@ -331,15 +333,17 @@ describe("ProcessManager", () => {
       processManager.setup();
 
       // Execute stdin handlers
-      const stdinOnCalls = (process.stdin.on as any).mock.calls;
-      const endHandler = stdinOnCalls.find((call: any) => call[0] === "end")[1];
+      const stdinOnCalls = process.stdin.on.mock.calls;
+      const endHandler = stdinOnCalls.find(
+        (call: unknown[]) => call[0] === "end",
+      )?.[1];
       const closeHandler = stdinOnCalls.find(
-        (call: any) => call[0] === "close",
-      )[1];
+        (call: unknown[]) => call[0] === "close",
+      )?.[1];
 
       // These should not cause exit in non-CI environment
-      endHandler();
-      closeHandler();
+      if (typeof endHandler === "function") endHandler();
+      if (typeof closeHandler === "function") closeHandler();
 
       expect(exitSpy).not.toHaveBeenCalled();
 
@@ -391,7 +395,7 @@ describe("ProcessManager", () => {
         cleanup: vi.fn().mockImplementation(() => {
           throw new Error("Cleanup error");
         }),
-      } as any;
+      };
 
       const errorProcessManager = new ProcessManager(errorTerminalManager);
 

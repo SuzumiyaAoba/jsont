@@ -33,7 +33,7 @@ describe("SqlConverter", () => {
   describe("validate", () => {
     it("should validate null and undefined", () => {
       expect(converter.validate(null).isOk()).toBe(true);
-      expect(converter.validate(undefined as any).isOk()).toBe(true);
+      expect(converter.validate(undefined).isOk()).toBe(true);
     });
 
     it("should validate simple values", () => {
@@ -412,10 +412,7 @@ describe("SqlConverter", () => {
     describe("error handling", () => {
       it("should handle conversion gracefully with robust error checking", () => {
         // The SQL converter is robust and handles invalid options gracefully
-        const result = converter.convert(
-          { id: 1 },
-          { batchSize: "invalid" as any },
-        );
+        const result = converter.convert({ id: 1 }, { batchSize: "invalid" });
         expect(result.isOk()).toBe(true);
 
         // Test that SQL conversion normally succeeds
