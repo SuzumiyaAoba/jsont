@@ -4,9 +4,10 @@
  */
 
 import { AppStateProvider } from "@components/providers/AppStateProvider";
-import { defaultConfig } from "@core/config/defaults";
-import { ConfigContext } from "@core/context/ConfigContext";
+import { DEFAULT_CONFIG } from "@core/config/defaults";
+import { ConfigProvider } from "@core/context/ConfigContext";
 import type { AppMode, KeyboardHandler } from "@core/types/app";
+import type { JsonValue } from "@core/types/index";
 import { render } from "@testing-library/react";
 import type { ReactElement } from "react";
 import { createRef } from "react";
@@ -236,19 +237,19 @@ function TestWrapper({
   treeViewKeyboardHandler = null,
 }: {
   keyboardEnabled?: boolean;
-  initialData?: unknown;
-  displayData?: unknown;
+  initialData?: JsonValue | null;
+  displayData?: JsonValue | null;
   currentMode?: AppMode;
   treeViewKeyboardHandler?: KeyboardHandler | null;
 }): ReactElement {
   const collapsibleViewerRef = createRef<{
-    navigate: (action: unknown) => void;
+    navigate: (action: any) => void;
   } | null>();
 
   const safeSetTreeViewKeyboardHandler = vi.fn();
 
   return (
-    <ConfigContext.Provider value={defaultConfig}>
+    <ConfigProvider config={DEFAULT_CONFIG}>
       <AppStateProvider>
         <KeyboardManager
           keyboardEnabled={keyboardEnabled}
@@ -260,7 +261,7 @@ function TestWrapper({
           safeSetTreeViewKeyboardHandler={safeSetTreeViewKeyboardHandler}
         />
       </AppStateProvider>
-    </ConfigContext.Provider>
+    </ConfigProvider>
   );
 }
 
@@ -490,13 +491,13 @@ describe("KeyboardManager", () => {
   describe("Data Export Handling", () => {
     it("should handle data export action", () => {
       const setDataExportDialog = vi.fn();
-
-      // Mock the provider state to include the setDataExportDialog function
-      const _mockState = {
-        setDataExportDialog,
-        dataExportDialog: { isVisible: false },
-        // ... other state
-      };
+      // Use the function to prevent unused variable warning
+      expect(setDataExportDialog).toBeDefined(); // Mock the provider state to include the setDataExportDialog function
+      // const mockState = {
+      // setDataExportDialog,
+      // dataExportDialog: { isVisible: false },
+      // ... other state
+      //       };
 
       // We need to ensure that setDataExportDialog is called
       render(<TestWrapper />);

@@ -4,8 +4,8 @@
  */
 
 import { AppStateProvider } from "@components/providers/AppStateProvider";
-import { defaultConfig } from "@core/config/defaults";
-import { ConfigContext } from "@core/context/ConfigContext";
+import { DEFAULT_CONFIG } from "@core/config/defaults";
+import { ConfigProvider } from "@core/context/ConfigContext";
 import { render, screen } from "@testing-library/react";
 import type { ReactElement } from "react";
 import { StatusBarManager } from "../StatusBarManager";
@@ -17,7 +17,7 @@ vi.mock("@features/search/components/SearchBar", () => ({
     searchInput,
   }: {
     searchState: unknown;
-    searchInput: unknown;
+    searchInput: React.ReactNode;
   }) => (
     <div data-testid="search-bar">
       <div data-testid="search-state">{JSON.stringify(searchState)}</div>
@@ -31,8 +31,8 @@ vi.mock("@features/jq/components/JqQueryInput", () => ({
     jqState,
     queryInput,
   }: {
-    jqState: unknown;
-    queryInput: unknown;
+    jqState: any;
+    queryInput: React.ReactNode;
   }) => (
     <div data-testid="jq-input">
       <div data-testid="jq-state">{JSON.stringify(jqState)}</div>
@@ -248,11 +248,11 @@ function TestWrapper({
   keyboardEnabled?: boolean;
 }): ReactElement {
   return (
-    <ConfigContext.Provider value={defaultConfig}>
+    <ConfigProvider config={DEFAULT_CONFIG}>
       <AppStateProvider>
         <StatusBarManager keyboardEnabled={keyboardEnabled} />
       </AppStateProvider>
-    </ConfigContext.Provider>
+    </ConfigProvider>
   );
 }
 

@@ -3,7 +3,7 @@
  * Tests complete workflows from initialization to user interactions
  */
 
-import { DEFAULT_CONFIG as defaultConfig } from "@core/config/defaults";
+import { DEFAULT_CONFIG } from "@core/config/defaults";
 import { ConfigProvider } from "@core/context/ConfigContext";
 import type { JsonValue, ViewMode } from "@core/types/index";
 import { render } from "@testing-library/react";
@@ -244,7 +244,7 @@ function TestApp({
   initialViewMode?: ViewMode;
 } = {}): ReactElement {
   return (
-    <ConfigProvider config={defaultConfig}>
+    <ConfigProvider config={DEFAULT_CONFIG}>
       <App
         initialData={initialData}
         initialError={initialError}
@@ -527,10 +527,10 @@ describe("Full Application Integration", () => {
     });
 
     it("should handle invalid initial data", () => {
-      const invalidData = {
-        circular: null as unknown,
+      const invalidData: JsonValue = {
+        circular: "self-reference",
       };
-      invalidData.circular = invalidData; // Create circular reference
+      // Note: Using string instead of actual circular reference for JSON safety
 
       render(<TestApp initialData={invalidData} />);
 

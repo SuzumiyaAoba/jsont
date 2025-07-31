@@ -4,9 +4,10 @@
  */
 
 import { AppStateProvider } from "@components/providers/AppStateProvider";
-import { defaultConfig } from "@core/config/defaults";
-import { ConfigContext } from "@core/context/ConfigContext";
+import { DEFAULT_CONFIG } from "@core/config/defaults";
+import { ConfigProvider } from "@core/context/ConfigContext";
 import type { AppMode } from "@core/types/app";
+import type { JsonValue } from "@core/types/index";
 import { render, screen } from "@testing-library/react";
 import type { ReactElement } from "react";
 import { createRef } from "react";
@@ -18,7 +19,7 @@ vi.mock("@features/tree/components/TreeView", () => ({
     data,
     onKeyboardHandlerReady,
   }: {
-    data: unknown;
+    data: JsonValue | null;
     onKeyboardHandlerReady: (handler: () => void) => void;
   }) => (
     <div data-testid="tree-view">
@@ -39,7 +40,7 @@ vi.mock("@features/collapsible/components/CollapsibleJsonViewer", () => ({
     {
       data,
       onScrollChange,
-    }: { data: unknown; onScrollChange: (offset: number) => void },
+    }: { data: JsonValue | null; onScrollChange: (offset: number) => void },
     ref: React.Ref<HTMLDivElement>,
   ) => (
     <div data-testid="collapsible-view" ref={ref}>
@@ -270,7 +271,7 @@ function TestWrapper({
   keyboardEnabled = false,
   currentMode = "raw" as AppMode,
 }: {
-  displayData?: unknown;
+  displayData?: JsonValue | null;
   keyboardEnabled?: boolean;
   currentMode?: AppMode;
 }): ReactElement {
@@ -281,7 +282,7 @@ function TestWrapper({
   const safeSetTreeViewKeyboardHandler = vi.fn();
 
   return (
-    <ConfigContext.Provider value={defaultConfig}>
+    <ConfigProvider config={DEFAULT_CONFIG}>
       <AppStateProvider>
         <ContentRouter
           displayData={displayData}
@@ -291,7 +292,7 @@ function TestWrapper({
           collapsibleViewerRef={collapsibleViewerRef}
         />
       </AppStateProvider>
-    </ConfigContext.Provider>
+    </ConfigProvider>
   );
 }
 
@@ -602,7 +603,7 @@ describe("ContentRouter", () => {
       } | null>();
 
       render(
-        <ConfigContext.Provider value={defaultConfig}>
+        <ConfigProvider config={DEFAULT_CONFIG}>
           <AppStateProvider>
             <ContentRouter
               displayData={{ test: "data" }}
@@ -612,7 +613,7 @@ describe("ContentRouter", () => {
               collapsibleViewerRef={collapsibleViewerRef}
             />
           </AppStateProvider>
-        </ConfigContext.Provider>,
+        </ConfigProvider>,
       );
 
       // Simulate handler setup
@@ -640,7 +641,7 @@ describe("ContentRouter", () => {
       const mockUI = createMockUI({ treeViewMode: true });
       vi.mocked(require("@store/hooks/useUI")).useUI.mockReturnValue(mockUI);
 
-      render(<TestWrapper displayData={undefined} />);
+      render(<TestWrapper displayData={null} />);
 
       expect(screen.getByTestId("tree-view")).toBeInTheDocument();
     });

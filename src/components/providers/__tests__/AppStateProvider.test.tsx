@@ -3,8 +3,9 @@
  * Ensures proper state management and context provision
  */
 
-import { defaultConfig } from "@core/config/defaults";
-import { ConfigContext } from "@core/context/ConfigContext";
+import { DEFAULT_CONFIG } from "@core/config/defaults";
+import { ConfigProvider } from "@core/context/ConfigContext";
+import type { JsonValue } from "@core/types/index";
 import { render, screen } from "@testing-library/react";
 import type { ReactElement } from "react";
 import { AppStateProvider, useAppState } from "../AppStateProvider";
@@ -215,20 +216,20 @@ function TestComponent(): ReactElement {
 
 describe("AppStateProvider", () => {
   const renderWithProvider = (
-    initialData?: unknown,
+    initialData?: JsonValue | null,
     initialError?: string | null,
     keyboardEnabled = false,
   ) => {
     return render(
-      <ConfigContext.Provider value={defaultConfig}>
+      <ConfigProvider config={DEFAULT_CONFIG}>
         <AppStateProvider
-          initialData={initialData}
-          initialError={initialError}
+          initialData={initialData ?? null}
+          initialError={initialError ?? null}
           keyboardEnabled={keyboardEnabled}
         >
           <TestComponent />
         </AppStateProvider>
-      </ConfigContext.Provider>,
+      </ConfigProvider>,
     );
   };
 
@@ -384,7 +385,7 @@ describe("AppStateProvider", () => {
 
       // Rerender with same props
       rerender(
-        <ConfigContext.Provider value={defaultConfig}>
+        <ConfigProvider config={DEFAULT_CONFIG}>
           <AppStateProvider
             initialData={null}
             initialError={null}
@@ -392,7 +393,7 @@ describe("AppStateProvider", () => {
           >
             <TestComponent />
           </AppStateProvider>
-        </ConfigContext.Provider>,
+        </ConfigProvider>,
       );
 
       const rerenderedContent = screen.getByTestId(
@@ -409,27 +410,27 @@ describe("AppStateProvider", () => {
       // Verify createKeybindingMatcher was called with config keybindings
       expect(
         require("@core/utils/keybindings").createKeybindingMatcher,
-      ).toHaveBeenCalledWith(defaultConfig.keybindings);
+      ).toHaveBeenCalledWith(DEFAULT_CONFIG.keybindings);
     });
 
     it("should handle config changes", () => {
       const customConfig = {
-        ...defaultConfig,
+        ...DEFAULT_CONFIG,
         keybindings: {
-          ...defaultConfig.keybindings,
+          ...DEFAULT_CONFIG.keybindings,
           navigation: {
-            ...defaultConfig.keybindings.navigation,
+            ...DEFAULT_CONFIG.keybindings.navigation,
             up: ["w"],
           },
         },
       };
 
       render(
-        <ConfigContext.Provider value={customConfig}>
+        <ConfigProvider config={customConfig}>
           <AppStateProvider>
             <TestComponent />
           </AppStateProvider>
-        </ConfigContext.Provider>,
+        </ConfigProvider>,
       );
 
       expect(

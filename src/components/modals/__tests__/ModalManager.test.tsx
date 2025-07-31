@@ -4,9 +4,10 @@
  */
 
 import { AppStateProvider } from "@components/providers/AppStateProvider";
-import { defaultConfig } from "@core/config/defaults";
-import { ConfigContext } from "@core/context/ConfigContext";
+import { DEFAULT_CONFIG } from "@core/config/defaults";
+import { ConfigProvider } from "@core/context/ConfigContext";
 import type { AppMode } from "@core/types/app";
+import type { JsonValue } from "@core/types/index";
 import { fireEvent, render, screen } from "@testing-library/react";
 import type { ReactElement } from "react";
 import { ModalManager } from "../ModalManager";
@@ -253,11 +254,11 @@ function TestWrapper({
 }: {
   children: React.ReactNode;
   currentMode?: AppMode;
-  displayData?: unknown;
+  displayData?: JsonValue | null;
   initialError?: string | null;
 }): ReactElement {
   return (
-    <ConfigContext.Provider value={defaultConfig}>
+    <ConfigProvider config={DEFAULT_CONFIG}>
       <AppStateProvider>
         <ModalManager
           currentMode={currentMode}
@@ -267,7 +268,7 @@ function TestWrapper({
           {children}
         </ModalManager>
       </AppStateProvider>
-    </ConfigContext.Provider>
+    </ConfigProvider>
   );
 }
 
@@ -327,7 +328,11 @@ describe("ModalManager", () => {
         require("@store/hooks/useExport"),
       ).useExportDialog.mockReturnValue({ isVisible: true });
 
-      render(<TestWrapper />);
+      render(
+        <TestWrapper>
+          <div>Test content</div>
+        </TestWrapper>,
+      );
 
       expect(screen.getByTestId("debug-log-viewer")).toBeInTheDocument();
       expect(screen.queryByTestId("settings-viewer")).not.toBeInTheDocument();
@@ -343,7 +348,11 @@ describe("ModalManager", () => {
         require("@store/hooks/useExport"),
       ).useExportDialog.mockReturnValue({ isVisible: true });
 
-      render(<TestWrapper />);
+      render(
+        <TestWrapper>
+          <div>Test content</div>
+        </TestWrapper>,
+      );
 
       expect(screen.queryByTestId("debug-log-viewer")).not.toBeInTheDocument();
       expect(screen.getByTestId("settings-viewer")).toBeInTheDocument();
@@ -356,7 +365,11 @@ describe("ModalManager", () => {
         require("@store/hooks/useExport"),
       ).useExportDialog.mockReturnValue({ isVisible: true });
 
-      render(<TestWrapper />);
+      render(
+        <TestWrapper>
+          <div>Test content</div>
+        </TestWrapper>,
+      );
 
       expect(screen.queryByTestId("debug-log-viewer")).not.toBeInTheDocument();
       expect(screen.queryByTestId("settings-viewer")).not.toBeInTheDocument();
@@ -367,7 +380,11 @@ describe("ModalManager", () => {
       const mockUI = createMockUI({ helpVisible: true });
       vi.mocked(require("@store/hooks/useUI")).useUI.mockReturnValue(mockUI);
 
-      render(<TestWrapper currentMode="tree" />);
+      render(
+        <TestWrapper currentMode="tree">
+          <div>Test content</div>
+        </TestWrapper>,
+      );
 
       expect(screen.queryByTestId("debug-log-viewer")).not.toBeInTheDocument();
       expect(screen.queryByTestId("settings-viewer")).not.toBeInTheDocument();
@@ -385,7 +402,11 @@ describe("ModalManager", () => {
         require("@store/hooks/useExport"),
       ).useExportDialog.mockReturnValue({ isVisible: true });
 
-      render(<TestWrapper />);
+      render(
+        <TestWrapper>
+          <div>Test content</div>
+        </TestWrapper>,
+      );
 
       const exportDialog = screen.getByTestId("export-dialog");
       expect(exportDialog).toBeInTheDocument();
@@ -418,7 +439,11 @@ describe("ModalManager", () => {
       ).exportToFile;
       exportToFile.mockResolvedValue(undefined);
 
-      render(<TestWrapper />);
+      render(
+        <TestWrapper>
+          <div>Test content</div>
+        </TestWrapper>,
+      );
 
       expect(screen.getByTestId("export-dialog")).toBeInTheDocument();
       expect(screen.getByTestId("default-filename")).toHaveTextContent(
@@ -459,7 +484,11 @@ describe("ModalManager", () => {
       ).exportToFile;
       exportToFile.mockRejectedValue(new Error("Export failed"));
 
-      render(<TestWrapper />);
+      render(
+        <TestWrapper>
+          <div>Test content</div>
+        </TestWrapper>,
+      );
 
       fireEvent.click(screen.getByTestId("export-confirm"));
 
@@ -483,7 +512,11 @@ describe("ModalManager", () => {
       });
       vi.mocked(require("@store/hooks/useUI")).useUI.mockReturnValue(mockUI);
 
-      render(<TestWrapper />);
+      render(
+        <TestWrapper>
+          <div>Test content</div>
+        </TestWrapper>,
+      );
 
       fireEvent.click(screen.getByTestId("debug-close"));
       expect(setDebugLogViewerVisible).toHaveBeenCalledWith(false);
@@ -493,7 +526,11 @@ describe("ModalManager", () => {
       const mockUI = createMockUI({ debugLogViewerVisible: true });
       vi.mocked(require("@store/hooks/useUI")).useUI.mockReturnValue(mockUI);
 
-      render(<TestWrapper />);
+      render(
+        <TestWrapper>
+          <div>Test content</div>
+        </TestWrapper>,
+      );
 
       const debugViewer = screen.getByTestId("debug-log-viewer");
       expect(debugViewer).toBeInTheDocument();
@@ -522,7 +559,11 @@ describe("ModalManager", () => {
         require("@store/hooks/useExport"),
       ).useExportDialog.mockReturnValue({ isVisible: true });
 
-      render(<TestWrapper />);
+      render(
+        <TestWrapper>
+          <div>Test content</div>
+        </TestWrapper>,
+      );
 
       // Only debug log viewer should be visible (highest priority)
       expect(screen.getByTestId("debug-log-viewer")).toBeInTheDocument();
@@ -535,7 +576,11 @@ describe("ModalManager", () => {
       const mockUI = createMockUI({ helpVisible: true });
       vi.mocked(require("@store/hooks/useUI")).useUI.mockReturnValue(mockUI);
 
-      const { rerender } = render(<TestWrapper currentMode="tree" />);
+      const { rerender } = render(
+        <TestWrapper currentMode="tree">
+          <div>Test content</div>
+        </TestWrapper>,
+      );
 
       expect(screen.getByTestId("help-viewer")).toBeInTheDocument();
       expect(screen.getByTestId("help-viewer")).toHaveTextContent(
