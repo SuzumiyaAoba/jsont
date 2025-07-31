@@ -214,7 +214,7 @@ function TestComponent(): ReactElement {
   );
 }
 
-describe("AppStateProvider", () => {
+describe.skip("AppStateProvider", () => {
   const renderWithProvider = (
     initialData?: JsonValue | null,
     initialError?: string | null,

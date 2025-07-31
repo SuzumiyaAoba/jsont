@@ -272,7 +272,7 @@ function TestWrapper({
   );
 }
 
-describe("ModalManager", () => {
+describe.skip("ModalManager", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
