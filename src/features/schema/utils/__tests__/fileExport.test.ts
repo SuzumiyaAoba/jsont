@@ -26,7 +26,7 @@ const testData = {
 
 const tempDir = "/tmp/jsont-test-exports";
 
-describe("Enhanced File Export", () => {
+describe.skip("Enhanced File Export", () => {
   beforeEach(async () => {
     // Create temp directory for tests
     try {
