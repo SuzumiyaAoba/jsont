@@ -2,19 +2,18 @@
  * Tests for process management utilities
  */
 
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ProcessManager } from "../processManager";
 import type { TerminalManager } from "../terminal";
 
 // Mock TerminalManager
-const mockTerminalManager: TerminalManager = {
+const mockTerminalManager = {
   initialize: vi.fn(),
   cleanup: vi.fn(),
-  isInitialized: vi.fn().mockReturnValue(true),
   isTTY: vi.fn().mockReturnValue(true),
-};
+} as any as TerminalManager;
 
-describe.skip("ProcessManager", () => {
+describe("ProcessManager", () => {
   let processManager: ProcessManager;
   let originalEnv: NodeJS.ProcessEnv;
   let originalStdin: typeof process.stdin;
@@ -136,7 +135,7 @@ describe.skip("ProcessManager", () => {
       processManager.setup();
 
       // Simulate stdin end in CI
-      const stdinOnCalls = process.stdin.on.mock.calls;
+      const stdinOnCalls = (process.stdin.on as any).mock.calls;
       const endHandler = stdinOnCalls.find(
         (call: unknown[]) => call[0] === "end",
       )?.[1];
@@ -333,7 +332,7 @@ describe.skip("ProcessManager", () => {
       processManager.setup();
 
       // Execute stdin handlers
-      const stdinOnCalls = process.stdin.on.mock.calls;
+      const stdinOnCalls = (process.stdin.on as any).mock.calls;
       const endHandler = stdinOnCalls.find(
         (call: unknown[]) => call[0] === "end",
       )?.[1];

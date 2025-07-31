@@ -18,7 +18,7 @@ vi.mock("node-jq", () => ({
 
 import jq from "node-jq";
 
-describe.skip("JQ Transform Utilities", () => {
+describe("JQ Transform Utilities", () => {
   let mockJqRun: ReturnType<typeof vi.mocked>;
 
   beforeEach(() => {

@@ -2,9 +2,28 @@
  * Tests for enhanced file export utilities with multiple format support
  */
 
-import { promises as fs } from "node:fs";
 import { join } from "node:path";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+
+// Mock node:fs/promises
+vi.mock("node:fs/promises", () => ({
+  default: {
+    mkdir: vi.fn(),
+    readdir: vi.fn(),
+    unlink: vi.fn(),
+    rmdir: vi.fn(),
+    readFile: vi.fn(),
+    writeFile: vi.fn(),
+  },
+  mkdir: vi.fn(),
+  readdir: vi.fn(),
+  unlink: vi.fn(),
+  rmdir: vi.fn(),
+  readFile: vi.fn(),
+  writeFile: vi.fn(),
+}));
+
+import { promises as fs } from "node:fs";
 import {
   exportToFile,
   generateDefaultFilename,

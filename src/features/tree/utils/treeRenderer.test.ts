@@ -3,6 +3,7 @@
  */
 
 import { describe, expect, it } from "vitest";
+import type { TreeLine } from "../types";
 import { buildTreeFromJson } from "./treeBuilder";
 import {
   getTreeLineText,
@@ -10,7 +11,7 @@ import {
   searchTreeNodes,
 } from "./treeRenderer";
 
-describe.skip("treeRenderer", () => {
+describe("treeRenderer", () => {
   describe("renderTreeLines", () => {
     it("should render simple object as tree lines", () => {
       const data = { name: "John", age: 30 };

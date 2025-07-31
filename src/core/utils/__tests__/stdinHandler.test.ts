@@ -23,6 +23,12 @@ vi.mock("node:fs", () => ({
 }));
 
 vi.mock("node:tty", () => ({
+  default: {
+    ReadStream: vi.fn().mockImplementation(() => ({
+      setRawMode: vi.fn().mockReturnThis(),
+      isTTY: true,
+    })),
+  },
   ReadStream: vi.fn().mockImplementation(() => ({
     setRawMode: vi.fn().mockReturnThis(),
     isTTY: true,
@@ -32,7 +38,7 @@ vi.mock("node:tty", () => ({
 import { readFile } from "node:fs/promises";
 import { parseJsonWithValidation } from "@features/json-rendering/utils/jsonProcessor";
 
-describe.skip("Stdin Handler", () => {
+describe("Stdin Handler", () => {
   let mockParseJson: ReturnType<typeof vi.mocked>;
   let mockReadFile: ReturnType<typeof vi.mocked>;
   let originalStdin: typeof process.stdin;
@@ -102,7 +108,7 @@ describe.skip("Stdin Handler", () => {
       const mockStdin = process.stdin;
       mockStdin.isTTY = false;
 
-      mockStdin.on.mockImplementation((event: string, callback: () => void) => {
+      mockStdin.on.mockImplementation((event: string, callback: any) => {
         if (event === "data") {
           setTimeout(() => callback(Buffer.from(jsonString)), 0);
         } else if (event === "end") {
@@ -124,7 +130,7 @@ describe.skip("Stdin Handler", () => {
       const mockStdin = process.stdin;
       mockStdin.isTTY = false;
 
-      mockStdin.on.mockImplementation((event: string, callback: () => void) => {
+      mockStdin.on.mockImplementation((event: string, callback: any) => {
         if (event === "data") {
           setTimeout(() => callback(Buffer.from("")), 0);
         } else if (event === "end") {
@@ -153,7 +159,7 @@ describe.skip("Stdin Handler", () => {
       const mockStdin = process.stdin;
       mockStdin.isTTY = false;
 
-      mockStdin.on.mockImplementation((event: string, callback: () => void) => {
+      mockStdin.on.mockImplementation((event: string, callback: any) => {
         if (event === "data") {
           setTimeout(() => callback(Buffer.from(invalidJson)), 0);
         } else if (event === "end") {
@@ -191,7 +197,7 @@ describe.skip("Stdin Handler", () => {
       const mockStdin = process.stdin;
       mockStdin.isTTY = false;
 
-      mockStdin.on.mockImplementation((event: string, callback: () => void) => {
+      mockStdin.on.mockImplementation((event: string, callback: any) => {
         if (event === "error") {
           setTimeout(() => callback(testError), 0);
         }
@@ -222,7 +228,7 @@ describe.skip("Stdin Handler", () => {
       mockStdin.isTTY = false;
 
       let dataCallbackCount = 0;
-      mockStdin.on.mockImplementation((event: string, callback: () => void) => {
+      mockStdin.on.mockImplementation((event: string, callback: any) => {
         if (event === "data") {
           setTimeout(() => {
             dataCallbackCount++;
