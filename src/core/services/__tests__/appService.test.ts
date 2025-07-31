@@ -201,7 +201,7 @@ describe("AppService", () => {
 
     it("should setup environment and render app", async () => {
       const mockData = { test: "data" };
-      const cliArgs = { viewMode: "schema" };
+      const cliArgs = { viewMode: "schema" as const };
 
       vi.mocked(parseCliArgs).mockReturnValue(cliArgs);
       vi.mocked(readStdinThenReinitialize).mockResolvedValue({
@@ -214,20 +214,12 @@ describe("AppService", () => {
       const mockTerminalManager = {
         initialize: vi.fn(),
         cleanup: vi.fn(),
-        isInitialized: false,
-        isTTY: true,
-      };
+      } as any;
       const mockProcessManager = {
         setup: vi.fn(),
         cleanup: vi.fn(),
-        keepAliveTimer: null,
-        signalHandlersAttached: false,
-        terminalManager: mockTerminalManager,
-        setupKeepAlive: vi.fn(),
-        clearKeepAlive: vi.fn(),
-        attachSignalHandlers: vi.fn(),
-        detachSignalHandlers: vi.fn(),
-      };
+        onAppExit: vi.fn(),
+      } as any;
 
       vi.mocked(TerminalManager).mockImplementation(() => mockTerminalManager);
       vi.mocked(ProcessManager).mockImplementation(() => mockProcessManager);
@@ -241,7 +233,7 @@ describe("AppService", () => {
     });
 
     it("should pass viewMode to renderApp", async () => {
-      const cliArgs = { viewMode: "tree" };
+      const cliArgs = { viewMode: "tree" as const };
 
       vi.mocked(parseCliArgs).mockReturnValue(cliArgs);
       vi.mocked(readStdinThenReinitialize).mockResolvedValue({
@@ -381,6 +373,9 @@ describe("AppService", () => {
       const mockApp = {
         waitUntilExit: vi.fn().mockResolvedValue(undefined),
         unmount: vi.fn(),
+        rerender: vi.fn(),
+        cleanup: vi.fn(),
+        clear: vi.fn(),
       };
 
       vi.mocked(parseCliArgs).mockReturnValue({});
@@ -403,6 +398,9 @@ describe("AppService", () => {
       const mockApp = {
         waitUntilExit: vi.fn().mockResolvedValue(undefined),
         unmount: vi.fn(),
+        rerender: vi.fn(),
+        cleanup: vi.fn(),
+        clear: vi.fn(),
       };
 
       vi.mocked(parseCliArgs).mockReturnValue({});
@@ -460,6 +458,9 @@ describe("AppService", () => {
       const mockApp = {
         waitUntilExit: vi.fn().mockResolvedValue(undefined),
         unmount: vi.fn(),
+        rerender: vi.fn(),
+        cleanup: vi.fn(),
+        clear: vi.fn(),
       };
 
       vi.mocked(parseCliArgs).mockReturnValue({});
@@ -502,6 +503,9 @@ describe("AppService", () => {
         const mockApp = {
           waitUntilExit: vi.fn().mockResolvedValue(undefined),
           unmount: vi.fn(),
+          rerender: vi.fn(),
+          cleanup: vi.fn(),
+          clear: vi.fn(),
         };
 
         vi.mocked(parseCliArgs).mockReturnValue({});
@@ -590,6 +594,9 @@ describe("AppService", () => {
       const mockApp = {
         waitUntilExit: vi.fn().mockResolvedValue(undefined),
         unmount: vi.fn(),
+        rerender: vi.fn(),
+        cleanup: vi.fn(),
+        clear: vi.fn(),
       };
 
       vi.mocked(parseCliArgs).mockReturnValue({
@@ -617,6 +624,9 @@ describe("AppService", () => {
       const mockApp = {
         waitUntilExit: vi.fn().mockResolvedValue(undefined),
         unmount: vi.fn(),
+        rerender: vi.fn(),
+        cleanup: vi.fn(),
+        clear: vi.fn(),
       };
 
       vi.mocked(parseCliArgs).mockReturnValue({});
