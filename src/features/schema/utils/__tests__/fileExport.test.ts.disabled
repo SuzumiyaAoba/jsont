@@ -6,21 +6,51 @@ import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 // Mock node:fs/promises
-vi.mock("node:fs/promises", () => ({
-  default: {
-    mkdir: vi.fn(),
-    readdir: vi.fn(),
-    unlink: vi.fn(),
-    rmdir: vi.fn(),
-    readFile: vi.fn(),
-    writeFile: vi.fn(),
+vi.mock("node:fs/promises", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("node:fs/promises")>();
+  return {
+    ...actual,
+    default: {
+      ...actual.default,
+      mkdir: vi.fn().mockResolvedValue(undefined),
+      readdir: vi.fn().mockResolvedValue([]),
+      unlink: vi.fn().mockResolvedValue(undefined),
+      rmdir: vi.fn().mockResolvedValue(undefined),
+      readFile: vi.fn().mockResolvedValue("test content"),
+      writeFile: vi.fn().mockResolvedValue(undefined),
+    },
+    mkdir: vi.fn().mockResolvedValue(undefined),
+    readdir: vi.fn().mockResolvedValue([]),
+    unlink: vi.fn().mockResolvedValue(undefined),
+    rmdir: vi.fn().mockResolvedValue(undefined),
+    readFile: vi.fn().mockResolvedValue("test content"),
+    writeFile: vi.fn().mockResolvedValue(undefined),
+  };
+});
+
+// Mock data converters
+vi.mock("@core/utils/dataConverters", () => ({
+  dataConverterRegistry: {
+    get: vi.fn((format: string) => ({
+      convert: vi.fn().mockReturnValue({
+        isOk: () => true,
+        unwrap: () => format === "json" ? '{"test": "data"}' : "test,data\n1,value",
+      }),
+      validate: vi.fn().mockReturnValue({ isOk: () => true }),
+    })),
   },
-  mkdir: vi.fn(),
-  readdir: vi.fn(),
-  unlink: vi.fn(),
-  rmdir: vi.fn(),
-  readFile: vi.fn(),
-  writeFile: vi.fn(),
+}));
+
+// Mock error utilities
+vi.mock("@core/utils/errors", () => ({
+  createExportErrorHandler: vi.fn(() => ({
+    handleError: vi.fn(),
+  })),
+  ExportError: class ExportError extends Error {},
+  ExportErrorCode: {
+    INVALID_DATA: "INVALID_DATA",
+    FILE_WRITE_ERROR: "FILE_WRITE_ERROR",
+  },
 }));
 
 import { promises as fs } from "node:fs";

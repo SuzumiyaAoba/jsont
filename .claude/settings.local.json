@@ -80,7 +80,8 @@
       "Bash(gh issue list:*)",
       "Bash(git rm:*)",
       "Bash(tree:*)",
-      "Bash(sed:*)"
+      "Bash(sed:*)",
+      "Bash(npx vitest:*)"
     ],
     "deny": []
   }

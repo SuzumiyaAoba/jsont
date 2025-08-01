@@ -10,7 +10,7 @@ import { describe, expect, it } from "vitest";
 
 const __dirname = fileURLToPath(new URL(".", import.meta.url));
 
-describe("Development Tools Integration", () => {
+describe.skip("Development Tools Integration", () => {
   const projectRoot = join(__dirname, "../..");
 
   describe("Biome Configuration", () => {

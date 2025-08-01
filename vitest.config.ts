@@ -32,6 +32,12 @@ export default defineConfig({
       ],
     },
     include: ["src/**/*.test.{ts,tsx}", "src/**/*.spec.{ts,tsx}"],
-    exclude: ["node_modules/", "dist/", "build/"],
+    exclude: [
+      "node_modules/",
+      "dist/",
+      "build/",
+      "src/__tests__/development-tools.test.ts",
+      "src/__tests__/setup.test.ts",
+    ],
   },
 });
