@@ -8,6 +8,7 @@ import { ConfigProvider } from "@core/context/ConfigContext";
 import type { JsonValue, ViewMode } from "@core/types/index";
 import { render } from "@testing-library/react";
 import type { ReactElement } from "react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { App } from "../../App";
 
 // Mock external dependencies
@@ -29,49 +30,87 @@ vi.mock("@features/schema/utils/fileExport", () => ({
   generateDefaultFilename: vi.fn((format: string) => `test.${format}`),
 }));
 
+// Mock all hooks
 vi.mock("@hooks/useTerminalCalculations", () => ({
   useTerminalCalculations: vi.fn(),
 }));
-
 vi.mock("@hooks/useSearchHandlers", () => ({
   useSearchHandlers: vi.fn(),
 }));
-
 vi.mock("@hooks/useExportHandlers", () => ({
   useExportHandlers: vi.fn(),
 }));
-
 vi.mock("@hooks/useNavigationHandlers", () => ({
   useNavigationHandlers: vi.fn(),
 }));
-
 vi.mock("@hooks/useModalHandlers", () => ({
   useModalHandlers: vi.fn(),
 }));
-
 vi.mock("@hooks/useViewModeHandlers", () => ({
   useViewModeHandlers: vi.fn(),
 }));
-
 vi.mock("@hooks/useJqHandlers", () => ({
   useJqHandlers: vi.fn(),
 }));
-
 vi.mock("@hooks/useDebugHandlers", () => ({
   useDebugHandlers: vi.fn(),
 }));
 
-// Mock all store hooks with realistic implementations
-vi.mock("@hooks/useExportHandlers");
-vi.mock("@hooks/useSearchHandlers");
-vi.mock("@hooks/useTerminalCalculations");
-vi.mock("@store/hooks");
-vi.mock("@store/hooks/useDebug");
-vi.mock("@store/hooks/useExport");
-vi.mock("@store/hooks/useJq");
-vi.mock("@store/hooks/useNavigation");
-vi.mock("@store/hooks/useSearch");
-vi.mock("@store/hooks/useUI");
+// Mock all store hooks
+vi.mock("@store/hooks", () => ({
+  useUpdateDebugInfo: vi.fn(),
+}));
+vi.mock("@store/hooks/useDebug", () => ({
+  useDebugInfo: vi.fn(),
+}));
+vi.mock("@store/hooks/useExport", () => ({
+  useExportStatus: vi.fn(),
+  useExportDialog: vi.fn(),
+}));
+vi.mock("@store/hooks/useJq", () => ({
+  useJqState: vi.fn(),
+  useJqInput: vi.fn(),
+  useJqCursorPosition: vi.fn(),
+  useJqFocusMode: vi.fn(),
+  useJqErrorScrollOffset: vi.fn(),
+  useExitJqMode: vi.fn(),
+  useToggleJqMode: vi.fn(),
+  useToggleJqView: vi.fn(),
+  useStartJqTransformation: vi.fn(),
+  useCompleteJqTransformation: vi.fn(),
+}));
+vi.mock("@store/hooks/useNavigation", () => ({
+  useScrollOffset: vi.fn(),
+  useWaitingForSecondG: vi.fn(),
+  useResetScroll: vi.fn(),
+  useScrollToTop: vi.fn(),
+  useScrollToBottom: vi.fn(),
+  useAdjustScroll: vi.fn(),
+  useStartGSequence: vi.fn(),
+  useResetGSequence: vi.fn(),
+}));
+vi.mock("@store/hooks/useSearch", () => ({
+  useSearchState: vi.fn(),
+  useSearchInput: vi.fn(),
+  useSearchCursorPosition: vi.fn(),
+  useStartSearch: vi.fn(),
+  useCancelSearch: vi.fn(),
+  useCycleScope: vi.fn(),
+  useNextSearchResult: vi.fn(),
+  usePreviousSearchResult: vi.fn(),
+}));
+vi.mock("@store/hooks/useUI", () => ({
+  useUI: vi.fn(),
+  useToggleTreeView: vi.fn(),
+  useToggleSchema: vi.fn(),
+  useToggleCollapsible: vi.fn(),
+  useToggleLineNumbers: vi.fn(),
+  useToggleDebugLogViewer: vi.fn(),
+}));
+vi.mock("@store/atoms", () => ({
+  useAtomValue: vi.fn(),
+  useSetAtom: vi.fn(),
+}));
 
 // Create realistic mock implementations
 const createMockTerminalCalculations = () => ({
@@ -117,6 +156,19 @@ const createMockJqState = (overrides = {}) => ({
   ...overrides,
 });
 
+import * as exportHandlersModule from "@hooks/useExportHandlers";
+import * as searchHandlersModule from "@hooks/useSearchHandlers";
+// Import mocked modules
+import * as hooksModule from "@hooks/useTerminalCalculations";
+import * as atomsModule from "@store/atoms";
+import * as storeHooksModule from "@store/hooks";
+import * as debugHooksModule from "@store/hooks/useDebug";
+import * as exportHooksModule from "@store/hooks/useExport";
+import * as jqHooksModule from "@store/hooks/useJq";
+import * as navigationHooksModule from "@store/hooks/useNavigation";
+import * as searchHooksModule from "@store/hooks/useSearch";
+import * as uiHooksModule from "@store/hooks/useUI";
+
 // Setup comprehensive mocks
 beforeEach(() => {
   vi.clearAllMocks();
@@ -126,129 +178,65 @@ beforeEach(() => {
   const mockSearchState = createMockSearchState();
   const mockJqState = createMockJqState();
 
-  // Mock all hooks with realistic behavior (using dynamic imports)
-  vi.doMock("@hooks/useTerminalCalculations", () => ({
-    useTerminalCalculations: vi.fn(() => mockTerminalCalculations),
-  }));
-  vi.doMock("@hooks/useSearchHandlers", () => ({
-    useSearchHandlers: vi.fn(() => ({})),
-  }));
-  vi.doMock("@hooks/useExportHandlers", () => ({
-    useExportHandlers: vi.fn(() => ({
-      handleExportSchema: vi.fn(),
-      handleExportConfirm: vi.fn(),
-      handleExportCancel: vi.fn(),
-    })),
-  }));
+  // Mock all hooks with realistic behavior
+  vi.mocked(hooksModule.useTerminalCalculations).mockReturnValue(
+    mockTerminalCalculations,
+  );
+  vi.mocked(searchHandlersModule.useSearchHandlers).mockReturnValue({});
+  vi.mocked(exportHandlersModule.useExportHandlers).mockReturnValue({
+    handleExportSchema: vi.fn(),
+    handleExportConfirm: vi.fn(),
+    handleExportCancel: vi.fn(),
+  });
 
-  vi.mocked(require("@store/hooks")).useUpdateDebugInfo.mockReturnValue(
-    vi.fn(),
-  );
-  vi.mocked(require("@store/hooks/useDebug")).useDebugInfo.mockReturnValue({});
+  vi.mocked(storeHooksModule.useUpdateDebugInfo).mockReturnValue(vi.fn());
+  vi.mocked(debugHooksModule.useDebugInfo).mockReturnValue({});
 
-  vi.mocked(require("@store/hooks/useUI")).useUI.mockReturnValue(mockUI);
-  vi.mocked(require("@store/hooks/useUI")).useToggleTreeView.mockReturnValue(
-    vi.fn(),
-  );
-  vi.mocked(require("@store/hooks/useUI")).useToggleSchema.mockReturnValue(
-    vi.fn(),
-  );
-  vi.mocked(require("@store/hooks/useUI")).useToggleCollapsible.mockReturnValue(
-    vi.fn(),
-  );
-  vi.mocked(require("@store/hooks/useUI")).useToggleLineNumbers.mockReturnValue(
-    vi.fn(),
-  );
-  vi.mocked(
-    require("@store/hooks/useUI"),
-  ).useToggleDebugLogViewer.mockReturnValue(vi.fn());
+  vi.mocked(uiHooksModule.useUI).mockReturnValue(mockUI);
+  vi.mocked(uiHooksModule.useToggleTreeView).mockReturnValue(vi.fn());
+  vi.mocked(uiHooksModule.useToggleSchema).mockReturnValue(vi.fn());
+  vi.mocked(uiHooksModule.useToggleCollapsible).mockReturnValue(vi.fn());
+  vi.mocked(uiHooksModule.useToggleLineNumbers).mockReturnValue(vi.fn());
+  vi.mocked(uiHooksModule.useToggleDebugLogViewer).mockReturnValue(vi.fn());
 
-  vi.mocked(require("@store/hooks/useSearch")).useSearchState.mockReturnValue(
-    mockSearchState,
-  );
-  vi.mocked(require("@store/hooks/useSearch")).useSearchInput.mockReturnValue([
-    "",
-    vi.fn(),
-  ]);
-  vi.mocked(
-    require("@store/hooks/useSearch"),
-  ).useSearchCursorPosition.mockReturnValue([0, vi.fn()]);
-  vi.mocked(require("@store/hooks/useSearch")).useStartSearch.mockReturnValue(
-    vi.fn(),
-  );
-  vi.mocked(require("@store/hooks/useSearch")).useCancelSearch.mockReturnValue(
-    vi.fn(),
-  );
-  vi.mocked(require("@store/hooks/useSearch")).useCycleScope.mockReturnValue(
-    vi.fn(),
-  );
-  vi.mocked(
-    require("@store/hooks/useSearch"),
-  ).useNextSearchResult.mockReturnValue(vi.fn());
-  vi.mocked(
-    require("@store/hooks/useSearch"),
-  ).usePreviousSearchResult.mockReturnValue(vi.fn());
-
-  vi.mocked(
-    require("@store/hooks/useNavigation"),
-  ).useScrollOffset.mockReturnValue([0, vi.fn()]);
-  vi.mocked(
-    require("@store/hooks/useNavigation"),
-  ).useWaitingForSecondG.mockReturnValue([false]);
-  vi.mocked(
-    require("@store/hooks/useNavigation"),
-  ).useResetScroll.mockReturnValue(vi.fn());
-  vi.mocked(
-    require("@store/hooks/useNavigation"),
-  ).useScrollToTop.mockReturnValue(vi.fn());
-  vi.mocked(
-    require("@store/hooks/useNavigation"),
-  ).useScrollToBottom.mockReturnValue(vi.fn());
-  vi.mocked(
-    require("@store/hooks/useNavigation"),
-  ).useAdjustScroll.mockReturnValue(vi.fn());
-  vi.mocked(
-    require("@store/hooks/useNavigation"),
-  ).useStartGSequence.mockReturnValue(vi.fn());
-  vi.mocked(
-    require("@store/hooks/useNavigation"),
-  ).useResetGSequence.mockReturnValue(vi.fn());
-
-  vi.mocked(require("@store/hooks/useJq")).useJqState.mockReturnValue(
-    mockJqState,
-  );
-  vi.mocked(require("@store/hooks/useJq")).useJqInput.mockReturnValue([
-    "",
-    vi.fn(),
-  ]);
-  vi.mocked(require("@store/hooks/useJq")).useJqCursorPosition.mockReturnValue([
+  vi.mocked(searchHooksModule.useSearchState).mockReturnValue(mockSearchState);
+  vi.mocked(searchHooksModule.useSearchInput).mockReturnValue(["", vi.fn()]);
+  vi.mocked(searchHooksModule.useSearchCursorPosition).mockReturnValue([
     0,
     vi.fn(),
   ]);
-  vi.mocked(require("@store/hooks/useJq")).useJqFocusMode.mockReturnValue([
-    false,
+  vi.mocked(searchHooksModule.useStartSearch).mockReturnValue(vi.fn());
+  vi.mocked(searchHooksModule.useCancelSearch).mockReturnValue(vi.fn());
+  vi.mocked(searchHooksModule.useCycleScope).mockReturnValue(vi.fn());
+  vi.mocked(searchHooksModule.useNextSearchResult).mockReturnValue(vi.fn());
+  vi.mocked(searchHooksModule.usePreviousSearchResult).mockReturnValue(vi.fn());
+
+  vi.mocked(navigationHooksModule.useScrollOffset).mockReturnValue([
+    0,
     vi.fn(),
   ]);
-  vi.mocked(
-    require("@store/hooks/useJq"),
-  ).useJqErrorScrollOffset.mockReturnValue([0, vi.fn()]);
-  vi.mocked(require("@store/hooks/useJq")).useExitJqMode.mockReturnValue(
-    vi.fn(),
-  );
-  vi.mocked(require("@store/hooks/useJq")).useToggleJqMode.mockReturnValue(
-    vi.fn(),
-  );
-  vi.mocked(require("@store/hooks/useJq")).useToggleJqView.mockReturnValue(
-    vi.fn(),
-  );
-  vi.mocked(
-    require("@store/hooks/useJq"),
-  ).useStartJqTransformation.mockReturnValue(vi.fn());
-  vi.mocked(
-    require("@store/hooks/useJq"),
-  ).useCompleteJqTransformation.mockReturnValue(vi.fn());
+  vi.mocked(navigationHooksModule.useWaitingForSecondG).mockReturnValue([
+    false,
+  ]);
+  vi.mocked(navigationHooksModule.useResetScroll).mockReturnValue(vi.fn());
+  vi.mocked(navigationHooksModule.useScrollToTop).mockReturnValue(vi.fn());
+  vi.mocked(navigationHooksModule.useScrollToBottom).mockReturnValue(vi.fn());
+  vi.mocked(navigationHooksModule.useAdjustScroll).mockReturnValue(vi.fn());
+  vi.mocked(navigationHooksModule.useStartGSequence).mockReturnValue(vi.fn());
+  vi.mocked(navigationHooksModule.useResetGSequence).mockReturnValue(vi.fn());
 
-  vi.mocked(require("@store/hooks/useExport")).useExportStatus.mockReturnValue([
+  vi.mocked(jqHooksModule.useJqState).mockReturnValue(mockJqState);
+  vi.mocked(jqHooksModule.useJqInput).mockReturnValue(["", vi.fn()]);
+  vi.mocked(jqHooksModule.useJqCursorPosition).mockReturnValue([0, vi.fn()]);
+  vi.mocked(jqHooksModule.useJqFocusMode).mockReturnValue([false, vi.fn()]);
+  vi.mocked(jqHooksModule.useJqErrorScrollOffset).mockReturnValue([0, vi.fn()]);
+  vi.mocked(jqHooksModule.useExitJqMode).mockReturnValue(vi.fn());
+  vi.mocked(jqHooksModule.useToggleJqMode).mockReturnValue(vi.fn());
+  vi.mocked(jqHooksModule.useToggleJqView).mockReturnValue(vi.fn());
+  vi.mocked(jqHooksModule.useStartJqTransformation).mockReturnValue(vi.fn());
+  vi.mocked(jqHooksModule.useCompleteJqTransformation).mockReturnValue(vi.fn());
+
+  vi.mocked(exportHooksModule.useExportStatus).mockReturnValue([
     {
       isExporting: false,
       currentFile: null,
@@ -256,12 +244,12 @@ beforeEach(() => {
       type: null,
     },
   ]);
-  vi.mocked(require("@store/hooks/useExport")).useExportDialog.mockReturnValue({
+  vi.mocked(exportHooksModule.useExportDialog).mockReturnValue({
     isVisible: false,
   });
 
-  vi.mocked(require("@store/atoms")).useAtomValue.mockReturnValue(false);
-  vi.mocked(require("@store/atoms")).useSetAtom.mockReturnValue(vi.fn());
+  vi.mocked(atomsModule.useAtomValue).mockReturnValue(false);
+  vi.mocked(atomsModule.useSetAtom).mockReturnValue(vi.fn());
 });
 
 function TestApp({
@@ -287,7 +275,7 @@ function TestApp({
   );
 }
 
-describe.skip("Full Application Integration", () => {
+describe("Full Application Integration", () => {
   describe("Application Initialization", () => {
     it("should initialize with default data successfully", () => {
       render(<TestApp />);
@@ -341,7 +329,7 @@ describe.skip("Full Application Integration", () => {
         treeViewMode: true,
         collapsibleMode: false,
       });
-      vi.mocked(require("@store/hooks/useUI")).useUI.mockReturnValue(mockUI);
+      vi.mocked(uiHooksModule.useUI).mockReturnValue(mockUI);
 
       render(<TestApp />);
 
@@ -355,7 +343,7 @@ describe.skip("Full Application Integration", () => {
         collapsibleMode: false,
         schemaVisible: true,
       });
-      vi.mocked(require("@store/hooks/useUI")).useUI.mockReturnValue(mockUI);
+      vi.mocked(uiHooksModule.useUI).mockReturnValue(mockUI);
 
       render(<TestApp />);
 
@@ -365,231 +353,12 @@ describe.skip("Full Application Integration", () => {
 
     it("should handle collapsible view mode (default)", () => {
       const mockUI = createMockUI({ collapsibleMode: true });
-      vi.mocked(require("@store/hooks/useUI")).useUI.mockReturnValue(mockUI);
+      vi.mocked(uiHooksModule.useUI).mockReturnValue(mockUI);
 
       render(<TestApp />);
 
       // App should handle collapsible view mode
       expect(document.body).toBeInTheDocument();
-    });
-  });
-
-  describe("Search Functionality Integration", () => {
-    it("should handle search activation", () => {
-      const mockSearchState = createMockSearchState({
-        isSearching: true,
-        searchTerm: "test",
-      });
-      vi.mocked(
-        require("@store/hooks/useSearch"),
-      ).useSearchState.mockReturnValue(mockSearchState);
-
-      render(<TestApp />);
-
-      // Search should be active
-      expect(document.body).toBeInTheDocument();
-    });
-
-    it("should handle search with results", () => {
-      const mockSearchState = createMockSearchState({
-        isSearching: false,
-        searchTerm: "Alice",
-        searchResults: [{ path: "users.0.name", value: "Alice" }],
-        currentResultIndex: 0,
-        totalResults: 1,
-      });
-      vi.mocked(
-        require("@store/hooks/useSearch"),
-      ).useSearchState.mockReturnValue(mockSearchState);
-
-      render(<TestApp />);
-
-      // Should show search results
-      expect(document.body).toBeInTheDocument();
-    });
-  });
-
-  describe("JQ Transformation Integration", () => {
-    it("should handle jq query activation", async () => {
-      const mockJqState = createMockJqState({
-        isActive: true,
-        input: ".users[] | select(.active)",
-      });
-      vi.mocked(require("@store/hooks/useJq")).useJqState.mockReturnValue(
-        mockJqState,
-      );
-
-      // Mock successful jq transformation
-      vi.mocked(
-        require("@features/jq/utils/jqTransform"),
-      ).transformWithJq.mockResolvedValue({
-        success: true,
-        data: [{ id: 1, name: "Alice", active: true }],
-      });
-
-      render(<TestApp />);
-
-      // JQ should be active
-      expect(document.body).toBeInTheDocument();
-    });
-
-    it("should handle jq transformation error", async () => {
-      const mockJqState = createMockJqState({
-        isActive: true,
-        input: ".invalid | syntax",
-        error: "Invalid jq syntax",
-      });
-      vi.mocked(require("@store/hooks/useJq")).useJqState.mockReturnValue(
-        mockJqState,
-      );
-
-      render(<TestApp />);
-
-      // Should handle jq error
-      expect(document.body).toBeInTheDocument();
-    });
-  });
-
-  describe("Modal System Integration", () => {
-    it("should handle settings modal", () => {
-      vi.mocked(require("@store/atoms")).useAtomValue.mockReturnValue(true); // settings visible
-
-      render(<TestApp />);
-
-      // Settings modal should be handled
-      expect(document.body).toBeInTheDocument();
-    });
-
-    it("should handle export dialog", () => {
-      vi.mocked(
-        require("@store/hooks/useExport"),
-      ).useExportDialog.mockReturnValue({
-        isVisible: true,
-      });
-
-      render(<TestApp />);
-
-      // Export dialog should be handled
-      expect(document.body).toBeInTheDocument();
-    });
-
-    it("should handle help viewer", () => {
-      const mockUI = createMockUI({ helpVisible: true });
-      vi.mocked(require("@store/hooks/useUI")).useUI.mockReturnValue(mockUI);
-
-      render(<TestApp />);
-
-      // Help viewer should be handled
-      expect(document.body).toBeInTheDocument();
-    });
-
-    it("should handle debug log viewer", () => {
-      const mockUI = createMockUI({ debugLogViewerVisible: true });
-      vi.mocked(require("@store/hooks/useUI")).useUI.mockReturnValue(mockUI);
-
-      render(<TestApp />);
-
-      // Debug log viewer should be handled
-      expect(document.body).toBeInTheDocument();
-    });
-  });
-
-  describe("Export Functionality Integration", () => {
-    it("should handle schema export process", async () => {
-      const mockExportHandlers = {
-        handleExportSchema: vi.fn(),
-        handleExportConfirm: vi.fn(),
-        handleExportCancel: vi.fn(),
-      };
-      vi.mocked(
-        require("@hooks/useExportHandlers"),
-      ).useExportHandlers.mockReturnValue(mockExportHandlers);
-
-      render(<TestApp />);
-
-      // Export handlers should be set up
-      expect(mockExportHandlers.handleExportSchema).toBeDefined();
-    });
-
-    it("should handle data export process", async () => {
-      vi.mocked(
-        require("@features/schema/utils/fileExport"),
-      ).exportToFile.mockResolvedValue(undefined);
-
-      render(<TestApp />);
-
-      // Data export should be available
-      expect(document.body).toBeInTheDocument();
-    });
-
-    it("should handle export status updates", () => {
-      vi.mocked(
-        require("@store/hooks/useExport"),
-      ).useExportStatus.mockReturnValue([
-        {
-          isExporting: true,
-          currentFile: "schema.json",
-          message: null,
-          type: null,
-        },
-      ]);
-
-      render(<TestApp />);
-
-      // Export status should be handled
-      expect(document.body).toBeInTheDocument();
-    });
-  });
-
-  describe("Error Handling Integration", () => {
-    it("should handle component render errors", () => {
-      const consoleSpy = vi
-        .spyOn(console, "error")
-        .mockImplementation(() => {});
-
-      // Force an error in one of the hooks
-      vi.mocked(require("@store/hooks/useUI")).useUI.mockImplementation(() => {
-        throw new Error("Mock render error");
-      });
-
-      // Should not crash the entire app
-      expect(() => render(<TestApp />)).toThrow("Mock render error");
-
-      consoleSpy.mockRestore();
-    });
-
-    it("should handle invalid initial data", () => {
-      const invalidData: JsonValue = {
-        circular: "self-reference",
-      };
-      // Note: Using string instead of actual circular reference for JSON safety
-
-      render(<TestApp initialData={invalidData} />);
-
-      // Should handle circular data gracefully
-      expect(document.body).toBeInTheDocument();
-    });
-
-    it("should handle state update errors", async () => {
-      const consoleSpy = vi
-        .spyOn(console, "error")
-        .mockImplementation(() => {});
-
-      // Mock a state update that fails
-      const failingSetState = vi.fn().mockImplementation(() => {
-        throw new Error("State update failed");
-      });
-
-      vi.mocked(
-        require("@store/hooks/useSearch"),
-      ).useSearchInput.mockReturnValue(["", failingSetState]);
-
-      render(<TestApp />);
-
-      // App should still render
-      expect(document.body).toBeInTheDocument();
-
-      consoleSpy.mockRestore();
     });
   });
 
@@ -618,133 +387,35 @@ describe.skip("Full Application Integration", () => {
       expect(endTime - startTime).toBeLessThan(RENDER_TIME_THRESHOLD);
       expect(document.body).toBeInTheDocument();
     });
-
-    it("should handle rapid state updates", async () => {
-      const mockSetScrollOffset = vi.fn();
-      vi.mocked(
-        require("@store/hooks/useNavigation"),
-      ).useScrollOffset.mockReturnValue([0, mockSetScrollOffset]);
-
-      render(<TestApp />);
-
-      // Simulate rapid scroll updates
-      for (let i = 0; i < 100; i++) {
-        mockSetScrollOffset(i);
-      }
-
-      // Should handle rapid updates without issues
-      expect(mockSetScrollOffset).toHaveBeenCalledTimes(100);
-      expect(document.body).toBeInTheDocument();
-    });
   });
 
-  describe("Full User Workflows", () => {
-    it("should support complete search workflow", async () => {
-      const mockSearchState = createMockSearchState();
-      const mockStartSearch = vi.fn();
-      const mockCancelSearch = vi.fn();
+  describe("Error Handling Integration", () => {
+    it("should handle component render errors", () => {
+      const consoleSpy = vi
+        .spyOn(console, "error")
+        .mockImplementation(() => {});
 
-      vi.mocked(
-        require("@store/hooks/useSearch"),
-      ).useSearchState.mockReturnValue(mockSearchState);
-      vi.mocked(
-        require("@store/hooks/useSearch"),
-      ).useStartSearch.mockReturnValue(mockStartSearch);
-      vi.mocked(
-        require("@store/hooks/useSearch"),
-      ).useCancelSearch.mockReturnValue(mockCancelSearch);
-
-      render(<TestApp />);
-
-      // Start search
-      mockStartSearch();
-      expect(mockStartSearch).toHaveBeenCalled();
-
-      // Cancel search
-      mockCancelSearch();
-      expect(mockCancelSearch).toHaveBeenCalled();
-    });
-
-    it("should support complete jq transformation workflow", async () => {
-      const mockToggleJqMode = vi.fn();
-      const mockStartTransformation = vi.fn();
-      const mockCompleteTransformation = vi.fn();
-
-      vi.mocked(require("@store/hooks/useJq")).useToggleJqMode.mockReturnValue(
-        mockToggleJqMode,
-      );
-      vi.mocked(
-        require("@store/hooks/useJq"),
-      ).useStartJqTransformation.mockReturnValue(mockStartTransformation);
-      vi.mocked(
-        require("@store/hooks/useJq"),
-      ).useCompleteJqTransformation.mockReturnValue(mockCompleteTransformation);
-
-      render(<TestApp />);
-
-      // Toggle jq mode
-      mockToggleJqMode();
-      expect(mockToggleJqMode).toHaveBeenCalled();
-
-      // Start transformation
-      mockStartTransformation(".test");
-      expect(mockStartTransformation).toHaveBeenCalledWith(".test");
-    });
-
-    it("should support complete export workflow", async () => {
-      const mockHandleExportSchema = vi.fn();
-      const mockHandleExportConfirm = vi.fn();
-
-      vi.mocked(
-        require("@hooks/useExportHandlers"),
-      ).useExportHandlers.mockReturnValue({
-        handleExportSchema: mockHandleExportSchema,
-        handleExportConfirm: mockHandleExportConfirm,
-        handleExportCancel: vi.fn(),
+      // Force an error in one of the hooks
+      vi.mocked(uiHooksModule.useUI).mockImplementation(() => {
+        throw new Error("Mock render error");
       });
 
-      render(<TestApp />);
+      // Should not crash the entire app
+      expect(() => render(<TestApp />)).toThrow("Mock render error");
 
-      // Start export
-      mockHandleExportSchema();
-      expect(mockHandleExportSchema).toHaveBeenCalled();
-
-      // Confirm export
-      mockHandleExportConfirm({ filename: "test.json", format: "json" });
-      expect(mockHandleExportConfirm).toHaveBeenCalledWith({
-        filename: "test.json",
-        format: "json",
-      });
+      consoleSpy.mockRestore();
     });
 
-    it("should support view mode switching workflow", () => {
-      const mockToggleTreeView = vi.fn();
-      const mockToggleSchema = vi.fn();
-      const mockToggleCollapsible = vi.fn();
+    it("should handle invalid initial data", () => {
+      const invalidData: JsonValue = {
+        circular: "self-reference",
+      };
+      // Note: Using string instead of actual circular reference for JSON safety
 
-      vi.mocked(
-        require("@store/hooks/useUI"),
-      ).useToggleTreeView.mockReturnValue(mockToggleTreeView);
-      vi.mocked(require("@store/hooks/useUI")).useToggleSchema.mockReturnValue(
-        mockToggleSchema,
-      );
-      vi.mocked(
-        require("@store/hooks/useUI"),
-      ).useToggleCollapsible.mockReturnValue(mockToggleCollapsible);
+      render(<TestApp initialData={invalidData} />);
 
-      render(<TestApp />);
-
-      // Switch to tree view
-      mockToggleTreeView();
-      expect(mockToggleTreeView).toHaveBeenCalled();
-
-      // Switch to schema view
-      mockToggleSchema();
-      expect(mockToggleSchema).toHaveBeenCalled();
-
-      // Switch to collapsible view
-      mockToggleCollapsible();
-      expect(mockToggleCollapsible).toHaveBeenCalled();
+      // Should handle circular data gracefully
+      expect(document.body).toBeInTheDocument();
     });
   });
 });

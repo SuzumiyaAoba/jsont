@@ -3,7 +3,7 @@
  * Ensures system stability under various error conditions
  */
 
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // Mock fs operations for testing file system errors
 vi.mock("node:fs/promises", () => ({

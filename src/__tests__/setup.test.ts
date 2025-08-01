@@ -10,7 +10,7 @@ import { describe, expect, it } from "vitest";
 
 const __dirname = fileURLToPath(new URL(".", import.meta.url));
 
-describe.skip("Project Setup", () => {
+describe("Project Setup", () => {
   const projectRoot = join(__dirname, "../..");
 
   describe("TypeScript configuration", () => {

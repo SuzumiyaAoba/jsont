@@ -264,7 +264,7 @@ function TestWrapper({
   );
 }
 
-describe.skip("StatusBarManager", () => {
+describe("StatusBarManager", () => {
   describe("Search Bar", () => {
     it("should show search bar when searching", () => {
       const mockSearchState = createMockSearchState({ isSearching: true });

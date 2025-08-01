@@ -25,7 +25,7 @@ vi.mock("node:os", async (importOriginal) => {
   };
 });
 
-describe.skip("Configuration Loader", () => {
+describe("Configuration Loader", () => {
   const testConfigDir = join(testTmpDir, ".config", "jsont");
   const testConfigPath = join(testConfigDir, "config.yaml");
 

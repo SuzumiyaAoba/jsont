@@ -27,7 +27,7 @@ vi.mock("ink", async () => {
   };
 });
 
-describe.skip("Schema Toggle Functionality", () => {
+describe("Schema Toggle Functionality", () => {
   it("should show JSON view by default", () => {
     const data = { name: "test", value: 123 };
     const { lastFrame } = render(

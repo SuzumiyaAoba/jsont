@@ -265,7 +265,7 @@ function TestWrapper({
   );
 }
 
-describe.skip("KeyboardManager", () => {
+describe("KeyboardManager", () => {
   describe("Initialization", () => {
     it("should render without crashing", () => {
       render(<TestWrapper />);

@@ -81,7 +81,10 @@
       "Bash(git rm:*)",
       "Bash(tree:*)",
       "Bash(sed:*)",
-      "Bash(npx vitest:*)"
+      "Bash(npx vitest:*)",
+      "Bash(for module in \"useDebug\" \"useUI\" \"useSearch\" \"useNavigation\" \"useJq\" \"useExport\")",
+      "Bash(do)",
+      "Bash(done)"
     ],
     "deny": []
   }

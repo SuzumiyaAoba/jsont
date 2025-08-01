@@ -304,7 +304,7 @@ function TestWrapper({
   );
 }
 
-describe.skip("ContentRouter", () => {
+describe("ContentRouter", () => {
   describe("View Mode Routing", () => {
     it("should render tree view when treeViewMode is true", () => {
       const mockUI = createMockUI({
