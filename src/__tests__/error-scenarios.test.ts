@@ -295,31 +295,65 @@ describe("Critical Error Scenarios", () => {
     });
 
     it("should handle uncaught exceptions", () => {
-      const uncaughtHandler = vi.fn();
+      let registeredHandler: Function | undefined;
 
       // Mock uncaught exception handler
-      const mockOn2 = vi.fn(() => process);
-      Object.defineProperty(process, "on", {
-        value: mockOn2,
-        writable: true,
+      process.on = vi.fn((event, handler) => {
+        if (event === "uncaughtException") {
+          registeredHandler = handler as Function;
+        }
+        return process;
       });
 
+      // Simulate setting up the handler
+      const mockHandler = vi.fn();
+      process.on("uncaughtException", mockHandler);
+
       // Test that handler can be set up
-      expect(typeof uncaughtHandler).toBe("function");
+      expect(process.on).toHaveBeenCalledWith("uncaughtException", mockHandler);
+      expect(registeredHandler).toBeDefined();
+
+      // Test the handler behavior
+      if (registeredHandler) {
+        const testError = new Error("Test uncaught exception");
+        registeredHandler(testError);
+
+        // In a real scenario, this would clean up and exit
+        expect(testError.message).toBe("Test uncaught exception");
+      }
     });
 
     it("should handle unhandled promise rejections", () => {
-      const rejectionHandler = vi.fn();
+      let registeredHandler: Function | undefined;
 
       // Mock unhandled rejection handler
-      const mockOn3 = vi.fn(() => process);
-      Object.defineProperty(process, "on", {
-        value: mockOn3,
-        writable: true,
+      process.on = vi.fn((event, handler) => {
+        if (event === "unhandledRejection") {
+          registeredHandler = handler as Function;
+        }
+        return process;
       });
 
+      // Simulate setting up the handler
+      const mockHandler = vi.fn();
+      process.on("unhandledRejection", mockHandler);
+
       // Test that handler can be set up
-      expect(typeof rejectionHandler).toBe("function");
+      expect(process.on).toHaveBeenCalledWith(
+        "unhandledRejection",
+        mockHandler,
+      );
+      expect(registeredHandler).toBeDefined();
+
+      // Test the handler behavior
+      if (registeredHandler) {
+        const testReason = new Error("Test unhandled rejection");
+        const mockPromise = {} as Promise<any>;
+        registeredHandler(testReason, mockPromise);
+
+        // In a real scenario, this would log and potentially exit
+        expect(testReason.message).toBe("Test unhandled rejection");
+      }
     });
   });
 

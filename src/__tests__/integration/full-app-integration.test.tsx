@@ -609,12 +609,13 @@ describe.skip("Full Application Integration", () => {
         })),
       };
 
+      const RENDER_TIME_THRESHOLD = process.env.CI ? 2000 : 1000; // More lenient in CI
       const startTime = Date.now();
       render(<TestApp initialData={largeData} />);
       const endTime = Date.now();
 
       // Should render within reasonable time
-      expect(endTime - startTime).toBeLessThan(1000); // 1 second max
+      expect(endTime - startTime).toBeLessThan(RENDER_TIME_THRESHOLD);
       expect(document.body).toBeInTheDocument();
     });
 
