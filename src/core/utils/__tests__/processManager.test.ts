@@ -391,10 +391,12 @@ describe("ProcessManager", () => {
     it("should handle error scenarios gracefully", () => {
       // Mock terminal manager that throws error
       const errorTerminalManager = {
+        initialize: vi.fn(),
         cleanup: vi.fn().mockImplementation(() => {
           throw new Error("Cleanup error");
         }),
-      };
+        isTTY: vi.fn().mockReturnValue(true),
+      } as any as TerminalManager;
 
       const errorProcessManager = new ProcessManager(errorTerminalManager);
 

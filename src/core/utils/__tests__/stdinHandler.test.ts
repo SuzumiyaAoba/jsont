@@ -39,8 +39,10 @@ import { readFile } from "node:fs/promises";
 import { parseJsonWithValidation } from "@features/json-rendering/utils/jsonProcessor";
 
 describe("Stdin Handler", () => {
-  let mockParseJson: ReturnType<typeof vi.mocked>;
-  let mockReadFile: ReturnType<typeof vi.mocked>;
+  let mockParseJson: ReturnType<
+    typeof vi.mocked<typeof parseJsonWithValidation>
+  >;
+  let mockReadFile: ReturnType<typeof vi.mocked<typeof readFile>>;
   let originalStdin: typeof process.stdin;
 
   beforeEach(() => {
@@ -53,7 +55,7 @@ describe("Stdin Handler", () => {
     // Mock process.stdin
     const mockStdin = {
       isTTY: false,
-      on: vi.fn(),
+      on: vi.fn() as any,
       removeListener: vi.fn(),
       removeAllListeners: vi.fn(),
       resume: vi.fn(),

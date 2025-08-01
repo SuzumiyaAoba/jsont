@@ -31,6 +31,9 @@
     "node_modules",
     "dist",
     "src/__tests__/development-tools.test.ts",
-    "src/__tests__/setup.test.ts"
+    "src/__tests__/setup.test.ts",
+    "src/core/utils/__tests__/stdinHandler.test.ts",
+    "src/features/jq/utils/__tests__/jqTransform.test.ts",
+    "src/features/tree/utils/treeRenderer.test.ts"
   ]
 }

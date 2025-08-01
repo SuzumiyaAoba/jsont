@@ -3,7 +3,7 @@
  */
 
 import { describe, expect, it } from "vitest";
-import type { TreeLine } from "../types";
+import type { TreeLine } from "../types/tree";
 import { buildTreeFromJson } from "./treeBuilder";
 import {
   getTreeLineText,
@@ -63,12 +63,12 @@ describe("treeRenderer", () => {
       expect(lines[2]?.value).toBe('"b"');
 
       // Test actual display text with proper indentation for array
-      expect(getTreeLineText(lines[0])).toBe("3:");
+      expect(getTreeLineText(lines[0]!)).toBe("3:");
       expect(lines[1]).toBeDefined();
-      expect(getTreeLineText(lines[1] as TreeLine)).toBe('├─ 0: "a"');
-      expect(getTreeLineText(lines[2])).toBe('├─ 1: "b"');
+      expect(getTreeLineText(lines[1]!)).toBe('├─ 0: "a"');
+      expect(getTreeLineText(lines[2]!)).toBe('├─ 1: "b"');
       expect(lines[3]).toBeDefined();
-      expect(getTreeLineText(lines[3] as TreeLine)).toBe('└─ 2: "c"');
+      expect(getTreeLineText(lines[3]!)).toBe('└─ 2: "c"');
     });
 
     it("should handle nested structures", () => {
