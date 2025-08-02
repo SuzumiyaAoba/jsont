@@ -63,12 +63,21 @@ describe("treeRenderer", () => {
       expect(lines[2]?.value).toBe('"b"');
 
       // Test actual display text with proper indentation for array
-      expect(getTreeLineText(lines[0]!)).toBe("3:");
-      expect(lines[1]).toBeDefined();
-      expect(getTreeLineText(lines[1]!)).toBe('├─ 0: "a"');
-      expect(getTreeLineText(lines[2]!)).toBe('├─ 1: "b"');
-      expect(lines[3]).toBeDefined();
-      expect(getTreeLineText(lines[3]!)).toBe('└─ 2: "c"');
+      const firstLine = lines[0];
+      expect(firstLine).toBeDefined();
+      expect(getTreeLineText(firstLine as TreeLine)).toBe("3:");
+
+      const secondLine = lines[1];
+      expect(secondLine).toBeDefined();
+      expect(getTreeLineText(secondLine as TreeLine)).toBe('├─ 0: "a"');
+
+      const thirdLine = lines[2];
+      expect(thirdLine).toBeDefined();
+      expect(getTreeLineText(thirdLine as TreeLine)).toBe('├─ 1: "b"');
+
+      const fourthLine = lines[3];
+      expect(fourthLine).toBeDefined();
+      expect(getTreeLineText(fourthLine as TreeLine)).toBe('└─ 2: "c"');
     });
 
     it("should handle nested structures", () => {

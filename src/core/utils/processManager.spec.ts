@@ -7,11 +7,11 @@ import type { TerminalManager } from "@core/utils/terminal";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 // Mock TerminalManager
-const mockTerminalManager = {
+const mockTerminalManager: TerminalManager = {
   initialize: vi.fn(),
   cleanup: vi.fn(),
   isTTY: vi.fn().mockReturnValue(true),
-} as any as TerminalManager;
+};
 
 describe("ProcessManager", () => {
   let processManager: ProcessManager;
@@ -135,7 +135,7 @@ describe("ProcessManager", () => {
       processManager.setup();
 
       // Simulate stdin end in CI
-      const stdinOnCalls = (process.stdin.on as any).mock.calls;
+      const stdinOnCalls = vi.mocked(process.stdin.on).mock.calls;
       const endHandler = stdinOnCalls.find(
         (call: unknown[]) => call[0] === "end",
       )?.[1];
@@ -332,7 +332,7 @@ describe("ProcessManager", () => {
       processManager.setup();
 
       // Execute stdin handlers
-      const stdinOnCalls = (process.stdin.on as any).mock.calls;
+      const stdinOnCalls = vi.mocked(process.stdin.on).mock.calls;
       const endHandler = stdinOnCalls.find(
         (call: unknown[]) => call[0] === "end",
       )?.[1];
@@ -396,7 +396,7 @@ describe("ProcessManager", () => {
           throw new Error("Cleanup error");
         }),
         isTTY: vi.fn().mockReturnValue(true),
-      } as any as TerminalManager;
+      } satisfies TerminalManager;
 
       const errorProcessManager = new ProcessManager(errorTerminalManager);
 
