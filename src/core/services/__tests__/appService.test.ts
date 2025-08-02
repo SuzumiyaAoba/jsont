@@ -142,7 +142,7 @@ describe("AppService", () => {
 
   describe("run", () => {
     it("should show help when help flag is provided", async () => {
-      (parseCliArgs as any).mockReturnValue({ help: true });
+      vi.mocked(parseCliArgs).mockReturnValue({ help: true });
 
       await appService.run();
 
@@ -152,7 +152,7 @@ describe("AppService", () => {
     });
 
     it("should show version when version flag is provided", async () => {
-      (parseCliArgs as any).mockReturnValue({ version: true });
+      vi.mocked(parseCliArgs).mockReturnValue({ version: true });
 
       await appService.run();
 
@@ -163,10 +163,11 @@ describe("AppService", () => {
 
     it("should read from file when filePath is provided", async () => {
       const mockData = { test: "data" };
-      const cliArgs = { filePath: "test.json", viewMode: "tree" };
+      const cliArgs = { filePath: "test.json", viewMode: "tree" as const };
 
-      (parseCliArgs as any).mockReturnValue(cliArgs);
-      (readFromFile as any).mockResolvedValue({
+      vi.mocked(parseCliArgs).mockReturnValue(cliArgs);
+      vi.mocked(readFromFile).mockResolvedValue({
+        success: true,
         data: mockData,
         error: null,
         canUseKeyboard: true,
@@ -183,8 +184,9 @@ describe("AppService", () => {
       const mockData = { test: "data" };
       const cliArgs = {};
 
-      (parseCliArgs as any).mockReturnValue(cliArgs);
-      (readStdinThenReinitialize as any).mockResolvedValue({
+      vi.mocked(parseCliArgs).mockReturnValue(cliArgs);
+      vi.mocked(readStdinThenReinitialize).mockResolvedValue({
+        success: true,
         data: mockData,
         error: null,
         canUseKeyboard: false,
@@ -199,10 +201,11 @@ describe("AppService", () => {
 
     it("should setup environment and render app", async () => {
       const mockData = { test: "data" };
-      const cliArgs = { viewMode: "schema" };
+      const cliArgs = { viewMode: "schema" as const };
 
-      (parseCliArgs as any).mockReturnValue(cliArgs);
-      (readStdinThenReinitialize as any).mockResolvedValue({
+      vi.mocked(parseCliArgs).mockReturnValue(cliArgs);
+      vi.mocked(readStdinThenReinitialize).mockResolvedValue({
+        success: true,
         data: mockData,
         error: null,
         canUseKeyboard: true,
@@ -211,14 +214,15 @@ describe("AppService", () => {
       const mockTerminalManager = {
         initialize: vi.fn(),
         cleanup: vi.fn(),
-      };
+      } as any;
       const mockProcessManager = {
         setup: vi.fn(),
         cleanup: vi.fn(),
-      };
+        onAppExit: vi.fn(),
+      } as any;
 
-      (TerminalManager as any).mockImplementation(() => mockTerminalManager);
-      (ProcessManager as any).mockImplementation(() => mockProcessManager);
+      vi.mocked(TerminalManager).mockImplementation(() => mockTerminalManager);
+      vi.mocked(ProcessManager).mockImplementation(() => mockProcessManager);
 
       appService = new AppService();
       await appService.run();
@@ -229,10 +233,11 @@ describe("AppService", () => {
     });
 
     it("should pass viewMode to renderApp", async () => {
-      const cliArgs = { viewMode: "tree" };
+      const cliArgs = { viewMode: "tree" as const };
 
-      (parseCliArgs as any).mockReturnValue(cliArgs);
-      (readStdinThenReinitialize as any).mockResolvedValue({
+      vi.mocked(parseCliArgs).mockReturnValue(cliArgs);
+      vi.mocked(readStdinThenReinitialize).mockResolvedValue({
+        success: true,
         data: null,
         error: null,
         canUseKeyboard: true,
@@ -240,7 +245,7 @@ describe("AppService", () => {
 
       await appService.run();
 
-      const renderCall = (render as any).mock.calls[0];
+      const renderCall = vi.mocked(render).mock.calls[0];
       expect(renderCall).toBeDefined();
     });
 
@@ -252,7 +257,7 @@ describe("AppService", () => {
         throw new Error("process.exit called");
       });
 
-      (parseCliArgs as any).mockImplementation(() => {
+      vi.mocked(parseCliArgs).mockImplementation(() => {
         throw new Error("CLI parsing error");
       });
 
@@ -273,7 +278,7 @@ describe("AppService", () => {
         throw new Error("process.exit called");
       });
 
-      (parseCliArgs as any).mockImplementation(() => {
+      vi.mocked(parseCliArgs).mockImplementation(() => {
         throw "String error";
       });
 
@@ -291,8 +296,9 @@ describe("AppService", () => {
     it("should setup stdin properties for Ink compatibility", async () => {
       const cliArgs = {};
 
-      (parseCliArgs as any).mockReturnValue(cliArgs);
-      (readStdinThenReinitialize as any).mockResolvedValue({
+      vi.mocked(parseCliArgs).mockReturnValue(cliArgs);
+      vi.mocked(readStdinThenReinitialize).mockResolvedValue({
+        success: true,
         data: null,
         error: null,
         canUseKeyboard: true,
@@ -314,10 +320,11 @@ describe("AppService", () => {
       for (const testCase of testCases) {
         vi.clearAllMocks();
 
-        (parseCliArgs as any).mockReturnValue({});
-        (readStdinThenReinitialize as any).mockResolvedValue({
+        vi.mocked(parseCliArgs).mockReturnValue({});
+        vi.mocked(readStdinThenReinitialize).mockResolvedValue({
           data: null,
           error: null,
+          success: true,
           canUseKeyboard: testCase.canUseKeyboard,
         });
 
@@ -330,8 +337,9 @@ describe("AppService", () => {
     it("should use test environment keyboard settings", async () => {
       process.env["NODE_ENV"] = "test";
 
-      (parseCliArgs as any).mockReturnValue({});
-      (readStdinThenReinitialize as any).mockResolvedValue({
+      vi.mocked(parseCliArgs).mockReturnValue({});
+      vi.mocked(readStdinThenReinitialize).mockResolvedValue({
+        success: true,
         data: null,
         error: null,
         canUseKeyboard: true,
@@ -346,8 +354,9 @@ describe("AppService", () => {
       delete process.env["NODE_ENV"];
       process.env["VITEST"] = "true";
 
-      (parseCliArgs as any).mockReturnValue({});
-      (readStdinThenReinitialize as any).mockResolvedValue({
+      vi.mocked(parseCliArgs).mockReturnValue({});
+      vi.mocked(readStdinThenReinitialize).mockResolvedValue({
+        success: true,
         data: null,
         error: null,
         canUseKeyboard: true,
@@ -364,15 +373,19 @@ describe("AppService", () => {
       const mockApp = {
         waitUntilExit: vi.fn().mockResolvedValue(undefined),
         unmount: vi.fn(),
+        rerender: vi.fn(),
+        cleanup: vi.fn(),
+        clear: vi.fn(),
       };
 
-      (parseCliArgs as any).mockReturnValue({});
-      (readStdinThenReinitialize as any).mockResolvedValue({
+      vi.mocked(parseCliArgs).mockReturnValue({});
+      vi.mocked(readStdinThenReinitialize).mockResolvedValue({
+        success: true,
         data: null,
         error: null,
         canUseKeyboard: true,
       });
-      (render as any).mockReturnValue(mockApp);
+      vi.mocked(render).mockReturnValue(mockApp);
 
       await appService.run();
 
@@ -385,15 +398,19 @@ describe("AppService", () => {
       const mockApp = {
         waitUntilExit: vi.fn().mockResolvedValue(undefined),
         unmount: vi.fn(),
+        rerender: vi.fn(),
+        cleanup: vi.fn(),
+        clear: vi.fn(),
       };
 
-      (parseCliArgs as any).mockReturnValue({});
-      (readStdinThenReinitialize as any).mockResolvedValue({
+      vi.mocked(parseCliArgs).mockReturnValue({});
+      vi.mocked(readStdinThenReinitialize).mockResolvedValue({
+        success: true,
         data: null,
         error: null,
         canUseKeyboard: true,
       });
-      (render as any).mockReturnValue(mockApp);
+      vi.mocked(render).mockReturnValue(mockApp);
 
       const setTimeoutSpy = vi.spyOn(global, "setTimeout");
 
@@ -441,15 +458,19 @@ describe("AppService", () => {
       const mockApp = {
         waitUntilExit: vi.fn().mockResolvedValue(undefined),
         unmount: vi.fn(),
+        rerender: vi.fn(),
+        cleanup: vi.fn(),
+        clear: vi.fn(),
       };
 
-      (parseCliArgs as any).mockReturnValue({});
-      (readStdinThenReinitialize as any).mockResolvedValue({
+      vi.mocked(parseCliArgs).mockReturnValue({});
+      vi.mocked(readStdinThenReinitialize).mockResolvedValue({
+        success: true,
         data: null,
         error: null,
         canUseKeyboard: false,
       });
-      (render as any).mockReturnValue(mockApp);
+      vi.mocked(render).mockReturnValue(mockApp);
 
       const setTimeoutSpy = vi.spyOn(global, "setTimeout");
 
@@ -482,15 +503,19 @@ describe("AppService", () => {
         const mockApp = {
           waitUntilExit: vi.fn().mockResolvedValue(undefined),
           unmount: vi.fn(),
+          rerender: vi.fn(),
+          cleanup: vi.fn(),
+          clear: vi.fn(),
         };
 
-        (parseCliArgs as any).mockReturnValue({});
-        (readStdinThenReinitialize as any).mockResolvedValue({
+        vi.mocked(parseCliArgs).mockReturnValue({});
+        vi.mocked(readStdinThenReinitialize).mockResolvedValue({
+          success: true,
           data: null,
           error: null,
           canUseKeyboard: true,
         });
-        (render as any).mockReturnValue(mockApp);
+        vi.mocked(render).mockReturnValue(mockApp);
 
         const setTimeoutSpy = vi.spyOn(global, "setTimeout");
 
@@ -517,8 +542,9 @@ describe("AppService", () => {
         configurable: true,
       });
 
-      (parseCliArgs as any).mockReturnValue({});
-      (readStdinThenReinitialize as any).mockResolvedValue({
+      vi.mocked(parseCliArgs).mockReturnValue({});
+      vi.mocked(readStdinThenReinitialize).mockResolvedValue({
+        success: true,
         data: null,
         error: null,
         canUseKeyboard: true,
@@ -549,8 +575,9 @@ describe("AppService", () => {
         configurable: true,
       });
 
-      (parseCliArgs as any).mockReturnValue({});
-      (readStdinThenReinitialize as any).mockResolvedValue({
+      vi.mocked(parseCliArgs).mockReturnValue({});
+      vi.mocked(readStdinThenReinitialize).mockResolvedValue({
+        success: true,
         data: null,
         error: null,
         canUseKeyboard: true,
@@ -567,18 +594,22 @@ describe("AppService", () => {
       const mockApp = {
         waitUntilExit: vi.fn().mockResolvedValue(undefined),
         unmount: vi.fn(),
+        rerender: vi.fn(),
+        cleanup: vi.fn(),
+        clear: vi.fn(),
       };
 
-      (parseCliArgs as any).mockReturnValue({
+      vi.mocked(parseCliArgs).mockReturnValue({
         filePath: "data.json",
-        viewMode: "tree",
+        viewMode: "tree" as const,
       });
-      (readFromFile as any).mockResolvedValue({
+      vi.mocked(readFromFile).mockResolvedValue({
+        success: true,
         data: mockData,
         error: null,
         canUseKeyboard: true,
       });
-      (render as any).mockReturnValue(mockApp);
+      vi.mocked(render).mockReturnValue(mockApp);
 
       await appService.run();
 
@@ -593,22 +624,26 @@ describe("AppService", () => {
       const mockApp = {
         waitUntilExit: vi.fn().mockResolvedValue(undefined),
         unmount: vi.fn(),
+        rerender: vi.fn(),
+        cleanup: vi.fn(),
+        clear: vi.fn(),
       };
 
-      (parseCliArgs as any).mockReturnValue({});
-      (readStdinThenReinitialize as any).mockResolvedValue({
+      vi.mocked(parseCliArgs).mockReturnValue({});
+      vi.mocked(readStdinThenReinitialize).mockResolvedValue({
+        success: false,
         data: null,
         error: "JSON parsing failed",
         canUseKeyboard: false,
       });
-      (render as any).mockReturnValue(mockApp);
+      vi.mocked(render).mockReturnValue(mockApp);
 
       await appService.run();
 
       expect(render).toHaveBeenCalled();
 
       // Verify that error is passed to App component
-      const renderCall = (render as any).mock.calls[0];
+      const renderCall = vi.mocked(render).mock.calls[0];
       expect(renderCall).toBeDefined();
     });
   });

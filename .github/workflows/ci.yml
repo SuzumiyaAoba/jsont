@@ -20,7 +20,9 @@ jobs:
           cache: 'npm'
       
       - name: Install dependencies
-        run: npm ci
+        run: |
+          npm ci
+          npm install --force @biomejs/cli-linux-x64 @rollup/rollup-linux-x64-gnu
       
       - name: Run Biome check
         run: npm run check
@@ -44,7 +46,9 @@ jobs:
           cache: 'npm'
       
       - name: Install dependencies
-        run: npm ci
+        run: |
+          npm ci
+          npm install --force @biomejs/cli-linux-x64 @rollup/rollup-linux-x64-gnu
       
       - name: Run TypeScript type check
         run: npm run type-check
@@ -65,7 +69,9 @@ jobs:
           cache: 'npm'
       
       - name: Install dependencies
-        run: npm ci
+        run: |
+          npm ci
+          npm install --force @biomejs/cli-linux-x64 @rollup/rollup-linux-x64-gnu
       
       - name: Run tests
         run: npm run test:run
@@ -90,7 +96,9 @@ jobs:
           cache: 'npm'
       
       - name: Install dependencies
-        run: npm ci
+        run: |
+          npm ci
+          npm install --force @biomejs/cli-linux-x64 @rollup/rollup-linux-x64-gnu
       
       - name: Build project
         run: npm run build
@@ -119,7 +127,9 @@ jobs:
           cache: 'npm'
       
       - name: Install dependencies
-        run: npm ci
+        run: |
+          npm ci
+          npm install --force @biomejs/cli-linux-x64 @rollup/rollup-linux-x64-gnu
       
       - name: Run security audit
         run: npm audit --audit-level=moderate
@@ -150,7 +160,9 @@ jobs:
           cache: 'npm'
       
       - name: Install dependencies
-        run: npm ci
+        run: |
+          npm ci
+          npm install --force @biomejs/cli-linux-x64 @rollup/rollup-linux-x64-gnu
       
       - name: Build project
         run: npm run build

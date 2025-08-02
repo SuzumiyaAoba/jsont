@@ -1,4 +1,5 @@
 {
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
   "permissions": {
     "allow": [
       "Bash(npm run build:*)",
@@ -79,7 +80,15 @@
       "Bash(git reset:*)",
       "Bash(gh issue list:*)",
       "Bash(git rm:*)",
-      "Bash(tree:*)"
+      "Bash(tree:*)",
+      "Bash(sed:*)",
+      "Bash(npx vitest:*)",
+      "Bash(for module in \"useDebug\" \"useUI\" \"useSearch\" \"useNavigation\" \"useJq\" \"useExport\")",
+      "Bash(do)",
+      "Bash(done)",
+      "mcp__serena__list_dir",
+      "mcp__serena__replace_regex",
+      "mcp__serena__search_for_pattern"
     ],
     "deny": []
   }

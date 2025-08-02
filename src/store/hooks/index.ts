@@ -12,5 +12,7 @@ export * from "./useJq";
 export * from "./useNavigation";
 // Search hooks
 export * from "./useSearch";
+// Settings hooks
+export * from "./useSettings";
 // UI hooks
 export * from "./useUI";

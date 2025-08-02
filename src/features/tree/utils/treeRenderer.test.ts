@@ -3,6 +3,7 @@
  */
 
 import { describe, expect, it } from "vitest";
+import type { TreeLine } from "../types/tree";
 import { buildTreeFromJson } from "./treeBuilder";
 import {
   getTreeLineText,
@@ -33,9 +34,12 @@ describe("treeRenderer", () => {
       expect(lines[2]?.value).toBe("30");
 
       // Test actual display text with proper indentation
-      expect(getTreeLineText(lines[0]!)).toBe(".");
-      expect(getTreeLineText(lines[1]!)).toBe('├─ name: "John"');
-      expect(getTreeLineText(lines[2]!)).toBe("└─ age: 30");
+      expect(lines[0]).toBeDefined();
+      expect(getTreeLineText(lines[0] as TreeLine)).toBe(".");
+      expect(lines[1]).toBeDefined();
+      expect(getTreeLineText(lines[1] as TreeLine)).toBe('├─ name: "John"');
+      expect(lines[2]).toBeDefined();
+      expect(getTreeLineText(lines[2] as TreeLine)).toBe("└─ age: 30");
     });
 
     it("should render array with indices", () => {
@@ -60,8 +64,10 @@ describe("treeRenderer", () => {
 
       // Test actual display text with proper indentation for array
       expect(getTreeLineText(lines[0]!)).toBe("3:");
+      expect(lines[1]).toBeDefined();
       expect(getTreeLineText(lines[1]!)).toBe('├─ 0: "a"');
       expect(getTreeLineText(lines[2]!)).toBe('├─ 1: "b"');
+      expect(lines[3]).toBeDefined();
       expect(getTreeLineText(lines[3]!)).toBe('└─ 2: "c"');
     });
 
@@ -89,8 +95,10 @@ describe("treeRenderer", () => {
       expect(lines[1]?.type).toBe("object");
 
       // Test nested structure indentation
-      expect(getTreeLineText(lines[0]!)).toBe("."); // root object
-      expect(getTreeLineText(lines[1]!)).toBe("└─ user"); // user object (no extra indentation)
+      expect(lines[0]).toBeDefined();
+      expect(getTreeLineText(lines[0] as TreeLine)).toBe("."); // root object
+      expect(lines[1]).toBeDefined();
+      expect(getTreeLineText(lines[1] as TreeLine)).toBe("└─ user"); // user object (no extra indentation)
       // The nested elements should have proper indentation from the user level
       const userNameLine = lines.find((line) => line.key === "name");
       const contactsLine = lines.find((line) => line.key === "contacts");
@@ -110,7 +118,7 @@ describe("treeRenderer", () => {
       };
 
       const lines = renderTreeLines(tree, options);
-      const lineText = getTreeLineText(lines[1] || lines[0]!);
+      const lineText = getTreeLineText((lines[1] || lines[0]) as TreeLine);
 
       expect(lineText).toContain("`-- "); // ASCII last branch symbol
     });
