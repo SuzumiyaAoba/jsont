@@ -31,9 +31,9 @@ describe("Application Entry Point", () => {
     expect(typeof instance.run).toBe("function");
   });
 
-  it("should handle ES module requirements", () => {
+  it("should handle ES module requirements", async () => {
     // Verify that the entry point is compatible with ES modules
-    expect(typeof import("./index")).toBe("object");
+    await expect(import("./index")).resolves.toBeTypeOf("object");
   });
 
   it("should have proper entry point structure", async () => {

@@ -2,7 +2,7 @@
  * Tests for Result-based error handling utilities
  */
 
-import type { JsonValue } from "@core/types/index";
+import type { JsonValue } from "@core/types";
 import {
   combineResults,
   createError,
