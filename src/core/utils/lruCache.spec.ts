@@ -2,8 +2,8 @@
  * Tests for LRUCache utility
  */
 
+import { LRUCache } from "@core/utils/lruCache";
 import { describe, expect, it } from "vitest";
-import { LRUCache } from "./lruCache";
 
 describe("LRUCache", () => {
   describe("Constructor", () => {

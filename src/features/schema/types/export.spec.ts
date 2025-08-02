@@ -2,8 +2,11 @@
  * Tests for export type definitions
  */
 
+import type {
+  ExportDialogState,
+  ExportPreferences,
+} from "@features/schema/types/export";
 import { describe, expect, it } from "vitest";
-import type { ExportDialogState, ExportPreferences } from "./export";
 
 describe("export types", () => {
   describe("ExportDialogState", () => {

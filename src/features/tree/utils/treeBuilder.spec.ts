@@ -2,13 +2,13 @@
  * Tests for tree builder utilities
  */
 
-import { describe, expect, it } from "vitest";
 import {
   buildTreeFromJson,
   collapseAll,
   expandAll,
   toggleNodeExpansion,
-} from "./treeBuilder.js";
+} from "@features/tree/utils/treeBuilder.js";
+import { describe, expect, it } from "vitest";
 
 describe("treeBuilder", () => {
   describe("buildTreeFromJson", () => {

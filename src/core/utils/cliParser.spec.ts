@@ -2,8 +2,8 @@
  * Tests for CLI argument parser
  */
 
+import { parseCliArgs, showHelp, showVersion } from "@core/utils/cliParser";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { parseCliArgs, showHelp, showVersion } from "./cliParser";
 
 describe("CLI Parser", () => {
   describe("parseCliArgs", () => {

@@ -2,8 +2,8 @@
  * Tests for XmlConverter
  */
 
+import { XmlConverter } from "@core/utils/dataConverters/XmlConverter";
 import { describe, expect, it } from "vitest";
-import { XmlConverter } from "./XmlConverter";
 
 describe("XmlConverter", () => {
   const converter = new XmlConverter();

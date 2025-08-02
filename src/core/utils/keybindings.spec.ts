@@ -2,12 +2,12 @@
  * Tests for keybinding utilities
  */
 
-import type { KeyBindings } from "./../config/types.js";
+import type { KeyBindings } from "@core/config/types";
 import {
   createKeybindingMatcher,
   type KeyboardInput,
   matchesKeybinding,
-} from "./keybindings.js";
+} from "@core/utils/keybindings";
 
 describe("Keybinding Utilities", () => {
   const testKeybindings: KeyBindings = {

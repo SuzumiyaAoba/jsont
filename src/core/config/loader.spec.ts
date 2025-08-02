@@ -5,20 +5,20 @@
 import { existsSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { DEFAULT_CONFIG } from "./defaults.js";
+import { DEFAULT_CONFIG } from "@core/config/defaults";
 import {
   getConfigPath,
   loadConfig,
   loadConfigFromPath,
   validateConfigWithDetails,
-} from "./loader.js";
+} from "@core/config/loader";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 // Mock os.homedir to use a temporary directory
 const testTmpDir = join(tmpdir(), "jsont-test-config");
 
 // Mock the loader module to use our test directory
-import * as loaderModule from "./loader.js";
+import * as loaderModule from "@core/config/loader";
 
 describe("Configuration Loader", () => {
   const testConfigDir = join(testTmpDir, ".config", "jsont");

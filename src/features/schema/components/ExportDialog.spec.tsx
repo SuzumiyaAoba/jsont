@@ -2,9 +2,9 @@
  * Tests for ExportDialog component logic and props
  */
 
+import type { ExportDialogProps } from "@features/schema/components/ExportDialog";
 import { describe, expect, it, vi } from "vitest";
 import type { ExportOptions } from "../utils/fileExport";
-import type { ExportDialogProps } from "./ExportDialog";
 
 describe("ExportDialog Props and Logic", () => {
   it("should define correct prop interface", () => {

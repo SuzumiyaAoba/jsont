@@ -2,8 +2,8 @@
  * Tests for SqlConverter
  */
 
+import { SqlConverter } from "@core/utils/dataConverters/SqlConverter";
 import { describe, expect, it } from "vitest";
-import { SqlConverter } from "./SqlConverter";
 
 describe("SqlConverter", () => {
   const converter = new SqlConverter();

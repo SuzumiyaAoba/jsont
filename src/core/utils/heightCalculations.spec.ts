@@ -2,7 +2,6 @@
  * Tests for height calculation utilities
  */
 
-import { describe, expect, it } from "vitest";
 import {
   calculateCenteredScroll,
   calculateComponentHeights,
@@ -12,7 +11,8 @@ import {
   calculateTreeViewHeights,
   calculateVisibleEnd,
   calculateVisibleRange,
-} from "./heightCalculations";
+} from "@core/utils/heightCalculations";
+import { describe, expect, it } from "vitest";
 
 describe("Height Calculations", () => {
   describe("calculateComponentHeights", () => {

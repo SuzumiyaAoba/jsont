@@ -3,13 +3,16 @@
  * Ensures proper state management and context provision
  */
 
+import {
+  AppStateProvider,
+  useAppState,
+} from "@components/providers/AppStateProvider";
 import { DEFAULT_CONFIG } from "@core/config/defaults";
 import { ConfigProvider } from "@core/context/ConfigContext";
 import type { JsonValue } from "@core/types/index";
 import { render, screen } from "@testing-library/react";
 import type { ReactElement } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { AppStateProvider, useAppState } from "./AppStateProvider";
 
 // Mock all the complex hooks to focus on testing the provider itself
 vi.mock("@hooks/useExportHandlers", () => ({

@@ -3,6 +3,7 @@
  * Ensures proper modal management and priority system
  */
 
+import { ModalManager } from "@components/modals/ModalManager";
 import { AppStateProvider } from "@components/providers/AppStateProvider";
 import { DEFAULT_CONFIG } from "@core/config/defaults";
 import { ConfigProvider } from "@core/context/ConfigContext";
@@ -10,7 +11,6 @@ import type { AppMode } from "@core/types/app";
 import type { JsonValue } from "@core/types/index";
 import { render } from "@testing-library/react";
 import type { ReactElement } from "react";
-import { ModalManager } from "./ModalManager";
 
 // Mock ConfigContext
 vi.mock("@core/context/ConfigContext", () => ({

@@ -3,8 +3,11 @@
  */
 
 import type { JsonValue } from "@core/types/index";
+import {
+  readFromFile,
+  readStdinThenReinitialize,
+} from "@core/utils/stdinHandler";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { readFromFile, readStdinThenReinitialize } from "./stdinHandler";
 
 // Mock dependencies
 vi.mock("@features/json-rendering/utils/jsonProcessor", () => ({

@@ -159,7 +159,7 @@ describe("Library Integration", () => {
     it("should support ES module imports", () => {
       // Test ES module import/export functionality
       const moduleImport = async () => {
-        const module = await import("./core/types/index");
+        const module = await import("@core/types");
         return module;
       };
 

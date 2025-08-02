@@ -2,9 +2,9 @@
  * Tests for process management utilities
  */
 
+import { ProcessManager } from "@core/utils/processManager";
+import type { TerminalManager } from "@core/utils/terminal";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { ProcessManager } from "./processManager";
-import type { TerminalManager } from "./terminal";
 
 // Mock TerminalManager
 const mockTerminalManager = {

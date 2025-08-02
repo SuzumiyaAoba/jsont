@@ -3,13 +3,13 @@
  * Specifically testing the functionality around line 26 and getVisibleTreeLines
  */
 
-import { beforeEach, describe, expect, it } from "vitest";
-import { buildTreeFromJson, expandAll } from "./treeBuilder";
+import { buildTreeFromJson, expandAll } from "@features/tree/utils/treeBuilder";
 import {
   getTreeLineText,
   getVisibleTreeLines,
   renderTreeLines,
-} from "./treeRenderer";
+} from "@features/tree/utils/treeRenderer";
+import { beforeEach, describe, expect, it } from "vitest";
 
 describe("Tree Line Generation and Visibility", () => {
   // Debug data from debug_test.json

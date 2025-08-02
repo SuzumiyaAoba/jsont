@@ -92,7 +92,7 @@ describe("Development Tools Integration", () => {
     it("should support TypeScript imports", () => {
       // Test that dynamic imports work with Vitest
       const moduleImport = async () => {
-        const module = await import("./core/types/index");
+        const module = await import("@core/types");
         return module;
       };
 

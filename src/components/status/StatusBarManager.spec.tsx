@@ -4,11 +4,11 @@
  */
 
 import { AppStateProvider } from "@components/providers/AppStateProvider";
+import { StatusBarManager } from "@components/status/StatusBarManager";
 import { DEFAULT_CONFIG } from "@core/config/defaults";
 import { ConfigProvider } from "@core/context/ConfigContext";
 import { render } from "@testing-library/react";
 import type { ReactElement } from "react";
-import { StatusBarManager } from "./StatusBarManager";
 
 // Mock ConfigContext
 vi.mock("@core/context/ConfigContext", () => ({

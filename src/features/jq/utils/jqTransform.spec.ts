@@ -2,8 +2,12 @@
  * Tests for jq transformation utilities
  */
 
+import {
+  getJqExamples,
+  transformWithJq,
+  validateJqQuery,
+} from "@features/jq/utils/jqTransform";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { getJqExamples, transformWithJq, validateJqQuery } from "./jqTransform";
 
 // Mock node-jq
 vi.mock("node-jq", () => ({

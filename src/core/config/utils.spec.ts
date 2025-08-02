@@ -2,9 +2,8 @@
  * Tests for configuration utilities with defu
  */
 
-import { describe, expect, it } from "vitest";
-import { DEFAULT_CONFIG } from "./defaults.js";
-import type { JsontConfig, PartialJsontConfig } from "./types.js";
+import { DEFAULT_CONFIG } from "@core/config/defaults";
+import type { JsontConfig, PartialJsontConfig } from "@core/config/types";
 import {
   applyConfigPreset,
   CONFIG_BUILDERS,
@@ -14,7 +13,8 @@ import {
   getConfigSummary,
   isDefaultConfig,
   smartMergeConfigs,
-} from "./utils.js";
+} from "@core/config/utils";
+import { describe, expect, it } from "vitest";
 
 describe("Configuration Utils with defu", () => {
   describe("createConfigPreset", () => {

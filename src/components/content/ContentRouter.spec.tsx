@@ -3,6 +3,7 @@
  * Ensures proper content routing between different view modes
  */
 
+import { ContentRouter } from "@components/content/ContentRouter";
 import { AppStateProvider } from "@components/providers/AppStateProvider";
 import { DEFAULT_CONFIG } from "@core/config/defaults";
 import { ConfigProvider } from "@core/context/ConfigContext";
@@ -11,7 +12,6 @@ import type { JsonValue } from "@core/types/index";
 import { render, screen } from "@testing-library/react";
 import type { ReactElement } from "react";
 import { createRef } from "react";
-import { ContentRouter } from "./ContentRouter";
 
 // Mock ConfigContext
 vi.mock("@core/context/ConfigContext", () => ({

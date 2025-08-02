@@ -3,11 +3,11 @@
  * Ensures proper keyboard input handling and delegation
  */
 
+import { KeyboardManager } from "@components/keyboard/KeyboardManager";
 import { AppStateProvider } from "@components/providers/AppStateProvider";
 import { DEFAULT_CONFIG } from "@core/config/defaults";
 import { ConfigProvider } from "@core/context/ConfigContext";
 import { render } from "@testing-library/react";
-import { KeyboardManager } from "./KeyboardManager";
 
 // Mock ConfigContext
 vi.mock("@core/context/ConfigContext", () => ({

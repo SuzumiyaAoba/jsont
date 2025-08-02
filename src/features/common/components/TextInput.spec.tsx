@@ -2,18 +2,18 @@
  * Comprehensive test suite for unified TextInput component and utilities
  */
 
-import { beforeEach, describe, expect, it, vi } from "vitest";
 import type {
   KeyboardEvent,
   TextInputActions,
   TextInputState,
-} from "./TextInput";
+} from "@features/common/components/TextInput";
 import {
   convertLegacyState,
   convertToLegacyState,
   handleTextInput,
   renderTextWithCursor,
-} from "./TextInput";
+} from "@features/common/components/TextInput";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 describe("Unified TextInput System", () => {
   let mockSetText: ReturnType<typeof vi.fn>;

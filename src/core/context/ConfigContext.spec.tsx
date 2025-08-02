@@ -2,11 +2,15 @@
  * Configuration context tests
  */
 
+import type { JsontConfig } from "@core/config/index";
+import {
+  ConfigProvider,
+  useConfig,
+  useConfigValue,
+} from "@core/context/ConfigContext";
 import { Text } from "ink";
 import { render } from "ink-testing-library";
 import { describe, expect, it, vi } from "vitest";
-import type { JsontConfig } from "./../config/index.js";
-import { ConfigProvider, useConfig, useConfigValue } from "./ConfigContext.js";
 
 // Mock the config loader - mock the index.js file since that's what ConfigContext imports
 vi.mock("../../config/index.js", () => ({

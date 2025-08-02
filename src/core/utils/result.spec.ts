@@ -3,7 +3,6 @@
  */
 
 import type { JsonValue } from "@core/types/index";
-import { describe, expect, it } from "vitest";
 import {
   combineResults,
   createError,
@@ -13,7 +12,8 @@ import {
   safe,
   safeDetectJsonFormat,
   validateJsonStructure,
-} from "./result";
+} from "@core/utils/result";
+import { describe, expect, it } from "vitest";
 
 describe("Result utilities", () => {
   describe("parseJsonSafely", () => {

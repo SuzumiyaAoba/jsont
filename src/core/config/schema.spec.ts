@@ -2,8 +2,7 @@
  * Tests for Zod configuration validation schemas
  */
 
-import { describe, expect, it } from "vitest";
-import { DEFAULT_CONFIG } from "./defaults.js";
+import { DEFAULT_CONFIG } from "@core/config/defaults";
 import {
   coerceToPartialConfig,
   getValidationErrors,
@@ -11,7 +10,8 @@ import {
   safeValidatePartialJsontConfig,
   validateJsontConfig,
   validatePartialJsontConfig,
-} from "./schema.js";
+} from "@core/config/schema";
+import { describe, expect, it } from "vitest";
 
 describe("Configuration Schema Validation", () => {
   describe("jsontConfigSchema", () => {

@@ -2,8 +2,8 @@
  * Tests for AppService
  */
 
+import { AppService } from "@core/services/appService";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { AppService } from "./appService";
 
 // Mock dependencies
 vi.mock("@core/utils/cliParser", () => ({

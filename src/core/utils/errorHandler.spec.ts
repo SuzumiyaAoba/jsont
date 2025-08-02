@@ -2,13 +2,13 @@
  * Tests for error handling utilities
  */
 
-import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   getErrorMessage,
   handleFatalError,
   handleInputError,
   handleNoInput,
-} from "./errorHandler";
+} from "@core/utils/errorHandler";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 describe("Error Handler", () => {
   let consoleSpy: ReturnType<typeof vi.spyOn>;

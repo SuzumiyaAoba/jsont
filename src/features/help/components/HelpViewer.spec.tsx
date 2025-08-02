@@ -3,9 +3,9 @@
  */
 
 import type { KeyBindings } from "@core/config/types";
+import { HelpViewer } from "@features/help/components/HelpViewer";
 import { render } from "ink-testing-library";
 import { describe, expect, it } from "vitest";
-import { HelpViewer } from "./HelpViewer";
 
 const mockKeybindings: KeyBindings = {
   navigation: {

@@ -2,14 +2,14 @@
  * Tests for tree renderer utilities
  */
 
-import { describe, expect, it } from "vitest";
-import type { TreeLine } from "../types/tree";
-import { buildTreeFromJson } from "./treeBuilder";
+import { buildTreeFromJson } from "@features/tree/utils/treeBuilder";
 import {
   getTreeLineText,
   renderTreeLines,
   searchTreeNodes,
-} from "./treeRenderer";
+} from "@features/tree/utils/treeRenderer";
+import { describe, expect, it } from "vitest";
+import type { TreeLine } from "../types/tree";
 
 describe("treeRenderer", () => {
   describe("renderTreeLines", () => {
