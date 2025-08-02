@@ -3,8 +3,8 @@
  */
 
 import { describe, expect, it, vi } from "vitest";
+import type { ExportOptions } from "../utils/fileExport";
 import type { ExportDialogProps } from "./ExportDialog";
-import type { ExportOptions } from "./utils/fileExport";
 
 describe("ExportDialog Props and Logic", () => {
   it("should define correct prop interface", () => {

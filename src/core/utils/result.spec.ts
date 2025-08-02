@@ -2,6 +2,7 @@
  * Tests for Result-based error handling utilities
  */
 
+import type { JsonValue } from "@core/types/index";
 import { describe, expect, it } from "vitest";
 import {
   combineResults,
@@ -13,7 +14,6 @@ import {
   safeDetectJsonFormat,
   validateJsonStructure,
 } from "./result";
-import type { JsonValue } from "./types";
 
 describe("Result utilities", () => {
   describe("parseJsonSafely", () => {

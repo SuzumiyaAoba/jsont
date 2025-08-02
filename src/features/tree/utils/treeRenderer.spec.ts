@@ -3,13 +3,13 @@
  */
 
 import { describe, expect, it } from "vitest";
+import type { TreeLine } from "../types/tree";
 import { buildTreeFromJson } from "./treeBuilder";
 import {
   getTreeLineText,
   renderTreeLines,
   searchTreeNodes,
 } from "./treeRenderer";
-import type { TreeLine } from "./types/tree";
 
 describe("treeRenderer", () => {
   describe("renderTreeLines", () => {

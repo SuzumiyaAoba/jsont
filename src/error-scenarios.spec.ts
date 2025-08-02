@@ -82,7 +82,7 @@ describe("Critical Error Scenarios", () => {
       const circularObj: { name: string; self?: unknown } = { name: "test" };
       circularObj.self = circularObj;
 
-      const validation = validateJsonStructure(circularObj);
+      const validation = validateJsonStructure(circularObj as any);
       expect(validation.isValid).toBe(false);
       expect(validation.error).toMatch(
         /circular reference|Maximum call stack/i,
@@ -99,12 +99,12 @@ describe("Critical Error Scenarios", () => {
       const deepObj: Record<string, unknown> = {};
       let current = deepObj;
       for (let i = 0; i < 20; i++) {
-        current.nested = {};
-        current = current.nested as Record<string, unknown>;
+        current["nested"] = {};
+        current = current["nested"] as Record<string, unknown>;
       }
-      current.value = "deep";
+      current["value"] = "deep";
 
-      const validation = validateJsonStructure(deepObj);
+      const validation = validateJsonStructure(deepObj as any);
       expect(validation.isValid).toBe(true);
       expect(validation.warnings).toContain("excessive-depth");
     });
@@ -116,7 +116,7 @@ describe("Critical Error Scenarios", () => {
         largeObject[`key_${i}`] = "x".repeat(1000);
       }
 
-      const validation = validateJsonStructure(largeObject);
+      const validation = validateJsonStructure(largeObject as any);
       expect(validation.isValid).toBe(true);
       expect(validation.warnings).toContain("large-size");
       expect(validation.warnings).toContain("many-keys");
@@ -135,12 +135,12 @@ describe("Critical Error Scenarios", () => {
       const result = parseJsonWithValidation(JSON.stringify(complexJson));
       expect(result.success).toBe(true);
       expect(result.validation.isValid).toBe(true);
-      expect(result.validation.stats?.types.string).toBeGreaterThan(0);
-      expect(result.validation.stats?.types.number).toBeGreaterThan(0);
-      expect(result.validation.stats?.types.boolean).toBeGreaterThan(0);
-      expect(result.validation.stats?.types.null).toBeGreaterThan(0);
-      expect(result.validation.stats?.types.array).toBeGreaterThan(0);
-      expect(result.validation.stats?.types.object).toBeGreaterThan(0);
+      expect(result.validation.stats?.types["string"]).toBeGreaterThan(0);
+      expect(result.validation.stats?.types["number"]).toBeGreaterThan(0);
+      expect(result.validation.stats?.types["boolean"]).toBeGreaterThan(0);
+      expect(result.validation.stats?.types["null"]).toBeGreaterThan(0);
+      expect(result.validation.stats?.types["array"]).toBeGreaterThan(0);
+      expect(result.validation.stats?.types["object"]).toBeGreaterThan(0);
     });
 
     it("should detect different JSON formats correctly", () => {
@@ -260,7 +260,7 @@ describe("Critical Error Scenarios", () => {
       const result = parseJsonSafely(JSON.stringify(reasonableLargeObject));
       expect(result.success).toBe(true);
 
-      const validation = validateJsonStructure(reasonableLargeObject);
+      const validation = validateJsonStructure(reasonableLargeObject as any);
       expect(validation.isValid).toBe(true);
     });
 
