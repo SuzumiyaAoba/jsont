@@ -34,12 +34,13 @@ describe("treeRenderer", () => {
       expect(lines[2]?.value).toBe("30");
 
       // Test actual display text with proper indentation
-      expect(lines[0]).toBeDefined();
-      expect(getTreeLineText(lines[0] as TreeLine)).toBe(".");
-      expect(lines[1]).toBeDefined();
-      expect(getTreeLineText(lines[1] as TreeLine)).toBe('├─ name: "John"');
-      expect(lines[2]).toBeDefined();
-      expect(getTreeLineText(lines[2] as TreeLine)).toBe("└─ age: 30");
+      const expectedLines = [".", '├─ name: "John"', "└─ age: 30"];
+
+      expect(lines).toHaveLength(expectedLines.length);
+      lines.forEach((line, index) => {
+        expect(line).toBeDefined();
+        expect(getTreeLineText(line as TreeLine)).toBe(expectedLines[index]);
+      });
     });
 
     it("should render array with indices", () => {
@@ -63,21 +64,13 @@ describe("treeRenderer", () => {
       expect(lines[2]?.value).toBe('"b"');
 
       // Test actual display text with proper indentation for array
-      const firstLine = lines[0];
-      expect(firstLine).toBeDefined();
-      expect(getTreeLineText(firstLine as TreeLine)).toBe("3:");
+      const expectedLines = ["3:", '├─ 0: "a"', '├─ 1: "b"', '└─ 2: "c"'];
 
-      const secondLine = lines[1];
-      expect(secondLine).toBeDefined();
-      expect(getTreeLineText(secondLine as TreeLine)).toBe('├─ 0: "a"');
-
-      const thirdLine = lines[2];
-      expect(thirdLine).toBeDefined();
-      expect(getTreeLineText(thirdLine as TreeLine)).toBe('├─ 1: "b"');
-
-      const fourthLine = lines[3];
-      expect(fourthLine).toBeDefined();
-      expect(getTreeLineText(fourthLine as TreeLine)).toBe('└─ 2: "c"');
+      expect(lines).toHaveLength(expectedLines.length);
+      lines.forEach((line, index) => {
+        expect(line).toBeDefined();
+        expect(getTreeLineText(line as TreeLine)).toBe(expectedLines[index]);
+      });
     });
 
     it("should handle nested structures", () => {
