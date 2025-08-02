@@ -33,7 +33,9 @@ describe("SqlConverter", () => {
   describe("validate", () => {
     it("should validate null and undefined", () => {
       expect(converter.validate(null).isOk()).toBe(true);
-      expect(converter.validate(undefined as any).isOk()).toBe(true);
+      expect(converter.validate(undefined as unknown as JsonValue).isOk()).toBe(
+        true,
+      );
     });
 
     it("should validate simple values", () => {

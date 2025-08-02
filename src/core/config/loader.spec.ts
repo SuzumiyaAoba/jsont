@@ -25,7 +25,7 @@ describe("Configuration Loader", () => {
   const testConfigPath = join(testConfigDir, "config.yaml");
 
   // Spy on getConfigPath to return our test path
-  let getConfigPathSpy: any;
+  let getConfigPathSpy: ReturnType<typeof vi.spyOn>;
 
   beforeEach(() => {
     // Restore any existing spy first

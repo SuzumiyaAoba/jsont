@@ -115,7 +115,7 @@ describe("Stdin Handler", () => {
       mockStdin.isTTY = false;
 
       vi.mocked(mockStdin.on).mockImplementation(
-        (event: string, callback: any) => {
+        (event: string, callback: (data?: Buffer | Error) => void) => {
           if (event === "data") {
             setTimeout(() => callback(Buffer.from(jsonString)), 0);
           } else if (event === "end") {
@@ -139,7 +139,7 @@ describe("Stdin Handler", () => {
       mockStdin.isTTY = false;
 
       vi.mocked(mockStdin.on).mockImplementation(
-        (event: string, callback: any) => {
+        (event: string, callback: (data?: Buffer | Error) => void) => {
           if (event === "data") {
             setTimeout(() => callback(Buffer.from("")), 0);
           } else if (event === "end") {
@@ -171,7 +171,7 @@ describe("Stdin Handler", () => {
       mockStdin.isTTY = false;
 
       vi.mocked(mockStdin.on).mockImplementation(
-        (event: string, callback: any) => {
+        (event: string, callback: (data?: Buffer | Error) => void) => {
           if (event === "data") {
             setTimeout(() => callback(Buffer.from(invalidJson)), 0);
           } else if (event === "end") {
@@ -211,7 +211,7 @@ describe("Stdin Handler", () => {
       mockStdin.isTTY = false;
 
       vi.mocked(mockStdin.on).mockImplementation(
-        (event: string, callback: any) => {
+        (event: string, callback: (data?: Buffer | Error) => void) => {
           if (event === "error") {
             setTimeout(() => callback(testError), 0);
           }
@@ -245,7 +245,7 @@ describe("Stdin Handler", () => {
 
       let dataCallbackCount = 0;
       vi.mocked(mockStdin.on).mockImplementation(
-        (event: string, callback: any) => {
+        (event: string, callback: (data?: Buffer | Error) => void) => {
           if (event === "data") {
             setTimeout(() => {
               dataCallbackCount++;

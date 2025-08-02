@@ -82,7 +82,9 @@ describe("Critical Error Scenarios", () => {
       const circularObj: { name: string; self?: unknown } = { name: "test" };
       circularObj.self = circularObj;
 
-      const validation = validateJsonStructure(circularObj as any);
+      const validation = validateJsonStructure(
+        circularObj as unknown as JsonValue,
+      );
       expect(validation.isValid).toBe(false);
       expect(validation.error).toMatch(
         /circular reference|Maximum call stack/i,
@@ -104,7 +106,7 @@ describe("Critical Error Scenarios", () => {
       }
       current["value"] = "deep";
 
-      const validation = validateJsonStructure(deepObj as any);
+      const validation = validateJsonStructure(deepObj as unknown as JsonValue);
       expect(validation.isValid).toBe(true);
       expect(validation.warnings).toContain("excessive-depth");
     });
@@ -116,7 +118,9 @@ describe("Critical Error Scenarios", () => {
         largeObject[`key_${i}`] = "x".repeat(1000);
       }
 
-      const validation = validateJsonStructure(largeObject as any);
+      const validation = validateJsonStructure(
+        largeObject as unknown as JsonValue,
+      );
       expect(validation.isValid).toBe(true);
       expect(validation.warnings).toContain("large-size");
       expect(validation.warnings).toContain("many-keys");
@@ -260,7 +264,9 @@ describe("Critical Error Scenarios", () => {
       const result = parseJsonSafely(JSON.stringify(reasonableLargeObject));
       expect(result.success).toBe(true);
 
-      const validation = validateJsonStructure(reasonableLargeObject as any);
+      const validation = validateJsonStructure(
+        reasonableLargeObject as unknown as JsonValue,
+      );
       expect(validation.isValid).toBe(true);
     });
 

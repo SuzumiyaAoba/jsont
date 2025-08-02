@@ -287,7 +287,7 @@ describe("Configuration Utils with defu", () => {
       const config = smartMergeConfigs({
         display: {
           interface: {
-            showLineNumbers: null as any, // null should be ignored
+            showLineNumbers: null as unknown as boolean, // null should be ignored
           },
         },
       });
