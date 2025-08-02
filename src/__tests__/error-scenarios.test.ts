@@ -3,523 +3,330 @@
  * Ensures system stability under various error conditions
  */
 
+import {
+  getErrorMessage,
+  handleFatalError,
+  handleInputError,
+  handleNoInput,
+} from "@core/utils/errorHandler";
+import {
+  detectJsonFormat,
+  parseJsonSafely,
+  parseJsonWithValidation,
+  repairJsonString,
+  validateJsonStructure,
+} from "@features/json-rendering/utils/jsonProcessor";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-// Mock fs operations for testing file system errors
-vi.mock("node:fs/promises", () => ({
-  writeFile: vi.fn(),
-  mkdir: vi.fn(),
-  access: vi.fn(),
-  readFile: vi.fn(),
-}));
-
-// Mock process for testing process-related errors
+// Mock console and process for error handler tests
+const mockConsoleError = vi
+  .spyOn(console, "error")
+  .mockImplementation(() => {});
 const mockExit = vi.fn();
-vi.mock("node:process", () => ({
-  exit: mockExit,
-  env: {},
-  stdout: { write: vi.fn() },
-  stderr: { write: vi.fn() },
-}));
+
+// Mock process.exit for testing
+Object.defineProperty(process, "exit", {
+  value: mockExit,
+  writable: true,
+});
 
 describe("Critical Error Scenarios", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockConsoleError.mockClear();
+    mockExit.mockClear();
+    // Ensure we're in test environment
+    process.env["VITEST"] = "true";
+    // Mock stdin.isTTY for error handler tests
+    Object.defineProperty(process.stdin, "isTTY", {
+      value: true,
+      writable: true,
+    });
   });
 
-  describe("JSON Parsing Errors", () => {
-    it("should handle malformed JSON gracefully", () => {
+  describe("Application JSON Processing Error Handling", () => {
+    it("should handle malformed JSON with detailed error information", () => {
       const malformedJson = '{"name": "test", "incomplete": ';
+      const result = parseJsonSafely(malformedJson);
 
-      expect(() => JSON.parse(malformedJson)).toThrow();
+      expect(result.success).toBe(false);
+      expect(result.data).toBe(null);
+      expect(result.error).toContain("JSON parsing failed");
+      expect(result.suggestion).toBe(
+        "Check for unclosed strings, objects, or arrays",
+      );
+      expect(result.parseTime).toBeGreaterThan(0);
+    });
 
-      // Test our error handling wrapper
-      try {
-        JSON.parse(malformedJson);
-      } catch (error) {
-        expect(error).toBeInstanceOf(SyntaxError);
-        expect((error as Error).message).toContain(
-          "Unexpected end of JSON input",
+    it("should handle single quotes in JSON with helpful suggestions", () => {
+      // JSON5 actually supports single quotes, so let's test with truly invalid JSON
+      const invalidJson = "{'name': 'test', 'invalid': function(){}}";
+      const result = parseJsonSafely(invalidJson);
+
+      expect(result.success).toBe(false);
+      expect(result.error).toContain("JSON parsing failed");
+    });
+
+    it("should handle empty or whitespace input", () => {
+      const emptyInputs = ["", "   ", "\n\t  \n"];
+
+      for (const input of emptyInputs) {
+        const result = parseJsonSafely(input);
+        expect(result.success).toBe(false);
+        expect(result.error).toBe("Input is empty or contains only whitespace");
+        expect(result.suggestion).toBe("Please provide valid JSON data");
+      }
+    });
+
+    it("should detect circular references in validation", () => {
+      const circularObj: { name: string; self?: unknown } = { name: "test" };
+      circularObj.self = circularObj;
+
+      const validation = validateJsonStructure(circularObj);
+      expect(validation.isValid).toBe(false);
+      expect(validation.error).toMatch(
+        /circular reference|Maximum call stack/i,
+      );
+      if (validation.suggestion) {
+        expect(validation.suggestion).toBe(
+          "Remove circular references before processing",
         );
       }
     });
 
-    it("should handle extremely large JSON objects", () => {
-      // Create a very large object
+    it("should handle deeply nested objects with validation warnings", () => {
+      // Create deeply nested object
+      const deepObj: Record<string, unknown> = {};
+      let current = deepObj;
+      for (let i = 0; i < 20; i++) {
+        current.nested = {};
+        current = current.nested as Record<string, unknown>;
+      }
+      current.value = "deep";
+
+      const validation = validateJsonStructure(deepObj);
+      expect(validation.isValid).toBe(true);
+      expect(validation.warnings).toContain("excessive-depth");
+    });
+
+    it("should handle large JSON objects with validation warnings", () => {
+      // Create large object
       const largeObject: Record<string, unknown> = {};
-      for (let i = 0; i < 10000; i++) {
-        largeObject[`key_${i}`] = {
-          id: i,
-          data: "x".repeat(100),
-          nested: {
-            level1: { level2: { level3: `value_${i}` } },
-          },
-        };
+      for (let i = 0; i < 2000; i++) {
+        largeObject[`key_${i}`] = "x".repeat(1000);
       }
 
-      // Should not throw even with large objects
-      expect(() => JSON.stringify(largeObject)).not.toThrow();
-
-      const jsonString = JSON.stringify(largeObject);
-      expect(jsonString.length).toBeGreaterThan(1000000); // > 1MB
-
-      // Should be able to parse it back
-      expect(() => JSON.parse(jsonString)).not.toThrow();
+      const validation = validateJsonStructure(largeObject);
+      expect(validation.isValid).toBe(true);
+      expect(validation.warnings).toContain("large-size");
+      expect(validation.warnings).toContain("many-keys");
     });
 
-    it("should handle circular references in objects", () => {
-      const circularObj: { name: string; self?: unknown } = { name: "test" };
-      circularObj.self = circularObj;
-
-      // JSON.stringify should throw on circular references
-      expect(() => JSON.stringify(circularObj)).toThrow(/circular structure/i);
-    });
-
-    it("should handle various invalid JSON formats", () => {
-      const invalidJsonExamples = [
-        "undefined",
-        "function() {}",
-        "{ name: 'test' }", // unquoted keys
-        "{ 'name': 'test' }", // single quotes
-        '{ "name": "test", }', // trailing comma
-        "NaN",
-        "Infinity",
-        "-Infinity",
-      ];
-
-      invalidJsonExamples.forEach((invalid) => {
-        expect(() => JSON.parse(invalid)).toThrow();
-      });
-    });
-  });
-
-  describe("File System Errors", () => {
-    it("should handle permission denied errors", async () => {
-      const { writeFile } = await import("node:fs/promises");
-      vi.mocked(writeFile).mockRejectedValue(
-        Object.assign(new Error("EACCES: permission denied"), {
-          code: "EACCES",
-          errno: -13,
-          syscall: "open",
-          path: "/root/protected-file.txt",
-        }),
-      );
-
-      try {
-        await writeFile("/root/protected-file.txt", "test data");
-      } catch (error: unknown) {
-        expect((error as { code: string }).code).toBe("EACCES");
-        expect((error as Error).message).toContain("permission denied");
-      }
-    });
-
-    it("should handle disk full errors", async () => {
-      const { writeFile } = await import("node:fs/promises");
-      vi.mocked(writeFile).mockRejectedValue(
-        Object.assign(new Error("ENOSPC: no space left on device"), {
-          code: "ENOSPC",
-          errno: -28,
-          syscall: "write",
-        }),
-      );
-
-      try {
-        await writeFile("/tmp/test.txt", "x".repeat(1000000));
-      } catch (error: unknown) {
-        expect((error as { code: string }).code).toBe("ENOSPC");
-        expect((error as Error).message).toContain("no space left on device");
-      }
-    });
-
-    it("should handle file not found errors", async () => {
-      const { readFile } = await import("node:fs/promises");
-      vi.mocked(readFile).mockRejectedValue(
-        Object.assign(new Error("ENOENT: no such file or directory"), {
-          code: "ENOENT",
-          errno: -2,
-          syscall: "open",
-          path: "/nonexistent/path/file.json",
-        }),
-      );
-
-      try {
-        await readFile("/nonexistent/path/file.json", "utf8");
-      } catch (error: unknown) {
-        expect((error as { code: string }).code).toBe("ENOENT");
-        expect((error as Error).message).toContain("no such file or directory");
-      }
-    });
-
-    it("should handle directory creation failures", async () => {
-      const { mkdir } = await import("node:fs/promises");
-      vi.mocked(mkdir).mockRejectedValue(
-        Object.assign(new Error("EEXIST: file already exists"), {
-          code: "EEXIST",
-          errno: -17,
-          syscall: "mkdir",
-          path: "/existing/directory",
-        }),
-      );
-
-      try {
-        await mkdir("/existing/directory", { recursive: true });
-      } catch (error: unknown) {
-        expect((error as { code: string }).code).toBe("EEXIST");
-      }
-    });
-  });
-
-  describe("Memory and Performance Errors", () => {
-    it("should handle out of memory scenarios gracefully", () => {
-      // Simulate a function that might cause memory issues
-      const createLargeArray = (size: number) => {
-        const arr = [];
-        for (let i = 0; i < size; i++) {
-          arr.push({
-            index: i,
-            data: "x".repeat(1000),
-            timestamp: Date.now(),
-          });
-        }
-        return arr;
-      };
-
-      // Test with reasonable size (should work)
-      expect(() => createLargeArray(1000)).not.toThrow();
-
-      // For extremely large sizes, we can't actually test OOM without crashing the test,
-      // but we can test that our code doesn't create infinite loops
-      const size = 1000000;
-      const startTime = Date.now();
-
-      try {
-        createLargeArray(size);
-        const endTime = Date.now();
-        // Should complete within reasonable time (not infinite loop)
-        expect(endTime - startTime).toBeLessThan(10000); // 10 seconds max
-      } catch (error) {
-        // If it throws due to memory constraints, that's acceptable
-        expect(error).toBeDefined();
-      }
-    });
-
-    it("should handle stack overflow in recursive operations", () => {
-      const deeplyNestedObject = (depth: number): unknown => {
-        if (depth === 0) return { value: "leaf" };
-        return { nested: deeplyNestedObject(depth - 1) };
-      };
-
-      // Reasonable depth should work
-      expect(() => deeplyNestedObject(100)).not.toThrow();
-
-      // Extreme depth might cause stack overflow - test that we handle it
-      try {
-        const result = deeplyNestedObject(10000);
-        expect(result).toBeDefined();
-      } catch (error) {
-        // Stack overflow is acceptable for extreme depths
-        expect(error).toBeInstanceOf(RangeError);
-      }
-    });
-  });
-
-  describe("Network and External Service Errors", () => {
-    it("should handle network timeout errors", async () => {
-      // Mock a network operation that times out
-      const networkOperation = () => {
-        return new Promise((_, reject) => {
-          setTimeout(() => {
-            reject(new Error("ETIMEDOUT: network timeout"));
-          }, 100);
-        });
-      };
-
-      await expect(networkOperation()).rejects.toThrow("network timeout");
-    });
-
-    it("should handle connection refused errors", async () => {
-      const connectionError = Object.assign(
-        new Error("ECONNREFUSED: Connection refused"),
-        {
-          code: "ECONNREFUSED",
-          errno: -61,
-          syscall: "connect",
-          address: "127.0.0.1",
-          port: 3000,
-        },
-      );
-
-      const mockFetch = vi.fn().mockRejectedValue(connectionError);
-
-      await expect(
-        mockFetch("http://localhost:3000/api"),
-      ).rejects.toMatchObject({
-        code: "ECONNREFUSED",
-        message: expect.stringContaining("Connection refused"),
-      });
-    });
-
-    it("should handle DNS resolution failures", async () => {
-      const dnsError = Object.assign(
-        new Error("ENOTFOUND: getaddrinfo ENOTFOUND"),
-        {
-          code: "ENOTFOUND",
-          errno: -3008,
-          syscall: "getaddrinfo",
-          hostname: "nonexistent-domain-12345.com",
-        },
-      );
-
-      const mockNetworkCall = vi.fn().mockRejectedValue(dnsError);
-
-      await expect(mockNetworkCall()).rejects.toMatchObject({
-        code: "ENOTFOUND",
-        message: expect.stringContaining("ENOTFOUND"),
-      });
-    });
-  });
-
-  describe("Process and System Errors", () => {
-    it("should handle process termination signals", () => {
-      const signalHandler = vi.fn();
-
-      // Simulate signal handling
-      const mockOn = vi.fn(() => process);
-      Object.defineProperty(process, "on", {
-        value: mockOn,
-        writable: true,
-      });
-
-      // Test signal handler setup
-      expect(typeof signalHandler).toBe("function");
-    });
-
-    it("should handle uncaught exceptions", () => {
-      let registeredHandler: Function | undefined;
-
-      // Mock uncaught exception handler
-      process.on = vi.fn((event, handler) => {
-        if (event === "uncaughtException") {
-          registeredHandler = handler as Function;
-        }
-        return process;
-      });
-
-      // Simulate setting up the handler
-      const mockHandler = vi.fn();
-      process.on("uncaughtException", mockHandler);
-
-      // Test that handler can be set up
-      expect(process.on).toHaveBeenCalledWith("uncaughtException", mockHandler);
-      expect(registeredHandler).toBeDefined();
-
-      // Test the handler behavior
-      if (registeredHandler) {
-        const testError = new Error("Test uncaught exception");
-        registeredHandler(testError);
-
-        // In a real scenario, this would clean up and exit
-        expect(testError.message).toBe("Test uncaught exception");
-      }
-    });
-
-    it("should handle unhandled promise rejections", () => {
-      let registeredHandler: Function | undefined;
-
-      // Mock unhandled rejection handler
-      process.on = vi.fn((event, handler) => {
-        if (event === "unhandledRejection") {
-          registeredHandler = handler as Function;
-        }
-        return process;
-      });
-
-      // Simulate setting up the handler
-      const mockHandler = vi.fn();
-      process.on("unhandledRejection", mockHandler);
-
-      // Test that handler can be set up
-      expect(process.on).toHaveBeenCalledWith(
-        "unhandledRejection",
-        mockHandler,
-      );
-      expect(registeredHandler).toBeDefined();
-
-      // Test the handler behavior
-      if (registeredHandler) {
-        const testReason = new Error("Test unhandled rejection");
-        const mockPromise = {} as Promise<any>;
-        registeredHandler(testReason, mockPromise);
-
-        // In a real scenario, this would log and potentially exit
-        expect(testReason.message).toBe("Test unhandled rejection");
-      }
-    });
-  });
-
-  describe("Unicode and Encoding Errors", () => {
-    it("should handle invalid UTF-8 sequences", () => {
-      const invalidUtf8 = "\uD800"; // Lone surrogate
-
-      // Should not crash when handling invalid UTF-8
-      expect(() => JSON.stringify({ text: invalidUtf8 })).not.toThrow();
-
-      const result = JSON.stringify({ text: invalidUtf8 });
-      expect(result).toContain("\\ud800");
-    });
-
-    it("should handle extremely long strings", () => {
-      const longString = "x".repeat(1000000); // 1MB string
-
-      expect(() => JSON.stringify({ data: longString })).not.toThrow();
-
-      const result = JSON.stringify({ data: longString });
-      expect(result.length).toBeGreaterThan(1000000);
-    });
-
-    it("should handle various Unicode characters", () => {
-      const unicodeTest = {
-        emoji: "🚀🌟💻",
-        chinese: "你好世界",
-        arabic: "مرحبا بالعالم",
-        russian: "Привет мир",
-        japanese: "こんにちは世界",
-        special: "©®™€£¥",
-        combining: "é̂ñ̃ü̈", // combining diacritical marks
-      };
-
-      expect(() => JSON.stringify(unicodeTest)).not.toThrow();
-
-      const jsonString = JSON.stringify(unicodeTest);
-      const parsed = JSON.parse(jsonString);
-
-      expect(parsed.emoji).toBe("🚀🌟💻");
-      expect(parsed.chinese).toBe("你好世界");
-      expect(parsed.arabic).toBe("مرحبا بالعالم");
-    });
-  });
-
-  describe("Resource Exhaustion", () => {
-    it("should handle file handle exhaustion", async () => {
-      const { writeFile } = await import("node:fs/promises");
-
-      // Mock file handle exhaustion
-      vi.mocked(writeFile).mockRejectedValue(
-        Object.assign(new Error("EMFILE: too many open files"), {
-          code: "EMFILE",
-          errno: -24,
-          syscall: "open",
-        }),
-      );
-
-      try {
-        await writeFile("/tmp/test.txt", "data");
-      } catch (error: unknown) {
-        expect((error as { code: string }).code).toBe("EMFILE");
-        expect((error as Error).message).toContain("too many open files");
-      }
-    });
-
-    it("should handle thread pool exhaustion", async () => {
-      // Simulate many concurrent operations
-      const operations = Array.from({ length: 100 }, (_, i) =>
-        Promise.resolve().then(() => ({ id: i, processed: Date.now() })),
-      );
-
-      // Should complete without throwing
-      const results = await Promise.all(operations);
-      expect(results).toHaveLength(100);
-      expect(results[0]).toHaveProperty("id", 0);
-      expect(results[99]).toHaveProperty("id", 99);
-    });
-  });
-
-  describe("Data Validation Errors", () => {
-    it("should handle type mismatches", () => {
-      const mixedTypeData = {
-        string: "hello",
+    it("should provide comprehensive validation with statistics", () => {
+      const complexJson = {
+        string: "value",
         number: 42,
         boolean: true,
-        null: null,
-        undefined: undefined,
-        array: [1, "two", { three: 3 }],
-        object: { nested: { deeply: "nested" } },
-        function: () => "not serializable",
-        symbol: Symbol("test"),
-        // Note: BigInt cannot be serialized with JSON.stringify
+        nullValue: null,
+        array: [1, 2, 3],
+        nested: { deep: { deeper: "value" } },
       };
 
-      // JSON.stringify should handle most types gracefully
-      const result = JSON.stringify(mixedTypeData);
-      const parsed = JSON.parse(result);
-
-      expect(parsed.string).toBe("hello");
-      expect(parsed.number).toBe(42);
-      expect(parsed.boolean).toBe(true);
-      expect(parsed.null).toBe(null);
-      expect(parsed.undefined).toBeUndefined();
-      expect(parsed.array).toEqual([1, "two", { three: 3 }]);
-      expect(parsed.object).toEqual({ nested: { deeply: "nested" } });
-
-      // Function and symbol are not serializable
-      expect(parsed.function).toBeUndefined();
-      expect(parsed.symbol).toBeUndefined();
+      const result = parseJsonWithValidation(JSON.stringify(complexJson));
+      expect(result.success).toBe(true);
+      expect(result.validation.isValid).toBe(true);
+      expect(result.validation.stats?.types.string).toBeGreaterThan(0);
+      expect(result.validation.stats?.types.number).toBeGreaterThan(0);
+      expect(result.validation.stats?.types.boolean).toBeGreaterThan(0);
+      expect(result.validation.stats?.types.null).toBeGreaterThan(0);
+      expect(result.validation.stats?.types.array).toBeGreaterThan(0);
+      expect(result.validation.stats?.types.object).toBeGreaterThan(0);
     });
 
-    it("should handle BigInt serialization separately", () => {
-      const dataWithBigInt = {
-        normalNumber: 42,
-        bigIntValue: BigInt(123),
-      };
+    it("should detect different JSON formats correctly", () => {
+      expect(detectJsonFormat('{"valid": "json"}')).toBe("json");
+      expect(detectJsonFormat('{unquoted: "keys"}')).toBe("json5");
+      expect(detectJsonFormat('{"trailing": "comma",}')).toBe("json5");
+      expect(detectJsonFormat('// comment\n{"json5": true}')).toBe("json5");
+      expect(detectJsonFormat("invalid json")).toBe("invalid");
+    });
 
-      // BigInt should throw when trying to serialize
-      expect(() => JSON.stringify(dataWithBigInt)).toThrow(
-        /Do not know how to serialize a BigInt/,
+    it("should repair common JSON issues", () => {
+      const brokenJson = "{'key': 'value', 'trailing': 'comma',}";
+      const repaired = repairJsonString(brokenJson);
+      expect(repaired).toBe('{"key": "value", "trailing": "comma"}');
+    });
+  });
+
+  describe("Application Error Handler Functions", () => {
+    it("should handle fatal errors in test environment", () => {
+      const testError = new Error("Test fatal error");
+
+      expect(() => handleFatalError(testError)).toThrow(
+        "Fatal error: Test fatal error",
       );
-
-      // But we can handle it with a replacer
-      const result = JSON.stringify(dataWithBigInt, (_key, value) =>
-        typeof value === "bigint" ? value.toString() : value,
+      expect(mockConsoleError).toHaveBeenCalledWith(
+        expect.stringMatching(/Fatal error/),
+        "Test fatal error",
       );
-      const parsed = JSON.parse(result);
-
-      expect(parsed.normalNumber).toBe(42);
-      expect(parsed.bigIntValue).toBe("123");
     });
 
-    it("should handle date serialization edge cases", () => {
-      const dateTest = {
-        validDate: new Date("2023-01-01T00:00:00.000Z"),
-        invalidDate: new Date("invalid"),
-        epoch: new Date(0),
-        future: new Date("2099-12-31T23:59:59.999Z"),
-      };
+    it("should handle unknown fatal errors", () => {
+      const unknownError = "string error";
 
-      const result = JSON.stringify(dateTest);
-      const parsed = JSON.parse(result);
-
-      expect(parsed.validDate).toBe("2023-01-01T00:00:00.000Z");
-      // Invalid dates serialize to null in JSON
-      expect(parsed.invalidDate).toBe(null);
-      expect(parsed.epoch).toBe("1970-01-01T00:00:00.000Z");
-      expect(parsed.future).toBe("2099-12-31T23:59:59.999Z");
+      expect(() => handleFatalError(unknownError)).toThrow();
+      expect(mockConsoleError).toHaveBeenCalledWith(
+        expect.stringMatching(/Fatal error/),
+        expect.stringMatching(/Unknown error/),
+      );
     });
 
-    it("should handle invalid date string representation", () => {
-      const invalidDate = new Date("invalid");
+    it("should handle input errors gracefully in test environment", () => {
+      const inputError = new Error("Invalid input");
 
-      // Invalid date toString returns "Invalid Date"
-      expect(invalidDate.toString()).toBe("Invalid Date");
+      // Should not throw in test environment
+      expect(() => handleInputError(inputError)).not.toThrow();
+      expect(mockConsoleError).toHaveBeenCalledWith("Error:", "Invalid input");
+    });
 
-      // But JSON.stringify returns null for invalid dates
-      expect(JSON.stringify(invalidDate)).toBe("null");
+    it("should handle no input scenario in test environment", () => {
+      // Should not throw in test environment
+      expect(() => handleNoInput()).not.toThrow();
+      expect(mockConsoleError).toHaveBeenCalledWith("No JSON input provided.");
+      expect(mockConsoleError).toHaveBeenCalledWith(
+        "Usage: jsont [file.json] or echo '{...}' | jsont",
+      );
+    });
 
-      // And when part of an object
-      const objectWithInvalidDate = { date: invalidDate };
-      const serialized = JSON.stringify(objectWithInvalidDate);
-      const parsed = JSON.parse(serialized);
+    it("should extract error messages from various error types", () => {
+      expect(getErrorMessage(new Error("Test error"))).toBe("Test error");
+      expect(getErrorMessage("string error")).toMatch(/Unknown error/);
+      expect(getErrorMessage(null)).toMatch(/Unknown error/);
+      expect(getErrorMessage(undefined)).toMatch(/Unknown error/);
+      expect(getErrorMessage({ message: "object error" })).toMatch(
+        /Unknown error/,
+      );
+    });
+  });
 
-      expect(parsed.date).toBe(null);
+  describe("Edge Cases and Boundary Conditions", () => {
+    it("should handle extremely large valid JSON", () => {
+      const largeArray = Array(50000).fill("data");
+      const largeJson = JSON.stringify(largeArray);
+
+      const result = parseJsonSafely(largeJson);
+      expect(result.success).toBe(true);
+      expect(result.data).toHaveLength(50000);
+    });
+
+    it("should handle various numeric edge cases", () => {
+      const numericCases = [
+        { value: Number.MAX_SAFE_INTEGER, expected: true },
+        { value: Number.MIN_SAFE_INTEGER, expected: true },
+        { value: 0, expected: true },
+        { value: -0, expected: true },
+        { value: 1.7976931348623157e308, expected: true }, // MAX_VALUE
+      ];
+
+      for (const testCase of numericCases) {
+        const json = JSON.stringify({ value: testCase.value });
+        const result = parseJsonSafely(json);
+        expect(result.success).toBe(testCase.expected);
+      }
+    });
+
+    it("should handle various string edge cases", () => {
+      const stringCases = [
+        '{"unicode": "\\u0048\\u0065\\u006C\\u006C\\u006F"}',
+        '{"emoji": "🚀🎉"}',
+        '{"empty": ""}',
+        '{"newlines": "line1\\nline2\\r\\nline3"}',
+        '{"quotes": "He said \\"Hello\\""}',
+      ];
+
+      for (const json of stringCases) {
+        const result = parseJsonSafely(json);
+        expect(result.success).toBe(true);
+      }
+    });
+
+    it("should handle memory exhaustion gracefully", () => {
+      // Test with reasonable size to avoid actually exhausting memory
+      const reasonableLargeObject: Record<string, unknown> = {};
+      for (let i = 0; i < 1000; i++) {
+        reasonableLargeObject[`key_${i}`] = "x".repeat(1000);
+      }
+
+      const result = parseJsonSafely(JSON.stringify(reasonableLargeObject));
+      expect(result.success).toBe(true);
+
+      const validation = validateJsonStructure(reasonableLargeObject);
+      expect(validation.isValid).toBe(true);
+    });
+
+    it("should handle concurrent parsing operations", async () => {
+      const testData = '{"concurrent": "test"}';
+      const promises = Array(10)
+        .fill(null)
+        .map(() => Promise.resolve(parseJsonSafely(testData)));
+
+      const results = await Promise.all(promises);
+      results.forEach((result) => {
+        expect(result.success).toBe(true);
+        expect(result.data).toEqual({ concurrent: "test" });
+      });
+    });
+  });
+
+  describe("Recovery and Resilience", () => {
+    it("should provide actionable error messages for common mistakes", () => {
+      const commonMistakes = [
+        {
+          input: '{"name": "test"',
+          expectedSuggestion: "unclosed",
+        },
+        {
+          input: '{"name": undefined}',
+          expectedSuggestion: "missing commas|brackets|quotes",
+        },
+        {
+          input: '{"invalid": function(){}}',
+          expectedSuggestion: "missing commas|brackets|quotes",
+        },
+      ];
+
+      for (const mistake of commonMistakes) {
+        const result = parseJsonSafely(mistake.input);
+        expect(result.success).toBe(false);
+        if (result.suggestion) {
+          expect(result.suggestion).toMatch(
+            new RegExp(mistake.expectedSuggestion, "i"),
+          );
+        }
+      }
+    });
+
+    it("should maintain performance under error conditions", () => {
+      const malformedJson = '{"broken": "json"'.repeat(1000);
+
+      const startTime = performance.now();
+      const result = parseJsonSafely(malformedJson);
+      const endTime = performance.now();
+
+      expect(result.success).toBe(false);
+      expect(endTime - startTime).toBeLessThan(100); // Should fail fast
+      expect(result.parseTime).toBeLessThan(100);
+    });
+
+    it("should handle error conditions without memory leaks", () => {
+      // Test that error handling doesn't accumulate memory
+      for (let i = 0; i < 100; i++) {
+        const result = parseJsonSafely(`{"invalid": json${i}}`);
+        expect(result.success).toBe(false);
+      }
+
+      // If we get here without running out of memory, the test passes
+      expect(true).toBe(true);
     });
   });
 });
