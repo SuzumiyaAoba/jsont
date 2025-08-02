@@ -18,31 +18,12 @@ import type {
   DataValidationResult,
   SqlOptions,
 } from "./types";
+import { BaseDataConverter } from "./types";
 
-export class SqlConverter implements DataConverter<SqlOptions> {
+export class SqlConverter extends BaseDataConverter<SqlOptions> {
   readonly format = "sql";
   readonly extension = ".sql";
   readonly displayName = "SQL";
-
-  convert(
-    data: JsonValue,
-    options?: SqlOptions | Record<string, unknown>,
-  ): ConversionResult {
-    try {
-      const sqlOptions = { ...this.getDefaultOptions(), ...options };
-      const result = this.convertToSQL(data, sqlOptions);
-
-      return ok(result);
-    } catch (error) {
-      return err({
-        type: "CONVERSION_ERROR" as const,
-        message:
-          error instanceof Error ? error.message : "SQL conversion failed",
-        format: this.format,
-        context: { options },
-      });
-    }
-  }
 
   validate(data: JsonValue): DataValidationResult {
     // SQL converter works best with arrays of objects (table rows)
@@ -106,7 +87,7 @@ export class SqlConverter implements DataConverter<SqlOptions> {
     };
   }
 
-  private convertToSQL(data: JsonValue, options: SqlOptions): string {
+  protected performConversion(data: JsonValue, options: SqlOptions): string {
     const { tableName, includeCreateTable } = options;
     let sql = "";
 

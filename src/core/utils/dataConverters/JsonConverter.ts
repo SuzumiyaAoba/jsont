@@ -10,31 +10,12 @@ import type {
   DataValidationResult,
   JsonOptions,
 } from "./types";
+import { BaseDataConverter } from "./types";
 
-export class JsonConverter implements DataConverter<JsonOptions> {
+export class JsonConverter extends BaseDataConverter<JsonOptions> {
   readonly format = "json";
   readonly extension = ".json";
   readonly displayName = "JSON";
-
-  convert(
-    data: JsonValue,
-    options?: JsonOptions | Record<string, unknown>,
-  ): ConversionResult {
-    try {
-      const finalOptions = { ...this.getDefaultOptions(), ...options };
-      const { indent = 2 } = finalOptions;
-      const result = JSON.stringify(data, null, Number(indent));
-
-      return ok(result);
-    } catch (error) {
-      return err({
-        type: "CONVERSION_ERROR" as const,
-        message:
-          error instanceof Error ? error.message : "JSON conversion failed",
-        format: this.format,
-      });
-    }
-  }
 
   validate(data: JsonValue): DataValidationResult {
     try {
@@ -53,5 +34,10 @@ export class JsonConverter implements DataConverter<JsonOptions> {
     return {
       indent: 2,
     };
+  }
+
+  protected performConversion(data: JsonValue, options: JsonOptions): string {
+    const { indent = 2 } = options;
+    return JSON.stringify(data, null, Number(indent));
   }
 }

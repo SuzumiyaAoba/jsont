@@ -11,30 +11,12 @@ import type {
   DataValidationResult,
   YamlOptions,
 } from "./types";
+import { BaseDataConverter } from "./types";
 
-export class YamlConverter implements DataConverter<YamlOptions> {
+export class YamlConverter extends BaseDataConverter<YamlOptions> {
   readonly format = "yaml";
   readonly extension = ".yaml";
   readonly displayName = "YAML";
-
-  convert(
-    data: JsonValue,
-    options?: YamlOptions | Record<string, unknown>,
-  ): ConversionResult {
-    try {
-      const yamlOptions = { ...this.getDefaultOptions(), ...options };
-      const result = yamlDump(data, yamlOptions);
-
-      return ok(result);
-    } catch (error) {
-      return err({
-        type: "CONVERSION_ERROR" as const,
-        message:
-          error instanceof Error ? error.message : "YAML conversion failed",
-        format: this.format,
-      });
-    }
-  }
 
   validate(data: JsonValue): DataValidationResult {
     try {
@@ -59,5 +41,9 @@ export class YamlConverter implements DataConverter<YamlOptions> {
       noRefs: true, // Avoid references
       skipInvalid: true, // Skip invalid values
     };
+  }
+
+  protected performConversion(data: JsonValue, options: YamlOptions): string {
+    return yamlDump(data, options);
   }
 }
