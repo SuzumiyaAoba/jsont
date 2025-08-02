@@ -287,7 +287,8 @@ describe("Configuration Utils with defu", () => {
       const config = smartMergeConfigs({
         display: {
           interface: {
-            showLineNumbers: null as any, // null should be ignored
+            // @ts-expect-error: Testing null handling behavior - null should be ignored by merge
+            showLineNumbers: null,
           },
         },
       });

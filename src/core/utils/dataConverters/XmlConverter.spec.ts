@@ -2,6 +2,7 @@
  * Tests for XmlConverter
  */
 
+import type { JsonValue } from "@core/types";
 import { XmlConverter } from "@core/utils/dataConverters/XmlConverter";
 import { describe, expect, it } from "vitest";
 
@@ -57,7 +58,7 @@ describe("XmlConverter", () => {
     });
 
     it("should reject function values", () => {
-      const result = converter.validate((() => {}) as any);
+      const result = converter.validate((() => {}) as unknown as JsonValue);
       expect(result.isErr()).toBe(true);
       if (result.isErr()) {
         expect(result.error.message).toContain(

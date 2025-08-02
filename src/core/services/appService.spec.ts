@@ -214,12 +214,14 @@ describe("AppService", () => {
       const mockTerminalManager = {
         initialize: vi.fn(),
         cleanup: vi.fn(),
-      } as any;
+        isTTY: vi.fn().mockReturnValue(true),
+        isInitialized: false,
+      } as unknown as TerminalManager;
       const mockProcessManager = {
         setup: vi.fn(),
         cleanup: vi.fn(),
         onAppExit: vi.fn(),
-      } as any;
+      } as unknown as ProcessManager;
 
       vi.mocked(TerminalManager).mockImplementation(() => mockTerminalManager);
       vi.mocked(ProcessManager).mockImplementation(() => mockProcessManager);
