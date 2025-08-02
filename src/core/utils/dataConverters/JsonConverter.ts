@@ -4,12 +4,7 @@
 
 import type { JsonValue } from "@core/types/index";
 import { err, ok } from "neverthrow";
-import type {
-  ConversionResult,
-  DataConverter,
-  DataValidationResult,
-  JsonOptions,
-} from "./types";
+import type { DataValidationResult, JsonOptions } from "./types";
 import { BaseDataConverter } from "./types";
 
 export class JsonConverter extends BaseDataConverter<JsonOptions> {

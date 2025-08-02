@@ -8,12 +8,7 @@ import {
   inferJsonSchema,
 } from "@features/schema/utils/schemaUtils";
 import { err, ok } from "neverthrow";
-import type {
-  ConversionResult,
-  DataConverter,
-  DataValidationResult,
-  SchemaOptions,
-} from "./types";
+import type { DataValidationResult, SchemaOptions } from "./types";
 import { BaseDataConverter } from "./types";
 
 export class SchemaConverter extends BaseDataConverter<SchemaOptions> {

@@ -12,12 +12,7 @@ import {
   normalizeDataForSQL,
   shouldUseMultiTableStructure,
 } from "./sql";
-import type {
-  ConversionResult,
-  DataConverter,
-  DataValidationResult,
-  SqlOptions,
-} from "./types";
+import type { DataValidationResult, SqlOptions } from "./types";
 import { BaseDataConverter } from "./types";
 
 export class SqlConverter extends BaseDataConverter<SqlOptions> {

@@ -4,12 +4,7 @@
 
 import type { JsonValue } from "@core/types/index";
 import { err, ok } from "neverthrow";
-import type {
-  ConversionResult,
-  CsvOptions,
-  DataConverter,
-  DataValidationResult,
-} from "./types";
+import type { CsvOptions, DataValidationResult } from "./types";
 import { BaseDataConverter } from "./types";
 
 export class CsvConverter extends BaseDataConverter<CsvOptions> {

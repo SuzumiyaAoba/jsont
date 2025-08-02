@@ -116,7 +116,9 @@ export class XmlConverter extends BaseDataConverter<XmlOptions> {
       } else if (key === textNodeName) {
         textContent = this.escapeXmlText(String(val));
       } else {
-        elements.push(this.convertValue(val, key, depth + 1, options));
+        elements.push(
+          this.convertValue(val as JsonValue, key, depth + 1, options),
+        );
       }
     }
 
