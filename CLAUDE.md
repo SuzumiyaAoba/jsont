@@ -19,6 +19,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `npm run test:watch` - Run tests in explicit watch mode
 - `npm run test:ui` - Open Vitest UI for interactive testing
 - `npm run test -- tree` - Run specific test files matching "tree"
+- `npm run test -- --coverage` - Run tests with coverage reporting
 
 ### Code Quality
 - `npm run check` - Run Biome linter and formatter checks
@@ -270,3 +271,13 @@ useEffect(() => {
   }
 }, [onKeyboardHandlerReady, handleKeyboardInput]);
 ```
+
+## Important Development Reminders
+
+- **Always use extensionless imports** - The build system requires this
+- **Prefer path aliases over relative imports** - Use `@core/*`, `@features/*`, etc.
+- **Test files use `.spec.ts` suffix** - All tests are co-located with implementation
+- **Run `npm run check` before committing** - Ensures code quality standards
+- **Never assume libraries are available** - Always check existing dependencies first
+- **Use `neverthrow` Result pattern** - Avoid throwing exceptions in favor of explicit error handling
+- **Follow feature-based architecture** - Keep components, types, and utils together within feature directories
