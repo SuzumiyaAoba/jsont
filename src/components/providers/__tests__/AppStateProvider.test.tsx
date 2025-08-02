@@ -75,22 +75,36 @@ vi.mock("@store/hooks/useUI", () => ({
 // Mock implementations
 const mockTerminalCalculations = {
   terminalSize: { width: 80, height: 24 },
+  debugBarHeight: 1,
+  statusBarHeight: 1,
+  searchBarHeight: 1,
+  jqBarHeight: 1,
+  UI_RESERVED_LINES: 4,
   visibleLines: 20,
   searchModeVisibleLines: 18,
   maxScroll: 100,
   maxScrollSearchMode: 90,
   halfPageLines: 10,
+  jsonLines: 18,
+  schemaLines: 15,
+  currentDataLines: 17,
+  JSON_INDENT: 2,
 };
 
 const mockUI = {
   debugVisible: false,
+  setDebugVisible: vi.fn(),
   lineNumbersVisible: true,
+  setLineNumbersVisible: vi.fn(),
   schemaVisible: false,
+  setSchemaVisible: vi.fn(),
   helpVisible: false,
-  treeViewMode: false,
-  collapsibleMode: true,
-  debugLogViewerVisible: false,
   setHelpVisible: vi.fn(),
+  treeViewMode: false,
+  setTreeViewMode: vi.fn(),
+  collapsibleMode: true,
+  setCollapsibleMode: vi.fn(),
+  debugLogViewerVisible: false,
   setDebugLogViewerVisible: vi.fn(),
 };
 
@@ -101,14 +115,18 @@ const mockSearchState = {
   currentIndex: 0,
   totalResults: 0,
   results: [],
+  searchResults: [],
+  currentResultIndex: 0,
 };
 
 const mockJqState = {
   isActive: false,
+  query: "",
   input: "",
   transformedData: null,
   error: null,
   showOriginal: false,
+  isProcessing: false,
 };
 
 import * as keybindingsModule from "@core/utils/keybindings";
@@ -132,7 +150,7 @@ vi.mock("@store/atoms", () => ({
 }));
 
 vi.mock("@core/utils/keybindings", () => ({
-  createKeybindingMatcher: vi.fn(),
+  createKeybindingMatcher: vi.fn(() => ({})), // Return a truthy object
 }));
 
 // Setup mocks
@@ -140,11 +158,20 @@ beforeEach(() => {
   vi.mocked(terminalCalculationsModule.useTerminalCalculations).mockReturnValue(
     mockTerminalCalculations,
   );
-  vi.mocked(searchHandlersModule.useSearchHandlers).mockReturnValue({});
-  vi.mocked(exportHandlersModule).useExportHandlers.mockReturnValue({});
+  vi.mocked(searchHandlersModule.useSearchHandlers).mockReturnValue({
+    scrollToSearchResult: vi.fn(),
+  });
+  vi.mocked(exportHandlersModule).useExportHandlers.mockReturnValue({
+    handleExportSchema: vi.fn(),
+    handleExportConfirm: vi.fn(),
+    handleExportCancel: vi.fn(),
+  });
 
   vi.mocked(storeHooksModule).useUpdateDebugInfo.mockReturnValue(vi.fn());
-  vi.mocked(debugHooksModule).useDebugInfo.mockReturnValue({});
+  vi.mocked(debugHooksModule).useDebugInfo.mockReturnValue([
+    { lastKey: "", lastKeyAction: "", timestamp: "" },
+    vi.fn(),
+  ]);
 
   vi.mocked(uiHooksModule).useUI.mockReturnValue(mockUI);
   vi.mocked(uiHooksModule).useToggleTreeView.mockReturnValue(vi.fn());
@@ -171,6 +198,7 @@ beforeEach(() => {
   ]);
   vi.mocked(navigationHooksModule).useWaitingForSecondG.mockReturnValue([
     false,
+    vi.fn(),
   ]);
   vi.mocked(navigationHooksModule).useResetScroll.mockReturnValue(vi.fn());
   vi.mocked(navigationHooksModule).useScrollToTop.mockReturnValue(vi.fn());
@@ -182,7 +210,7 @@ beforeEach(() => {
   vi.mocked(jqHooksModule).useJqState.mockReturnValue(mockJqState);
   vi.mocked(jqHooksModule).useJqInput.mockReturnValue(["", vi.fn()]);
   vi.mocked(jqHooksModule).useJqCursorPosition.mockReturnValue([0, vi.fn()]);
-  vi.mocked(jqHooksModule).useJqFocusMode.mockReturnValue([false, vi.fn()]);
+  vi.mocked(jqHooksModule).useJqFocusMode.mockReturnValue(["input", vi.fn()]);
   vi.mocked(jqHooksModule).useJqErrorScrollOffset.mockReturnValue([0, vi.fn()]);
   vi.mocked(jqHooksModule).useExitJqMode.mockReturnValue(vi.fn());
   vi.mocked(jqHooksModule).useToggleJqMode.mockReturnValue(vi.fn());
@@ -191,10 +219,12 @@ beforeEach(() => {
   vi.mocked(jqHooksModule).useCompleteJqTransformation.mockReturnValue(vi.fn());
 
   vi.mocked(exportHooksModule).useExportStatus.mockReturnValue([
-    { isExporting: false, currentFile: null },
+    { isExporting: false, message: "", type: "success" },
+    vi.fn(),
   ]);
   vi.mocked(exportHooksModule).useExportDialog.mockReturnValue({
     isVisible: false,
+    mode: "simple",
   });
 
   vi.mocked(atomsModule.useAtomValue).mockReturnValue(false);

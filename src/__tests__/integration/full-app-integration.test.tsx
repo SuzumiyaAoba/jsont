@@ -115,22 +115,36 @@ vi.mock("@store/atoms", () => ({
 // Create realistic mock implementations
 const createMockTerminalCalculations = () => ({
   terminalSize: { width: 80, height: 24 },
+  debugBarHeight: 1,
+  statusBarHeight: 1,
+  searchBarHeight: 1,
+  jqBarHeight: 1,
+  UI_RESERVED_LINES: 4,
   visibleLines: 20,
   searchModeVisibleLines: 18,
   maxScroll: 100,
   maxScrollSearchMode: 90,
   halfPageLines: 10,
+  jsonLines: 18,
+  schemaLines: 15,
+  currentDataLines: 17,
+  JSON_INDENT: 2,
 });
 
 const createMockUI = (overrides = {}) => ({
   debugVisible: false,
+  setDebugVisible: vi.fn(),
   lineNumbersVisible: true,
+  setLineNumbersVisible: vi.fn(),
   schemaVisible: false,
+  setSchemaVisible: vi.fn(),
   helpVisible: false,
-  treeViewMode: false,
-  collapsibleMode: true,
-  debugLogViewerVisible: false,
   setHelpVisible: vi.fn(),
+  treeViewMode: false,
+  setTreeViewMode: vi.fn(),
+  collapsibleMode: true,
+  setCollapsibleMode: vi.fn(),
+  debugLogViewerVisible: false,
   setDebugLogViewerVisible: vi.fn(),
   ...overrides,
 });
@@ -149,10 +163,12 @@ const createMockSearchState = (overrides = {}) => ({
 
 const createMockJqState = (overrides = {}) => ({
   isActive: false,
+  query: "",
   input: "",
   transformedData: null,
   error: null,
   showOriginal: false,
+  isProcessing: false,
   ...overrides,
 });
 
@@ -182,7 +198,9 @@ beforeEach(() => {
   vi.mocked(hooksModule.useTerminalCalculations).mockReturnValue(
     mockTerminalCalculations,
   );
-  vi.mocked(searchHandlersModule.useSearchHandlers).mockReturnValue({});
+  vi.mocked(searchHandlersModule.useSearchHandlers).mockReturnValue({
+    scrollToSearchResult: vi.fn(),
+  });
   vi.mocked(exportHandlersModule.useExportHandlers).mockReturnValue({
     handleExportSchema: vi.fn(),
     handleExportConfirm: vi.fn(),
@@ -190,7 +208,10 @@ beforeEach(() => {
   });
 
   vi.mocked(storeHooksModule.useUpdateDebugInfo).mockReturnValue(vi.fn());
-  vi.mocked(debugHooksModule.useDebugInfo).mockReturnValue({});
+  vi.mocked(debugHooksModule.useDebugInfo).mockReturnValue([
+    { lastKey: "", lastKeyAction: "", timestamp: "" },
+    vi.fn(),
+  ]);
 
   vi.mocked(uiHooksModule.useUI).mockReturnValue(mockUI);
   vi.mocked(uiHooksModule.useToggleTreeView).mockReturnValue(vi.fn());
@@ -217,6 +238,7 @@ beforeEach(() => {
   ]);
   vi.mocked(navigationHooksModule.useWaitingForSecondG).mockReturnValue([
     false,
+    vi.fn(),
   ]);
   vi.mocked(navigationHooksModule.useResetScroll).mockReturnValue(vi.fn());
   vi.mocked(navigationHooksModule.useScrollToTop).mockReturnValue(vi.fn());
@@ -228,7 +250,7 @@ beforeEach(() => {
   vi.mocked(jqHooksModule.useJqState).mockReturnValue(mockJqState);
   vi.mocked(jqHooksModule.useJqInput).mockReturnValue(["", vi.fn()]);
   vi.mocked(jqHooksModule.useJqCursorPosition).mockReturnValue([0, vi.fn()]);
-  vi.mocked(jqHooksModule.useJqFocusMode).mockReturnValue([false, vi.fn()]);
+  vi.mocked(jqHooksModule.useJqFocusMode).mockReturnValue(["input", vi.fn()]);
   vi.mocked(jqHooksModule.useJqErrorScrollOffset).mockReturnValue([0, vi.fn()]);
   vi.mocked(jqHooksModule.useExitJqMode).mockReturnValue(vi.fn());
   vi.mocked(jqHooksModule.useToggleJqMode).mockReturnValue(vi.fn());
@@ -239,13 +261,14 @@ beforeEach(() => {
   vi.mocked(exportHooksModule.useExportStatus).mockReturnValue([
     {
       isExporting: false,
-      currentFile: null,
-      message: null,
-      type: null,
+      message: "",
+      type: "success",
     },
+    vi.fn(),
   ]);
   vi.mocked(exportHooksModule.useExportDialog).mockReturnValue({
     isVisible: false,
+    mode: "simple",
   });
 
   vi.mocked(atomsModule.useAtomValue).mockReturnValue(false);
@@ -378,7 +401,7 @@ describe("Full Application Integration", () => {
         })),
       };
 
-      const RENDER_TIME_THRESHOLD = process.env.CI ? 2000 : 1000; // More lenient in CI
+      const RENDER_TIME_THRESHOLD = process.env["CI"] ? 2000 : 1000; // More lenient in CI
       const startTime = Date.now();
       render(<TestApp initialData={largeData} />);
       const endTime = Date.now();
