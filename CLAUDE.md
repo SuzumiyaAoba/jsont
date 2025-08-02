@@ -137,7 +137,7 @@ Organized by feature domains, each containing:
   ```
 
 ### File Organization
-- Tests co-located with source files using `.test.ts` suffix
+- Tests co-located with source files using `.spec.ts` suffix
 - Feature-based organization with clear domain boundaries
 - Barrel exports (`index.ts`) for clean module interfaces
 
