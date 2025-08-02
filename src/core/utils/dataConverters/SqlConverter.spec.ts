@@ -2,6 +2,7 @@
  * Tests for SqlConverter
  */
 
+import type { JsonValue } from "@core/types";
 import { SqlConverter } from "@core/utils/dataConverters/SqlConverter";
 import { describe, expect, it } from "vitest";
 

@@ -3,6 +3,7 @@
  * Ensures system stability under various error conditions
  */
 
+import type { JsonValue } from "@core/types";
 import {
   getErrorMessage,
   handleFatalError,

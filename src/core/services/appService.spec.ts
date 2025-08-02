@@ -211,21 +211,17 @@ describe("AppService", () => {
         canUseKeyboard: true,
       });
 
-      const mockTerminalManager: Pick<
-        TerminalManager,
-        "initialize" | "cleanup"
-      > = {
+      const mockTerminalManager = {
         initialize: vi.fn(),
         cleanup: vi.fn(),
-      };
-      const mockProcessManager: Pick<
-        ProcessManager,
-        "setup" | "cleanup" | "onAppExit"
-      > = {
+        isTTY: vi.fn().mockReturnValue(true),
+        isInitialized: false,
+      } as unknown as TerminalManager;
+      const mockProcessManager = {
         setup: vi.fn(),
         cleanup: vi.fn(),
         onAppExit: vi.fn(),
-      };
+      } as unknown as ProcessManager;
 
       vi.mocked(TerminalManager).mockImplementation(() => mockTerminalManager);
       vi.mocked(ProcessManager).mockImplementation(() => mockProcessManager);

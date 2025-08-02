@@ -7,11 +7,12 @@ import type { TerminalManager } from "@core/utils/terminal";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 // Mock TerminalManager
-const mockTerminalManager: TerminalManager = {
+const mockTerminalManager = {
   initialize: vi.fn(),
   cleanup: vi.fn(),
   isTTY: vi.fn().mockReturnValue(true),
-};
+  isInitialized: false,
+} as unknown as TerminalManager;
 
 describe("ProcessManager", () => {
   let processManager: ProcessManager;
@@ -396,7 +397,8 @@ describe("ProcessManager", () => {
           throw new Error("Cleanup error");
         }),
         isTTY: vi.fn().mockReturnValue(true),
-      } satisfies TerminalManager;
+        isInitialized: false,
+      } as unknown as TerminalManager;
 
       const errorProcessManager = new ProcessManager(errorTerminalManager);
 

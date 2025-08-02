@@ -2,6 +2,7 @@
  * Tests for XmlConverter
  */
 
+import type { JsonValue } from "@core/types";
 import { XmlConverter } from "@core/utils/dataConverters/XmlConverter";
 import { describe, expect, it } from "vitest";
 
