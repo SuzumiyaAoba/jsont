@@ -35,6 +35,8 @@ keybindings:
     debug: ["D"]
     help: ["?"]
     export: ["E"]
+    exportData: ["Shift+E"]
+    settings: [","]
     quit: ["q"]
   search:
     next: ["n"]
@@ -120,11 +122,13 @@ behavior:
 
 ### Key Features
 
-- **Hot Configuration Loading**: Configuration is loaded at application startup
+- **Hot Configuration Loading**: Configuration is loaded at application startup with hot-reloading support
+- **Interactive Configuration UI**: Built-in settings editor accessible with `,` key
 - **Partial Configuration Support**: Users only need to specify values they want to change
 - **Validation**: Invalid configuration values are ignored, defaults are used
 - **Error Handling**: Malformed YAML files fall back to defaults with warnings
 - **Type Safety**: Full TypeScript support for configuration access
+- **Live Preview**: Changes are visible immediately in the interactive settings interface
 
 ### Integration Points
 
@@ -177,14 +181,40 @@ The configuration system includes comprehensive tests:
 - **Integration Tests**: React context and hook functionality
 - **Error Handling Tests**: Invalid YAML, missing files, type validation
 
+## Interactive Settings Interface
+
+The application now includes a built-in interactive settings editor:
+
+### Accessing Settings
+- Press `,` to open the interactive settings interface
+- Navigate using `j/k` keys and `Tab` to switch categories
+- Press `Enter` or `e` to edit field values
+- Press `Ctrl+S` to save changes to disk
+- Press `Ctrl+R` to reset to defaults
+- Press `Esc` to close the settings interface
+
+### Features
+- **Real-time Preview**: See changes immediately as you edit
+- **Input Validation**: Invalid values are rejected with helpful error messages
+- **Category Organization**: Settings are grouped logically for easy navigation
+- **Live Help**: Each setting shows description and valid values
+
+## Export Capabilities
+
+The application supports exporting data in multiple formats:
+- **JSON**: Standard JSON format
+- **YAML**: Human-readable YAML format
+- **CSV**: Tabular data format for spreadsheets
+- **XML**: Hierarchical XML representation
+- **SQL**: Database table creation and insert statements
+
 ## Future Enhancements
 
-The configuration system is designed to be extensible. Future enhancements could include:
+Additional features being considered:
 
-1. **Runtime Configuration Changes**: Hot-reloading of configuration
-2. **Command-line Overrides**: Temporary configuration via CLI flags
-3. **Profile Support**: Multiple named configuration profiles
-4. **Configuration UI**: Interactive configuration editing within the application
+1. **Command-line Overrides**: Temporary configuration via CLI flags
+2. **Profile Support**: Multiple named configuration profiles
+3. **Theme System**: Customizable color schemes and visual themes
 
 ## Migration
 

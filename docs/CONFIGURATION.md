@@ -45,10 +45,15 @@ keybindings:
   
   features:
     search: "/"                # Enter search mode
-    toggleView: "T"            # Toggle view mode
+    toggleTree: "T"            # Toggle tree view mode
+    toggleCollapsible: "C"     # Toggle collapsible view mode
     toggleLineNumbers: "L"     # Toggle line numbers
     schemaView: "S"            # Switch to schema view
+    jqMode: "J"                # Enter jq/JSONata query mode
+    debugMode: "D"             # Toggle debug mode
+    settings: ","              # Open interactive settings
     export: "E"                # Export schema
+    exportData: "shift+e"      # Export data (JSON/YAML/CSV/XML/SQL)
     help: "?"                  # Show help
     quit: "q"                  # Quit application
 ```
@@ -78,6 +83,31 @@ keybindings:
     pageUp: "ctrl+u"
     pageDown: "ctrl+d"
 ```
+
+## Interactive Settings
+
+jsont includes a built-in settings editor that you can access by pressing `,` (comma):
+
+- **Navigate**: Use `j/k` to move between settings, `Tab` to switch categories
+- **Edit**: Press `Enter` or `e` to edit a value
+- **Save**: Press `Ctrl+S` to save changes to the config file
+- **Reset**: Press `Ctrl+R` to reset to defaults
+- **Close**: Press `Esc` to exit settings
+
+The interactive settings interface provides:
+- Real-time preview of changes
+- Input validation with helpful error messages
+- Category organization for easy navigation
+- Live help for each setting
+
+## Export Formats
+
+jsont supports exporting data in multiple formats:
+- **JSON**: Standard JSON format
+- **YAML**: Human-readable YAML format  
+- **CSV**: Tabular data for spreadsheets
+- **XML**: Hierarchical XML representation
+- **SQL**: Database table creation and insert statements
 
 ## Validation
 

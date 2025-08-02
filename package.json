@@ -34,11 +34,22 @@
     "schema",
     "interactive",
     "tree-view",
-    "search"
+    "search",
+    "export",
+    "xml",
+    "sql",
+    "csv",
+    "yaml",
+    "configuration",
+    "settings",
+    "debug",
+    "navigation",
+    "collapsible",
+    "syntax-highlighting"
   ],
   "author": "",
   "license": "MIT",
-  "description": "Interactive terminal JSON viewer with tree display, search, jq queries, and schema generation",
+  "description": "Interactive terminal JSON viewer with tree display, search, jq/JSONata queries, schema generation, and multi-format export (JSON/YAML/CSV/XML/SQL)",
   "engines": {
     "node": ">=18.0.0",
     "npm": ">=8.0.0"
