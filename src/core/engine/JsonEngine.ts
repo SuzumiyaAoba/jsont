@@ -14,6 +14,7 @@ import {
 } from "@features/json-rendering/utils/jsonProcessor";
 import { inferJsonSchema } from "@features/schema/utils/schemaUtils";
 import type { SearchScope } from "@features/search/types/search";
+import { err, ok, type Result } from "neverthrow";
 import { SearchEngine, type SearchEngineState } from "./SearchEngine";
 import { TreeEngine, type TreeEngineState } from "./TreeEngine";
 
@@ -219,14 +220,24 @@ export class JsonEngine {
 
         case "parse-json":
           if (typeof payload === "string") {
-            result = this.parseJson(payload);
+            const parseResult = this.parseJson(payload);
+            if (parseResult.isErr()) {
+              error = parseResult.error;
+            } else {
+              result = { success: true };
+            }
             handled = true;
           }
           break;
 
         case "apply-jq":
           if (typeof payload === "string") {
-            result = await this.applyJqTransformation(payload);
+            const jqResult = await this.applyJqTransformation(payload);
+            if (jqResult.isErr()) {
+              error = jqResult.error;
+            } else {
+              result = { success: true, result: jqResult.value };
+            }
             handled = true;
           }
           break;
@@ -238,7 +249,12 @@ export class JsonEngine {
 
         case "export-data":
           if (payload && typeof payload === "object") {
-            result = this.exportData(payload as ExportOptions);
+            const exportResult = this.exportData(payload as ExportOptions);
+            if (exportResult.isErr()) {
+              error = exportResult.error;
+            } else {
+              result = exportResult.value;
+            }
             handled = true;
           }
           break;
@@ -275,7 +291,7 @@ export class JsonEngine {
   /**
    * Parse new JSON input
    */
-  private parseJson(input: string): { success: boolean; error?: string } {
+  private parseJson(input: string): Result<void, string> {
     const parseResult = parseJsonSafely(input);
 
     this.state.rawInput = input;
@@ -294,10 +310,9 @@ export class JsonEngine {
     // Clear JQ transformation
     this.clearJqTransformation();
 
-    return {
-      success: parseResult.success,
-      ...(parseResult.error && { error: parseResult.error }),
-    };
+    return parseResult.success
+      ? ok(undefined)
+      : err(parseResult.error || "Parse failed");
   }
 
   /**
@@ -305,13 +320,13 @@ export class JsonEngine {
    */
   private async applyJqTransformation(
     query: string,
-  ): Promise<{ success: boolean; result?: JsonValue; error?: string }> {
+  ): Promise<Result<JsonValue, string>> {
     this.state.jqQuery = query;
 
     if (this.state.data === null || this.state.data === undefined) {
       const error = "No JSON data to transform";
       this.state.jqError = error;
-      return { success: false, error };
+      return err(error);
     }
 
     try {
@@ -324,19 +339,17 @@ export class JsonEngine {
         this.treeEngine.updateData(result.data as JsonValue);
         this.searchEngine.updateData(result.data as JsonValue);
 
-        return { success: true, result: result.data as JsonValue };
+        return ok(result.data as JsonValue);
       } else {
-        this.state.jqError = result.error || "JQ transformation failed";
-        return {
-          success: false,
-          error: result.error || "JQ transformation failed",
-        };
+        const errorMessage = result.error || "JQ transformation failed";
+        this.state.jqError = errorMessage;
+        return err(errorMessage);
       }
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : "JQ transformation failed";
       this.state.jqError = errorMessage;
-      return { success: false, error: errorMessage };
+      return err(errorMessage);
     }
   }
 
@@ -356,25 +369,25 @@ export class JsonEngine {
   /**
    * Export data to specified format
    */
-  private exportData(options: ExportOptions): ExportResult | { error: string } {
+  private exportData(options: ExportOptions): Result<ExportResult, string> {
     const dataToExport = this.getCurrentData();
 
     if (!dataToExport) {
-      return { error: "No data to export" };
+      return err("No data to export");
     }
 
     const converter = dataConverterRegistry.get(options.format);
     if (!converter) {
-      return { error: `Unsupported format: ${options.format}` };
+      return err(`Unsupported format: ${options.format}`);
     }
 
     const conversionResult = converter.convert(dataToExport, options.options);
 
     if (conversionResult.isErr()) {
-      return { error: conversionResult.error.message };
+      return err(conversionResult.error.message);
     }
 
-    return {
+    return ok({
       content: conversionResult.value,
       format: options.format,
       extension: converter.extension,
@@ -383,7 +396,7 @@ export class JsonEngine {
         generatedAt: new Date(),
         sourceFormat: "json",
       },
-    };
+    });
   }
 
   /**

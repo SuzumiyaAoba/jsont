@@ -281,11 +281,32 @@ export class SearchEngine {
     }
 
     try {
-      // Convert "all" scope to either "keys" or "values" for the search function
-      const searchScope =
-        this.state.scope === "all" ? "values" : this.state.scope;
+      let searchResults: ReturnType<typeof searchInJsonWithScope>;
 
-      const searchResults = searchInJsonWithScope(this.data, term, searchScope);
+      if (this.state.scope === "all") {
+        // Search in both keys and values for "all" scope
+        const keyResults = searchInJsonWithScope(this.data, term, "keys");
+        const valueResults = searchInJsonWithScope(this.data, term, "values");
+
+        // Combine and deduplicate results
+        const combinedResults = [...keyResults, ...valueResults];
+        const uniqueResults = new Map();
+
+        for (const result of combinedResults) {
+          const key = `${result.lineIndex}-${result.columnStart}-${result.columnEnd}`;
+          if (!uniqueResults.has(key)) {
+            uniqueResults.set(key, result);
+          }
+        }
+
+        searchResults = Array.from(uniqueResults.values());
+      } else {
+        searchResults = searchInJsonWithScope(
+          this.data,
+          term,
+          this.state.scope,
+        );
+      }
 
       // Convert search results to our format
       const matches = searchResults
