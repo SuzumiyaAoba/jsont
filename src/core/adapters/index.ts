@@ -3,6 +3,8 @@
  * Enables multiple UI frontends (TUI, Web, etc.)
  */
 
+export type { TUIKeyboardEvent } from "./TUIAdapter";
+export { TUIAdapter } from "./TUIAdapter";
 export type {
   ConfigChangeEvent,
   DisplayDimensions,
