@@ -4,37 +4,13 @@
 
 import type { JsonValue } from "@core/types/index";
 import { err, ok } from "neverthrow";
-import type {
-  ConversionResult,
-  CsvOptions,
-  DataConverter,
-  DataValidationResult,
-} from "./types";
+import type { CsvOptions, DataValidationResult } from "./types";
+import { BaseDataConverter } from "./types";
 
-export class CsvConverter implements DataConverter<CsvOptions> {
+export class CsvConverter extends BaseDataConverter<CsvOptions> {
   readonly format = "csv";
   readonly extension = ".csv";
   readonly displayName = "CSV";
-
-  convert(
-    data: JsonValue,
-    options?: CsvOptions | Record<string, unknown>,
-  ): ConversionResult {
-    try {
-      const csvOptions = { ...this.getDefaultOptions(), ...options };
-      const result = this.convertToCSV(data, csvOptions);
-
-      return ok(result);
-    } catch (error) {
-      return err({
-        type: "CONVERSION_ERROR" as const,
-        message:
-          error instanceof Error ? error.message : "CSV conversion failed",
-        format: this.format,
-        context: { options },
-      });
-    }
-  }
 
   validate(data: JsonValue): DataValidationResult {
     if (data === null || data === undefined) {
@@ -73,7 +49,7 @@ export class CsvConverter implements DataConverter<CsvOptions> {
     };
   }
 
-  private convertToCSV(data: JsonValue, options: CsvOptions): string {
+  protected performConversion(data: JsonValue, options: CsvOptions): string {
     const { delimiter, includeHeaders, flattenArrays } = options;
 
     // Handle null or undefined data

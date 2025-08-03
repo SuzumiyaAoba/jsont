@@ -3,7 +3,7 @@
  */
 
 import type { JsonValue } from "@core/types/index";
-import type { Result } from "neverthrow";
+import { err, ok, type Result } from "neverthrow";
 
 export interface ValidationResult {
   isValid: boolean;
@@ -38,6 +38,66 @@ export interface DataConverter<TOptions = Record<string, unknown>> {
   ): ConversionResult;
   validate(data: JsonValue): DataValidationResult;
   getDefaultOptions(): TOptions;
+}
+
+/**
+ * Abstract base class for data converters
+ * Provides common functionality and error handling patterns
+ */
+export abstract class BaseDataConverter<TOptions = Record<string, unknown>>
+  implements DataConverter<TOptions>
+{
+  abstract readonly format: string;
+  abstract readonly extension: string;
+  abstract readonly displayName: string;
+
+  /**
+   * Convert data with standardized error handling
+   */
+  convert(
+    data: JsonValue,
+    options?: TOptions | Record<string, unknown>,
+  ): ConversionResult {
+    try {
+      const mergedOptions = this.mergeWithDefaults(options);
+      const result = this.performConversion(data, mergedOptions);
+      return ok(result);
+    } catch (error) {
+      return err({
+        type: "CONVERSION_ERROR" as const,
+        message:
+          error instanceof Error
+            ? error.message
+            : `${this.displayName} conversion failed`,
+        format: this.format,
+        context: { options },
+      });
+    }
+  }
+
+  /**
+   * Merge provided options with defaults
+   */
+  protected mergeWithDefaults(
+    options?: TOptions | Record<string, unknown>,
+  ): TOptions {
+    return { ...this.getDefaultOptions(), ...options } as TOptions;
+  }
+
+  /**
+   * Abstract method for format-specific conversion logic
+   * Implementations should focus on conversion without error handling
+   */
+  protected abstract performConversion(
+    data: JsonValue,
+    options: TOptions,
+  ): string;
+
+  /**
+   * Abstract methods that must be implemented by subclasses
+   */
+  abstract validate(data: JsonValue): DataValidationResult;
+  abstract getDefaultOptions(): TOptions;
 }
 
 export interface CsvOptions extends Record<string, unknown> {

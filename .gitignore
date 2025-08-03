@@ -64,3 +64,6 @@ Thumbs.db
 # Test files
 test.json
 *.test.json
+
+.serena/
+!.serena/project.yml
