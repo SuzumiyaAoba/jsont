@@ -5,6 +5,7 @@ import {
   AppStateProvider,
   useAppState,
 } from "@components/providers/AppStateProvider";
+import { EngineProvider } from "@components/providers/EngineProvider";
 
 import { StatusBarManager } from "@components/status/StatusBarManager";
 import type {
@@ -33,18 +34,29 @@ export function App({
   initialViewMode,
 }: AppProps) {
   return (
-    <AppStateProvider
+    <EngineProvider
       initialData={initialData}
-      initialError={initialError}
-      keyboardEnabled={keyboardEnabled}
+      initialViewMode={
+        initialViewMode === "tree"
+          ? "tree"
+          : initialViewMode === "schema"
+            ? "tree"
+            : "raw"
+      }
     >
-      <AppContent
+      <AppStateProvider
         initialData={initialData}
         initialError={initialError}
         keyboardEnabled={keyboardEnabled}
-        initialViewMode={initialViewMode}
-      />
-    </AppStateProvider>
+      >
+        <AppContent
+          initialData={initialData}
+          initialError={initialError}
+          keyboardEnabled={keyboardEnabled}
+          initialViewMode={initialViewMode}
+        />
+      </AppStateProvider>
+    </EngineProvider>
   );
 }
 

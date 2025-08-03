@@ -11,6 +11,7 @@ import type { NavigationAction } from "@features/collapsible/types/collapsible";
 import { DebugBar } from "@features/debug/components/DebugBar";
 import { JsonViewer } from "@features/json-rendering/components/JsonViewer";
 import { SchemaViewer } from "@features/schema/components/SchemaViewer";
+import { EnhancedTreeView } from "@features/tree/components/EnhancedTreeView";
 import { TreeView } from "@features/tree/components/TreeView";
 import { Box } from "ink";
 import type { ReactElement, RefObject } from "react";
@@ -67,6 +68,11 @@ export function ContentRouter({
       ? searchModeVisibleLines
       : visibleLines;
 
+  // Feature flag for engine-enhanced components
+  const useEngineEnhancedComponents =
+    process.env["NODE_ENV"] === "development" ||
+    process.env["USE_ENGINE_COMPONENTS"] === "true";
+
   // Don't show content when help is visible (it's handled by ModalManager)
   if (helpVisible) {
     return null;
@@ -77,19 +83,35 @@ export function ContentRouter({
       {/* Main content area */}
       <Box flexGrow={1} flexDirection="column">
         {treeViewMode ? (
-          <TreeView
-            data={displayData as JsonValue | null}
-            height={effectiveVisibleLines}
-            scrollOffset={scrollOffset}
-            searchTerm={searchState.searchTerm}
-            options={{
-              showArrayIndices: true,
-              showPrimitiveValues: true,
-              maxValueLength: 50,
-              useUnicodeTree: true,
-            }}
-            onKeyboardHandlerReady={safeSetTreeViewKeyboardHandler}
-          />
+          useEngineEnhancedComponents ? (
+            <EnhancedTreeView
+              data={displayData as JsonValue | null}
+              height={effectiveVisibleLines}
+              scrollOffset={scrollOffset}
+              searchTerm={searchState.searchTerm}
+              options={{
+                showArrayIndices: true,
+                showPrimitiveValues: true,
+                maxValueLength: 50,
+                useUnicodeTree: true,
+              }}
+              onKeyboardHandlerReady={safeSetTreeViewKeyboardHandler}
+            />
+          ) : (
+            <TreeView
+              data={displayData as JsonValue | null}
+              height={effectiveVisibleLines}
+              scrollOffset={scrollOffset}
+              searchTerm={searchState.searchTerm}
+              options={{
+                showArrayIndices: true,
+                showPrimitiveValues: true,
+                maxValueLength: 50,
+                useUnicodeTree: true,
+              }}
+              onKeyboardHandlerReady={safeSetTreeViewKeyboardHandler}
+            />
+          )
         ) : collapsibleMode ? (
           <CollapsibleJsonViewer
             ref={collapsibleViewerRef}
