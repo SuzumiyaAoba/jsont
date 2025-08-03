@@ -309,7 +309,7 @@ export class UIController {
     // For now, return a placeholder result
     return {
       handled: false,
-      state: this.engineState!,
+      state: this.engineState || ({} as JsonEngineState),
     };
   }
 

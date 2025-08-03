@@ -178,7 +178,7 @@ export class SearchEngine {
         break;
 
       case "end-search":
-        if (payload && payload.trim()) {
+        if (payload?.trim()) {
           results = this.performSearch(payload);
           this.addToHistory(payload);
         }
@@ -308,7 +308,7 @@ export class SearchEngine {
       this.state.currentMatch = Math.max(0, Math.min(0, result.total - 1));
 
       return result;
-    } catch (error) {
+    } catch (_error) {
       // Handle regex errors or other search errors
       const errorResult: SearchResult = {
         matches: [],

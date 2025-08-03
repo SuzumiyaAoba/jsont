@@ -4,7 +4,7 @@
  */
 
 import type { JsontConfig } from "@core/config/types";
-import type { JsonValue } from "@core/types/index";
+import type { JsonValue, KeyboardInput } from "@core/types/index";
 import {
   type ConfigChangeEvent,
   type DisplayDimensions,
@@ -12,6 +12,7 @@ import {
   type FileOperationResult,
   type RenderContext,
   UIAdapter,
+  type UIEvent,
   type UIRenderData,
   type UIUpdateInstruction,
 } from "./UIAdapter";
@@ -213,7 +214,7 @@ export class TUIAdapter extends UIAdapter {
   /**
    * Handle keyboard input from terminal
    */
-  private handleKeyboardInput(input: string, key: any): void {
+  private handleKeyboardInput(input: string, key: KeyboardInput): void {
     const tuiEvent: TUIKeyboardEvent = {
       input: input || "",
       key: {
@@ -247,7 +248,7 @@ export class TUIAdapter extends UIAdapter {
         return { success: false, error: "No content to save" };
       }
 
-      const fs = await import("fs/promises");
+      const fs = await import("node:fs/promises");
       const path = request.path || "./output.json";
 
       await fs.writeFile(path, request.content, "utf8");
@@ -275,7 +276,7 @@ export class TUIAdapter extends UIAdapter {
         return { success: false, error: "No file path provided" };
       }
 
-      const fs = await import("fs/promises");
+      const fs = await import("node:fs/promises");
       const content = await fs.readFile(request.path, "utf8");
 
       return {
@@ -304,13 +305,29 @@ export class TUIAdapter extends UIAdapter {
   /**
    * Emit an event to registered handlers
    */
-  private emitEvent(eventType: string, data: any): void {
+  private emitEvent(eventType: string, data: unknown): void {
     const handler = this.eventHandlers.get(eventType);
     if (handler) {
+      // Map generic event types to UI events when possible
+      const uiEventType = this.mapToUIEvent(eventType);
       handler({
-        type: eventType as any,
+        type: uiEventType,
         payload: data,
       });
+    }
+  }
+
+  /**
+   * Map internal event types to UIEvent types
+   */
+  private mapToUIEvent(eventType: string): UIEvent {
+    switch (eventType) {
+      case "keyboard":
+        return "key-press";
+      case "resize":
+        return "window-resize";
+      default:
+        return "key-press"; // Default fallback
     }
   }
 }

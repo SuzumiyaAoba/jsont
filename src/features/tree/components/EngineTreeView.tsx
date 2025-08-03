@@ -4,14 +4,10 @@
  */
 
 import { useConfig } from "@core/context/ConfigContext";
-import type {
-  TreeCommand,
-  TreeEngineState,
-  TreeRenderOptions,
-} from "@core/engine/TreeEngine";
+import type { TreeCommand, TreeRenderOptions } from "@core/engine/TreeEngine";
 import { TreeEngine } from "@core/engine/TreeEngine";
-import type { JsonValue } from "@core/types/index";
-import type { TreeDisplayOptions } from "@features/tree/types/tree";
+import type { JsonValue, KeyboardInput } from "@core/types/index";
+import type { TreeDisplayOptions, TreeLine } from "@features/tree/types/tree";
 import { getTreeLineText } from "@features/tree/utils/treeRenderer";
 import { Box, Text } from "ink";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -32,20 +28,8 @@ export interface EngineTreeViewProps {
   options?: Partial<TreeDisplayOptions>;
   /** Callback when keyboard handler is ready */
   onKeyboardHandlerReady?: (
-    handler: (input: string, key: any) => boolean,
+    handler: (input: string, key: KeyboardInput) => boolean,
   ) => void;
-}
-
-/**
- * Keyboard input interface
- */
-interface KeyboardInput {
-  upArrow?: boolean;
-  downArrow?: boolean;
-  pageUp?: boolean;
-  pageDown?: boolean;
-  return?: boolean;
-  ctrl?: boolean;
 }
 
 /**
@@ -160,7 +144,7 @@ export function EngineTreeView({
 
   // Helper function to render a tree line
   const renderTreeLine = useCallback(
-    (line: any, index: number, isSelected: boolean) => {
+    (line: TreeLine, index: number, isSelected: boolean) => {
       const currentEngineState = treeEngine.getState();
       const displayOptions: TreeDisplayOptions = {
         ...config.display.tree,

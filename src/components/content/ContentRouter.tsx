@@ -11,7 +11,6 @@ import type { NavigationAction } from "@features/collapsible/types/collapsible";
 import { DebugBar } from "@features/debug/components/DebugBar";
 import { JsonViewer } from "@features/json-rendering/components/JsonViewer";
 import { SchemaViewer } from "@features/schema/components/SchemaViewer";
-import { EngineTreeView } from "@features/tree/components/EngineTreeView";
 import { TreeView } from "@features/tree/components/TreeView";
 import { Box } from "ink";
 import type { ReactElement, RefObject } from "react";

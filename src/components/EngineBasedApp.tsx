@@ -12,7 +12,7 @@ import type {
   JsonViewMode,
 } from "@core/engine/JsonEngine";
 import { JsonEngine } from "@core/engine/JsonEngine";
-import type { JsonValue } from "@core/types/index";
+import type { JsonValue, KeyboardInput } from "@core/types/index";
 import { EngineSearchView } from "@features/search/components/EngineSearchView";
 import { EngineTreeView } from "@features/tree/components/EngineTreeView";
 import { Box, Text, useInput } from "ink";
@@ -31,24 +31,6 @@ export interface EngineBasedAppProps {
     width: number;
     height: number;
   };
-}
-
-/**
- * Keyboard input interface
- */
-interface KeyboardInput {
-  upArrow?: boolean;
-  downArrow?: boolean;
-  leftArrow?: boolean;
-  rightArrow?: boolean;
-  pageUp?: boolean;
-  pageDown?: boolean;
-  return?: boolean;
-  escape?: boolean;
-  ctrl?: boolean;
-  shift?: boolean;
-  meta?: boolean;
-  tab?: boolean;
 }
 
 /**
@@ -91,10 +73,10 @@ export function EngineBasedApp({
 
   // Active component handlers
   const [treeKeyboardHandler, setTreeKeyboardHandler] = useState<
-    ((input: string, key: any) => boolean) | null
+    ((input: string, key: KeyboardInput) => boolean) | null
   >(null);
   const [searchKeyboardHandler, setSearchKeyboardHandler] = useState<
-    ((input: string, key: any) => boolean) | null
+    ((input: string, key: KeyboardInput) => boolean) | null
   >(null);
 
   // Initialize UI controller
@@ -127,8 +109,10 @@ export function EngineBasedApp({
   );
 
   // Handle search operations
-  const handleSearchResults = useCallback((results: any) => {
-    setSearchTerm(results.term || "");
+  const handleSearchResults = useCallback((results: unknown) => {
+    if (results && typeof results === "object" && "term" in results) {
+      setSearchTerm(String((results as { term?: string }).term || ""));
+    }
   }, []);
 
   // Global keyboard handler

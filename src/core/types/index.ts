@@ -148,5 +148,33 @@ export interface SearchResult {
   contextLine: string;
 }
 
+// Keyboard input types
+export interface KeyboardInput {
+  name?: string;
+  ctrl?: boolean;
+  shift?: boolean;
+  meta?: boolean;
+  upArrow?: boolean;
+  downArrow?: boolean;
+  leftArrow?: boolean;
+  rightArrow?: boolean;
+  pageUp?: boolean;
+  pageDown?: boolean;
+  return?: boolean;
+  escape?: boolean;
+  tab?: boolean;
+}
+
+export interface TreeLineData {
+  id: string;
+  depth: number;
+  path: string[];
+  key?: string;
+  value?: JsonValue;
+  type: "object" | "array" | "value" | "property";
+  isExpanded?: boolean;
+  hasChildren?: boolean;
+}
+
 // Export default to satisfy ES module requirements
 export default {};
