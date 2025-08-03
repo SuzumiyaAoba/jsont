@@ -248,7 +248,7 @@ export class SearchEngine {
    * Get search navigation info
    */
   getNavigationInfo(): string {
-    if (this.state.totalMatches === 0) {
+    if (this.state.totalMatches === 0 || this.state.currentMatch < 0) {
       return "No matches";
     }
     return `${this.state.currentMatch + 1}/${this.state.totalMatches}`;
@@ -305,7 +305,7 @@ export class SearchEngine {
       };
 
       this.state.totalMatches = result.total;
-      this.state.currentMatch = result.total > 0 ? 0 : -1;
+      this.state.currentMatch = Math.max(0, Math.min(0, result.total - 1));
 
       return result;
     } catch (error) {

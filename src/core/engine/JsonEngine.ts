@@ -465,9 +465,7 @@ export class JsonEngine {
    * Get current data (JQ result if available, otherwise original)
    */
   private getCurrentData(): JsonValue | null {
-    return this.state.jqResult !== undefined
-      ? this.state.jqResult
-      : this.state.data;
+    return "jqResult" in this.state ? this.state.jqResult : this.state.data;
   }
 
   /**

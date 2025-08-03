@@ -104,11 +104,20 @@ export interface TreeRenderResult {
  */
 export class TreeEngine {
   private state: TreeEngineState;
+  private defaultDisplayOptions: TreeDisplayOptions;
 
   constructor(
     data: JsonValue | null,
     options: Partial<TreeDisplayOptions> = {},
   ) {
+    this.defaultDisplayOptions = {
+      showArrayIndices: true,
+      showPrimitiveValues: true,
+      maxValueLength: 50,
+      useUnicodeTree: true,
+      showSchemaTypes: options.showSchemaTypes ?? false,
+    };
+
     this.state = {
       treeState: buildTreeFromJson(data, { expandLevel: 1 }),
       selectedLineIndex: 0,
@@ -265,10 +274,7 @@ export class TreeEngine {
    */
   getLineText(line: TreeLine, options?: Partial<TreeDisplayOptions>): string {
     const displayOptions: TreeDisplayOptions = {
-      showArrayIndices: true,
-      showPrimitiveValues: true,
-      maxValueLength: 50,
-      useUnicodeTree: true,
+      ...this.defaultDisplayOptions,
       showSchemaTypes: this.state.showSchemaTypes,
       ...options,
     };
@@ -292,10 +298,7 @@ export class TreeEngine {
    */
   private navigateDown(): boolean {
     const displayOptions: TreeDisplayOptions = {
-      showArrayIndices: true,
-      showPrimitiveValues: true,
-      maxValueLength: 50,
-      useUnicodeTree: true,
+      ...this.defaultDisplayOptions,
       showSchemaTypes: this.state.showSchemaTypes,
     };
 
@@ -327,10 +330,7 @@ export class TreeEngine {
    */
   private navigatePageDown(height: number): boolean {
     const displayOptions: TreeDisplayOptions = {
-      showArrayIndices: true,
-      showPrimitiveValues: true,
-      maxValueLength: 50,
-      useUnicodeTree: true,
+      ...this.defaultDisplayOptions,
       showSchemaTypes: this.state.showSchemaTypes,
     };
 
@@ -365,10 +365,7 @@ export class TreeEngine {
    */
   private navigateToBottom(): boolean {
     const displayOptions: TreeDisplayOptions = {
-      showArrayIndices: true,
-      showPrimitiveValues: true,
-      maxValueLength: 50,
-      useUnicodeTree: true,
+      ...this.defaultDisplayOptions,
       showSchemaTypes: this.state.showSchemaTypes,
     };
 
@@ -389,10 +386,7 @@ export class TreeEngine {
    */
   private toggleCurrentNode(): boolean {
     const displayOptions: TreeDisplayOptions = {
-      showArrayIndices: true,
-      showPrimitiveValues: true,
-      maxValueLength: 50,
-      useUnicodeTree: true,
+      ...this.defaultDisplayOptions,
       showSchemaTypes: this.state.showSchemaTypes,
     };
 

@@ -356,11 +356,13 @@ export class UIController {
    * Build render data from engine state
    */
   private buildRenderData(state: JsonEngineState): UIRenderData {
+    // TODO: Generate tree data from TreeEngine
+    // TODO: Include search results from SearchEngine
+    // TODO: Add export data if available
     return {
       engineState: state,
-      // Tree data would be generated here
-      // Search results would be included here
-      // etc.
+      // Optional properties are omitted for now - will be populated by respective engines
+      // when this controller is integrated with actual engines
     };
   }
 
