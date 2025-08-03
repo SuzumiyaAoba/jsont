@@ -80,6 +80,8 @@ export interface TreeRenderOptions {
   width: number;
   /** Tree display options */
   displayOptions: TreeDisplayOptions;
+  /** Optional engine state to use for rendering */
+  engineState?: TreeEngineState;
 }
 
 /**
@@ -146,6 +148,7 @@ export class TreeEngine {
     this.state.treeState = buildTreeFromJson(data, { expandLevel: 1 });
     this.state.selectedLineIndex = 0;
     this.state.scrollOffset = 0;
+    this.cachedDisplayOptions = undefined; // Clear cache on data update
     this.applySearch(this.state.searchTerm);
   }
 
@@ -176,11 +179,17 @@ export class TreeEngine {
 
     switch (command) {
       case "navigate-up":
+        if (options) {
+          this.currentViewHeight = options.height;
+        }
         handled = this.navigateUp();
         needsRefresh = handled;
         break;
 
       case "navigate-down":
+        if (options) {
+          this.currentViewHeight = options.height;
+        }
         handled = this.navigateDown();
         needsRefresh = handled;
         break;
@@ -200,11 +209,17 @@ export class TreeEngine {
         break;
 
       case "navigate-to-top":
+        if (options) {
+          this.currentViewHeight = options.height;
+        }
         handled = this.navigateToTop();
         needsRefresh = handled;
         break;
 
       case "navigate-to-bottom":
+        if (options) {
+          this.currentViewHeight = options.height;
+        }
         handled = this.navigateToBottom();
         needsRefresh = handled;
         break;
@@ -251,27 +266,30 @@ export class TreeEngine {
   render(options: TreeRenderOptions): TreeRenderResult {
     // Update current view height for scroll calculations
     this.currentViewHeight = options.height;
-    
+
+    // Use provided engine state or fall back to internal state
+    const renderState = options.engineState || this.state;
+
     const displayOptions: TreeDisplayOptions = {
       ...options.displayOptions,
-      showSchemaTypes: this.state.showSchemaTypes,
+      showSchemaTypes: renderState.showSchemaTypes,
     };
 
-    const allLines = renderTreeLines(this.state.treeState, displayOptions);
+    const allLines = renderTreeLines(renderState.treeState, displayOptions);
     const visibleLines = getVisibleTreeLines(
       allLines,
-      this.state.scrollOffset,
-      options.height,
+      renderState.scrollOffset,
+      renderState.scrollOffset + options.height,
     );
 
-    const visibleStart = this.state.scrollOffset;
+    const visibleStart = renderState.scrollOffset;
     const visibleEnd = Math.min(visibleStart + options.height, allLines.length);
 
     return {
       lines: visibleLines,
       totalLines: allLines.length,
       visibleRange: { start: visibleStart, end: visibleEnd },
-      hasScrollUp: this.state.scrollOffset > 0,
+      hasScrollUp: renderState.scrollOffset > 0,
       hasScrollDown: visibleEnd < allLines.length,
     };
   }
@@ -280,7 +298,10 @@ export class TreeEngine {
    * Get current display options with caching
    */
   private getDisplayOptions(): TreeDisplayOptions {
-    if (!this.cachedDisplayOptions || this.lastShowSchemaTypes !== this.state.showSchemaTypes) {
+    if (
+      !this.cachedDisplayOptions ||
+      this.lastShowSchemaTypes !== this.state.showSchemaTypes
+    ) {
       this.cachedDisplayOptions = {
         ...this.defaultDisplayOptions,
         showSchemaTypes: this.state.showSchemaTypes,
@@ -294,9 +315,9 @@ export class TreeEngine {
    * Get text representation of a tree line
    */
   getLineText(line: TreeLine, options?: Partial<TreeDisplayOptions>): string {
-    const displayOptions = options ? 
-      { ...this.getDisplayOptions(), ...options } : 
-      this.getDisplayOptions();
+    const displayOptions = options
+      ? { ...this.getDisplayOptions(), ...options }
+      : this.getDisplayOptions();
     return getTreeLineText(line, displayOptions);
   }
 
@@ -316,7 +337,10 @@ export class TreeEngine {
    * Navigate down one line
    */
   private navigateDown(): boolean {
-    const allLines = renderTreeLines(this.state.treeState, this.getDisplayOptions());
+    const allLines = renderTreeLines(
+      this.state.treeState,
+      this.getDisplayOptions(),
+    );
     if (this.state.selectedLineIndex < allLines.length - 1) {
       this.state.selectedLineIndex++;
       this.adjustScrollForSelection();
@@ -343,7 +367,10 @@ export class TreeEngine {
    * Navigate down by page
    */
   private navigatePageDown(height: number): boolean {
-    const allLines = renderTreeLines(this.state.treeState, this.getDisplayOptions());
+    const allLines = renderTreeLines(
+      this.state.treeState,
+      this.getDisplayOptions(),
+    );
     const pageSize = Math.max(1, Math.floor(height / 2));
     const newIndex = Math.min(
       allLines.length - 1,
@@ -373,7 +400,10 @@ export class TreeEngine {
    * Navigate to bottom
    */
   private navigateToBottom(): boolean {
-    const allLines = renderTreeLines(this.state.treeState, this.getDisplayOptions());
+    const allLines = renderTreeLines(
+      this.state.treeState,
+      this.getDisplayOptions(),
+    );
     if (allLines.length > 0) {
       const newIndex = allLines.length - 1;
       if (newIndex !== this.state.selectedLineIndex) {
@@ -389,7 +419,10 @@ export class TreeEngine {
    * Toggle expansion of current node
    */
   private toggleCurrentNode(): boolean {
-    const allLines = renderTreeLines(this.state.treeState, this.getDisplayOptions());
+    const allLines = renderTreeLines(
+      this.state.treeState,
+      this.getDisplayOptions(),
+    );
     const currentLine = allLines[this.state.selectedLineIndex];
 
     if (currentLine?.hasChildren) {
