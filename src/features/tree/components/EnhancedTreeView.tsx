@@ -7,6 +7,8 @@ import { useTreeEngineIntegration } from "@components/providers/EngineProvider";
 import { useConfig } from "@core/context/ConfigContext";
 import type { KeyboardInput } from "@core/types/app";
 import type { JsonValue } from "@core/types/index";
+import type { TreeDisplayOptions, TreeLine } from "@features/tree/types/tree";
+import { getTreeLineText } from "@features/tree/utils/treeRenderer";
 import { Box, Text } from "ink";
 import {
   type ReactElement,
@@ -15,8 +17,6 @@ import {
   useMemo,
   useState,
 } from "react";
-import type { TreeDisplayOptions, TreeLine } from "../types/tree";
-import { getTreeLineText } from "../utils/treeRenderer";
 
 /**
  * Props interface for the Enhanced TreeView component

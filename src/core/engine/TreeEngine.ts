@@ -105,6 +105,9 @@ export interface TreeRenderResult {
 export class TreeEngine {
   private state: TreeEngineState;
   private defaultDisplayOptions: TreeDisplayOptions;
+  private currentViewHeight: number = 20;
+  private cachedDisplayOptions: TreeDisplayOptions | undefined;
+  private lastShowSchemaTypes: boolean | undefined;
 
   constructor(
     data: JsonValue | null,
@@ -223,6 +226,7 @@ export class TreeEngine {
 
       case "toggle-schema-types":
         this.state.showSchemaTypes = !this.state.showSchemaTypes;
+        this.cachedDisplayOptions = undefined; // Invalidate cache
         handled = true;
         needsRefresh = true;
         break;
@@ -245,6 +249,9 @@ export class TreeEngine {
    * Render tree for display
    */
   render(options: TreeRenderOptions): TreeRenderResult {
+    // Update current view height for scroll calculations
+    this.currentViewHeight = options.height;
+    
     const displayOptions: TreeDisplayOptions = {
       ...options.displayOptions,
       showSchemaTypes: this.state.showSchemaTypes,
@@ -270,14 +277,26 @@ export class TreeEngine {
   }
 
   /**
+   * Get current display options with caching
+   */
+  private getDisplayOptions(): TreeDisplayOptions {
+    if (!this.cachedDisplayOptions || this.lastShowSchemaTypes !== this.state.showSchemaTypes) {
+      this.cachedDisplayOptions = {
+        ...this.defaultDisplayOptions,
+        showSchemaTypes: this.state.showSchemaTypes,
+      };
+      this.lastShowSchemaTypes = this.state.showSchemaTypes;
+    }
+    return this.cachedDisplayOptions;
+  }
+
+  /**
    * Get text representation of a tree line
    */
   getLineText(line: TreeLine, options?: Partial<TreeDisplayOptions>): string {
-    const displayOptions: TreeDisplayOptions = {
-      ...this.defaultDisplayOptions,
-      showSchemaTypes: this.state.showSchemaTypes,
-      ...options,
-    };
+    const displayOptions = options ? 
+      { ...this.getDisplayOptions(), ...options } : 
+      this.getDisplayOptions();
     return getTreeLineText(line, displayOptions);
   }
 
@@ -297,12 +316,7 @@ export class TreeEngine {
    * Navigate down one line
    */
   private navigateDown(): boolean {
-    const displayOptions: TreeDisplayOptions = {
-      ...this.defaultDisplayOptions,
-      showSchemaTypes: this.state.showSchemaTypes,
-    };
-
-    const allLines = renderTreeLines(this.state.treeState, displayOptions);
+    const allLines = renderTreeLines(this.state.treeState, this.getDisplayOptions());
     if (this.state.selectedLineIndex < allLines.length - 1) {
       this.state.selectedLineIndex++;
       this.adjustScrollForSelection();
@@ -329,12 +343,7 @@ export class TreeEngine {
    * Navigate down by page
    */
   private navigatePageDown(height: number): boolean {
-    const displayOptions: TreeDisplayOptions = {
-      ...this.defaultDisplayOptions,
-      showSchemaTypes: this.state.showSchemaTypes,
-    };
-
-    const allLines = renderTreeLines(this.state.treeState, displayOptions);
+    const allLines = renderTreeLines(this.state.treeState, this.getDisplayOptions());
     const pageSize = Math.max(1, Math.floor(height / 2));
     const newIndex = Math.min(
       allLines.length - 1,
@@ -364,12 +373,7 @@ export class TreeEngine {
    * Navigate to bottom
    */
   private navigateToBottom(): boolean {
-    const displayOptions: TreeDisplayOptions = {
-      ...this.defaultDisplayOptions,
-      showSchemaTypes: this.state.showSchemaTypes,
-    };
-
-    const allLines = renderTreeLines(this.state.treeState, displayOptions);
+    const allLines = renderTreeLines(this.state.treeState, this.getDisplayOptions());
     if (allLines.length > 0) {
       const newIndex = allLines.length - 1;
       if (newIndex !== this.state.selectedLineIndex) {
@@ -385,12 +389,7 @@ export class TreeEngine {
    * Toggle expansion of current node
    */
   private toggleCurrentNode(): boolean {
-    const displayOptions: TreeDisplayOptions = {
-      ...this.defaultDisplayOptions,
-      showSchemaTypes: this.state.showSchemaTypes,
-    };
-
-    const allLines = renderTreeLines(this.state.treeState, displayOptions);
+    const allLines = renderTreeLines(this.state.treeState, this.getDisplayOptions());
     const currentLine = allLines[this.state.selectedLineIndex];
 
     if (currentLine?.hasChildren) {
@@ -423,18 +422,14 @@ export class TreeEngine {
    * Adjust scroll offset to keep selected line visible
    */
   private adjustScrollForSelection(): void {
-    // This method would typically use height parameter, but since it's internal
-    // we'll use a reasonable default for now
-    const defaultHeight = 20;
-
     if (this.state.selectedLineIndex < this.state.scrollOffset) {
       this.state.scrollOffset = this.state.selectedLineIndex;
     } else if (
       this.state.selectedLineIndex >=
-      this.state.scrollOffset + defaultHeight
+      this.state.scrollOffset + this.currentViewHeight
     ) {
       this.state.scrollOffset =
-        this.state.selectedLineIndex - defaultHeight + 1;
+        this.state.selectedLineIndex - this.currentViewHeight + 1;
     }
 
     // Ensure scroll offset is not negative

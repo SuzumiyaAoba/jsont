@@ -308,7 +308,7 @@ export class JsonEngine {
   ): Promise<{ success: boolean; result?: JsonValue; error?: string }> {
     this.state.jqQuery = query;
 
-    if (!this.state.data) {
+    if (this.state.data === null || this.state.data === undefined) {
       const error = "No JSON data to transform";
       this.state.jqError = error;
       return { success: false, error };

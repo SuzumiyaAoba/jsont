@@ -269,7 +269,7 @@ export class SearchEngine {
 
     this.state.term = term;
 
-    if (!this.data || !term.trim()) {
+    if (this.data === null || this.data === undefined || !term.trim()) {
       const emptyResult: SearchResult = {
         matches: [],
         total: 0,
