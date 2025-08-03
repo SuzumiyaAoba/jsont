@@ -5,6 +5,7 @@ import {
   AppStateProvider,
   useAppState,
 } from "@components/providers/AppStateProvider";
+
 import { StatusBarManager } from "@components/status/StatusBarManager";
 import type {
   AppMode,

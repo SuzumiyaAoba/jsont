@@ -70,41 +70,33 @@ export function EngineTreeView({
       }),
   );
 
-  // Engine state
-  const [engineState, setEngineState] = useState<TreeEngineState>(() =>
-    treeEngine.getState(),
-  );
-
   // Update engine data when props change
   useEffect(() => {
     treeEngine.updateData(data);
-    setEngineState(treeEngine.getState());
   }, [data, treeEngine]);
 
   // Apply search filter
   useEffect(() => {
     treeEngine.applySearch(searchTerm);
-    setEngineState(treeEngine.getState());
   }, [searchTerm, treeEngine]);
 
-  // Memoize render options
-  const renderOptions = useMemo(
-    (): TreeRenderOptions => ({
+  // Force re-render counter for engine state changes
+  const [, forceUpdate] = useState(0);
+
+  // Get rendered tree data - use a ref to avoid circular dependencies
+  const renderResult = useMemo(() => {
+    const currentEngineState = treeEngine.getState();
+    const currentRenderOptions: TreeRenderOptions = {
       height,
       width,
       displayOptions: {
         ...config.display.tree,
         ...options,
-        showSchemaTypes: engineState.showSchemaTypes,
+        showSchemaTypes: currentEngineState.showSchemaTypes,
       },
-    }),
-    [height, width, config.display.tree, options, engineState.showSchemaTypes],
-  );
-
-  // Get rendered tree data
-  const renderResult = useMemo(() => {
-    return treeEngine.render(renderOptions);
-  }, [treeEngine, renderOptions, engineState]);
+    };
+    return treeEngine.render(currentRenderOptions);
+  }, [treeEngine, height, width, config.display.tree, options]);
 
   // Handle keyboard input
   const handleKeyboardInput = useCallback(
@@ -137,16 +129,26 @@ export function EngineTreeView({
       }
 
       if (command) {
-        const result = treeEngine.executeCommand(command, renderOptions);
+        const currentEngineState = treeEngine.getState();
+        const currentRenderOptions: TreeRenderOptions = {
+          height,
+          width,
+          displayOptions: {
+            ...config.display.tree,
+            ...options,
+            showSchemaTypes: currentEngineState.showSchemaTypes,
+          },
+        };
+        const result = treeEngine.executeCommand(command, currentRenderOptions);
         if (result.handled) {
-          setEngineState(result.state);
+          forceUpdate((prev) => prev + 1);
           return true;
         }
       }
 
       return false;
     },
-    [treeEngine, renderOptions],
+    [treeEngine, height, width, config.display.tree, options],
   );
 
   // Register keyboard handler with parent
@@ -159,20 +161,23 @@ export function EngineTreeView({
   // Helper function to render a tree line
   const renderTreeLine = useCallback(
     (line: any, index: number, isSelected: boolean) => {
+      const currentEngineState = treeEngine.getState();
       const displayOptions: TreeDisplayOptions = {
         ...config.display.tree,
         ...options,
-        showSchemaTypes: engineState.showSchemaTypes,
+        showSchemaTypes: currentEngineState.showSchemaTypes,
       };
 
       const lineText = getTreeLineText(line, displayOptions);
       const isMatched =
-        engineState.searchTerm &&
-        lineText.toLowerCase().includes(engineState.searchTerm.toLowerCase());
+        currentEngineState.searchTerm &&
+        lineText
+          .toLowerCase()
+          .includes(currentEngineState.searchTerm.toLowerCase());
 
       return (
         <Box key={line.id} width={width}>
-          {engineState.showLineNumbers && (
+          {currentEngineState.showLineNumbers && (
             <>
               <Text color={isSelected ? "yellow" : "gray"}>
                 {isSelected ? ">" : " "}
@@ -195,14 +200,7 @@ export function EngineTreeView({
         </Box>
       );
     },
-    [
-      config.display.tree,
-      options,
-      engineState.showSchemaTypes,
-      engineState.showLineNumbers,
-      engineState.searchTerm,
-      width,
-    ],
+    [treeEngine, config.display.tree, options, width],
   );
 
   return (
@@ -219,13 +217,15 @@ export function EngineTreeView({
         {renderResult.lines.length > 0 ? (
           renderResult.lines.map((line, index) => {
             const absoluteIndex = renderResult.visibleRange.start + index;
-            const isSelected = absoluteIndex === engineState.selectedLineIndex;
+            const currentEngineState = treeEngine.getState();
+            const isSelected =
+              absoluteIndex === currentEngineState.selectedLineIndex;
             return renderTreeLine(line, absoluteIndex, isSelected);
           })
         ) : (
           <Box width={width}>
             <Text color="gray" italic>
-              {engineState.searchTerm
+              {treeEngine.getState().searchTerm
                 ? "No matches found"
                 : "No data to display"}
             </Text>
@@ -240,7 +240,7 @@ export function EngineTreeView({
             {renderResult.hasScrollUp ? "↑ More above" : ""}
           </Text>
           <Text color="gray">
-            Line {engineState.selectedLineIndex + 1} of{" "}
+            Line {treeEngine.getState().selectedLineIndex + 1} of{" "}
             {renderResult.totalLines}
           </Text>
           <Text color="gray">
