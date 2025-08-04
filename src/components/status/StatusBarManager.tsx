@@ -74,8 +74,8 @@ export function StatusBarManager({
             width="100%"
           >
             <Text color="yellow" dimColor>
-              ⚠️ Keyboard input unavailable (terminal access failed). Use file
-              input: jsont file.json
+              Warning: Keyboard input unavailable (terminal access failed). Use
+              file input: jsont file.json
             </Text>
           </Box>
         </Box>

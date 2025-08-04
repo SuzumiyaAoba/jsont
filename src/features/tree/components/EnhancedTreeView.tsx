@@ -245,7 +245,7 @@ export function EnhancedTreeView({
       {/* Header */}
       <Box width={width}>
         <Text color="green" bold>
-          🌲 TREE VIEW (j/k: navigate, Space: toggle, t: types, L: lines)
+          TREE VIEW (j/k: navigate, Space: toggle, t: types, L: lines)
         </Text>
       </Box>
 
