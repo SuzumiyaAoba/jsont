@@ -174,14 +174,6 @@ export function EnhancedTreeView({
 
         if (result.handled) {
           setLocalEngineState(result.state);
-          // Debug: Log state changes in development
-          if (process.env["NODE_ENV"] === "development") {
-            console.log("TreeEngine command executed:", command, "New state:", {
-              selectedLineIndex: result.state.selectedLineIndex,
-              scrollOffset: result.state.scrollOffset,
-              totalLines: renderResult.totalLines,
-            });
-          }
           return true;
         }
       }
