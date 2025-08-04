@@ -92,7 +92,7 @@ function NumberFieldComponent({ field, value, isEditing }: NumberFieldProps) {
           </Box>
           {!isValidInput() && (
             <Box marginLeft={1}>
-              <Text color="red">⚠️</Text>
+              <Text color="red">!</Text>
             </Box>
           )}
         </Box>

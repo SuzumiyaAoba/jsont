@@ -244,7 +244,7 @@ export function EnhancedSearchView({
       {/* Search header */}
       <Box width={width}>
         <Text color="cyan" bold>
-          🔍 SEARCH (Enhanced with SearchEngine)
+          SEARCH (Enhanced with SearchEngine)
         </Text>
       </Box>
 

@@ -307,7 +307,7 @@ export const SETTINGS_SECTIONS: SettingsSection[] = [
   {
     id: "interface",
     name: "Interface",
-    icon: "🖥️",
+    icon: "",
     description: "General interface and display settings",
     fields: [
       {
@@ -345,7 +345,7 @@ export const SETTINGS_SECTIONS: SettingsSection[] = [
   {
     id: "navigation",
     name: "Navigation",
-    icon: "⌨️",
+    icon: "",
     description: "Keyboard shortcuts and movement",
     fields: [
       {
