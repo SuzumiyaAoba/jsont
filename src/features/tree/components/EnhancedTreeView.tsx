@@ -4,7 +4,8 @@
  */
 
 import { useTreeEngineIntegration } from "@components/providers/EngineProvider";
-import { type Config, useConfig } from "@core/context/ConfigContext";
+import type { JsontConfig } from "@core/config/index.js";
+import { useConfig } from "@core/context/ConfigContext";
 import type { KeyboardInput } from "@core/types/app";
 import type { JsonValue } from "@core/types/index";
 import type { TreeDisplayOptions, TreeLine } from "@features/tree/types/tree";
@@ -49,7 +50,7 @@ interface TreeViewPresentationProps {
   /** Current engine state */
   engineState: import("@core/engine/TreeEngine").TreeEngineState;
   /** Configuration from context */
-  config: Config;
+  config: JsontConfig;
   /** Display options */
   options: Partial<TreeDisplayOptions>;
   /** Component width */
