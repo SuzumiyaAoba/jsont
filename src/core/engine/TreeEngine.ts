@@ -74,14 +74,20 @@ export interface TreeCommandResult {
  * Options for tree rendering
  */
 export interface TreeRenderOptions {
-  /** Height of the visible area */
-  height: number;
-  /** Width of the visible area */
-  width: number;
   /** Tree display options */
   displayOptions: TreeDisplayOptions;
   /** Optional engine state to use for rendering */
   engineState?: TreeEngineState;
+}
+
+/**
+ * UI-specific viewport options for rendering
+ */
+export interface ViewportOptions {
+  /** Height of the visible area */
+  height: number;
+  /** Width of the visible area */
+  width: number;
 }
 
 /**
@@ -170,56 +176,37 @@ export class TreeEngine {
   /**
    * Execute a tree command
    */
-  executeCommand(
-    command: TreeCommand,
-    options?: TreeRenderOptions,
-  ): TreeCommandResult {
+  executeCommand(command: TreeCommand): TreeCommandResult {
     let handled = false;
     let needsRefresh = false;
 
     switch (command) {
       case "navigate-up":
-        if (options) {
-          this.currentViewHeight = options.height;
-        }
         handled = this.navigateUp();
         needsRefresh = handled;
         break;
 
       case "navigate-down":
-        if (options) {
-          this.currentViewHeight = options.height;
-        }
         handled = this.navigateDown();
         needsRefresh = handled;
         break;
 
       case "navigate-page-up":
-        if (options) {
-          handled = this.navigatePageUp(options.height);
-          needsRefresh = handled;
-        }
+        handled = this.navigatePageUp();
+        needsRefresh = handled;
         break;
 
       case "navigate-page-down":
-        if (options) {
-          handled = this.navigatePageDown(options.height);
-          needsRefresh = handled;
-        }
+        handled = this.navigatePageDown();
+        needsRefresh = handled;
         break;
 
       case "navigate-to-top":
-        if (options) {
-          this.currentViewHeight = options.height;
-        }
         handled = this.navigateToTop();
         needsRefresh = handled;
         break;
 
       case "navigate-to-bottom":
-        if (options) {
-          this.currentViewHeight = options.height;
-        }
         handled = this.navigateToBottom();
         needsRefresh = handled;
         break;
@@ -263,9 +250,12 @@ export class TreeEngine {
   /**
    * Render tree for display
    */
-  render(options: TreeRenderOptions): TreeRenderResult {
+  render(
+    options: TreeRenderOptions,
+    viewport: ViewportOptions,
+  ): TreeRenderResult {
     // Update current view height for scroll calculations
-    this.currentViewHeight = options.height;
+    this.currentViewHeight = viewport.height;
 
     // Use provided engine state or fall back to internal state
     const renderState = options.engineState || this.state;
@@ -279,11 +269,14 @@ export class TreeEngine {
     const visibleLines = getVisibleTreeLines(
       allLines,
       renderState.scrollOffset,
-      renderState.scrollOffset + options.height,
+      renderState.scrollOffset + viewport.height,
     );
 
     const visibleStart = renderState.scrollOffset;
-    const visibleEnd = Math.min(visibleStart + options.height, allLines.length);
+    const visibleEnd = Math.min(
+      visibleStart + viewport.height,
+      allLines.length,
+    );
 
     return {
       lines: visibleLines,
@@ -352,8 +345,8 @@ export class TreeEngine {
   /**
    * Navigate up by page
    */
-  private navigatePageUp(height: number): boolean {
-    const pageSize = Math.max(1, Math.floor(height / 2));
+  private navigatePageUp(): boolean {
+    const pageSize = Math.max(1, Math.floor(this.currentViewHeight / 2));
     const newIndex = Math.max(0, this.state.selectedLineIndex - pageSize);
     if (newIndex !== this.state.selectedLineIndex) {
       this.state.selectedLineIndex = newIndex;
@@ -366,12 +359,12 @@ export class TreeEngine {
   /**
    * Navigate down by page
    */
-  private navigatePageDown(height: number): boolean {
+  private navigatePageDown(): boolean {
     const allLines = renderTreeLines(
       this.state.treeState,
       this.getDisplayOptions(),
     );
-    const pageSize = Math.max(1, Math.floor(height / 2));
+    const pageSize = Math.max(1, Math.floor(this.currentViewHeight / 2));
     const newIndex = Math.min(
       allLines.length - 1,
       this.state.selectedLineIndex + pageSize,

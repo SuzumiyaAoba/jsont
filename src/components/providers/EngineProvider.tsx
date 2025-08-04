@@ -27,7 +27,7 @@ interface EngineContextValue {
 
   // Engine command methods
   executeJsonCommand: (command: string, payload?: unknown) => void;
-  executeTreeCommand: (command: string, payload?: unknown) => void;
+  executeTreeCommand: (command: string) => void;
   executeSearchCommand: (command: string, payload?: unknown) => void;
 
   // Convenience methods for common operations
@@ -111,12 +111,10 @@ export function EngineProvider({
     }
   };
 
-  const executeTreeCommand = (command: string, payload?: unknown) => {
+  const executeTreeCommand = (command: string) => {
     const result = treeEngine.executeCommand(
       // biome-ignore lint/suspicious/noExplicitAny: Runtime type safety for generic command
       command as any,
-      // biome-ignore lint/suspicious/noExplicitAny: Runtime type safety for generic payload
-      payload as any,
     );
     if (result.handled) {
       setTreeEngineState(result.state);
