@@ -11,7 +11,7 @@ import type { NavigationAction } from "@features/collapsible/types/collapsible";
 import { DebugBar } from "@features/debug/components/DebugBar";
 import { JsonViewer } from "@features/json-rendering/components/JsonViewer";
 import { SchemaViewer } from "@features/schema/components/SchemaViewer";
-import { TreeView } from "@features/tree/components/TreeView";
+import { EnhancedTreeView } from "@features/tree/components/EnhancedTreeView";
 import { Box } from "ink";
 import type { ReactElement, RefObject } from "react";
 import { useCallback } from "react";
@@ -77,7 +77,7 @@ export function ContentRouter({
       {/* Main content area */}
       <Box flexGrow={1} flexDirection="column">
         {treeViewMode ? (
-          <TreeView
+          <EnhancedTreeView
             data={displayData as JsonValue | null}
             height={effectiveVisibleLines}
             scrollOffset={scrollOffset}
