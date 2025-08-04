@@ -4,6 +4,7 @@
  */
 
 import { useTreeEngineIntegration } from "@components/providers/EngineProvider";
+import type { JsontConfig } from "@core/config/index.js";
 import { useConfig } from "@core/context/ConfigContext";
 import type { KeyboardInput } from "@core/types/app";
 import type { JsonValue } from "@core/types/index";
@@ -38,6 +39,135 @@ export interface EnhancedTreeViewProps {
   onKeyboardHandlerReady?: (
     handler: (input: string, key: KeyboardInput) => boolean,
   ) => void;
+}
+
+/**
+ * Props for the TreeViewPresentation component
+ */
+interface TreeViewPresentationProps {
+  /** Rendered tree data from engine */
+  renderResult: import("@core/engine/TreeEngine").TreeRenderResult;
+  /** Current engine state */
+  engineState: import("@core/engine/TreeEngine").TreeEngineState;
+  /** Configuration from context */
+  config: JsontConfig;
+  /** Display options */
+  options: Partial<TreeDisplayOptions>;
+  /** Component width */
+  width: number;
+  /** Component height */
+  height: number;
+  /** Content area height */
+  contentHeight: number;
+}
+
+/**
+ * Pure presentational component for tree rendering
+ * Separated from container logic for better architecture
+ */
+function TreeViewPresentation({
+  renderResult,
+  engineState,
+  config,
+  options,
+  width,
+  height,
+  contentHeight,
+}: TreeViewPresentationProps): ReactElement {
+  // Helper function to render a tree line
+  const renderTreeLine = useCallback(
+    (line: TreeLine, index: number, isSelected: boolean) => {
+      const displayOptions: TreeDisplayOptions = {
+        ...config.display.tree,
+        ...options,
+        showSchemaTypes: engineState.showSchemaTypes,
+      };
+
+      const lineText = getTreeLineText(line, displayOptions);
+      const isMatched =
+        engineState.searchTerm &&
+        lineText.toLowerCase().includes(engineState.searchTerm.toLowerCase());
+
+      return (
+        <Box key={line.id} width={width}>
+          {engineState.showLineNumbers && (
+            <>
+              <Text color={isSelected ? "yellow" : "gray"}>
+                {isSelected ? ">" : " "}
+              </Text>
+              <Text
+                color={isSelected ? "yellow" : "gray"}
+                dimColor={!isSelected}
+              >
+                {String(index + 1).padStart(3, " ")}:
+              </Text>
+            </>
+          )}
+          {isSelected ? (
+            <Text backgroundColor="blue" color="white" bold>
+              {lineText}
+            </Text>
+          ) : (
+            <Text color={isMatched ? "yellow" : "gray"}>{lineText}</Text>
+          )}
+        </Box>
+      );
+    },
+    [
+      width,
+      engineState.showSchemaTypes,
+      engineState.searchTerm,
+      engineState.showLineNumbers,
+      config.display.tree,
+      options,
+    ],
+  );
+
+  return (
+    <Box flexDirection="column" width={width} height={height}>
+      {/* Header */}
+      <Box width={width}>
+        <Text color="green" bold>
+          TREE VIEW (j/k: navigate, Space: toggle, t: types, L: lines)
+        </Text>
+      </Box>
+
+      {/* Tree content */}
+      <Box flexDirection="column" height={contentHeight}>
+        {renderResult.lines.length > 0 ? (
+          renderResult.lines.map((line, index) => {
+            const absoluteIndex = renderResult.visibleRange.start + index;
+            const isSelected = absoluteIndex === engineState.selectedLineIndex;
+            return renderTreeLine(line, absoluteIndex, isSelected);
+          })
+        ) : (
+          <Box width={width}>
+            <Text color="gray" italic>
+              {engineState.searchTerm
+                ? "No matches found"
+                : "No data to display"}
+            </Text>
+          </Box>
+        )}
+      </Box>
+
+      {/* Footer with scroll info */}
+      {renderResult.hasScrollUp || renderResult.hasScrollDown ? (
+        <Box width={width} justifyContent="space-between">
+          <Text color="gray">
+            {renderResult.hasScrollUp ? "↑ More above" : ""}
+          </Text>
+          <Text color="gray">
+            Line {engineState.selectedLineIndex + 1} of{" "}
+            {renderResult.totalLines}
+          </Text>
+          <Text color="gray">
+            {renderResult.hasScrollDown ? "More below ↓" : ""}
+          </Text>
+        </Box>
+      ) : null}
+    </Box>
+  );
 }
 
 /**
@@ -90,12 +220,19 @@ export function EnhancedTreeView({
     return Math.max(1, height - headerHeight - maxFooterHeight);
   }, [height]);
 
+  // Create viewport options
+  const viewport = useMemo(
+    () => ({
+      height: contentHeight,
+      width,
+    }),
+    [contentHeight, width],
+  );
+
   // Get rendered tree data from engine
   // biome-ignore lint/correctness/useExhaustiveDependencies: selectedLineIndex and scrollOffset affect rendering output
   const renderResult = useMemo(() => {
     const renderOptions = {
-      height: contentHeight,
-      width,
       displayOptions: {
         ...config.display.tree,
         ...options,
@@ -103,16 +240,15 @@ export function EnhancedTreeView({
       },
       engineState: localEngineState,
     };
-    return treeEngine.render(renderOptions);
+    return treeEngine.render(renderOptions, viewport);
   }, [
     treeEngine,
-    contentHeight,
-    width,
     config.display.tree,
     options,
     localEngineState.showSchemaTypes,
     localEngineState.selectedLineIndex,
     localEngineState.scrollOffset,
+    viewport,
   ]);
 
   // Handle keyboard input
@@ -120,27 +256,20 @@ export function EnhancedTreeView({
   const handleKeyboardInput = useCallback(
     (input: string, key: KeyboardInput): boolean => {
       let command: string | null = null;
-      let needsOptions = false;
 
       // Map keyboard input to tree commands
       if (key.upArrow || (input === "k" && !key.ctrl)) {
         command = "navigate-up";
-        needsOptions = true;
       } else if (key.downArrow || (input === "j" && !key.ctrl)) {
         command = "navigate-down";
-        needsOptions = true;
       } else if (key.pageUp || (key.ctrl && input === "b")) {
         command = "navigate-page-up";
-        needsOptions = true;
       } else if (key.pageDown || (key.ctrl && input === "f")) {
         command = "navigate-page-down";
-        needsOptions = true;
       } else if (input === "g") {
         command = "navigate-to-top";
-        needsOptions = true;
       } else if (input === "G") {
         command = "navigate-to-bottom";
-        needsOptions = true;
       } else if (key.return || input === " ") {
         command = "toggle-node";
       } else if (input === "e") {
@@ -154,22 +283,9 @@ export function EnhancedTreeView({
       }
 
       if (command) {
-        const commandOptions = needsOptions
-          ? {
-              height: contentHeight,
-              width,
-              displayOptions: {
-                ...config.display.tree,
-                ...options,
-                showSchemaTypes: localEngineState.showSchemaTypes,
-              },
-            }
-          : undefined;
-
         const result = treeEngine.executeCommand(
           // biome-ignore lint/suspicious/noExplicitAny: Engine command types are generic
           command as any,
-          commandOptions,
         );
 
         if (result.handled) {
@@ -180,7 +296,7 @@ export function EnhancedTreeView({
 
       return false;
     },
-    [contentHeight, width, localEngineState.showSchemaTypes], // Remove objects that recreate on every render to prevent infinite loops
+    [], // Remove all dependencies that recreate on every render to prevent infinite loops
   );
 
   // Register keyboard handler with parent
@@ -190,100 +306,15 @@ export function EnhancedTreeView({
     }
   }, [onKeyboardHandlerReady, handleKeyboardInput]);
 
-  // Helper function to render a tree line
-  // biome-ignore lint/correctness/useExhaustiveDependencies: Adding objects that recreate on every render would cause infinite loops
-  const renderTreeLine = useCallback(
-    (line: TreeLine, index: number, isSelected: boolean) => {
-      const displayOptions: TreeDisplayOptions = {
-        ...config.display.tree,
-        ...options,
-        showSchemaTypes: localEngineState.showSchemaTypes,
-      };
-
-      const lineText = getTreeLineText(line, displayOptions);
-      const isMatched =
-        localEngineState.searchTerm &&
-        lineText
-          .toLowerCase()
-          .includes(localEngineState.searchTerm.toLowerCase());
-
-      return (
-        <Box key={line.id} width={width}>
-          {localEngineState.showLineNumbers && (
-            <>
-              <Text color={isSelected ? "yellow" : "gray"}>
-                {isSelected ? ">" : " "}
-              </Text>
-              <Text
-                color={isSelected ? "yellow" : "gray"}
-                dimColor={!isSelected}
-              >
-                {String(index + 1).padStart(3, " ")}:
-              </Text>
-            </>
-          )}
-          {isSelected ? (
-            <Text backgroundColor="blue" color="white" bold>
-              {lineText}
-            </Text>
-          ) : (
-            <Text color={isMatched ? "yellow" : "gray"}>{lineText}</Text>
-          )}
-        </Box>
-      );
-    },
-    [
-      width,
-      localEngineState.showSchemaTypes,
-      localEngineState.searchTerm,
-      localEngineState.showLineNumbers,
-    ], // Remove objects that recreate on every render
-  );
-
   return (
-    <Box flexDirection="column" width={width} height={height}>
-      {/* Header */}
-      <Box width={width}>
-        <Text color="green" bold>
-          TREE VIEW (j/k: navigate, Space: toggle, t: types, L: lines)
-        </Text>
-      </Box>
-
-      {/* Tree content */}
-      <Box flexDirection="column" height={contentHeight}>
-        {renderResult.lines.length > 0 ? (
-          renderResult.lines.map((line, index) => {
-            const absoluteIndex = renderResult.visibleRange.start + index;
-            const isSelected =
-              absoluteIndex === localEngineState.selectedLineIndex;
-            return renderTreeLine(line, absoluteIndex, isSelected);
-          })
-        ) : (
-          <Box width={width}>
-            <Text color="gray" italic>
-              {localEngineState.searchTerm
-                ? "No matches found"
-                : "No data to display"}
-            </Text>
-          </Box>
-        )}
-      </Box>
-
-      {/* Footer with scroll info */}
-      {renderResult.hasScrollUp || renderResult.hasScrollDown ? (
-        <Box width={width} justifyContent="space-between">
-          <Text color="gray">
-            {renderResult.hasScrollUp ? "↑ More above" : ""}
-          </Text>
-          <Text color="gray">
-            Line {localEngineState.selectedLineIndex + 1} of{" "}
-            {renderResult.totalLines}
-          </Text>
-          <Text color="gray">
-            {renderResult.hasScrollDown ? "More below ↓" : ""}
-          </Text>
-        </Box>
-      ) : null}
-    </Box>
+    <TreeViewPresentation
+      renderResult={renderResult}
+      engineState={localEngineState}
+      config={config}
+      options={options}
+      width={width}
+      height={height}
+      contentHeight={contentHeight}
+    />
   );
 }
