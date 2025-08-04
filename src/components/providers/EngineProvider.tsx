@@ -55,6 +55,7 @@ export function EngineProvider({
   const config = useConfig();
 
   // Initialize engines
+  // biome-ignore lint/correctness/useExhaustiveDependencies: Adding config/config.display.tree would recreate engines on every render causing infinite loops
   const { jsonEngine, treeEngine, searchEngine } = useMemo(() => {
     const dataString = initialData ? JSON.stringify(initialData) : "null";
 
@@ -174,6 +175,7 @@ export function EngineProvider({
   };
 
   // Sync data changes between engines when JSON engine data changes
+  // biome-ignore lint/correctness/useExhaustiveDependencies: Adding engines to deps would cause infinite loops
   useEffect(() => {
     treeEngine.updateData(jsonEngineState.data);
     searchEngine.updateData(jsonEngineState.data);

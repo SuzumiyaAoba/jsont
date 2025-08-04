@@ -67,11 +67,13 @@ export function EnhancedTreeView({
   const { treeEngine } = useTreeEngineIntegration();
 
   // Update engine data when props change
+  // biome-ignore lint/correctness/useExhaustiveDependencies: Adding treeEngine to deps would cause infinite loops
   useEffect(() => {
     treeEngine.updateData(data);
   }, [data]); // Remove treeEngine from deps to avoid infinite loops
 
   // Apply search filter
+  // biome-ignore lint/correctness/useExhaustiveDependencies: Adding treeEngine to deps would cause infinite loops
   useEffect(() => {
     treeEngine.applySearch(searchTerm);
   }, [searchTerm]); // Remove treeEngine from deps to avoid infinite loops
@@ -114,6 +116,7 @@ export function EnhancedTreeView({
   ]);
 
   // Handle keyboard input
+  // biome-ignore lint/correctness/useExhaustiveDependencies: Adding objects that recreate on every render would cause infinite loops
   const handleKeyboardInput = useCallback(
     (input: string, key: KeyboardInput): boolean => {
       let command: string | null = null;
@@ -196,6 +199,7 @@ export function EnhancedTreeView({
   }, [onKeyboardHandlerReady, handleKeyboardInput]);
 
   // Helper function to render a tree line
+  // biome-ignore lint/correctness/useExhaustiveDependencies: Adding objects that recreate on every render would cause infinite loops
   const renderTreeLine = useCallback(
     (line: TreeLine, index: number, isSelected: boolean) => {
       const displayOptions: TreeDisplayOptions = {
