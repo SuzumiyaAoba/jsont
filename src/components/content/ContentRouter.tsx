@@ -68,10 +68,9 @@ export function ContentRouter({
       ? searchModeVisibleLines
       : visibleLines;
 
-  // Feature flag for engine-enhanced components
+  // Feature flag for engine-enhanced components - now enabled by default
   const useEngineEnhancedComponents =
-    process.env["NODE_ENV"] === "development" ||
-    process.env["USE_ENGINE_COMPONENTS"] === "true";
+    process.env["DISABLE_ENGINE_COMPONENTS"] !== "true";
 
   // Don't show content when help is visible (it's handled by ModalManager)
   if (helpVisible) {

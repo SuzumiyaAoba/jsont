@@ -83,7 +83,12 @@ export function EngineProvider({
     });
 
     return { jsonEngine, treeEngine, searchEngine };
-  }, [config, initialData, initialViewMode]);
+  }, [
+    // Serialize config to avoid object reference changes causing re-creation
+    JSON.stringify(config),
+    initialData,
+    initialViewMode,
+  ]);
 
   // Engine states
   const [jsonEngineState, setJsonEngineState] = useState<JsonEngineState>(() =>
@@ -174,7 +179,7 @@ export function EngineProvider({
     searchEngine.updateData(jsonEngineState.data);
     setTreeEngineState(treeEngine.getState());
     setSearchEngineState(searchEngine.getState());
-  }, [jsonEngineState.data, treeEngine, searchEngine]);
+  }, [jsonEngineState.data]); // Remove engines from deps to avoid infinite loops
 
   const contextValue: EngineContextValue = {
     jsonEngine,

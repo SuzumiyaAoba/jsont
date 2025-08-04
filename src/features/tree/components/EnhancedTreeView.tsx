@@ -69,12 +69,12 @@ export function EnhancedTreeView({
   // Update engine data when props change
   useEffect(() => {
     treeEngine.updateData(data);
-  }, [data, treeEngine]);
+  }, [data]); // Remove treeEngine from deps to avoid infinite loops
 
   // Apply search filter
   useEffect(() => {
     treeEngine.applySearch(searchTerm);
-  }, [searchTerm, treeEngine]);
+  }, [searchTerm]); // Remove treeEngine from deps to avoid infinite loops
 
   // Local state to track engine state changes
   const [localEngineState, setLocalEngineState] = useState(() =>
@@ -185,15 +185,7 @@ export function EnhancedTreeView({
 
       return false;
     },
-    [
-      treeEngine,
-      contentHeight,
-      width,
-      config.display.tree,
-      options,
-      localEngineState.showSchemaTypes,
-      renderResult.totalLines,
-    ],
+    [contentHeight, width, localEngineState.showSchemaTypes], // Remove objects that recreate on every render to prevent infinite loops
   );
 
   // Register keyboard handler with parent
@@ -245,13 +237,11 @@ export function EnhancedTreeView({
       );
     },
     [
-      config.display.tree,
-      options,
       width,
       localEngineState.showSchemaTypes,
       localEngineState.searchTerm,
       localEngineState.showLineNumbers,
-    ],
+    ], // Remove objects that recreate on every render
   );
 
   return (
