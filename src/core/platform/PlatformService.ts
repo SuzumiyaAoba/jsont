@@ -384,7 +384,10 @@ export abstract class PlatformService {
   /**
    * Create a safe error result
    */
-  protected createErrorResult<T = any>(error: string, errorCode?: string): FileSystemResult<T> {
+  protected createErrorResult<T = any>(
+    error: string,
+    errorCode?: string,
+  ): FileSystemResult<T> {
     const result: FileSystemResult<T> = {
       success: false,
       error,
@@ -440,7 +443,9 @@ export class PlatformServiceManager {
    */
   getService(): PlatformService {
     if (!this.currentService) {
-      throw new Error("No platform service has been set. Call setService() first.");
+      throw new Error(
+        "No platform service has been set. Call setService() first.",
+      );
     }
     return this.currentService;
   }
@@ -489,7 +494,12 @@ export class PlatformUtils {
   static detectPlatformType(): PlatformCapabilities["type"] {
     if (typeof window !== "undefined") {
       // Web environment
-      if (typeof window.orientation !== "undefined" || /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
+      if (
+        typeof window.orientation !== "undefined" ||
+        /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+          navigator.userAgent,
+        )
+      ) {
         return "mobile";
       }
       return "web";
@@ -507,7 +517,9 @@ export class PlatformUtils {
   /**
    * Create default capabilities for a platform type
    */
-  static createDefaultCapabilities(type: PlatformCapabilities["type"]): PlatformCapabilities {
+  static createDefaultCapabilities(
+    type: PlatformCapabilities["type"],
+  ): PlatformCapabilities {
     switch (type) {
       case "terminal":
         return {

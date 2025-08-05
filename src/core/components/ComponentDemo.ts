@@ -3,8 +3,8 @@
  * Shows the core concept of multi-platform component architecture
  */
 
-import type { RenderNode, RenderManager } from "../rendering";
 import type { PlatformService } from "../platform";
+import type { RenderManager, RenderNode } from "../rendering";
 
 /**
  * Basic component interface demonstrating the abstraction concept
@@ -23,12 +23,12 @@ export interface MultiPlatformComponent {
   /**
    * Render component to platform-specific output
    */
-  renderToPlatform(): any;
+  renderToPlatform(): unknown;
 
   /**
    * Update component properties
    */
-  updateProps(props: any): void;
+  updateProps(props: Record<string, unknown>): void;
 }
 
 /**
@@ -36,16 +36,18 @@ export interface MultiPlatformComponent {
  */
 export class BaseMultiPlatformComponent implements MultiPlatformComponent {
   protected id: string;
-  protected props: any;
+  protected props: Record<string, unknown>;
   protected renderManager: RenderManager;
   protected platformService: PlatformService;
 
   constructor(
-    props: any,
+    props: Record<string, unknown>,
     renderManager: RenderManager,
-    platformService: PlatformService
+    platformService: PlatformService,
   ) {
-    this.id = props.id || `component-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    this.id =
+      props.id ||
+      `component-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
     this.props = props;
     this.renderManager = renderManager;
     this.platformService = platformService;
@@ -64,12 +66,12 @@ export class BaseMultiPlatformComponent implements MultiPlatformComponent {
     };
   }
 
-  renderToPlatform(): any {
+  renderToPlatform(): unknown {
     const renderNode = this.render();
     return this.renderManager.render(renderNode);
   }
 
-  updateProps(newProps: any): void {
+  updateProps(newProps: Record<string, unknown>): void {
     this.props = { ...this.props, ...newProps };
   }
 }
@@ -88,7 +90,8 @@ export class MultiPlatformButton extends BaseMultiPlatformComponent {
       },
       content: this.props.text || "Button",
       style: {
-        backgroundColor: this.props.variant === "primary" ? "#007acc" : "transparent",
+        backgroundColor:
+          this.props.variant === "primary" ? "#007acc" : "transparent",
         color: this.props.variant === "primary" ? "white" : "#007acc",
         padding: 8,
       },
@@ -107,11 +110,13 @@ export class MultiPlatformContainer extends BaseMultiPlatformComponent {
   }
 
   removeChild(childId: string): void {
-    this.children = this.children.filter(child => child.getId() !== childId);
+    this.children = this.children.filter((child) => child.getId() !== childId);
   }
 
   render(): RenderNode {
-    const childNodes: RenderNode[] = this.children.map(child => child.render());
+    const childNodes: RenderNode[] = this.children.map((child) =>
+      child.render(),
+    );
 
     return {
       type: "container",
@@ -170,15 +175,25 @@ export class MultiPlatformComponentFactory {
     onClick?: () => void;
     disabled?: boolean;
   }): MultiPlatformButton {
-    return new MultiPlatformButton(props, this.renderManager, this.platformService);
+    return new MultiPlatformButton(
+      props,
+      this.renderManager,
+      this.platformService,
+    );
   }
 
-  createContainer(props: {
-    direction?: "row" | "column";
-    gap?: number;
-    padding?: number;
-  } = {}): MultiPlatformContainer {
-    return new MultiPlatformContainer(props, this.renderManager, this.platformService);
+  createContainer(
+    props: {
+      direction?: "row" | "column";
+      gap?: number;
+      padding?: number;
+    } = {},
+  ): MultiPlatformContainer {
+    return new MultiPlatformContainer(
+      props,
+      this.renderManager,
+      this.platformService,
+    );
   }
 
   createText(props: {
@@ -186,7 +201,11 @@ export class MultiPlatformComponentFactory {
     color?: string;
     bold?: boolean;
   }): MultiPlatformText {
-    return new MultiPlatformText(props, this.renderManager, this.platformService);
+    return new MultiPlatformText(
+      props,
+      this.renderManager,
+      this.platformService,
+    );
   }
 }
 
@@ -195,9 +214,12 @@ export class MultiPlatformComponentFactory {
  */
 export function createComponentDemoApp(
   renderManager: RenderManager,
-  platformService: PlatformService
+  platformService: PlatformService,
 ): MultiPlatformContainer {
-  const factory = new MultiPlatformComponentFactory(renderManager, platformService);
+  const factory = new MultiPlatformComponentFactory(
+    renderManager,
+    platformService,
+  );
 
   // Create components
   const title = factory.createText({
@@ -324,7 +346,7 @@ export const PHASE_2_1_SUMMARY = {
   completed: [
     "✅ AbstractComponent base class with lifecycle management",
     "✅ ComponentStyling system for platform-specific theming",
-    "✅ ComponentManager for focus and event coordination", 
+    "✅ ComponentManager for focus and event coordination",
     "✅ Multi-platform component interfaces and patterns",
     "✅ Component factory pattern for easy instantiation",
     "✅ Example components (Button, Container, Text)",

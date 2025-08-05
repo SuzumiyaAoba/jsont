@@ -4,10 +4,6 @@
  */
 
 import type { CSSProperties, ReactElement } from "react";
-import {
-  RenderAdapter,
-  RenderUtils,
-} from "./RenderSystem";
 import type {
   ButtonNode,
   ContainerNode,
@@ -17,6 +13,7 @@ import type {
   TextNode,
   ViewportInfo,
 } from "./RenderSystem";
+import { RenderAdapter, RenderUtils } from "./RenderSystem";
 
 /**
  * Web-specific rendering capabilities
@@ -95,7 +92,11 @@ export class WebRenderAdapter extends RenderAdapter {
   /**
    * Create a button node
    */
-  createButton(content: string, onClick?: () => void, style: any = {}): ButtonNode {
+  createButton(
+    content: string,
+    onClick?: () => void,
+    style: Record<string, unknown> = {},
+  ): ButtonNode {
     return {
       type: "button",
       props: { ...style, onClick },
@@ -135,7 +136,12 @@ export class WebRenderAdapter extends RenderAdapter {
       case "spacer":
         return this.renderSpacer(node);
       default:
-        return <div key={node.key} className={`${this.cssClassPrefix}-unknown`}></div>;
+        return (
+          <div
+            key={node.key}
+            className={`${this.cssClassPrefix}-unknown`}
+          ></div>
+        );
     }
   }
 
@@ -145,16 +151,16 @@ export class WebRenderAdapter extends RenderAdapter {
   private renderContainer(node: ContainerNode): ReactElement {
     const style = this.mapToWebStyles(node);
     const className = this.buildClassName("container", node.className);
-    
+
     return (
-      <div 
+      <div
         key={node.key}
         className={className}
         style={style}
         data-testid={node.testId}
       >
-        {node.children?.map((child, index) => 
-          this.renderNode({ ...child, key: child.key || `child-${index}` })
+        {node.children?.map((child, index) =>
+          this.renderNode({ ...child, key: child.key || `child-${index}` }),
         )}
       </div>
     );
@@ -166,9 +172,9 @@ export class WebRenderAdapter extends RenderAdapter {
   private renderText(node: TextNode): ReactElement {
     const style = this.mapToWebStyles(node);
     const className = this.buildClassName("text", node.className);
-    
+
     return (
-      <span 
+      <span
         key={node.key}
         className={className}
         style={style}
@@ -185,7 +191,7 @@ export class WebRenderAdapter extends RenderAdapter {
   private renderInput(node: InputNode): ReactElement {
     const style = this.mapToWebStyles(node);
     const className = this.buildClassName("input", node.className);
-    
+
     return (
       <input
         key={node.key}
@@ -195,7 +201,6 @@ export class WebRenderAdapter extends RenderAdapter {
         disabled={node.props.disabled}
         required={node.props.required}
         maxLength={node.props.maxLength}
-        autoFocus={node.props.autoFocus}
         className={className}
         style={style}
         data-testid={node.testId}
@@ -209,7 +214,7 @@ export class WebRenderAdapter extends RenderAdapter {
   private renderButton(node: ButtonNode): ReactElement {
     const style = this.mapToWebStyles(node);
     const className = this.buildClassName("button", node.className);
-    
+
     return (
       <button
         key={node.key}
@@ -228,9 +233,12 @@ export class WebRenderAdapter extends RenderAdapter {
    * Render a spacer node as empty div
    */
   private renderSpacer(node: RenderNode): ReactElement {
-    const { width, height } = RenderUtils.calculateDimensions(node, this.currentViewport);
+    const { width, height } = RenderUtils.calculateDimensions(
+      node,
+      this.currentViewport,
+    );
     const className = this.buildClassName("spacer", node.className);
-    
+
     return (
       <div
         key={node.key}
@@ -283,7 +291,8 @@ export class WebRenderAdapter extends RenderAdapter {
         "space-around": "space-around",
         "space-evenly": "space-evenly",
       };
-      cssStyles.justifyContent = justifyMap[mergedStyle.justify] || mergedStyle.justify;
+      cssStyles.justifyContent =
+        justifyMap[mergedStyle.justify] || mergedStyle.justify;
     }
 
     if (mergedStyle.align) {
@@ -301,33 +310,40 @@ export class WebRenderAdapter extends RenderAdapter {
     }
 
     if (mergedStyle.gap !== undefined) {
-      cssStyles.gap = typeof mergedStyle.gap === "number" ? `${mergedStyle.gap}px` : mergedStyle.gap;
+      cssStyles.gap =
+        typeof mergedStyle.gap === "number"
+          ? `${mergedStyle.gap}px`
+          : mergedStyle.gap;
     }
 
     // Dimensions
     if (mergedStyle.width !== undefined) {
-      cssStyles.width = typeof mergedStyle.width === "number" 
-        ? `${mergedStyle.width}px` 
-        : mergedStyle.width;
+      cssStyles.width =
+        typeof mergedStyle.width === "number"
+          ? `${mergedStyle.width}px`
+          : mergedStyle.width;
     }
 
     if (mergedStyle.height !== undefined) {
-      cssStyles.height = typeof mergedStyle.height === "number"
-        ? `${mergedStyle.height}px`
-        : mergedStyle.height;
+      cssStyles.height =
+        typeof mergedStyle.height === "number"
+          ? `${mergedStyle.height}px`
+          : mergedStyle.height;
     }
 
     // Spacing
     if (mergedStyle.padding !== undefined) {
-      cssStyles.padding = typeof mergedStyle.padding === "number"
-        ? `${mergedStyle.padding}px`
-        : mergedStyle.padding;
+      cssStyles.padding =
+        typeof mergedStyle.padding === "number"
+          ? `${mergedStyle.padding}px`
+          : mergedStyle.padding;
     }
 
     if (mergedStyle.margin !== undefined) {
-      cssStyles.margin = typeof mergedStyle.margin === "number"
-        ? `${mergedStyle.margin}px`
-        : mergedStyle.margin;
+      cssStyles.margin =
+        typeof mergedStyle.margin === "number"
+          ? `${mergedStyle.margin}px`
+          : mergedStyle.margin;
     }
 
     // Typography
@@ -336,13 +352,16 @@ export class WebRenderAdapter extends RenderAdapter {
     }
 
     if (mergedStyle.backgroundColor) {
-      cssStyles.backgroundColor = RenderUtils.normalizeColor(mergedStyle.backgroundColor);
+      cssStyles.backgroundColor = RenderUtils.normalizeColor(
+        mergedStyle.backgroundColor,
+      );
     }
 
     if (mergedStyle.fontSize) {
-      cssStyles.fontSize = typeof mergedStyle.fontSize === "number"
-        ? `${mergedStyle.fontSize}px`
-        : mergedStyle.fontSize;
+      cssStyles.fontSize =
+        typeof mergedStyle.fontSize === "number"
+          ? `${mergedStyle.fontSize}px`
+          : mergedStyle.fontSize;
     }
 
     if (mergedStyle.fontFamily) {
@@ -374,10 +393,12 @@ export class WebRenderAdapter extends RenderAdapter {
       const border = mergedStyle.border;
       const borderWidth = border.width || 1;
       const borderStyle = border.style || "solid";
-      const borderColor = border.color ? RenderUtils.normalizeColor(border.color) : "currentColor";
-      
+      const borderColor = border.color
+        ? RenderUtils.normalizeColor(border.color)
+        : "currentColor";
+
       cssStyles.border = `${borderWidth}px ${borderStyle} ${borderColor}`;
-      
+
       if (border.radius !== undefined) {
         cssStyles.borderRadius = `${border.radius}px`;
       }
@@ -519,6 +540,8 @@ export function generateWebCSS(cssClassPrefix = "jsont-web"): string {
 /**
  * Utility to create a web render adapter instance
  */
-export function createWebRenderAdapter(cssClassPrefix?: string): WebRenderAdapter {
+export function createWebRenderAdapter(
+  cssClassPrefix?: string,
+): WebRenderAdapter {
   return new WebRenderAdapter(cssClassPrefix);
 }

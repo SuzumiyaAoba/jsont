@@ -24,7 +24,13 @@ export interface LayoutOptions {
   /** Flex direction */
   direction?: "row" | "column";
   /** Justify content alignment */
-  justify?: "start" | "center" | "end" | "space-between" | "space-around" | "space-evenly";
+  justify?:
+    | "start"
+    | "center"
+    | "end"
+    | "space-between"
+    | "space-around"
+    | "space-evenly";
   /** Align items */
   align?: "start" | "center" | "end" | "stretch";
   /** Flex wrap */
@@ -228,7 +234,10 @@ export abstract class RenderAdapter {
   /**
    * Create a container node
    */
-  abstract createContainer(options: LayoutOptions, children?: RenderNode[]): ContainerNode;
+  abstract createContainer(
+    options: LayoutOptions,
+    children?: RenderNode[],
+  ): ContainerNode;
 
   /**
    * Create a text node
@@ -238,12 +247,19 @@ export abstract class RenderAdapter {
   /**
    * Create an input node
    */
-  abstract createInput(options: InputFieldOptions, style?: TextStyle): InputNode;
+  abstract createInput(
+    options: InputFieldOptions,
+    style?: TextStyle,
+  ): InputNode;
 
   /**
    * Create a button node
    */
-  abstract createButton(content: string, onClick?: () => void, style?: TextStyle): ButtonNode;
+  abstract createButton(
+    content: string,
+    onClick?: () => void,
+    style?: TextStyle,
+  ): ButtonNode;
 
   /**
    * Create a spacer node for layout
@@ -307,7 +323,10 @@ export class RenderManager {
   /**
    * Create a layout container
    */
-  createLayout(options: LayoutOptions, children: RenderNode[] = []): ContainerNode {
+  createLayout(
+    options: LayoutOptions,
+    children: RenderNode[] = [],
+  ): ContainerNode {
     return this.adapter.createContainer(options, children);
   }
 
@@ -328,7 +347,11 @@ export class RenderManager {
   /**
    * Create a button
    */
-  createButton(content: string, onClick?: () => void, style?: TextStyle): ButtonNode {
+  createButton(
+    content: string,
+    onClick?: () => void,
+    style?: TextStyle,
+  ): ButtonNode {
     return this.adapter.createButton(content, onClick, style);
   }
 
@@ -403,10 +426,10 @@ export class RenderUtils {
    */
   static calculateDimensions(
     node: RenderNode,
-    viewport: ViewportInfo
+    viewport: ViewportInfo,
   ): { width: number; height: number } {
     const style = node.style || {};
-    
+
     let width = 0;
     let height = 0;
 
@@ -449,7 +472,14 @@ export class RenderUtils {
       return false;
     }
 
-    const validTypes = ["container", "text", "input", "button", "image", "spacer"];
+    const validTypes = [
+      "container",
+      "text",
+      "input",
+      "button",
+      "image",
+      "spacer",
+    ];
     if (!validTypes.includes(node.type)) {
       return false;
     }
@@ -483,25 +513,27 @@ export class RenderUtils {
     if (node.key !== undefined) {
       cloned.key = node.key;
     }
-    
+
     if (node.className !== undefined) {
       cloned.className = node.className;
     }
-    
+
     if (node.testId !== undefined) {
       cloned.testId = node.testId;
     }
-    
+
     if (node.style !== undefined) {
       cloned.style = { ...node.style };
     }
-    
+
     if (node.content !== undefined) {
       cloned.content = node.content;
     }
 
     if (node.children !== undefined) {
-      cloned.children = node.children.map(child => RenderUtils.cloneNode(child));
+      cloned.children = node.children.map((child) =>
+        RenderUtils.cloneNode(child),
+      );
     }
 
     return cloned as RenderNode;

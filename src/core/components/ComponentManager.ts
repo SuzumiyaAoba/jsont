@@ -3,11 +3,15 @@
  * Handles component lifecycle, focus management, and communication
  */
 
-import type { AbstractComponent, ComponentContext } from "./AbstractComponent";
-import type { InputHandler, InputEvent, InputManager } from "../input";
-import type { RenderManager } from "@core/rendering";
 import type { PlatformService } from "@core/platform";
-import { ComponentStyling, DEFAULT_THEME, DARK_THEME } from "./ComponentStyling";
+import type { RenderManager } from "@core/rendering";
+import type { InputEvent, InputHandler, InputManager } from "../input";
+import type { AbstractComponent, ComponentContext } from "./AbstractComponent";
+import {
+  ComponentStyling,
+  DARK_THEME,
+  DEFAULT_THEME,
+} from "./ComponentStyling";
 
 /**
  * Component registry entry
@@ -72,7 +76,6 @@ export class ComponentManager {
   private focusStack: string[] = [];
   private eventBus = new Map<string, Array<(data: any) => void>>();
   private inputManager: InputManager;
-  private renderManager: RenderManager;
   private platformService: PlatformService;
   private styling: ComponentStyling;
   private focusConfig: FocusConfig;
@@ -85,12 +88,12 @@ export class ComponentManager {
     options: {
       focusConfig?: Partial<FocusConfig>;
       themeConfig?: Partial<ThemeConfig>;
-    } = {}
+    } = {},
   ) {
     this.inputManager = inputManager;
     this.renderManager = renderManager;
     this.platformService = platformService;
-    
+
     this.focusConfig = {
       allowMultipleFocus: false,
       autoFocusFirst: true,
@@ -114,13 +117,13 @@ export class ComponentManager {
    */
   async registerComponent(component: AbstractComponent): Promise<void> {
     const id = component.getId();
-    
+
     if (this.components.has(id)) {
       throw new Error(`Component with id '${id}' is already registered`);
     }
 
     // Component context will be passed during construction
-    
+
     // Register component
     this.components.set(id, {
       component,
@@ -172,7 +175,7 @@ export class ComponentManager {
    * Get all registered components
    */
   getAllComponents(): AbstractComponent[] {
-    return Array.from(this.components.values()).map(entry => entry.component);
+    return Array.from(this.components.values()).map((entry) => entry.component);
   }
 
   /**
@@ -195,14 +198,14 @@ export class ComponentManager {
 
     // Focus the component
     entry.focused = true;
-    this.focusStack = this.focusStack.filter(id => id !== componentId);
+    this.focusStack = this.focusStack.filter((id) => id !== componentId);
     this.focusStack.push(componentId);
 
     // Emit focus event
     this.emit("component:focus", { componentId });
-    
+
     // Call component focus handler if available
-    if (typeof entry.component.onFocus === 'function') {
+    if (typeof entry.component.onFocus === "function") {
       entry.component.onFocus();
     }
   }
@@ -218,13 +221,13 @@ export class ComponentManager {
 
     // Blur the component
     entry.focused = false;
-    this.focusStack = this.focusStack.filter(id => id !== componentId);
+    this.focusStack = this.focusStack.filter((id) => id !== componentId);
 
     // Emit blur event
     this.emit("component:blur", { componentId });
-    
+
     // Call component blur handler if available
-    if (typeof entry.component.onBlur === 'function') {
+    if (typeof entry.component.onBlur === "function") {
       entry.component.onBlur();
     }
   }
@@ -245,9 +248,10 @@ export class ComponentManager {
     }
 
     const componentIds = Array.from(this.components.keys());
-    const currentIndex = this.focusStack.length > 0 
-      ? componentIds.indexOf(this.focusStack[this.focusStack.length - 1])
-      : -1;
+    const currentIndex =
+      this.focusStack.length > 0
+        ? componentIds.indexOf(this.focusStack[this.focusStack.length - 1])
+        : -1;
 
     if (componentIds.length > 0) {
       const nextIndex = (currentIndex + 1) % componentIds.length;
@@ -265,14 +269,14 @@ export class ComponentManager {
     }
 
     const componentIds = Array.from(this.components.keys());
-    const currentIndex = this.focusStack.length > 0 
-      ? componentIds.indexOf(this.focusStack[this.focusStack.length - 1])
-      : -1;
+    const currentIndex =
+      this.focusStack.length > 0
+        ? componentIds.indexOf(this.focusStack[this.focusStack.length - 1])
+        : -1;
 
     if (componentIds.length > 0) {
-      const prevIndex = currentIndex <= 0 
-        ? componentIds.length - 1 
-        : currentIndex - 1;
+      const prevIndex =
+        currentIndex <= 0 ? componentIds.length - 1 : currentIndex - 1;
       const prevComponentId = componentIds[prevIndex];
       this.requestFocus(prevComponentId);
     }
@@ -347,7 +351,9 @@ export class ComponentManager {
       return;
     }
 
-    const maxZIndex = Math.max(...Array.from(this.components.values()).map(e => e.zIndex));
+    const maxZIndex = Math.max(
+      ...Array.from(this.components.values()).map((e) => e.zIndex),
+    );
     entry.zIndex = maxZIndex + 1;
   }
 
@@ -370,7 +376,7 @@ export class ComponentManager {
         if (entry.mounted) {
           await entry.component.unmount();
         }
-      }
+      },
     );
 
     await Promise.all(unmountPromises);
@@ -382,33 +388,18 @@ export class ComponentManager {
   }
 
   /**
-   * Create component context
-   */
-  private createComponentContext(): ComponentContext {
-    return {
-      renderManager: this.renderManager,
-      platformService: this.platformService,
-      registerInputHandler: (handler: InputHandler) => {
-        this.inputManager.addHandler(handler);
-        return () => this.inputManager.removeHandler(handler);
-      },
-      requestFocus: (componentId: string) => this.requestFocus(componentId),
-      releaseFocus: (componentId: string) => this.releaseFocus(componentId),
-      emit: (event: string, data?: any) => this.emit(event, data),
-      listen: (event: string, handler: (data: any) => void) => this.listen(event, handler),
-    };
-  }
-
-  /**
    * Create styling utility
    */
   private createStyling(): ComponentStyling {
     const baseTheme = this.themeConfig.isDark ? DARK_THEME : DEFAULT_THEME;
-    const theme = this.themeConfig.customTheme 
+    const theme = this.themeConfig.customTheme
       ? { ...baseTheme, ...this.themeConfig.customTheme }
       : baseTheme;
 
-    const platform = this.platformService.getCapabilities().type === "web" ? "web" : "terminal";
+    const platform =
+      this.platformService.getCapabilities().type === "web"
+        ? "web"
+        : "terminal";
     return new ComponentStyling(theme, platform);
   }
 
@@ -419,8 +410,11 @@ export class ComponentManager {
     const globalHandler: InputHandler = {
       canHandle: (event: InputEvent) => {
         // Handle Tab navigation
-        return event.type === "keyboard" && 
-               (event.key === "Tab" || (event.key === "Tab" && event.modifiers.shift));
+        return (
+          event.type === "keyboard" &&
+          (event.key === "Tab" ||
+            (event.key === "Tab" && event.modifiers.shift))
+        );
       },
       handle: (event: InputEvent) => {
         if (event.key === "Tab") {
@@ -457,13 +451,13 @@ export class ComponentFactory {
   async createComponent<T extends AbstractComponent>(
     ComponentClass: new (...args: any[]) => T,
     props: any,
-    initialState?: any
+    initialState?: any,
   ): Promise<T> {
     const context = this.createComponentContext();
     const component = new ComponentClass(props, context, initialState);
-    
+
     await this.componentManager.registerComponent(component);
-    
+
     return component;
   }
 
@@ -476,12 +470,17 @@ export class ComponentFactory {
       platformService: this.componentManager["platformService"],
       registerInputHandler: (handler: InputHandler) => {
         this.componentManager["inputManager"].addHandler(handler);
-        return () => this.componentManager["inputManager"].removeHandler(handler);
+        return () =>
+          this.componentManager["inputManager"].removeHandler(handler);
       },
-      requestFocus: (componentId: string) => this.componentManager.requestFocus(componentId),
-      releaseFocus: (componentId: string) => this.componentManager.releaseFocus(componentId),
-      emit: (event: string, data?: any) => this.componentManager.emit(event, data),
-      listen: (event: string, handler: (data: any) => void) => this.componentManager.listen(event, handler),
+      requestFocus: (componentId: string) =>
+        this.componentManager.requestFocus(componentId),
+      releaseFocus: (componentId: string) =>
+        this.componentManager.releaseFocus(componentId),
+      emit: (event: string, data?: any) =>
+        this.componentManager.emit(event, data),
+      listen: (event: string, handler: (data: any) => void) =>
+        this.componentManager.listen(event, handler),
     };
   }
 }
@@ -502,34 +501,46 @@ export class ComponentUtils {
    */
   static validateProps(props: any, requiredProps: string[]): string[] {
     const errors: string[] = [];
-    
+
     for (const prop of requiredProps) {
-      if (!(prop in props) || props[prop] === undefined || props[prop] === null) {
+      if (
+        !(prop in props) ||
+        props[prop] === undefined ||
+        props[prop] === null
+      ) {
         errors.push(`Required prop '${prop}' is missing`);
       }
     }
-    
+
     return errors;
   }
 
   /**
    * Deep merge component props
    */
-  static mergeProps<T extends Record<string, any>>(base: T, override: Partial<T>): T {
+  static mergeProps<T extends Record<string, any>>(
+    base: T,
+    override: Partial<T>,
+  ): T {
     const result = { ...base };
-    
+
     for (const [key, value] of Object.entries(override)) {
       if (value !== undefined) {
-        if (typeof value === "object" && value !== null && !Array.isArray(value)) {
-          result[key as keyof T] = typeof base[key] === "object" && base[key] !== null
-            ? ComponentUtils.mergeProps(base[key], value)
-            : value;
+        if (
+          typeof value === "object" &&
+          value !== null &&
+          !Array.isArray(value)
+        ) {
+          result[key as keyof T] =
+            typeof base[key] === "object" && base[key] !== null
+              ? ComponentUtils.mergeProps(base[key], value)
+              : value;
         } else {
           result[key as keyof T] = value;
         }
       }
     }
-    
+
     return result;
   }
 
@@ -537,17 +548,17 @@ export class ComponentUtils {
    * Check if component is focusable
    */
   static isFocusable(component: AbstractComponent): boolean {
-    return component.isMounted() && 
-           component.isVisible() && 
-           !component.isDisabled();
+    return (
+      component.isMounted() && component.isVisible() && !component.isDisabled()
+    );
   }
 
   /**
    * Find next focusable component
    */
   static findNextFocusable(
-    components: AbstractComponent[], 
-    currentIndex: number
+    components: AbstractComponent[],
+    currentIndex: number,
   ): AbstractComponent | null {
     for (let i = 1; i < components.length; i++) {
       const index = (currentIndex + i) % components.length;
@@ -563,8 +574,8 @@ export class ComponentUtils {
    * Find previous focusable component
    */
   static findPreviousFocusable(
-    components: AbstractComponent[], 
-    currentIndex: number
+    components: AbstractComponent[],
+    currentIndex: number,
   ): AbstractComponent | null {
     for (let i = 1; i < components.length; i++) {
       const index = (currentIndex - i + components.length) % components.length;

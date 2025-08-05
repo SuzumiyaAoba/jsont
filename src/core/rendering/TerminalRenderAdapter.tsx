@@ -3,12 +3,8 @@
  * Converts abstract RenderNode tree to Ink components
  */
 
-import type { ReactElement } from "react";
 import { Box, Text } from "ink";
-import {
-  RenderAdapter,
-  RenderUtils,
-} from "./RenderSystem";
+import type { ReactElement } from "react";
 import type {
   ButtonNode,
   ContainerNode,
@@ -18,6 +14,7 @@ import type {
   TextNode,
   ViewportInfo,
 } from "./RenderSystem";
+import { RenderAdapter, RenderUtils } from "./RenderSystem";
 
 /**
  * Terminal-specific rendering capabilities
@@ -91,7 +88,11 @@ export class TerminalRenderAdapter extends RenderAdapter {
   /**
    * Create a button node
    */
-  createButton(content: string, onClick?: () => void, style: any = {}): ButtonNode {
+  createButton(
+    content: string,
+    onClick?: () => void,
+    style: Record<string, unknown> = {},
+  ): ButtonNode {
     return {
       type: "button",
       props: { ...style, onClick },
@@ -138,11 +139,11 @@ export class TerminalRenderAdapter extends RenderAdapter {
    */
   private renderContainer(node: ContainerNode): ReactElement {
     const inkProps = this.mapToInkBoxProps(node);
-    
+
     return (
       <Box key={node.key} {...inkProps}>
-        {node.children?.map((child, index) => 
-          this.renderNode({ ...child, key: child.key || `child-${index}` })
+        {node.children?.map((child, index) =>
+          this.renderNode({ ...child, key: child.key || `child-${index}` }),
         )}
       </Box>
     );
@@ -153,7 +154,7 @@ export class TerminalRenderAdapter extends RenderAdapter {
    */
   private renderText(node: TextNode): ReactElement {
     const inkProps = this.mapToInkTextProps(node);
-    
+
     return (
       <Text key={node.key} {...inkProps}>
         {node.content}
@@ -169,7 +170,7 @@ export class TerminalRenderAdapter extends RenderAdapter {
     // In a full implementation, this would integrate with ink-text-input
     const value = node.props.value || node.props.placeholder || "";
     const inkProps = this.mapToInkTextProps(node);
-    
+
     return (
       <Box key={node.key} borderStyle="single" paddingX={1}>
         <Text {...inkProps}>
@@ -185,7 +186,7 @@ export class TerminalRenderAdapter extends RenderAdapter {
    */
   private renderButton(node: ButtonNode): ReactElement {
     const inkProps = this.mapToInkTextProps(node);
-    
+
     return (
       <Box key={node.key} borderStyle="single" paddingX={1}>
         <Text {...inkProps} bold>
@@ -200,8 +201,11 @@ export class TerminalRenderAdapter extends RenderAdapter {
    * Render a spacer node
    */
   private renderSpacer(node: RenderNode): ReactElement {
-    const { width, height } = RenderUtils.calculateDimensions(node, this.currentViewport);
-    
+    const { width, height } = RenderUtils.calculateDimensions(
+      node,
+      this.currentViewport,
+    );
+
     return (
       <Box key={node.key} width={width || 1} height={height || 1}>
         <Text> </Text>
@@ -233,7 +237,8 @@ export class TerminalRenderAdapter extends RenderAdapter {
         "space-around": "space-around",
         "space-evenly": "space-evenly",
       };
-      inkProps.justifyContent = justifyMap[mergedStyle.justify] || mergedStyle.justify;
+      inkProps.justifyContent =
+        justifyMap[mergedStyle.justify] || mergedStyle.justify;
     }
 
     // Align items
@@ -249,15 +254,17 @@ export class TerminalRenderAdapter extends RenderAdapter {
 
     // Dimensions
     if (mergedStyle.width !== undefined) {
-      inkProps.width = typeof mergedStyle.width === "string" 
-        ? parseInt(mergedStyle.width) 
-        : mergedStyle.width;
+      inkProps.width =
+        typeof mergedStyle.width === "string"
+          ? parseInt(mergedStyle.width)
+          : mergedStyle.width;
     }
 
     if (mergedStyle.height !== undefined) {
-      inkProps.height = typeof mergedStyle.height === "string"
-        ? parseInt(mergedStyle.height)
-        : mergedStyle.height;
+      inkProps.height =
+        typeof mergedStyle.height === "string"
+          ? parseInt(mergedStyle.height)
+          : mergedStyle.height;
     }
 
     // Padding and margin
@@ -284,11 +291,14 @@ export class TerminalRenderAdapter extends RenderAdapter {
           dotted: "single", // Ink doesn't support dotted
           double: "double",
         };
-        inkProps.borderStyle = borderStyleMap[mergedStyle.border.style] || "single";
+        inkProps.borderStyle =
+          borderStyleMap[mergedStyle.border.style] || "single";
       }
-      
+
       if (mergedStyle.border.color) {
-        inkProps.borderColor = RenderUtils.normalizeColor(mergedStyle.border.color);
+        inkProps.borderColor = RenderUtils.normalizeColor(
+          mergedStyle.border.color,
+        );
       }
     }
 
@@ -321,7 +331,9 @@ export class TerminalRenderAdapter extends RenderAdapter {
 
     // Background color
     if (mergedStyle.backgroundColor) {
-      inkProps.backgroundColor = RenderUtils.normalizeColor(mergedStyle.backgroundColor);
+      inkProps.backgroundColor = RenderUtils.normalizeColor(
+        mergedStyle.backgroundColor,
+      );
     }
 
     // Font weight

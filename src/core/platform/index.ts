@@ -3,29 +3,27 @@
  * Provides unified platform abstraction for file system, clipboard, notifications, etc.
  */
 
+// Re-export key types for convenience
+export type {
+  ClipboardResult,
+  ClipboardService,
+  FileInfo,
+  FileSystemResult,
+  FileSystemService,
+  NotificationAction,
+  NotificationOptions,
+  NotificationResult,
+  NotificationService,
+  NotificationType,
+  PlatformCapabilities,
+  ProcessService,
+  StorageService,
+} from "./PlatformService";
 // Core platform service interfaces and abstractions
 export * from "./PlatformService";
-
 // Platform-specific implementations
 export * from "./TerminalPlatformService";
 export * from "./WebPlatformService";
-
-// Re-export key types for convenience
-export type {
-  FileSystemService,
-  FileSystemResult,
-  FileInfo,
-  ClipboardService,
-  ClipboardResult,
-  NotificationService,
-  NotificationOptions,
-  NotificationResult,
-  NotificationType,
-  NotificationAction,
-  ProcessService,
-  StorageService,
-  PlatformCapabilities,
-} from "./PlatformService";
 
 import {
   PlatformService,
@@ -34,13 +32,13 @@ import {
 } from "./PlatformService";
 
 import {
-  TerminalPlatformService,
   createTerminalPlatformService,
+  TerminalPlatformService,
 } from "./TerminalPlatformService";
 
 import {
-  WebPlatformService,
   createWebPlatformService,
+  WebPlatformService,
 } from "./WebPlatformService";
 
 // Export the classes and functions
@@ -59,7 +57,7 @@ export {
  */
 export function createPlatformService() {
   const platformType = PlatformUtils.detectPlatformType();
-  
+
   switch (platformType) {
     case "terminal":
       return createTerminalPlatformService();
@@ -80,10 +78,10 @@ export function createPlatformService() {
 export async function initializePlatformService(service?: PlatformService) {
   const platformService = service || createPlatformService();
   const manager = PlatformServiceManager.getInstance();
-  
+
   manager.setService(platformService);
   await manager.initialize();
-  
+
   return platformService;
 }
 

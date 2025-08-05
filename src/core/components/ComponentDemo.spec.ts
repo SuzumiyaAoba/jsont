@@ -2,24 +2,24 @@
  * Tests for multi-platform component abstraction
  */
 
-import { describe, it, expect, vi } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import {
+  createComponentDemoApp,
   MultiPlatformButton,
+  MultiPlatformComponentFactory,
   MultiPlatformContainer,
   MultiPlatformText,
-  MultiPlatformComponentFactory,
-  createComponentDemoApp,
   PHASE_2_1_SUMMARY,
 } from "./ComponentDemo";
 
 // Mock dependencies
 const mockRenderManager = {
   render: vi.fn((node) => node),
-} as any;
+} as any; // Intentional any for test mock
 
 const mockPlatformService = {
   getCapabilities: vi.fn(() => ({ type: "terminal" })),
-} as any;
+} as any; // Intentional any for test mock
 
 describe("Multi-Platform Component Abstraction", () => {
   describe("MultiPlatformButton", () => {
@@ -27,7 +27,7 @@ describe("Multi-Platform Component Abstraction", () => {
       const button = new MultiPlatformButton(
         { text: "Test Button", variant: "primary" },
         mockRenderManager,
-        mockPlatformService
+        mockPlatformService,
       );
 
       const renderNode = button.render();
@@ -42,7 +42,7 @@ describe("Multi-Platform Component Abstraction", () => {
       const button = new MultiPlatformButton(
         { text: "Secondary", variant: "secondary" },
         mockRenderManager,
-        mockPlatformService
+        mockPlatformService,
       );
 
       const renderNode = button.render();
@@ -56,7 +56,7 @@ describe("Multi-Platform Component Abstraction", () => {
       const button = new MultiPlatformButton(
         { text: "Clickable", onClick },
         mockRenderManager,
-        mockPlatformService
+        mockPlatformService,
       );
 
       const renderNode = button.render();
@@ -70,7 +70,7 @@ describe("Multi-Platform Component Abstraction", () => {
       const container = new MultiPlatformContainer(
         { direction: "row", gap: 2, padding: 1 },
         mockRenderManager,
-        mockPlatformService
+        mockPlatformService,
       );
 
       const renderNode = container.render();
@@ -85,19 +85,19 @@ describe("Multi-Platform Component Abstraction", () => {
       const container = new MultiPlatformContainer(
         {},
         mockRenderManager,
-        mockPlatformService
+        mockPlatformService,
       );
 
       const child1 = new MultiPlatformText(
         { content: "Child 1" },
         mockRenderManager,
-        mockPlatformService
+        mockPlatformService,
       );
 
       const child2 = new MultiPlatformText(
         { content: "Child 2" },
         mockRenderManager,
-        mockPlatformService
+        mockPlatformService,
       );
 
       container.addChild(child1);
@@ -114,13 +114,13 @@ describe("Multi-Platform Component Abstraction", () => {
       const container = new MultiPlatformContainer(
         {},
         mockRenderManager,
-        mockPlatformService
+        mockPlatformService,
       );
 
       const child = new MultiPlatformText(
         { content: "Child" },
         mockRenderManager,
-        mockPlatformService
+        mockPlatformService,
       );
 
       container.addChild(child);
@@ -136,7 +136,7 @@ describe("Multi-Platform Component Abstraction", () => {
       const text = new MultiPlatformText(
         { content: "Hello World", color: "red", bold: true },
         mockRenderManager,
-        mockPlatformService
+        mockPlatformService,
       );
 
       const renderNode = text.render();
@@ -152,7 +152,7 @@ describe("Multi-Platform Component Abstraction", () => {
     it("should create components through factory", () => {
       const factory = new MultiPlatformComponentFactory(
         mockRenderManager,
-        mockPlatformService
+        mockPlatformService,
       );
 
       const button = factory.createButton({ text: "Factory Button" });
@@ -167,7 +167,10 @@ describe("Multi-Platform Component Abstraction", () => {
 
   describe("createComponentDemoApp", () => {
     it("should create a complete demo application", () => {
-      const app = createComponentDemoApp(mockRenderManager, mockPlatformService);
+      const app = createComponentDemoApp(
+        mockRenderManager,
+        mockPlatformService,
+      );
 
       const renderNode = app.render();
 
@@ -175,10 +178,14 @@ describe("Multi-Platform Component Abstraction", () => {
       expect(renderNode.children).toHaveLength(3); // title, description, button container
 
       // Check title
-      expect(renderNode.children?.[0].content).toContain("Multi-Platform Component Demo");
+      expect(renderNode.children?.[0].content).toContain(
+        "Multi-Platform Component Demo",
+      );
 
       // Check description
-      expect(renderNode.children?.[1].content).toContain("platform-independent");
+      expect(renderNode.children?.[1].content).toContain(
+        "platform-independent",
+      );
 
       // Check button container
       const buttonContainer = renderNode.children?.[2];
@@ -192,7 +199,7 @@ describe("Multi-Platform Component Abstraction", () => {
       const button = new MultiPlatformButton(
         { text: "Original" },
         mockRenderManager,
-        mockPlatformService
+        mockPlatformService,
       );
 
       expect(button.render().content).toBe("Original");
@@ -206,13 +213,13 @@ describe("Multi-Platform Component Abstraction", () => {
       const button1 = new MultiPlatformButton(
         { text: "Button 1" },
         mockRenderManager,
-        mockPlatformService
+        mockPlatformService,
       );
 
       const button2 = new MultiPlatformButton(
         { text: "Button 2" },
         mockRenderManager,
-        mockPlatformService
+        mockPlatformService,
       );
 
       expect(button1.getId()).not.toBe(button2.getId());
@@ -226,7 +233,7 @@ describe("Multi-Platform Component Abstraction", () => {
       const button = new MultiPlatformButton(
         { text: "Platform Test" },
         mockRenderManager,
-        mockPlatformService
+        mockPlatformService,
       );
 
       const platformOutput = button.renderToPlatform();
@@ -235,26 +242,30 @@ describe("Multi-Platform Component Abstraction", () => {
         expect.objectContaining({
           type: "button",
           content: "Platform Test",
-        })
+        }),
       );
 
       expect(platformOutput).toBeDefined();
     });
 
     it("should work with different render managers", () => {
-      const terminalRenderManager = { render: vi.fn((node) => `Terminal: ${node.type}`) } as any;
-      const webRenderManager = { render: vi.fn((node) => `Web: ${node.type}`) } as any;
+      const terminalRenderManager = {
+        render: vi.fn((node) => `Terminal: ${node.type}`),
+      } as any; // Intentional any for test mock
+      const webRenderManager = {
+        render: vi.fn((node) => `Web: ${node.type}`),
+      } as any; // Intentional any for test mock
 
       const terminalButton = new MultiPlatformButton(
         { text: "Test" },
         terminalRenderManager,
-        mockPlatformService
+        mockPlatformService,
       );
 
       const webButton = new MultiPlatformButton(
         { text: "Test" },
         webRenderManager,
-        mockPlatformService
+        mockPlatformService,
       );
 
       const terminalOutput = terminalButton.renderToPlatform();
@@ -291,7 +302,7 @@ describe("Multi-Platform Component Abstraction", () => {
       const button = new MultiPlatformButton(
         { text: "Test", onClick: vi.fn() },
         mockRenderManager,
-        mockPlatformService
+        mockPlatformService,
       );
 
       const renderNode = button.render();
@@ -317,19 +328,19 @@ describe("Multi-Platform Component Abstraction", () => {
       const parent = new MultiPlatformContainer(
         { direction: "column" },
         mockRenderManager,
-        mockPlatformService
+        mockPlatformService,
       );
 
       const child1 = new MultiPlatformText(
         { content: "Child 1" },
         mockRenderManager,
-        mockPlatformService
+        mockPlatformService,
       );
 
       const child2 = new MultiPlatformButton(
         { text: "Child 2" },
         mockRenderManager,
-        mockPlatformService
+        mockPlatformService,
       );
 
       parent.addChild(child1);
@@ -345,11 +356,11 @@ describe("Multi-Platform Component Abstraction", () => {
     it("should enable easy testing without platform dependencies", () => {
       // This test itself demonstrates that we can test component logic
       // without needing Ink, React, or any platform-specific dependencies
-      
+
       const component = new MultiPlatformText(
         { content: "Testable", color: "blue" },
         mockRenderManager,
-        mockPlatformService
+        mockPlatformService,
       );
 
       const result = component.render();

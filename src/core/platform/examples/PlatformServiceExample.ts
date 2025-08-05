@@ -3,11 +3,8 @@
  * Demonstrates how to use the unified platform abstraction
  */
 
+import { createPlatformService, initializePlatformService } from "../index";
 import type { PlatformService } from "../PlatformService";
-import { 
-  createPlatformService, 
-  initializePlatformService
-} from "../index";
 
 /**
  * Example: File operations across platforms
@@ -64,7 +61,7 @@ export class FileOperationsExample {
 
     const result = await fileSystem.readDir(path);
     if (result.success && result.data) {
-      return result.data.map(info => info.name);
+      return result.data.map((info) => info.name);
     } else {
       console.log(`ℹ️  Directory listing not available: ${result.error}`);
       return [];
@@ -80,7 +77,9 @@ export class FileOperationsExample {
     console.log(`  Type: ${capabilities.type}`);
     console.log(`  File System: ${capabilities.hasFileSystem ? "✅" : "❌"}`);
     console.log(`  Clipboard: ${capabilities.hasClipboard ? "✅" : "❌"}`);
-    console.log(`  Notifications: ${capabilities.hasNotifications ? "✅" : "❌"}`);
+    console.log(
+      `  Notifications: ${capabilities.hasNotifications ? "✅" : "❌"}`,
+    );
     console.log(`  Storage: ${capabilities.hasStorage ? "✅" : "❌"}`);
   }
 }
@@ -132,7 +131,7 @@ export class ClipboardExample {
     if (result.success && result.data) {
       try {
         return JSON.parse(result.data);
-      } catch (error) {
+      } catch (_error) {
         console.log("ℹ️  Clipboard content is not valid JSON");
         return result.data; // Return as string
       }
@@ -305,7 +304,9 @@ export class JsonViewerPlatformExample {
     this.fileOps.checkCapabilities();
 
     // Save to storage
-    await this.storage.savePreferences({ lastProcessed: new Date().toISOString() });
+    await this.storage.savePreferences({
+      lastProcessed: new Date().toISOString(),
+    });
 
     // Copy to clipboard
     const copied = await this.clipboard.copyToClipboard(data);
@@ -351,7 +352,11 @@ export class JsonViewerPlatformExample {
       message: "Hello from jsont!",
       platform: process?.platform || "web",
       timestamp: new Date().toISOString(),
-      features: ["JSON viewing", "Multi-platform support", "Platform abstraction"],
+      features: [
+        "JSON viewing",
+        "Multi-platform support",
+        "Platform abstraction",
+      ],
     };
 
     console.log("📝 Using sample data");

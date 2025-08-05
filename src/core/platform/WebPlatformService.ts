@@ -29,10 +29,12 @@ class WebFileSystemService implements FileSystemService {
       try {
         // Use File System Access API if available
         const [fileHandle] = await (window as any).showOpenFilePicker({
-          types: [{
-            description: "Text files",
-            accept: { "text/*": [".txt", ".json", ".yaml", ".yml", ".md"] },
-          }],
+          types: [
+            {
+              description: "Text files",
+              accept: { "text/*": [".txt", ".json", ".yaml", ".yml", ".md"] },
+            },
+          ],
         });
         const file = await fileHandle.getFile();
         const content = await file.text();
@@ -53,16 +55,21 @@ class WebFileSystemService implements FileSystemService {
     };
   }
 
-  async writeFile(_path: string, content: string): Promise<FileSystemResult<void>> {
+  async writeFile(
+    _path: string,
+    content: string,
+  ): Promise<FileSystemResult<void>> {
     if (this.supportsFileSystemAccess) {
       try {
         // Use File System Access API if available
         const fileHandle = await (window as any).showSaveFilePicker({
           suggestedName: _path.split("/").pop() || "file.txt",
-          types: [{
-            description: "Text files",
-            accept: { "text/*": [".txt", ".json", ".yaml", ".yml", ".md"] },
-          }],
+          types: [
+            {
+              description: "Text files",
+              accept: { "text/*": [".txt", ".json", ".yaml", ".yml", ".md"] },
+            },
+          ],
         });
         const writable = await fileHandle.createWritable();
         await writable.write(content);
@@ -71,7 +78,8 @@ class WebFileSystemService implements FileSystemService {
       } catch (error) {
         return {
           success: false,
-          error: error instanceof Error ? error.message : "Failed to write file",
+          error:
+            error instanceof Error ? error.message : "Failed to write file",
           errorCode: "FILE_ACCESS_DENIED",
         };
       }
@@ -92,7 +100,8 @@ class WebFileSystemService implements FileSystemService {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to download file",
+        error:
+          error instanceof Error ? error.message : "Failed to download file",
         errorCode: "DOWNLOAD_FAILED",
       };
     }
@@ -120,7 +129,7 @@ class WebFileSystemService implements FileSystemService {
       try {
         const dirHandle = await (window as any).showDirectoryPicker();
         const entries: FileInfo[] = [];
-        
+
         for await (const [name, handle] of dirHandle.entries()) {
           const isFile = handle.kind === "file";
           const fileInfo: FileInfo = {
@@ -129,7 +138,9 @@ class WebFileSystemService implements FileSystemService {
             size: isFile ? (await handle.getFile()).size : 0,
             isDirectory: !isFile,
             isFile,
-            lastModified: isFile ? new Date((await handle.getFile()).lastModified) : new Date(),
+            lastModified: isFile
+              ? new Date((await handle.getFile()).lastModified)
+              : new Date(),
             permissions: {
               readable: true,
               writable: false, // Simplified
@@ -143,7 +154,8 @@ class WebFileSystemService implements FileSystemService {
       } catch (error) {
         return {
           success: false,
-          error: error instanceof Error ? error.message : "Failed to read directory",
+          error:
+            error instanceof Error ? error.message : "Failed to read directory",
           errorCode: "DIRECTORY_ACCESS_DENIED",
         };
       }
@@ -156,7 +168,10 @@ class WebFileSystemService implements FileSystemService {
     };
   }
 
-  async mkdir(_path: string, _recursive?: boolean): Promise<FileSystemResult<void>> {
+  async mkdir(
+    _path: string,
+    _recursive?: boolean,
+  ): Promise<FileSystemResult<void>> {
     return {
       success: false,
       error: "Directory creation not supported in browser",
@@ -164,7 +179,10 @@ class WebFileSystemService implements FileSystemService {
     };
   }
 
-  async remove(_path: string, _recursive?: boolean): Promise<FileSystemResult<void>> {
+  async remove(
+    _path: string,
+    _recursive?: boolean,
+  ): Promise<FileSystemResult<void>> {
     return {
       success: false,
       error: "File deletion not supported in browser",
@@ -172,7 +190,10 @@ class WebFileSystemService implements FileSystemService {
     };
   }
 
-  async copy(_source: string, _destination: string): Promise<FileSystemResult<void>> {
+  async copy(
+    _source: string,
+    _destination: string,
+  ): Promise<FileSystemResult<void>> {
     return {
       success: false,
       error: "File copying not supported in browser",
@@ -180,7 +201,10 @@ class WebFileSystemService implements FileSystemService {
     };
   }
 
-  async move(_source: string, _destination: string): Promise<FileSystemResult<void>> {
+  async move(
+    _source: string,
+    _destination: string,
+  ): Promise<FileSystemResult<void>> {
     return {
       success: false,
       error: "File moving not supported in browser",
@@ -248,7 +272,8 @@ class WebClipboardService implements ClipboardService {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to read clipboard",
+        error:
+          error instanceof Error ? error.message : "Failed to read clipboard",
       };
     }
   }
@@ -270,7 +295,10 @@ class WebClipboardService implements ClipboardService {
       } catch (error) {
         return {
           success: false,
-          error: error instanceof Error ? error.message : "Failed to copy to clipboard",
+          error:
+            error instanceof Error
+              ? error.message
+              : "Failed to copy to clipboard",
         };
       }
     }
@@ -281,7 +309,10 @@ class WebClipboardService implements ClipboardService {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to write to clipboard",
+        error:
+          error instanceof Error
+            ? error.message
+            : "Failed to write to clipboard",
       };
     }
   }
@@ -299,7 +330,6 @@ class WebClipboardService implements ClipboardService {
  * Web notification service implementation
  */
 class WebNotificationService implements NotificationService {
-  private notificationCounter = 0;
   private activeNotifications = new Map<string, Notification>();
 
   async show(options: NotificationOptions): Promise<NotificationResult> {
@@ -328,22 +358,26 @@ class WebNotificationService implements NotificationService {
       };
     }
 
-    const notificationId = options.tag || `notification-${++this.notificationCounter}`;
+    const notificationId =
+      options.tag || `notification-${++this.notificationCounter}`;
 
     try {
       const notificationOptions: any = {
         body: options.message,
       };
-      
+
       if (options.icon !== undefined) {
         notificationOptions.icon = options.icon;
       }
-      
+
       if (options.tag !== undefined) {
         notificationOptions.tag = options.tag;
       }
 
-      const notification = new Notification(options.title || "jsont", notificationOptions);
+      const notification = new Notification(
+        options.title || "jsont",
+        notificationOptions,
+      );
 
       this.activeNotifications.set(notificationId, notification);
 
@@ -369,7 +403,10 @@ class WebNotificationService implements NotificationService {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to show notification",
+        error:
+          error instanceof Error
+            ? error.message
+            : "Failed to show notification",
       };
     }
   }
@@ -491,7 +528,9 @@ class WebStorageService implements StorageService {
     try {
       this.storage.setItem(key, value);
     } catch (error) {
-      throw new Error(`Failed to set item: ${error instanceof Error ? error.message : "Unknown error"}`);
+      throw new Error(
+        `Failed to set item: ${error instanceof Error ? error.message : "Unknown error"}`,
+      );
     }
   }
 

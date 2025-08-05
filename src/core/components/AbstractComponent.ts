@@ -3,18 +3,18 @@
  * Provides base classes and interfaces for platform-independent component development
  */
 
-import type { ReactElement } from "react";
-import type { RenderNode, RenderManager } from "@core/rendering";
-import type { InputEvent, InputHandler } from "../input";
 import type { PlatformService } from "@core/platform";
+import type { RenderManager, RenderNode } from "@core/rendering";
+import type { ReactElement } from "react";
+import type { InputEvent, InputHandler } from "../input";
 
 /**
  * Component lifecycle state
  */
-export type ComponentLifecycleState = 
+export type ComponentLifecycleState =
   | "initializing"
   | "mounting"
-  | "mounted" 
+  | "mounted"
   | "updating"
   | "unmounting"
   | "unmounted"
@@ -23,7 +23,7 @@ export type ComponentLifecycleState =
 /**
  * Component event types
  */
-export type ComponentEventType = 
+export type ComponentEventType =
   | "mount"
   | "unmount"
   | "update"
@@ -35,9 +35,10 @@ export type ComponentEventType =
 /**
  * Component event handler
  */
-export interface ComponentEventHandler<T = any> {
-  (event: ComponentEventType, data?: T): void | Promise<void>;
-}
+export type ComponentEventHandler<T = unknown> = (
+  event: ComponentEventType,
+  data?: T,
+) => void | Promise<void>;
 
 /**
  * Component lifecycle hooks
@@ -214,13 +215,16 @@ export interface ComponentValidationResult {
  */
 export abstract class AbstractComponent<
   TProps extends ComponentProps = ComponentProps,
-  TState = any
+  TState = any,
 > {
   protected props: TProps;
   protected state: ComponentState<TState>;
   protected context: ComponentContext;
   protected lifecycleState: ComponentLifecycleState = "initializing";
-  protected eventHandlers = new Map<ComponentEventType, ComponentEventHandler[]>();
+  protected eventHandlers = new Map<
+    ComponentEventType,
+    ComponentEventHandler[]
+  >();
   protected inputHandler?: InputHandler;
   protected focusUnsubscribe?: () => void;
 
@@ -235,7 +239,9 @@ export abstract class AbstractComponent<
    * Get component identifier
    */
   getId(): string {
-    return this.props.id || `component-${Math.random().toString(36).substr(2, 9)}`;
+    return (
+      this.props.id || `component-${Math.random().toString(36).substr(2, 9)}`
+    );
   }
 
   /**
@@ -293,26 +299,30 @@ export abstract class AbstractComponent<
    */
   async mount(): Promise<void> {
     if (this.lifecycleState !== "initializing") {
-      throw new Error(`Cannot mount component in state: ${this.lifecycleState}`);
+      throw new Error(
+        `Cannot mount component in state: ${this.lifecycleState}`,
+      );
     }
 
     try {
       await this.onWillMount?.();
       this.lifecycleState = "mounting";
-      
+
       // Setup input handling
       this.setupInputHandling();
-      
+
       // Setup focus management
       this.setupFocusManagement();
-      
+
       this.lifecycleState = "mounted";
       await this.onDidMount?.();
-      
+
       this.emit("mount");
     } catch (error) {
       this.lifecycleState = "error";
-      await this.handleError(error instanceof Error ? error : new Error(String(error)));
+      await this.handleError(
+        error instanceof Error ? error : new Error(String(error)),
+      );
     }
   }
 
@@ -327,23 +337,25 @@ export abstract class AbstractComponent<
     try {
       await this.onWillUnmount?.();
       this.lifecycleState = "unmounting";
-      
+
       // Cleanup input handling
       this.cleanupInputHandling();
-      
+
       // Cleanup focus management
       this.cleanupFocusManagement();
-      
+
       // Cleanup event handlers
       this.eventHandlers.clear();
-      
+
       this.lifecycleState = "unmounted";
       await this.onDidUnmount?.();
-      
+
       this.emit("unmount");
     } catch (error) {
       this.lifecycleState = "error";
-      await this.handleError(error instanceof Error ? error : new Error(String(error)));
+      await this.handleError(
+        error instanceof Error ? error : new Error(String(error)),
+      );
     }
   }
 
@@ -433,7 +445,10 @@ export abstract class AbstractComponent<
   /**
    * Listen to component events
    */
-  protected listen(event: ComponentEventType, handler: ComponentEventHandler): () => void {
+  protected listen(
+    event: ComponentEventType,
+    handler: ComponentEventHandler,
+  ): () => void {
     const handlers = this.eventHandlers.get(event) || [];
     handlers.push(handler);
     this.eventHandlers.set(event, handlers);
@@ -453,7 +468,7 @@ export abstract class AbstractComponent<
    */
   protected async handleError(error: Error): Promise<void> {
     console.error(`Component ${this.getId()} error:`, error);
-    
+
     try {
       await this.onError?.(error);
       this.emit("error", error);
@@ -473,7 +488,7 @@ export abstract class AbstractComponent<
       getState: () => currentState,
       setState: (newState: Partial<TState>) => {
         currentState = { ...currentState, ...newState };
-        subscribers.forEach(callback => {
+        subscribers.forEach((callback) => {
           try {
             callback(currentState);
           } catch (error) {
@@ -492,7 +507,7 @@ export abstract class AbstractComponent<
       },
       resetState: () => {
         currentState = initialState || ({} as TState);
-        subscribers.forEach(callback => {
+        subscribers.forEach((callback) => {
           try {
             callback(currentState);
           } catch (error) {
@@ -534,8 +549,10 @@ export abstract class AbstractComponent<
         handle: (event: InputEvent) => this.handleInput(event),
         priority: this.getInputPriority(),
       };
-      
-      this.focusUnsubscribe = this.context.registerInputHandler(this.inputHandler);
+
+      this.focusUnsubscribe = this.context.registerInputHandler(
+        this.inputHandler,
+      );
     }
   }
 
@@ -578,12 +595,18 @@ export abstract class AbstractComponent<
   /**
    * Lifecycle hook: called before component updates
    */
-  protected onWillUpdate?(prevProps: TProps, nextProps: TProps): void | Promise<void>;
+  protected onWillUpdate?(
+    prevProps: TProps,
+    nextProps: TProps,
+  ): void | Promise<void>;
 
   /**
    * Lifecycle hook: called after component updates
    */
-  protected onDidUpdate?(prevProps: TProps, currentProps: TProps): void | Promise<void>;
+  protected onDidUpdate?(
+    prevProps: TProps,
+    currentProps: TProps,
+  ): void | Promise<void>;
 
   /**
    * Lifecycle hook: called before component unmounts
@@ -624,7 +647,12 @@ export abstract class AbstractComponent<
    * Check if component can handle input event
    */
   protected canHandleInput(_event: InputEvent): boolean {
-    return this.isMounted() && this.isVisible() && !this.isDisabled() && this.isFocused();
+    return (
+      this.isMounted() &&
+      this.isVisible() &&
+      !this.isDisabled() &&
+      this.isFocused()
+    );
   }
 
   /**

@@ -3,42 +3,38 @@
  * Provides unified rendering abstraction for terminal and web UIs
  */
 
-// Core rendering system
-export * from "./RenderSystem";
-
-// Platform-specific adapters
-export * from "./TerminalRenderAdapter";
-export * from "./WebRenderAdapter";
-
 // Re-export key types for convenience
 export type {
-  RenderNode,
-  ContainerNode,
-  TextNode,
-  InputNode,
-  ButtonNode,
-  RenderStyle,
-  LayoutOptions,
-  TextStyle,
   BorderStyle,
+  ButtonNode,
+  ContainerNode,
   InputFieldOptions,
-  ViewportInfo,
+  InputNode,
+  LayoutOptions,
   RenderCapabilities,
+  RenderNode,
+  RenderStyle,
+  TextNode,
+  TextStyle,
+  ViewportInfo,
 } from "./RenderSystem";
-
+// Core rendering system
+export * from "./RenderSystem";
 export {
   RenderAdapter,
   RenderManager,
   RenderUtils,
 } from "./RenderSystem";
-
+// Platform-specific adapters
+export * from "./TerminalRenderAdapter";
 export {
-  TerminalRenderAdapter,
   createTerminalRenderAdapter,
+  TerminalRenderAdapter,
 } from "./TerminalRenderAdapter";
+export * from "./WebRenderAdapter";
 
 export {
-  WebRenderAdapter,
   createWebRenderAdapter,
   generateWebCSS,
+  WebRenderAdapter,
 } from "./WebRenderAdapter";

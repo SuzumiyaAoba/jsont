@@ -4,8 +4,8 @@
  */
 
 import * as fs from "node:fs/promises";
-import * as path from "node:path";
 import * as os from "node:os";
+import * as path from "node:path";
 import type {
   ClipboardResult,
   ClipboardService,
@@ -32,12 +32,18 @@ class TerminalFileSystemService implements FileSystemService {
       return {
         success: false,
         error: error instanceof Error ? error.message : "Failed to read file",
-        errorCode: error instanceof Error && "code" in error ? (error as any).code : "UNKNOWN",
+        errorCode:
+          error instanceof Error && "code" in error
+            ? (error as any).code
+            : "UNKNOWN",
       };
     }
   }
 
-  async writeFile(filePath: string, content: string): Promise<FileSystemResult<void>> {
+  async writeFile(
+    filePath: string,
+    content: string,
+  ): Promise<FileSystemResult<void>> {
     try {
       await fs.writeFile(filePath, content, "utf8");
       return { success: true };
@@ -45,7 +51,10 @@ class TerminalFileSystemService implements FileSystemService {
       return {
         success: false,
         error: error instanceof Error ? error.message : "Failed to write file",
-        errorCode: error instanceof Error && "code" in error ? (error as any).code : "UNKNOWN",
+        errorCode:
+          error instanceof Error && "code" in error
+            ? (error as any).code
+            : "UNKNOWN",
       };
     }
   }
@@ -72,15 +81,19 @@ class TerminalFileSystemService implements FileSystemService {
         permissions: {
           readable: true, // Simplified - in reality would check file permissions
           writable: true,
-          executable: !!(stats.mode & parseInt("111", 8)),
+          executable: !!(stats.mode & 0o111),
         },
       };
       return { success: true, data: fileInfo };
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to get file stats",
-        errorCode: error instanceof Error && "code" in error ? (error as any).code : "UNKNOWN",
+        error:
+          error instanceof Error ? error.message : "Failed to get file stats",
+        errorCode:
+          error instanceof Error && "code" in error
+            ? (error as any).code
+            : "UNKNOWN",
       };
     }
   }
@@ -102,26 +115,40 @@ class TerminalFileSystemService implements FileSystemService {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to read directory",
-        errorCode: error instanceof Error && "code" in error ? (error as any).code : "UNKNOWN",
+        error:
+          error instanceof Error ? error.message : "Failed to read directory",
+        errorCode:
+          error instanceof Error && "code" in error
+            ? (error as any).code
+            : "UNKNOWN",
       };
     }
   }
 
-  async mkdir(dirPath: string, recursive = true): Promise<FileSystemResult<void>> {
+  async mkdir(
+    dirPath: string,
+    recursive = true,
+  ): Promise<FileSystemResult<void>> {
     try {
       await fs.mkdir(dirPath, { recursive });
       return { success: true };
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to create directory",
-        errorCode: error instanceof Error && "code" in error ? (error as any).code : "UNKNOWN",
+        error:
+          error instanceof Error ? error.message : "Failed to create directory",
+        errorCode:
+          error instanceof Error && "code" in error
+            ? (error as any).code
+            : "UNKNOWN",
       };
     }
   }
 
-  async remove(targetPath: string, recursive = false): Promise<FileSystemResult<void>> {
+  async remove(
+    targetPath: string,
+    recursive = false,
+  ): Promise<FileSystemResult<void>> {
     try {
       const stats = await fs.stat(targetPath);
       if (stats.isDirectory()) {
@@ -133,13 +160,22 @@ class TerminalFileSystemService implements FileSystemService {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to remove file/directory",
-        errorCode: error instanceof Error && "code" in error ? (error as any).code : "UNKNOWN",
+        error:
+          error instanceof Error
+            ? error.message
+            : "Failed to remove file/directory",
+        errorCode:
+          error instanceof Error && "code" in error
+            ? (error as any).code
+            : "UNKNOWN",
       };
     }
   }
 
-  async copy(source: string, destination: string): Promise<FileSystemResult<void>> {
+  async copy(
+    source: string,
+    destination: string,
+  ): Promise<FileSystemResult<void>> {
     try {
       await fs.copyFile(source, destination);
       return { success: true };
@@ -147,12 +183,18 @@ class TerminalFileSystemService implements FileSystemService {
       return {
         success: false,
         error: error instanceof Error ? error.message : "Failed to copy file",
-        errorCode: error instanceof Error && "code" in error ? (error as any).code : "UNKNOWN",
+        errorCode:
+          error instanceof Error && "code" in error
+            ? (error as any).code
+            : "UNKNOWN",
       };
     }
   }
 
-  async move(source: string, destination: string): Promise<FileSystemResult<void>> {
+  async move(
+    source: string,
+    destination: string,
+  ): Promise<FileSystemResult<void>> {
     try {
       await fs.rename(source, destination);
       return { success: true };
@@ -160,7 +202,10 @@ class TerminalFileSystemService implements FileSystemService {
       return {
         success: false,
         error: error instanceof Error ? error.message : "Failed to move file",
-        errorCode: error instanceof Error && "code" in error ? (error as any).code : "UNKNOWN",
+        errorCode:
+          error instanceof Error && "code" in error
+            ? (error as any).code
+            : "UNKNOWN",
       };
     }
   }
@@ -172,7 +217,10 @@ class TerminalFileSystemService implements FileSystemService {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to get current directory",
+        error:
+          error instanceof Error
+            ? error.message
+            : "Failed to get current directory",
       };
     }
   }
@@ -184,8 +232,12 @@ class TerminalFileSystemService implements FileSystemService {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to change directory",
-        errorCode: error instanceof Error && "code" in error ? (error as any).code : "UNKNOWN",
+        error:
+          error instanceof Error ? error.message : "Failed to change directory",
+        errorCode:
+          error instanceof Error && "code" in error
+            ? (error as any).code
+            : "UNKNOWN",
       };
     }
   }
@@ -230,7 +282,9 @@ class TerminalClipboardService implements ClipboardService {
       } else if (process.platform === "linux") {
         const { execSync } = await import("node:child_process");
         try {
-          const result = execSync("xclip -selection clipboard -o", { encoding: "utf8" });
+          const result = execSync("xclip -selection clipboard -o", {
+            encoding: "utf8",
+          });
           return { success: true, data: result };
         } catch {
           // Fallback to internal clipboard
@@ -243,7 +297,8 @@ class TerminalClipboardService implements ClipboardService {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to read clipboard",
+        error:
+          error instanceof Error ? error.message : "Failed to read clipboard",
       };
     }
   }
@@ -273,7 +328,8 @@ class TerminalClipboardService implements ClipboardService {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to write clipboard",
+        error:
+          error instanceof Error ? error.message : "Failed to write clipboard",
       };
     }
   }
@@ -292,11 +348,9 @@ class TerminalClipboardService implements ClipboardService {
  * Limited notification support - uses console output
  */
 class TerminalNotificationService implements NotificationService {
-  private notificationCounter = 0;
-
   async show(options: NotificationOptions): Promise<NotificationResult> {
     const notificationId = `notification-${++this.notificationCounter}`;
-    
+
     // Format notification for terminal output
     const typeSymbols = {
       info: "ℹ",

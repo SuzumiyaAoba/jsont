@@ -3,53 +3,47 @@
  * Provides abstract base classes and utilities for platform-independent components
  */
 
-// Core component abstractions
-export * from "./AbstractComponent";
-export * from "./ComponentStyling";
-export * from "./ComponentManager";
-
-// Simplified component abstractions (working version)
-export * from "./SimpleAbstractComponent";
-
 // Re-export key types for convenience
 export type {
-  ComponentLifecycleState,
-  ComponentEventType,
-  ComponentEventHandler,
-  ComponentLifecycle,
-  ComponentState,
-  ComponentProps,
   ComponentContext,
+  ComponentEventHandler,
+  ComponentEventType,
+  ComponentLifecycle,
+  ComponentLifecycleState,
+  ComponentProps,
+  ComponentState,
   ComponentValidationResult,
 } from "./AbstractComponent";
+// Core component abstractions
+export * from "./AbstractComponent";
+// Re-export classes
+export { AbstractComponent } from "./AbstractComponent";
+export * from "./ComponentManager";
+export {
+  ComponentFactory,
+  ComponentManager,
+  ComponentUtils,
+} from "./ComponentManager";
 
 export type {
   ComponentSize,
-  ComponentVariant,
-  ComponentTheme,
   ComponentStyleConfig,
+  ComponentTheme,
+  ComponentVariant,
   ComputedComponentStyle,
   StyleContext,
 } from "./ComponentStyling";
-
-// Re-export classes
-export {
-  AbstractComponent,
-} from "./AbstractComponent";
+export * from "./ComponentStyling";
 
 export {
-  ComponentStyling,
-  DEFAULT_THEME,
-  DARK_THEME,
-  TERMINAL_THEME_ADJUSTMENTS,
   COMPONENT_STYLES,
+  ComponentStyling,
+  DARK_THEME,
+  DEFAULT_THEME,
+  TERMINAL_THEME_ADJUSTMENTS,
 } from "./ComponentStyling";
-
-export {
-  ComponentManager,
-  ComponentFactory,
-  ComponentUtils,
-} from "./ComponentManager";
+// Simplified component abstractions (working version)
+export * from "./SimpleAbstractComponent";
 
 /**
  * Create a basic component setup for multi-platform development
@@ -62,7 +56,7 @@ export function createComponentSystem(
     theme?: "light" | "dark";
     allowMultipleFocus?: boolean;
     enableTabNavigation?: boolean;
-  } = {}
+  } = {},
 ) {
   const componentManager = new ComponentManager(
     inputManager,
@@ -79,7 +73,7 @@ export function createComponentSystem(
         name: options.theme || "light",
         isDark: options.theme === "dark",
       },
-    }
+    },
   );
 
   const componentFactory = new ComponentFactory(componentManager);
@@ -96,13 +90,14 @@ export function createComponentSystem(
  */
 export function createSimpleComponentSystem(
   renderManager: import("@core/rendering").RenderManager,
-  platformService: import("@core/platform").PlatformService
+  platformService: import("@core/platform").PlatformService,
 ) {
   return {
     renderManager,
     platformService,
-    createExample: () => import("./SimpleAbstractComponent").then(m => 
-      m.createSimpleExampleApp(renderManager, platformService)
-    ),
+    createExample: () =>
+      import("./SimpleAbstractComponent").then((m) =>
+        m.createSimpleExampleApp(renderManager, platformService),
+      ),
   };
 }

@@ -9,7 +9,10 @@ import type { RenderManager, RenderNode } from "../RenderSystem";
 /**
  * Create a simple JSON viewer component using the abstract rendering system
  */
-export function createJsonViewerComponent(renderManager: RenderManager, data: any): RenderNode {
+export function createJsonViewerComponent(
+  renderManager: RenderManager,
+  data: any,
+): RenderNode {
   // Create the main container
   const container = renderManager.createLayout({
     direction: "column",
@@ -38,19 +41,27 @@ export function createJsonViewerComponent(renderManager: RenderManager, data: an
     justify: "start",
   });
 
-  const copyButton = renderManager.createButton("Copy", () => {
-    console.log("Copy clicked");
-  }, {
-    color: "white",
-    backgroundColor: "blue",
-  });
+  const copyButton = renderManager.createButton(
+    "Copy",
+    () => {
+      console.log("Copy clicked");
+    },
+    {
+      color: "white",
+      backgroundColor: "blue",
+    },
+  );
 
-  const exportButton = renderManager.createButton("Export", () => {
-    console.log("Export clicked");
-  }, {
-    color: "white",
-    backgroundColor: "green",
-  });
+  const exportButton = renderManager.createButton(
+    "Export",
+    () => {
+      console.log("Export clicked");
+    },
+    {
+      color: "white",
+      backgroundColor: "green",
+    },
+  );
 
   // Assemble the component tree
   buttonContainer.children = [copyButton, exportButton];
@@ -62,7 +73,9 @@ export function createJsonViewerComponent(renderManager: RenderManager, data: an
 /**
  * Example of creating a settings form
  */
-export function createSettingsFormComponent(renderManager: RenderManager): RenderNode {
+export function createSettingsFormComponent(
+  renderManager: RenderManager,
+): RenderNode {
   const form = renderManager.createLayout({
     direction: "column",
     padding: 2,
@@ -123,12 +136,16 @@ export function createSettingsFormComponent(renderManager: RenderManager): Rende
     console.log("Cancel clicked");
   });
 
-  const saveButton = renderManager.createButton("Save", () => {
-    console.log("Save clicked");
-  }, {
-    color: "white",
-    backgroundColor: "blue",
-  });
+  const saveButton = renderManager.createButton(
+    "Save",
+    () => {
+      console.log("Save clicked");
+    },
+    {
+      color: "white",
+      backgroundColor: "blue",
+    },
+  );
 
   actions.children = [cancelButton, saveButton];
 
@@ -143,7 +160,7 @@ export function createSettingsFormComponent(renderManager: RenderManager): Rende
  */
 export function TerminalExample(): ReactElement {
   const { createTerminalRenderAdapter, RenderManager } = require("../index");
-  
+
   const adapter = createTerminalRenderAdapter();
   const renderManager = new RenderManager(adapter);
 
@@ -158,7 +175,7 @@ export function TerminalExample(): ReactElement {
   };
 
   const component = createJsonViewerComponent(renderManager, sampleData);
-  
+
   return renderManager.render(component);
 }
 
@@ -167,12 +184,12 @@ export function TerminalExample(): ReactElement {
  */
 export function WebExample(): ReactElement {
   const { createWebRenderAdapter, RenderManager } = require("../index");
-  
+
   const adapter = createWebRenderAdapter();
   const renderManager = new RenderManager(adapter);
 
   const settingsForm = createSettingsFormComponent(renderManager);
-  
+
   return renderManager.render(settingsForm);
 }
 
@@ -180,25 +197,25 @@ export function WebExample(): ReactElement {
  * Example showing platform detection and adapter selection
  */
 export function createAdaptiveComponent(data: any): ReactElement {
-  const { 
-    createTerminalRenderAdapter, 
-    createWebRenderAdapter, 
-    RenderManager 
+  const {
+    createTerminalRenderAdapter,
+    createWebRenderAdapter,
+    RenderManager,
   } = require("../index");
 
   // Detect platform
   const isWeb = typeof window !== "undefined";
-  
+
   // Create appropriate adapter
-  const adapter = isWeb 
+  const adapter = isWeb
     ? createWebRenderAdapter("jsont-app")
     : createTerminalRenderAdapter();
-  
+
   const renderManager = new RenderManager(adapter);
 
   // Create component that works on both platforms
   const component = createJsonViewerComponent(renderManager, data);
-  
+
   return renderManager.render(component);
 }
 
@@ -208,12 +225,12 @@ export function createAdaptiveComponent(data: any): ReactElement {
 export function createVirtualizedList(
   renderManager: RenderManager,
   items: any[],
-  visibleCount = 10
+  visibleCount = 10,
 ): RenderNode {
   const container = renderManager.createLayout({
     direction: "column",
   });
-  
+
   // Set additional styles that are not in LayoutOptions
   container.style = {
     ...container.style,
@@ -223,7 +240,7 @@ export function createVirtualizedList(
 
   // Only render visible items (simplified virtualization)
   const visibleItems = items.slice(0, visibleCount);
-  
+
   const itemNodes = visibleItems.map((item, index) => {
     return renderManager.createText(`${index + 1}. ${JSON.stringify(item)}`, {
       padding: 1,
@@ -232,6 +249,6 @@ export function createVirtualizedList(
   });
 
   container.children = itemNodes;
-  
+
   return container;
 }

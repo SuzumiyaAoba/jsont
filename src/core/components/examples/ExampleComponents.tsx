@@ -3,17 +3,17 @@
  * Shows how to create platform-independent components using the abstraction layer
  */
 
+import type { ButtonNode, ContainerNode, RenderNode } from "@core/rendering";
 import type { ReactElement } from "react";
-import type { RenderNode, ContainerNode, ButtonNode } from "@core/rendering";
 import type { InputEvent } from "../../input";
-import { 
-  AbstractComponent, 
-  ComponentProps, 
-  ComponentContext,
-  ComponentValidationResult,
-  ComponentSize,
-  ComponentVariant,
-  COMPONENT_STYLES
+import {
+  AbstractComponent,
+  COMPONENT_STYLES,
+  type ComponentContext,
+  type ComponentProps,
+  type ComponentSize,
+  type ComponentValidationResult,
+  type ComponentVariant,
 } from "../index";
 
 /**
@@ -57,7 +57,10 @@ interface ButtonState {
 /**
  * Example button component using the abstract component system
  */
-export class AbstractButton extends AbstractComponent<ButtonProps, ButtonState> {
+export class AbstractButton extends AbstractComponent<
+  ButtonProps,
+  ButtonState
+> {
   constructor(props: ButtonProps, context: ComponentContext) {
     super(props, context, {
       isPressed: false,
@@ -69,8 +72,9 @@ export class AbstractButton extends AbstractComponent<ButtonProps, ButtonState> 
    * Render button as RenderNode
    */
   override render(): RenderNode {
-    const styling = this.context.renderManager.getStyling?.() || 
-                   new (require("../ComponentStyling").ComponentStyling)();
+    const styling =
+      this.context.renderManager.getStyling?.() ||
+      new (require("../ComponentStyling").ComponentStyling)();
 
     const computedStyle = styling.computeStyles(COMPONENT_STYLES.button, {
       props: {
@@ -207,7 +211,10 @@ interface TextInputState {
 /**
  * Example text input component
  */
-export class AbstractTextInput extends AbstractComponent<TextInputProps, TextInputState> {
+export class AbstractTextInput extends AbstractComponent<
+  TextInputProps,
+  TextInputState
+> {
   constructor(props: TextInputProps, context: ComponentContext) {
     super(props, context, {
       internalValue: props.value || "",
@@ -220,8 +227,9 @@ export class AbstractTextInput extends AbstractComponent<TextInputProps, TextInp
    * Render text input as RenderNode
    */
   render(): RenderNode {
-    const styling = this.context.renderManager.getStyling?.() || 
-                   new (require("../ComponentStyling").ComponentStyling)();
+    const styling =
+      this.context.renderManager.getStyling?.() ||
+      new (require("../ComponentStyling").ComponentStyling)();
 
     const computedStyle = styling.computeStyles(COMPONENT_STYLES.input, {
       props: {
@@ -357,7 +365,11 @@ export class AbstractTextInput extends AbstractComponent<TextInputProps, TextInp
       errors.push("maxLength must be greater than 0");
     }
 
-    if (props.value && props.maxLength && props.value.length > props.maxLength) {
+    if (
+      props.value &&
+      props.maxLength &&
+      props.value.length > props.maxLength
+    ) {
       warnings.push("Initial value exceeds maxLength");
     }
 
@@ -422,7 +434,10 @@ interface ContainerState {
 /**
  * Example container component for layout
  */
-export class AbstractContainer extends AbstractComponent<ContainerProps, ContainerState> {
+export class AbstractContainer extends AbstractComponent<
+  ContainerProps,
+  ContainerState
+> {
   constructor(props: ContainerProps, context: ComponentContext) {
     super(props, context, {
       childrenMounted: false,
@@ -433,8 +448,9 @@ export class AbstractContainer extends AbstractComponent<ContainerProps, Contain
    * Render container as RenderNode
    */
   render(): RenderNode {
-    const styling = this.context.renderManager.getStyling?.() || 
-                   new (require("../ComponentStyling").ComponentStyling)();
+    const styling =
+      this.context.renderManager.getStyling?.() ||
+      new (require("../ComponentStyling").ComponentStyling)();
 
     const computedStyle = styling.computeStyles(COMPONENT_STYLES.container, {
       props: {
@@ -461,7 +477,9 @@ export class AbstractContainer extends AbstractComponent<ContainerProps, Contain
         justifyContent: this.props.justify || "start",
         gap: this.props.gap,
         padding: this.props.padding,
-        border: this.props.border ? { width: 1, style: "solid", color: "gray" } : undefined,
+        border: this.props.border
+          ? { width: 1, style: "solid", color: "gray" }
+          : undefined,
       },
       testId: this.props.testId,
       props: {
@@ -491,7 +509,9 @@ export class AbstractContainer extends AbstractComponent<ContainerProps, Contain
    */
   removeChild(childId: string): void {
     const children = this.props.children || [];
-    const filteredChildren = children.filter(child => child.getId() !== childId);
+    const filteredChildren = children.filter(
+      (child) => child.getId() !== childId,
+    );
     this.updateProps({ children: filteredChildren });
   }
 
@@ -538,7 +558,9 @@ export class AbstractContainer extends AbstractComponent<ContainerProps, Contain
     }
 
     if (props.children && props.children.length > 20) {
-      warnings.push("Container has many children, consider virtualization for performance");
+      warnings.push(
+        "Container has many children, consider virtualization for performance",
+      );
     }
 
     return { isValid: errors.length === 0, errors, warnings };
@@ -551,7 +573,7 @@ export class AbstractContainer extends AbstractComponent<ContainerProps, Contain
 export async function createExampleApp(
   inputManager: import("@core/input").InputManager,
   renderManager: import("@core/rendering").RenderManager,
-  platformService: import("@core/platform").PlatformService
+  platformService: import("@core/platform").PlatformService,
 ): Promise<AbstractContainer> {
   const context = {
     renderManager,
@@ -574,7 +596,7 @@ export async function createExampleApp(
       size: "lg",
       disabled: true,
     },
-    context
+    context,
   );
 
   const searchInput = new AbstractTextInput(
@@ -584,7 +606,7 @@ export async function createExampleApp(
       onChange: (value) => console.log("Search:", value),
       onSubmit: (value) => console.log("Submit search:", value),
     },
-    context
+    context,
   );
 
   const actionContainer = new AbstractContainer(
@@ -594,7 +616,7 @@ export async function createExampleApp(
       gap: 2,
       children: [],
     },
-    context
+    context,
   );
 
   const copyButton = new AbstractButton(
@@ -604,7 +626,7 @@ export async function createExampleApp(
       size: "sm",
       onClick: () => console.log("Copy clicked"),
     },
-    context
+    context,
   );
 
   const exportButton = new AbstractButton(
@@ -614,7 +636,7 @@ export async function createExampleApp(
       size: "sm",
       onClick: () => console.log("Export clicked"),
     },
-    context
+    context,
   );
 
   // Build component hierarchy
@@ -629,7 +651,7 @@ export async function createExampleApp(
       border: true,
       children: [titleButton, searchInput, actionContainer],
     },
-    context
+    context,
   );
 
   // Mount the main container (will mount all children)
@@ -641,8 +663,6 @@ export async function createExampleApp(
 /**
  * Render example to platform-specific output
  */
-export function renderExampleApp(
-  app: AbstractContainer
-): ReactElement {
+export function renderExampleApp(app: AbstractContainer): ReactElement {
   return app.renderToPlatform();
 }

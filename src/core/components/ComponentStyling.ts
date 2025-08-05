@@ -13,7 +13,13 @@ export type ComponentSize = "xs" | "sm" | "md" | "lg" | "xl";
 /**
  * Component variant types
  */
-export type ComponentVariant = "primary" | "secondary" | "success" | "warning" | "error" | "info";
+export type ComponentVariant =
+  | "primary"
+  | "secondary"
+  | "success"
+  | "warning"
+  | "error"
+  | "info";
 
 /**
  * Component theme configuration
@@ -200,7 +206,8 @@ export const DEFAULT_THEME: ComponentTheme = {
     accent: "#007acc",
   },
   typography: {
-    fontFamily: "'JetBrains Mono', 'Fira Code', 'Monaco', 'Menlo', 'Courier New', monospace",
+    fontFamily:
+      "'JetBrains Mono', 'Fira Code', 'Monaco', 'Menlo', 'Courier New', monospace",
     fontSize: {
       xs: 12,
       sm: 14,
@@ -305,7 +312,10 @@ export class ComponentStyling {
   private theme: ComponentTheme;
   private platform: "terminal" | "web";
 
-  constructor(theme: ComponentTheme = DEFAULT_THEME, platform: "terminal" | "web" = "terminal") {
+  constructor(
+    theme: ComponentTheme = DEFAULT_THEME,
+    platform: "terminal" | "web" = "terminal",
+  ) {
     this.theme = this.adjustThemeForPlatform(theme, platform);
     this.platform = platform;
   }
@@ -314,8 +324,8 @@ export class ComponentStyling {
    * Compute component styles
    */
   computeStyles(
-    config: ComponentStyleConfig, 
-    context: Partial<StyleContext> = {}
+    config: ComponentStyleConfig,
+    context: Partial<StyleContext> = {},
   ): ComputedComponentStyle {
     const fullContext: StyleContext = {
       theme: this.theme,
@@ -345,7 +355,10 @@ export class ComponentStyling {
     }
 
     // Apply variant-specific styles
-    if (fullContext.props.variant && config.variants?.[fullContext.props.variant]) {
+    if (
+      fullContext.props.variant &&
+      config.variants?.[fullContext.props.variant]
+    ) {
       const variantStyle = config.variants[fullContext.props.variant];
       if (variantStyle) {
         computedStyle = this.mergeStyles(computedStyle, variantStyle);
@@ -384,7 +397,7 @@ export class ComponentStyling {
       style: computedStyle,
       dataAttributes: this.generateDataAttributes(fullContext),
     };
-    
+
     if (this.platform === "web") {
       result.className = this.generateClassName(fullContext);
     }
@@ -395,10 +408,10 @@ export class ComponentStyling {
   /**
    * Get theme value by path
    */
-  getThemeValue(path: string): any {
+  getThemeValue(path: string): unknown {
     const keys = path.split(".");
-    let value: any = this.theme;
-    
+    let value: unknown = this.theme;
+
     for (const key of keys) {
       if (value && typeof value === "object" && key in value) {
         value = value[key];
@@ -406,7 +419,7 @@ export class ComponentStyling {
         return undefined;
       }
     }
-    
+
     return value;
   }
 
@@ -415,10 +428,10 @@ export class ComponentStyling {
    */
   createResponsiveStyle(
     property: keyof RenderStyle,
-    values: Partial<Record<ComponentSize, any>>
+    values: Partial<Record<ComponentSize, unknown>>,
   ): ComponentStyleConfig {
     const sizes: Partial<Record<ComponentSize, RenderStyle>> = {};
-    
+
     for (const [size, value] of Object.entries(values)) {
       sizes[size as ComponentSize] = { [property]: value };
     }
@@ -429,13 +442,13 @@ export class ComponentStyling {
   /**
    * Create theme-aware colors
    */
-  createThemedColors(variant: ComponentVariant): { 
-    color: string; 
-    backgroundColor?: string; 
-    borderColor?: string; 
+  createThemedColors(variant: ComponentVariant): {
+    color: string;
+    backgroundColor?: string;
+    borderColor?: string;
   } {
     const color = this.theme.colors[variant];
-    
+
     if (this.platform === "terminal") {
       return { color };
     }
@@ -452,8 +465,8 @@ export class ComponentStyling {
    * Create animation styles (web only)
    */
   createAnimationStyle(
-    property: string,
-    duration: keyof ComponentTheme["animation"]["duration"] = "normal"
+    _property: string,
+    _duration: keyof ComponentTheme["animation"]["duration"] = "normal",
   ): RenderStyle {
     if (this.platform === "terminal") {
       return {}; // No animations in terminal
@@ -473,7 +486,10 @@ export class ComponentStyling {
   /**
    * Adjust theme for platform
    */
-  private adjustThemeForPlatform(theme: ComponentTheme, platform: "terminal" | "web"): ComponentTheme {
+  private adjustThemeForPlatform(
+    theme: ComponentTheme,
+    platform: "terminal" | "web",
+  ): ComponentTheme {
     if (platform === "terminal") {
       return this.mergeThemes(theme, TERMINAL_THEME_ADJUSTMENTS);
     }
@@ -483,20 +499,29 @@ export class ComponentStyling {
   /**
    * Merge themes
    */
-  private mergeThemes(base: ComponentTheme, override: Partial<ComponentTheme>): ComponentTheme {
+  private mergeThemes(
+    base: ComponentTheme,
+    override: Partial<ComponentTheme>,
+  ): ComponentTheme {
     return {
       colors: { ...base.colors, ...override.colors },
-      typography: { 
-        ...base.typography, 
+      typography: {
+        ...base.typography,
         ...override.typography,
-        fontSize: { ...base.typography.fontSize, ...override.typography?.fontSize },
+        fontSize: {
+          ...base.typography.fontSize,
+          ...override.typography?.fontSize,
+        },
       },
       spacing: { ...base.spacing, ...override.spacing },
       borderRadius: { ...base.borderRadius, ...override.borderRadius },
-      animation: { 
-        ...base.animation, 
+      animation: {
+        ...base.animation,
         ...override.animation,
-        duration: { ...base.animation.duration, ...override.animation?.duration },
+        duration: {
+          ...base.animation.duration,
+          ...override.animation?.duration,
+        },
       },
     };
   }
@@ -506,23 +531,23 @@ export class ComponentStyling {
    */
   private generateClassName(context: StyleContext): string {
     const parts = ["jsont-component"];
-    
+
     if (context.props.size) {
       parts.push(`size-${context.props.size}`);
     }
-    
+
     if (context.props.variant) {
       parts.push(`variant-${context.props.variant}`);
     }
-    
+
     if (context.props.disabled) {
       parts.push("disabled");
     }
-    
+
     if (context.props.focused) {
       parts.push("focused");
     }
-    
+
     if (context.props.loading) {
       parts.push("loading");
     }
@@ -533,19 +558,21 @@ export class ComponentStyling {
   /**
    * Generate data attributes
    */
-  private generateDataAttributes(context: StyleContext): Record<string, string> {
+  private generateDataAttributes(
+    context: StyleContext,
+  ): Record<string, string> {
     const attributes: Record<string, string> = {};
-    
+
     if (context.props.size) {
       attributes["data-size"] = context.props.size;
     }
-    
+
     if (context.props.variant) {
       attributes["data-variant"] = context.props.variant;
     }
-    
+
     attributes["data-platform"] = context.platform;
-    
+
     return attributes;
   }
 }
@@ -598,7 +625,10 @@ export const COMPONENT_STYLES = {
       backgroundColor: "white",
     } as RenderStyle,
     states: {
-      focus: { borderColor: "#007acc", boxShadow: "0 0 0 2px rgba(0, 122, 204, 0.25)" },
+      focus: {
+        borderColor: "#007acc",
+        boxShadow: "0 0 0 2px rgba(0, 122, 204, 0.25)",
+      },
       disabled: { backgroundColor: "#f8f9fa", opacity: 0.6 },
     },
   } as ComponentStyleConfig,

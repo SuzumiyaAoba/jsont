@@ -3,9 +3,9 @@
  * Focuses on core abstraction principles with minimal TypeScript complexity
  */
 
-import type { ReactElement } from "react";
-import type { RenderNode, RenderManager } from "@core/rendering";
 import type { PlatformService } from "@core/platform";
+import type { RenderManager, RenderNode } from "@core/rendering";
+import type { ReactElement } from "react";
 
 /**
  * Basic component properties
@@ -16,7 +16,7 @@ export interface BaseComponentProps {
   testId?: string;
   visible?: boolean;
   disabled?: boolean;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 /**
@@ -30,7 +30,9 @@ export interface BaseComponentContext {
 /**
  * Simplified abstract component base class
  */
-export abstract class SimpleAbstractComponent<TProps extends BaseComponentProps = BaseComponentProps> {
+export abstract class SimpleAbstractComponent<
+  TProps extends BaseComponentProps = BaseComponentProps,
+> {
   protected props: TProps;
   protected context: BaseComponentContext;
   private componentId: string;
@@ -38,7 +40,9 @@ export abstract class SimpleAbstractComponent<TProps extends BaseComponentProps 
   constructor(props: TProps, context: BaseComponentContext) {
     this.props = props;
     this.context = context;
-    this.componentId = props.id || `component-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    this.componentId =
+      props.id ||
+      `component-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
   }
 
   /**
@@ -105,7 +109,8 @@ export class SimpleButton extends SimpleAbstractComponent<SimpleButtonProps> {
       },
       content: this.props.text,
       style: {
-        backgroundColor: this.props.variant === "primary" ? "#007acc" : "transparent",
+        backgroundColor:
+          this.props.variant === "primary" ? "#007acc" : "transparent",
         color: this.props.variant === "primary" ? "white" : "#007acc",
         padding: 8,
         border: { width: 1, style: "solid", color: "#007acc" },
@@ -127,7 +132,7 @@ interface SimpleContainerProps extends BaseComponentProps {
 export class SimpleContainer extends SimpleAbstractComponent<SimpleContainerProps> {
   render(): RenderNode {
     const children: RenderNode[] = [];
-    
+
     if (this.props.children) {
       for (const child of this.props.children) {
         children.push(child.render());
@@ -195,7 +200,7 @@ export class SimpleText extends SimpleAbstractComponent<SimpleTextProps> {
  */
 export function createSimpleExampleApp(
   renderManager: RenderManager,
-  platformService: PlatformService
+  platformService: PlatformService,
 ): SimpleContainer {
   const context: BaseComponentContext = {
     renderManager,
@@ -204,38 +209,42 @@ export function createSimpleExampleApp(
 
   // Create components
   const title = new SimpleText(
-    { content: "jsont - Multi-Platform JSON Viewer", bold: true, color: "#007acc" },
-    context
+    {
+      content: "jsont - Multi-Platform JSON Viewer",
+      bold: true,
+      color: "#007acc",
+    },
+    context,
   );
 
   const primaryButton = new SimpleButton(
-    { 
-      text: "Primary Action", 
-      variant: "primary", 
-      onClick: () => console.log("Primary clicked") 
+    {
+      text: "Primary Action",
+      variant: "primary",
+      onClick: () => console.log("Primary clicked"),
     },
-    context
+    context,
   );
 
   const secondaryButton = new SimpleButton(
-    { 
-      text: "Secondary Action", 
-      variant: "secondary", 
-      onClick: () => console.log("Secondary clicked") 
+    {
+      text: "Secondary Action",
+      variant: "secondary",
+      onClick: () => console.log("Secondary clicked"),
     },
-    context
+    context,
   );
 
   const buttonContainer = new SimpleContainer(
     { direction: "row", gap: 2 },
-    context
+    context,
   );
   buttonContainer.addChild(primaryButton);
   buttonContainer.addChild(secondaryButton);
 
   const mainContainer = new SimpleContainer(
     { direction: "column", gap: 2, padding: 2 },
-    context
+    context,
   );
   mainContainer.addChild(title);
   mainContainer.addChild(buttonContainer);
