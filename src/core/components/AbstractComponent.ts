@@ -6,8 +6,14 @@
 import type { PlatformService } from "@core/platform";
 import type { RenderManager, RenderNode } from "@core/rendering";
 import type { ReactElement } from "react";
+
 // Input handling types (to be implemented in future phases)
-type InputEvent = { key: string; ctrl?: boolean; alt?: boolean; shift?: boolean };
+type InputEvent = {
+  key: string;
+  ctrl?: boolean;
+  alt?: boolean;
+  shift?: boolean;
+};
 type InputHandler = {
   canHandle: (event: InputEvent) => boolean;
   handle: (event: InputEvent) => boolean;
@@ -63,11 +69,13 @@ export interface ComponentLifecycle {
   /**
    * Called before component updates
    */
+  // biome-ignore lint/suspicious/noExplicitAny: Required for generic component props
   onWillUpdate?(prevProps: any, nextProps: any): void | Promise<void>;
 
   /**
    * Called after component updates
    */
+  // biome-ignore lint/suspicious/noExplicitAny: Required for generic component props
   onDidUpdate?(prevProps: any, currentProps: any): void | Promise<void>;
 
   /**
@@ -104,6 +112,7 @@ export interface ComponentLifecycle {
 /**
  * Component state management interface
  */
+// biome-ignore lint/suspicious/noExplicitAny: Generic state type
 export interface ComponentState<T = any> {
   /**
    * Get current state
@@ -172,6 +181,7 @@ export interface ComponentProps {
   /**
    * Custom properties
    */
+  // biome-ignore lint/suspicious/noExplicitAny: Flexible component props
   [key: string]: any;
 }
 
@@ -203,7 +213,9 @@ export interface ComponentContext {
   /**
    * Component communication
    */
+  // biome-ignore lint/suspicious/noExplicitAny: Event data can be any type
   emit?(event: string, data?: any): void;
+  // biome-ignore lint/suspicious/noExplicitAny: Event handler data can be any type
   listen?(event: string, handler: (data: any) => void): () => void;
 }
 
@@ -221,6 +233,7 @@ export interface ComponentValidationResult {
  */
 export abstract class AbstractComponent<
   TProps extends ComponentProps = ComponentProps,
+  // biome-ignore lint/suspicious/noExplicitAny: Generic state type for flexible component state
   TState = any,
 > {
   protected props: TProps;
@@ -434,6 +447,7 @@ export abstract class AbstractComponent<
   /**
    * Emit a component event
    */
+  // biome-ignore lint/suspicious/noExplicitAny: Event data can be any type
   protected emit(event: ComponentEventType, data?: any): void {
     const handlers = this.eventHandlers.get(event) || [];
     for (const handler of handlers) {

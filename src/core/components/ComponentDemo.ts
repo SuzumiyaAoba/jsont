@@ -129,8 +129,12 @@ export class MultiPlatformContainer extends BaseMultiPlatformComponent {
       children: childNodes,
       style: {
         display: "flex" as const,
-        ...(this.props["gap"] !== undefined && { gap: this.props["gap"] as number }),
-        ...(this.props["padding"] !== undefined && { padding: this.props["padding"] as number | string }),
+        ...(this.props["gap"] !== undefined && {
+          gap: this.props["gap"] as number,
+        }),
+        ...(this.props["padding"] !== undefined && {
+          padding: this.props["padding"] as number | string,
+        }),
       },
     };
   }
@@ -150,7 +154,9 @@ export class MultiPlatformText extends BaseMultiPlatformComponent {
       },
       content: (this.props["content"] as string) || "",
       style: {
-        ...(this.props["color"] ? { color: this.props["color"] as string } : {}),
+        ...(this.props["color"]
+          ? { color: this.props["color"] as string }
+          : {}),
         ...(this.props["bold"] ? { bold: this.props["bold"] as boolean } : {}),
       },
     };

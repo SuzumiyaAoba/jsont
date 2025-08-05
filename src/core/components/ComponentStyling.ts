@@ -174,6 +174,7 @@ export interface StyleContext {
     disabled?: boolean;
     focused?: boolean;
     loading?: boolean;
+    // biome-ignore lint/suspicious/noExplicitAny: Flexible component state properties
     [key: string]: any;
   };
 
@@ -184,6 +185,7 @@ export interface StyleContext {
     hover: boolean;
     focus: boolean;
     active: boolean;
+    // biome-ignore lint/suspicious/noExplicitAny: Flexible style context properties
     [key: string]: any;
   };
 }

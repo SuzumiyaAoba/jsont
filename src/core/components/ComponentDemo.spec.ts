@@ -15,11 +15,13 @@ import {
 // Mock dependencies
 const mockRenderManager = {
   render: vi.fn((node) => node),
-} as any; // Intentional any for test mock
+  // biome-ignore lint/suspicious/noExplicitAny: Test mock requires any type
+} as any;
 
 const mockPlatformService = {
   getCapabilities: vi.fn(() => ({ type: "terminal" })),
-} as any; // Intentional any for test mock
+  // biome-ignore lint/suspicious/noExplicitAny: Test mock requires any type
+} as any;
 
 describe("Multi-Platform Component Abstraction", () => {
   describe("MultiPlatformButton", () => {
@@ -251,10 +253,12 @@ describe("Multi-Platform Component Abstraction", () => {
     it("should work with different render managers", () => {
       const terminalRenderManager = {
         render: vi.fn((node) => `Terminal: ${node.type}`),
-      } as any; // Intentional any for test mock
+        // biome-ignore lint/suspicious/noExplicitAny: Test mock requires any type
+      } as any;
       const webRenderManager = {
         render: vi.fn((node) => `Web: ${node.type}`),
-      } as any; // Intentional any for test mock
+        // biome-ignore lint/suspicious/noExplicitAny: Test mock requires any type
+      } as any;
 
       const terminalButton = new MultiPlatformButton(
         { text: "Test" },

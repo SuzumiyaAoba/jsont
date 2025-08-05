@@ -5,8 +5,15 @@
 
 import type { ButtonNode, ContainerNode, RenderNode } from "@core/rendering";
 import type { ReactElement } from "react";
+
 // Input handling types (to be implemented in future phases)
-type InputEvent = { key: string; ctrl?: boolean; alt?: boolean; shift?: boolean };
+type InputEvent = {
+  key: string;
+  ctrl?: boolean;
+  alt?: boolean;
+  shift?: boolean;
+};
+
 import {
   AbstractComponent,
   COMPONENT_STYLES,

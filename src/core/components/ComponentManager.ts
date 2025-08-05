@@ -5,11 +5,12 @@
 
 import type { PlatformService } from "@core/platform";
 import type { RenderManager } from "@core/rendering";
+
 // Input handling types (to be implemented in future phases)
-type InputEvent = { 
-  key: string; 
-  ctrl?: boolean; 
-  alt?: boolean; 
+type InputEvent = {
+  key: string;
+  ctrl?: boolean;
+  alt?: boolean;
   shift?: boolean;
   type?: string;
   modifiers?: string[];
@@ -26,6 +27,7 @@ interface InputManager {
   removeHandler(handler: InputHandler): void;
   handleInput(event: InputEvent): boolean;
 }
+
 import type { AbstractComponent, ComponentContext } from "./AbstractComponent";
 import {
   ComponentStyling,
@@ -94,6 +96,7 @@ interface ThemeConfig {
 export class ComponentManager {
   private components = new Map<string, ComponentRegistryEntry>();
   private focusStack: string[] = [];
+  // biome-ignore lint/suspicious/noExplicitAny: Event data can be any type
   private eventBus = new Map<string, Array<(data: any) => void>>();
   private inputManager: InputManager;
   private renderManager: RenderManager;
@@ -155,7 +158,10 @@ export class ComponentManager {
 
     // Mount component
     await component.mount();
-    const entry = this.components.get(id)!;
+    const entry = this.components.get(id);
+    if (!entry) {
+      throw new Error(`Component with id '${id}' not found after registration`);
+    }
     entry.mounted = true;
 
     // Auto-focus if it's the first component and auto-focus is enabled
@@ -226,6 +232,7 @@ export class ComponentManager {
     this.emit("component:focus", { componentId });
 
     // Call component focus handler if available
+    // biome-ignore lint/suspicious/noExplicitAny: Type assertion needed for protected method access
     const component = entry.component as any;
     if (typeof component.onFocus === "function") {
       component.onFocus();
@@ -249,6 +256,7 @@ export class ComponentManager {
     this.emit("component:blur", { componentId });
 
     // Call component blur handler if available
+    // biome-ignore lint/suspicious/noExplicitAny: Type assertion needed for protected method access
     const component = entry.component as any;
     if (typeof component.onBlur === "function") {
       component.onBlur();
@@ -273,7 +281,9 @@ export class ComponentManager {
     const componentIds = Array.from(this.components.keys());
     const currentIndex =
       this.focusStack.length > 0
-        ? componentIds.indexOf(this.focusStack[this.focusStack.length - 1]!)
+        ? componentIds.indexOf(
+            this.focusStack[this.focusStack.length - 1] || "",
+          )
         : -1;
 
     if (componentIds.length > 0) {
@@ -296,7 +306,9 @@ export class ComponentManager {
     const componentIds = Array.from(this.components.keys());
     const currentIndex =
       this.focusStack.length > 0
-        ? componentIds.indexOf(this.focusStack[this.focusStack.length - 1]!)
+        ? componentIds.indexOf(
+            this.focusStack[this.focusStack.length - 1] || "",
+          )
         : -1;
 
     if (componentIds.length > 0) {
@@ -338,8 +350,23 @@ export class ComponentManager {
   }
 
   /**
+   * Get render manager
+   */
+  getRenderManager(): RenderManager {
+    return this.renderManager;
+  }
+
+  /**
+   * Get platform service
+   */
+  getPlatformService(): PlatformService {
+    return this.platformService;
+  }
+
+  /**
    * Emit event to component event bus
    */
+  // biome-ignore lint/suspicious/noExplicitAny: Event data can be any type
   emit(event: string, data?: any): void {
     const listeners = this.eventBus.get(event) || [];
     for (const listener of listeners) {
@@ -354,6 +381,7 @@ export class ComponentManager {
   /**
    * Listen to component events
    */
+  // biome-ignore lint/suspicious/noExplicitAny: Event listener data can be any type
   listen(event: string, listener: (data: any) => void): () => void {
     const listeners = this.eventBus.get(event) || [];
     listeners.push(listener);
@@ -439,8 +467,8 @@ export class ComponentManager {
         // Handle Tab navigation
         return Boolean(
           event.type === "keyboard" &&
-          (event.key === "Tab" ||
-            (event.key === "Tab" && event.modifiers?.includes("shift")))
+            (event.key === "Tab" ||
+              (event.key === "Tab" && event.modifiers?.includes("shift"))),
         );
       },
       handle: (event: InputEvent) => {
@@ -476,8 +504,11 @@ export class ComponentFactory {
    * Create a component with automatic registration
    */
   async createComponent<T extends AbstractComponent>(
+    // biome-ignore lint/suspicious/noExplicitAny: Generic component factory parameters
     ComponentClass: new (...args: any[]) => T,
+    // biome-ignore lint/suspicious/noExplicitAny: Generic component factory parameters
     props: any,
+    // biome-ignore lint/suspicious/noExplicitAny: Generic component factory parameters
     initialState?: any,
   ): Promise<T> {
     const context = this.createComponentContext();
@@ -493,8 +524,8 @@ export class ComponentFactory {
    */
   private createComponentContext(): ComponentContext {
     return {
-      renderManager: this.componentManager["renderManager"],
-      platformService: this.componentManager["platformService"],
+      renderManager: this.componentManager.getRenderManager(),
+      platformService: this.componentManager.getPlatformService(),
       registerInputHandler: (handler: InputHandler) => {
         this.componentManager["inputManager"].addHandler(handler);
         return () =>
@@ -504,8 +535,10 @@ export class ComponentFactory {
         this.componentManager.requestFocus(componentId),
       releaseFocus: (componentId: string) =>
         this.componentManager.releaseFocus(componentId),
+      // biome-ignore lint/suspicious/noExplicitAny: Event data can be any type
       emit: (event: string, data?: any) =>
         this.componentManager.emit(event, data),
+      // biome-ignore lint/suspicious/noExplicitAny: Event handler data can be any type
       listen: (event: string, handler: (data: any) => void) =>
         this.componentManager.listen(event, handler),
     };
@@ -526,7 +559,11 @@ export class ComponentUtils {
   /**
    * Validate component props
    */
-  static validateProps(props: any, requiredProps: string[]): string[] {
+  static validateProps(
+    // biome-ignore lint/suspicious/noExplicitAny: Generic props validation
+    props: any,
+    requiredProps: string[],
+  ): string[] {
     const errors: string[] = [];
 
     for (const prop of requiredProps) {
@@ -545,10 +582,13 @@ export class ComponentUtils {
   /**
    * Deep merge component props
    */
-  static mergeProps<T extends Record<string, any>>(
-    base: T,
-    override: Partial<T>,
-  ): T {
+  static mergeProps<
+    T extends Record<
+      string,
+      // biome-ignore lint/suspicious/noExplicitAny: Generic record type
+      any
+    >,
+  >(base: T, override: Partial<T>): T {
     const result = { ...base };
 
     for (const [key, value] of Object.entries(override)) {
