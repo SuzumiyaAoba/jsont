@@ -6,7 +6,13 @@
 import type { PlatformService } from "@core/platform";
 import type { RenderManager, RenderNode } from "@core/rendering";
 import type { ReactElement } from "react";
-import type { InputEvent, InputHandler } from "../input";
+// Input handling types (to be implemented in future phases)
+type InputEvent = { key: string; ctrl?: boolean; alt?: boolean; shift?: boolean };
+type InputHandler = {
+  canHandle: (event: InputEvent) => boolean;
+  handle: (event: InputEvent) => boolean;
+  priority?: number;
+};
 
 /**
  * Component lifecycle state
@@ -226,7 +232,7 @@ export abstract class AbstractComponent<
     ComponentEventHandler[]
   >();
   protected inputHandler?: InputHandler;
-  protected focusUnsubscribe?: () => void;
+  protected focusUnsubscribe?: (() => void) | undefined;
 
   constructor(props: TProps, context: ComponentContext, initialState?: TState) {
     this.props = props;
@@ -550,9 +556,11 @@ export abstract class AbstractComponent<
         priority: this.getInputPriority(),
       };
 
-      this.focusUnsubscribe = this.context.registerInputHandler(
-        this.inputHandler,
-      );
+      if (this.inputHandler) {
+        this.focusUnsubscribe = this.context.registerInputHandler(
+          this.inputHandler,
+        );
+      }
     }
   }
 

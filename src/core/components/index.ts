@@ -20,8 +20,8 @@ export * from "./AbstractComponent";
 export { AbstractComponent } from "./AbstractComponent";
 export * from "./ComponentManager";
 export {
-  ComponentFactory,
   ComponentManager,
+  ComponentFactory,
   ComponentUtils,
 } from "./ComponentManager";
 
@@ -49,7 +49,7 @@ export * from "./SimpleAbstractComponent";
  * Create a basic component setup for multi-platform development
  */
 export function createComponentSystem(
-  inputManager: import("../input").InputManager,
+  inputManager: { registerHandler(handler: any): () => void; handleInput(event: any): boolean },
   renderManager: import("@core/rendering").RenderManager,
   platformService: import("@core/platform").PlatformService,
   options: {

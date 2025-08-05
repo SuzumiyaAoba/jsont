@@ -61,7 +61,7 @@ describe("Multi-Platform Component Abstraction", () => {
 
       const renderNode = button.render();
 
-      expect(renderNode.props.onClick).toBe(onClick);
+      expect(renderNode.props["onClick"]).toBe(onClick);
     });
   });
 
@@ -76,9 +76,9 @@ describe("Multi-Platform Component Abstraction", () => {
       const renderNode = container.render();
 
       expect(renderNode.type).toBe("container");
-      expect(renderNode.props.direction).toBe("row");
-      expect(renderNode.props.gap).toBe(2);
-      expect(renderNode.props.padding).toBe(1);
+      expect(renderNode.props["direction"]).toBe("row");
+      expect(renderNode.props["gap"]).toBe(2);
+      expect(renderNode.props["padding"]).toBe(1);
     });
 
     it("should manage child components", () => {
@@ -106,8 +106,8 @@ describe("Multi-Platform Component Abstraction", () => {
       const renderNode = container.render();
 
       expect(renderNode.children).toHaveLength(2);
-      expect(renderNode.children?.[0].content).toBe("Child 1");
-      expect(renderNode.children?.[1].content).toBe("Child 2");
+      expect(renderNode.children?.[0]?.content).toBe("Child 1");
+      expect(renderNode.children?.[1]?.content).toBe("Child 2");
     });
 
     it("should remove child components", () => {
@@ -178,12 +178,12 @@ describe("Multi-Platform Component Abstraction", () => {
       expect(renderNode.children).toHaveLength(3); // title, description, button container
 
       // Check title
-      expect(renderNode.children?.[0].content).toContain(
+      expect(renderNode.children?.[0]?.content).toContain(
         "Multi-Platform Component Demo",
       );
 
       // Check description
-      expect(renderNode.children?.[1].content).toContain(
+      expect(renderNode.children?.[1]?.content).toContain(
         "platform-independent",
       );
 
@@ -349,8 +349,8 @@ describe("Multi-Platform Component Abstraction", () => {
       const renderNode = parent.render();
 
       expect(renderNode.children).toHaveLength(2);
-      expect(renderNode.children?.[0].type).toBe("text");
-      expect(renderNode.children?.[1].type).toBe("button");
+      expect(renderNode.children?.[0]?.type).toBe("text");
+      expect(renderNode.children?.[1]?.type).toBe("button");
     });
 
     it("should enable easy testing without platform dependencies", () => {

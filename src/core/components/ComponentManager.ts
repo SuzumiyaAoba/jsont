@@ -5,7 +5,27 @@
 
 import type { PlatformService } from "@core/platform";
 import type { RenderManager } from "@core/rendering";
-import type { InputEvent, InputHandler, InputManager } from "../input";
+// Input handling types (to be implemented in future phases)
+type InputEvent = { 
+  key: string; 
+  ctrl?: boolean; 
+  alt?: boolean; 
+  shift?: boolean;
+  type?: string;
+  modifiers?: string[];
+  preventDefault?: () => void;
+};
+type InputHandler = {
+  canHandle: (event: InputEvent) => boolean;
+  handle: (event: InputEvent) => boolean;
+  priority?: number;
+};
+interface InputManager {
+  registerHandler(handler: InputHandler): () => void;
+  addHandler(handler: InputHandler): () => void;
+  removeHandler(handler: InputHandler): void;
+  handleInput(event: InputEvent): boolean;
+}
 import type { AbstractComponent, ComponentContext } from "./AbstractComponent";
 import {
   ComponentStyling,
@@ -76,6 +96,7 @@ export class ComponentManager {
   private focusStack: string[] = [];
   private eventBus = new Map<string, Array<(data: any) => void>>();
   private inputManager: InputManager;
+  private renderManager: RenderManager;
   private platformService: PlatformService;
   private styling: ComponentStyling;
   private focusConfig: FocusConfig;
@@ -205,8 +226,9 @@ export class ComponentManager {
     this.emit("component:focus", { componentId });
 
     // Call component focus handler if available
-    if (typeof entry.component.onFocus === "function") {
-      entry.component.onFocus();
+    const component = entry.component as any;
+    if (typeof component.onFocus === "function") {
+      component.onFocus();
     }
   }
 
@@ -227,8 +249,9 @@ export class ComponentManager {
     this.emit("component:blur", { componentId });
 
     // Call component blur handler if available
-    if (typeof entry.component.onBlur === "function") {
-      entry.component.onBlur();
+    const component = entry.component as any;
+    if (typeof component.onBlur === "function") {
+      component.onBlur();
     }
   }
 
@@ -250,13 +273,15 @@ export class ComponentManager {
     const componentIds = Array.from(this.components.keys());
     const currentIndex =
       this.focusStack.length > 0
-        ? componentIds.indexOf(this.focusStack[this.focusStack.length - 1])
+        ? componentIds.indexOf(this.focusStack[this.focusStack.length - 1]!)
         : -1;
 
     if (componentIds.length > 0) {
       const nextIndex = (currentIndex + 1) % componentIds.length;
       const nextComponentId = componentIds[nextIndex];
-      this.requestFocus(nextComponentId);
+      if (nextComponentId) {
+        this.requestFocus(nextComponentId);
+      }
     }
   }
 
@@ -271,14 +296,16 @@ export class ComponentManager {
     const componentIds = Array.from(this.components.keys());
     const currentIndex =
       this.focusStack.length > 0
-        ? componentIds.indexOf(this.focusStack[this.focusStack.length - 1])
+        ? componentIds.indexOf(this.focusStack[this.focusStack.length - 1]!)
         : -1;
 
     if (componentIds.length > 0) {
       const prevIndex =
         currentIndex <= 0 ? componentIds.length - 1 : currentIndex - 1;
       const prevComponentId = componentIds[prevIndex];
-      this.requestFocus(prevComponentId);
+      if (prevComponentId) {
+        this.requestFocus(prevComponentId);
+      }
     }
   }
 
@@ -408,22 +435,22 @@ export class ComponentManager {
    */
   private setupGlobalInputHandlers(): void {
     const globalHandler: InputHandler = {
-      canHandle: (event: InputEvent) => {
+      canHandle: (event: InputEvent): boolean => {
         // Handle Tab navigation
-        return (
+        return Boolean(
           event.type === "keyboard" &&
           (event.key === "Tab" ||
-            (event.key === "Tab" && event.modifiers.shift))
+            (event.key === "Tab" && event.modifiers?.includes("shift")))
         );
       },
       handle: (event: InputEvent) => {
         if (event.key === "Tab") {
-          if (event.modifiers.shift) {
+          if (event.modifiers?.includes("shift")) {
             this.focusPrevious();
           } else {
             this.focusNext();
           }
-          event.preventDefault();
+          event.preventDefault?.();
           return true;
         }
         return false;

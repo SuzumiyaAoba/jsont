@@ -46,7 +46,7 @@ export class BaseMultiPlatformComponent implements MultiPlatformComponent {
     platformService: PlatformService,
   ) {
     this.id =
-      props.id ||
+      (props["id"] as string) ||
       `component-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
     this.props = props;
     this.renderManager = renderManager;
@@ -80,19 +80,19 @@ export class BaseMultiPlatformComponent implements MultiPlatformComponent {
  * Example: Multi-platform Button component
  */
 export class MultiPlatformButton extends BaseMultiPlatformComponent {
-  render(): RenderNode {
+  override render(): RenderNode {
     return {
       type: "button",
       key: this.getId(),
       props: {
-        onClick: this.props.onClick,
-        disabled: this.props.disabled,
+        onClick: this.props["onClick"] as (() => void) | undefined,
+        disabled: this.props["disabled"] as boolean | undefined,
       },
-      content: this.props.text || "Button",
+      content: (this.props["text"] as string) || "Button",
       style: {
         backgroundColor:
-          this.props.variant === "primary" ? "#007acc" : "transparent",
-        color: this.props.variant === "primary" ? "white" : "#007acc",
+          this.props["variant"] === "primary" ? "#007acc" : "transparent",
+        color: this.props["variant"] === "primary" ? "white" : "#007acc",
         padding: 8,
       },
     };
@@ -113,7 +113,7 @@ export class MultiPlatformContainer extends BaseMultiPlatformComponent {
     this.children = this.children.filter((child) => child.getId() !== childId);
   }
 
-  render(): RenderNode {
+  override render(): RenderNode {
     const childNodes: RenderNode[] = this.children.map((child) =>
       child.render(),
     );
@@ -122,15 +122,15 @@ export class MultiPlatformContainer extends BaseMultiPlatformComponent {
       type: "container",
       key: this.getId(),
       props: {
-        direction: this.props.direction || "column",
-        gap: this.props.gap,
-        padding: this.props.padding,
+        direction: (this.props["direction"] as "row" | "column") || "column",
+        gap: this.props["gap"] as number | undefined,
+        padding: this.props["padding"] as number | string | undefined,
       },
       children: childNodes,
       style: {
-        display: "flex",
-        gap: this.props.gap,
-        padding: this.props.padding,
+        display: "flex" as const,
+        ...(this.props["gap"] !== undefined && { gap: this.props["gap"] as number }),
+        ...(this.props["padding"] !== undefined && { padding: this.props["padding"] as number | string }),
       },
     };
   }
@@ -140,18 +140,18 @@ export class MultiPlatformContainer extends BaseMultiPlatformComponent {
  * Example: Multi-platform Text component
  */
 export class MultiPlatformText extends BaseMultiPlatformComponent {
-  render(): RenderNode {
+  override render(): RenderNode {
     return {
       type: "text",
       key: this.getId(),
       props: {
-        bold: this.props.bold,
-        color: this.props.color,
+        bold: this.props["bold"] as boolean | undefined,
+        color: this.props["color"] as string | undefined,
       },
-      content: this.props.content || "",
+      content: (this.props["content"] as string) || "",
       style: {
-        color: this.props.color,
-        bold: this.props.bold,
+        ...(this.props["color"] ? { color: this.props["color"] as string } : {}),
+        ...(this.props["bold"] ? { bold: this.props["bold"] as boolean } : {}),
       },
     };
   }
