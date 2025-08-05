@@ -100,7 +100,9 @@
       "mcp__serena__list_memories",
       "mcp__serena__read_memory",
       "mcp__serena__check_onboarding_performed",
-      "Bash(gh issue create:*)"
+      "Bash(gh issue create:*)",
+      "Bash(gh issue view:*)",
+      "Bash(gh issue edit:*)"
     ],
     "deny": []
   }
