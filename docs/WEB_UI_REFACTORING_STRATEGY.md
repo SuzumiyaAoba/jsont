@@ -784,6 +784,30 @@ function WebUIRouter(): JSX.Element {
 - Rollback capability at any stage
 - Comprehensive documentation
 
+## Testing Strategy
+
+### Multi-Platform Testing Approach
+
+#### Unit Testing
+- **Engine Tests**: All UI-agnostic engines (JsonEngine, TreeEngine, SearchEngine) tested independently
+- **Adapter Tests**: Platform-specific adapters tested with mock implementations
+- **Abstraction Tests**: Interface compliance and behavior consistency across platforms
+
+#### Integration Testing
+- **Cross-Platform Consistency**: Same test suites run against both terminal and web implementations
+- **Input Event Testing**: Unified event handling tested across keyboard, mouse, and touch inputs
+- **Rendering Consistency**: Output comparison between platform-specific rendering implementations
+
+#### Platform-Specific Testing
+- **Terminal Testing**: Existing Vitest test suite continues unchanged
+- **Web Testing**: React Testing Library + jsdom for web component testing
+- **Browser Testing**: Playwright for cross-browser compatibility
+
+#### Testing Infrastructure
+- **Shared Test Utilities**: Common test helpers for engine state validation
+- **Mock Adapters**: Test-specific adapters for isolated testing
+- **Performance Benchmarks**: Regression testing to ensure no performance degradation
+
 ## Success Metrics
 
 - ✅ All existing tests continue to pass
@@ -791,5 +815,7 @@ function WebUIRouter(): JSX.Element {
 - ✅ Web UI achieves feature parity within 6 weeks
 - ✅ Clean architecture principles maintained
 - ✅ Multi-platform deployment ready
+- ✅ Cross-platform test coverage maintained at >95%
+- ✅ Consistent behavior verified across all platforms
 
 This refactoring strategy transforms jsont from a terminal-only application into a truly multi-platform JSON processing tool while maintaining its excellent architectural foundation and performance characteristics.

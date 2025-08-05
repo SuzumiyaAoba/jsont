@@ -78,6 +78,9 @@ export class InputManager {
   private isActive = true;
 
   constructor(adapter: InputAdapter) {
+    if (!adapter) {
+      throw new Error("InputAdapter is required");
+    }
     this.adapter = adapter;
     this.adapter.setInputManager(this);
     this.adapter.registerGlobalHandler();
@@ -211,7 +214,7 @@ export class InputUtils {
     key: string,
     modifiers: Partial<InputModifiers> = {},
     preventDefault: () => void = () => {},
-    stopPropagation: () => void = () => {},
+    stopPropagation?: () => void,
   ): InputEvent {
     return {
       type: "keyboard",
