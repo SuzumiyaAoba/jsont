@@ -216,7 +216,7 @@ export class InputUtils {
     preventDefault: () => void = () => {},
     stopPropagation?: () => void,
   ): InputEvent {
-    return {
+    const event: InputEvent = {
       type: "keyboard",
       key,
       modifiers: {
@@ -227,8 +227,14 @@ export class InputUtils {
         ...modifiers,
       },
       preventDefault,
-      stopPropagation,
     };
+
+    // Only add stopPropagation if it's provided to avoid exactOptionalPropertyTypes issues
+    if (stopPropagation) {
+      event.stopPropagation = stopPropagation;
+    }
+
+    return event;
   }
 
   /**
