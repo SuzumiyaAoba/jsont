@@ -56,6 +56,7 @@ export class TerminalRenderAdapter extends RenderAdapter {
   /**
    * Create a container node
    */
+  // biome-ignore lint/suspicious/noExplicitAny: Generic container options
   createContainer(options: any, children: RenderNode[] = []): ContainerNode {
     return {
       type: "container",
@@ -67,6 +68,7 @@ export class TerminalRenderAdapter extends RenderAdapter {
   /**
    * Create a text node
    */
+  // biome-ignore lint/suspicious/noExplicitAny: Generic text style options
   createText(content: string, style: any = {}): TextNode {
     return {
       type: "text",
@@ -95,9 +97,9 @@ export class TerminalRenderAdapter extends RenderAdapter {
   ): ButtonNode {
     return {
       type: "button",
-      props: { 
-        ...style, 
-        ...(onClick ? { onClick } : {})
+      props: {
+        ...style,
+        ...(onClick ? { onClick } : {}),
       },
       content,
     };

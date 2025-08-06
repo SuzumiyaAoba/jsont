@@ -60,6 +60,7 @@ export class WebRenderAdapter extends RenderAdapter {
   /**
    * Create a container node
    */
+  // biome-ignore lint/suspicious/noExplicitAny: Generic container options
   createContainer(options: any, children: RenderNode[] = []): ContainerNode {
     return {
       type: "container",
@@ -71,6 +72,7 @@ export class WebRenderAdapter extends RenderAdapter {
   /**
    * Create a text node
    */
+  // biome-ignore lint/suspicious/noExplicitAny: Generic text style options
   createText(content: string, style: any = {}): TextNode {
     return {
       type: "text",
@@ -82,6 +84,7 @@ export class WebRenderAdapter extends RenderAdapter {
   /**
    * Create an input node
    */
+  // biome-ignore lint/suspicious/noExplicitAny: Generic input options and style
   createInput(options: any, style: any = {}): InputNode {
     return {
       type: "input",
@@ -99,9 +102,9 @@ export class WebRenderAdapter extends RenderAdapter {
   ): ButtonNode {
     return {
       type: "button",
-      props: { 
-        ...style, 
-        ...(onClick ? { onClick } : {})
+      props: {
+        ...style,
+        ...(onClick ? { onClick } : {}),
       },
       content,
     };
@@ -220,6 +223,7 @@ export class WebRenderAdapter extends RenderAdapter {
 
     return (
       <button
+        type="button"
         key={node.key}
         onClick={node.props.onClick}
         disabled={node.props.disabled}

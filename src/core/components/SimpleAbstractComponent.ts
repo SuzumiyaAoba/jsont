@@ -147,14 +147,18 @@ export class SimpleContainer extends SimpleAbstractComponent<SimpleContainerProp
       props: {
         direction: this.props.direction || "column",
         ...(this.props.gap !== undefined ? { gap: this.props.gap } : {}),
-        ...(this.props.padding !== undefined ? { padding: this.props.padding } : {}),
+        ...(this.props.padding !== undefined
+          ? { padding: this.props.padding }
+          : {}),
       },
       children,
       style: {
         display: "flex",
         direction: this.props.direction || "column",
         ...(this.props.gap !== undefined ? { gap: this.props.gap } : {}),
-        ...(this.props.padding !== undefined ? { padding: this.props.padding } : {}),
+        ...(this.props.padding !== undefined
+          ? { padding: this.props.padding }
+          : {}),
       },
     };
   }

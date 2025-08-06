@@ -107,7 +107,9 @@ export class AbstractButton extends AbstractComponent<
       ...(this.props.testId ? { testId: this.props.testId } : {}),
       props: {
         onClick: this.handleClick.bind(this),
-        ...(this.props.disabled || this.props.loading ? { disabled: true } : {}),
+        ...(this.props.disabled || this.props.loading
+          ? { disabled: true }
+          : {}),
       },
       content: this.props.loading ? "Loading..." : this.props.text,
     };
@@ -145,7 +147,9 @@ export class AbstractButton extends AbstractComponent<
   /**
    * Validate button props
    */
-  protected override validateProps(props: ButtonProps): ComponentValidationResult {
+  protected override validateProps(
+    props: ButtonProps,
+  ): ComponentValidationResult {
     const errors: string[] = [];
     const warnings: string[] = [];
 
@@ -260,7 +264,9 @@ export class AbstractTextInput extends AbstractComponent<
       ...(this.props.testId ? { testId: this.props.testId } : {}),
       props: {
         type: this.props.type || "text",
-        ...(this.props.placeholder ? { placeholder: this.props.placeholder } : {}),
+        ...(this.props.placeholder
+          ? { placeholder: this.props.placeholder }
+          : {}),
         value: this.state.getState().internalValue,
         ...(this.props.disabled ? { disabled: this.props.disabled } : {}),
         ...(this.props.maxLength ? { maxLength: this.props.maxLength } : {}),
@@ -370,7 +376,9 @@ export class AbstractTextInput extends AbstractComponent<
   /**
    * Validate input props
    */
-  protected override validateProps(props: TextInputProps): ComponentValidationResult {
+  protected override validateProps(
+    props: TextInputProps,
+  ): ComponentValidationResult {
     const errors: string[] = [];
     const warnings: string[] = [];
 
@@ -499,7 +507,9 @@ export class AbstractContainer extends AbstractComponent<
         align: this.props.align || "stretch",
         justify: this.props.justify || "start",
         ...(this.props.gap !== undefined ? { gap: this.props.gap } : {}),
-        ...(this.props.padding !== undefined ? { padding: this.props.padding } : {}),
+        ...(this.props.padding !== undefined
+          ? { padding: this.props.padding }
+          : {}),
       },
       children,
     };
@@ -557,7 +567,9 @@ export class AbstractContainer extends AbstractComponent<
   /**
    * Validate container props
    */
-  protected override validateProps(props: ContainerProps): ComponentValidationResult {
+  protected override validateProps(
+    props: ContainerProps,
+  ): ComponentValidationResult {
     const errors: string[] = [];
     const warnings: string[] = [];
 
@@ -584,7 +596,9 @@ export class AbstractContainer extends AbstractComponent<
  */
 // Input management types for the example
 type ExampleInputManager = {
+  // biome-ignore lint/suspicious/noExplicitAny: Generic handler type for examples
   addHandler(handler: any): () => void;
+  // biome-ignore lint/suspicious/noExplicitAny: Generic handler type for examples
   removeHandler(handler: any): void;
 };
 type ExampleInputHandler = {

@@ -51,8 +51,14 @@ export * from "./SimpleAbstractComponent";
 export function createComponentSystem(
   // biome-ignore lint/suspicious/noExplicitAny: Generic input handler interface
   inputManager: {
-    registerHandler(handler: any): () => void;
-    handleInput(event: any): boolean;
+    registerHandler(
+      // biome-ignore lint/suspicious/noExplicitAny: Generic input handler interface
+      handler: any,
+    ): () => void;
+    handleInput(
+      // biome-ignore lint/suspicious/noExplicitAny: Generic input event interface
+      event: any,
+    ): boolean;
   },
   renderManager: import("@core/rendering").RenderManager,
   platformService: import("@core/platform").PlatformService,
@@ -63,8 +69,11 @@ export function createComponentSystem(
   } = {},
 ) {
   // Import classes at function level to avoid scope issues
-  const { ComponentManager: CM, ComponentFactory: CF } = require('./ComponentManager');
-  
+  const {
+    ComponentManager: CM,
+    ComponentFactory: CF,
+  } = require("./ComponentManager");
+
   const componentManager = new CM(
     inputManager,
     renderManager,

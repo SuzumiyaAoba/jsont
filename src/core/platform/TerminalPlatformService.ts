@@ -34,7 +34,8 @@ class TerminalFileSystemService implements FileSystemService {
         error: error instanceof Error ? error.message : "Failed to read file",
         errorCode:
           error instanceof Error && "code" in error
-            ? (error as any).code
+            ? // biome-ignore lint/suspicious/noExplicitAny: Error code property access
+              (error as any).code
             : "UNKNOWN",
       };
     }
@@ -53,7 +54,8 @@ class TerminalFileSystemService implements FileSystemService {
         error: error instanceof Error ? error.message : "Failed to write file",
         errorCode:
           error instanceof Error && "code" in error
-            ? (error as any).code
+            ? // biome-ignore lint/suspicious/noExplicitAny: Error code property access
+              (error as any).code
             : "UNKNOWN",
       };
     }
@@ -92,7 +94,8 @@ class TerminalFileSystemService implements FileSystemService {
           error instanceof Error ? error.message : "Failed to get file stats",
         errorCode:
           error instanceof Error && "code" in error
-            ? (error as any).code
+            ? // biome-ignore lint/suspicious/noExplicitAny: Error code property access
+              (error as any).code
             : "UNKNOWN",
       };
     }
@@ -119,7 +122,8 @@ class TerminalFileSystemService implements FileSystemService {
           error instanceof Error ? error.message : "Failed to read directory",
         errorCode:
           error instanceof Error && "code" in error
-            ? (error as any).code
+            ? // biome-ignore lint/suspicious/noExplicitAny: Error code property access
+              (error as any).code
             : "UNKNOWN",
       };
     }
@@ -139,7 +143,8 @@ class TerminalFileSystemService implements FileSystemService {
           error instanceof Error ? error.message : "Failed to create directory",
         errorCode:
           error instanceof Error && "code" in error
-            ? (error as any).code
+            ? // biome-ignore lint/suspicious/noExplicitAny: Error code property access
+              (error as any).code
             : "UNKNOWN",
       };
     }
@@ -166,7 +171,8 @@ class TerminalFileSystemService implements FileSystemService {
             : "Failed to remove file/directory",
         errorCode:
           error instanceof Error && "code" in error
-            ? (error as any).code
+            ? // biome-ignore lint/suspicious/noExplicitAny: Error code property access
+              (error as any).code
             : "UNKNOWN",
       };
     }
@@ -185,7 +191,8 @@ class TerminalFileSystemService implements FileSystemService {
         error: error instanceof Error ? error.message : "Failed to copy file",
         errorCode:
           error instanceof Error && "code" in error
-            ? (error as any).code
+            ? // biome-ignore lint/suspicious/noExplicitAny: Error code property access
+              (error as any).code
             : "UNKNOWN",
       };
     }
@@ -204,7 +211,8 @@ class TerminalFileSystemService implements FileSystemService {
         error: error instanceof Error ? error.message : "Failed to move file",
         errorCode:
           error instanceof Error && "code" in error
-            ? (error as any).code
+            ? // biome-ignore lint/suspicious/noExplicitAny: Error code property access
+              (error as any).code
             : "UNKNOWN",
       };
     }
@@ -236,7 +244,8 @@ class TerminalFileSystemService implements FileSystemService {
           error instanceof Error ? error.message : "Failed to change directory",
         errorCode:
           error instanceof Error && "code" in error
-            ? (error as any).code
+            ? // biome-ignore lint/suspicious/noExplicitAny: Error code property access
+              (error as any).code
             : "UNKNOWN",
       };
     }

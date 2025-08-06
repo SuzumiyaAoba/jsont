@@ -6,6 +6,7 @@
 /**
  * File system operation result
  */
+// biome-ignore lint/suspicious/noExplicitAny: Generic result type
 export interface FileSystemResult<T = any> {
   success: boolean;
   data?: T;
@@ -118,6 +119,7 @@ export interface FileSystemService {
 /**
  * Clipboard operation result
  */
+// biome-ignore lint/suspicious/noExplicitAny: Generic result type
 export interface ClipboardResult<T = any> {
   success: boolean;
   data?: T;
@@ -384,6 +386,7 @@ export abstract class PlatformService {
   /**
    * Create a safe error result
    */
+  // biome-ignore lint/suspicious/noExplicitAny: Generic error result type
   protected createErrorResult<T = any>(
     error: string,
     errorCode?: string,
@@ -401,6 +404,7 @@ export abstract class PlatformService {
   /**
    * Create a success result
    */
+  // biome-ignore lint/suspicious/noExplicitAny: Generic success result type
   protected createSuccessResult<T = any>(data?: T): FileSystemResult<T> {
     const result: FileSystemResult<T> = {
       success: true,

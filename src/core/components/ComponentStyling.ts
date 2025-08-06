@@ -482,7 +482,8 @@ export class ComponentStyling {
    * Merge multiple styles
    */
   private mergeStyles(...styles: RenderStyle[]): RenderStyle {
-    return styles.reduce((merged, style) => ({ ...merged, ...style }), {});
+    // Use Object.assign instead of spread for better performance
+    return styles.reduce((merged, style) => Object.assign(merged, style), {});
   }
 
   /**
