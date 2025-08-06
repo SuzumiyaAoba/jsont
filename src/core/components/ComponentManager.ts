@@ -548,6 +548,7 @@ export class ComponentFactory {
 /**
  * Utility functions for component management
  */
+// biome-ignore lint/complexity/noStaticOnlyClass: Utility class pattern for component management
 export class ComponentUtils {
   /**
    * Generate unique component ID
