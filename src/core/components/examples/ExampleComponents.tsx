@@ -12,6 +12,8 @@ type InputEvent = {
   ctrl?: boolean;
   alt?: boolean;
   shift?: boolean;
+  type?: string;
+  preventDefault?: () => void;
 };
 
 import {
@@ -80,9 +82,8 @@ export class AbstractButton extends AbstractComponent<
    * Render button as RenderNode
    */
   override render(): RenderNode {
-    const styling =
-      this.context.renderManager.getStyling?.() ||
-      new (require("../ComponentStyling").ComponentStyling)();
+    const { ComponentStyling, DEFAULT_THEME } = require("../ComponentStyling");
+    const styling = new ComponentStyling(DEFAULT_THEME, "terminal");
 
     const computedStyle = styling.computeStyles(COMPONENT_STYLES.button, {
       props: {
@@ -103,10 +104,10 @@ export class AbstractButton extends AbstractComponent<
       key: this.getId(),
       className: computedStyle.className,
       style: computedStyle.style,
-      testId: this.props.testId,
+      ...(this.props.testId ? { testId: this.props.testId } : {}),
       props: {
         onClick: this.handleClick.bind(this),
-        disabled: this.props.disabled || this.props.loading,
+        ...(this.props.disabled || this.props.loading ? { disabled: true } : {}),
       },
       content: this.props.loading ? "Loading..." : this.props.text,
     };
@@ -123,17 +124,18 @@ export class AbstractButton extends AbstractComponent<
     }
 
     this.props.onClick?.();
-    this.emit("click");
+    // Emit generic event instead of click-specific
+    this.context.emit?.("button:click", { componentId: this.getId() });
   }
 
   /**
    * Handle input events
    */
-  protected onInput(event: InputEvent): boolean {
+  protected override onInput(event: InputEvent): boolean {
     if (event.type === "keyboard") {
       if (event.key === "Enter" || event.key === " ") {
         this.handleClick();
-        event.preventDefault();
+        event.preventDefault?.();
         return true;
       }
     }
@@ -143,7 +145,7 @@ export class AbstractButton extends AbstractComponent<
   /**
    * Validate button props
    */
-  protected validateProps(props: ButtonProps): ComponentValidationResult {
+  protected override validateProps(props: ButtonProps): ComponentValidationResult {
     const errors: string[] = [];
     const warnings: string[] = [];
 
@@ -161,7 +163,7 @@ export class AbstractButton extends AbstractComponent<
   /**
    * Get input handling priority
    */
-  protected getInputPriority(): number {
+  protected override getInputPriority(): number {
     return this.isFocused() ? 100 : 0;
   }
 }
@@ -234,10 +236,9 @@ export class AbstractTextInput extends AbstractComponent<
   /**
    * Render text input as RenderNode
    */
-  render(): RenderNode {
-    const styling =
-      this.context.renderManager.getStyling?.() ||
-      new (require("../ComponentStyling").ComponentStyling)();
+  override render(): RenderNode {
+    const { ComponentStyling, DEFAULT_THEME } = require("../ComponentStyling");
+    const styling = new ComponentStyling(DEFAULT_THEME, "terminal");
 
     const computedStyle = styling.computeStyles(COMPONENT_STYLES.input, {
       props: {
@@ -256,14 +257,14 @@ export class AbstractTextInput extends AbstractComponent<
       key: this.getId(),
       className: computedStyle.className,
       style: computedStyle.style,
-      testId: this.props.testId,
+      ...(this.props.testId ? { testId: this.props.testId } : {}),
       props: {
         type: this.props.type || "text",
-        placeholder: this.props.placeholder,
+        ...(this.props.placeholder ? { placeholder: this.props.placeholder } : {}),
         value: this.state.getState().internalValue,
-        disabled: this.props.disabled,
-        maxLength: this.props.maxLength,
-        required: this.props.required,
+        ...(this.props.disabled ? { disabled: this.props.disabled } : {}),
+        ...(this.props.maxLength ? { maxLength: this.props.maxLength } : {}),
+        ...(this.props.required ? { required: this.props.required } : {}),
       },
     };
 
@@ -296,19 +297,19 @@ export class AbstractTextInput extends AbstractComponent<
   /**
    * Handle input events
    */
-  protected onInput(event: InputEvent): boolean {
+  protected override onInput(event: InputEvent): boolean {
     if (event.type === "keyboard") {
       const currentValue = this.state.getState().internalValue;
 
       if (event.key === "Enter") {
         this.props.onSubmit?.(currentValue);
-        event.preventDefault();
+        event.preventDefault?.();
         return true;
       }
 
       if (event.key === "Backspace") {
         this.setValue(currentValue.slice(0, -1));
-        event.preventDefault();
+        event.preventDefault?.();
         return true;
       }
 
@@ -317,7 +318,7 @@ export class AbstractTextInput extends AbstractComponent<
         if (!this.props.maxLength || newValue.length <= this.props.maxLength) {
           this.setValue(newValue);
         }
-        event.preventDefault();
+        event.preventDefault?.();
         return true;
       }
     }
@@ -328,14 +329,14 @@ export class AbstractTextInput extends AbstractComponent<
   /**
    * Focus event handler
    */
-  protected async onFocus(): Promise<void> {
+  protected override async onFocus(): Promise<void> {
     this.state.setState({ isFocused: true });
   }
 
   /**
    * Blur event handler
    */
-  protected async onBlur(): Promise<void> {
+  protected override async onBlur(): Promise<void> {
     this.state.setState({ isFocused: false });
   }
 
@@ -359,13 +360,17 @@ export class AbstractTextInput extends AbstractComponent<
       }
     }
 
-    this.state.setState({ isValid, validationError });
+    const stateUpdate: Partial<TextInputState> = { isValid };
+    if (validationError) {
+      stateUpdate.validationError = validationError;
+    }
+    this.state.setState(stateUpdate);
   }
 
   /**
    * Validate input props
    */
-  protected validateProps(props: TextInputProps): ComponentValidationResult {
+  protected override validateProps(props: TextInputProps): ComponentValidationResult {
     const errors: string[] = [];
     const warnings: string[] = [];
 
@@ -387,7 +392,7 @@ export class AbstractTextInput extends AbstractComponent<
   /**
    * Get input handling priority
    */
-  protected getInputPriority(): number {
+  protected override getInputPriority(): number {
     return this.isFocused() ? 200 : 0; // Higher priority than buttons when focused
   }
 }
@@ -455,10 +460,9 @@ export class AbstractContainer extends AbstractComponent<
   /**
    * Render container as RenderNode
    */
-  render(): RenderNode {
-    const styling =
-      this.context.renderManager.getStyling?.() ||
-      new (require("../ComponentStyling").ComponentStyling)();
+  override render(): RenderNode {
+    const { ComponentStyling, DEFAULT_THEME } = require("../ComponentStyling");
+    const styling = new ComponentStyling(DEFAULT_THEME, "terminal");
 
     const computedStyle = styling.computeStyles(COMPONENT_STYLES.container, {
       props: {
@@ -489,13 +493,13 @@ export class AbstractContainer extends AbstractComponent<
           ? { width: 1, style: "solid", color: "gray" }
           : undefined,
       },
-      testId: this.props.testId,
+      ...(this.props.testId ? { testId: this.props.testId } : {}),
       props: {
         direction: this.props.direction || "column",
         align: this.props.align || "stretch",
         justify: this.props.justify || "start",
-        gap: this.props.gap,
-        padding: this.props.padding,
+        ...(this.props.gap !== undefined ? { gap: this.props.gap } : {}),
+        ...(this.props.padding !== undefined ? { padding: this.props.padding } : {}),
       },
       children,
     };
@@ -526,7 +530,7 @@ export class AbstractContainer extends AbstractComponent<
   /**
    * Mount lifecycle - mount all children
    */
-  protected async onDidMount(): Promise<void> {
+  protected override async onDidMount(): Promise<void> {
     if (this.props.children) {
       for (const child of this.props.children) {
         if (!child.isMounted()) {
@@ -540,7 +544,7 @@ export class AbstractContainer extends AbstractComponent<
   /**
    * Unmount lifecycle - unmount all children
    */
-  protected async onWillUnmount(): Promise<void> {
+  protected override async onWillUnmount(): Promise<void> {
     if (this.props.children) {
       for (const child of this.props.children) {
         if (child.isMounted()) {
@@ -553,7 +557,7 @@ export class AbstractContainer extends AbstractComponent<
   /**
    * Validate container props
    */
-  protected validateProps(props: ContainerProps): ComponentValidationResult {
+  protected override validateProps(props: ContainerProps): ComponentValidationResult {
     const errors: string[] = [];
     const warnings: string[] = [];
 
@@ -578,15 +582,26 @@ export class AbstractContainer extends AbstractComponent<
 /**
  * Example usage demonstrating component composition
  */
+// Input management types for the example
+type ExampleInputManager = {
+  addHandler(handler: any): () => void;
+  removeHandler(handler: any): void;
+};
+type ExampleInputHandler = {
+  canHandle: (event: InputEvent) => boolean;
+  handle: (event: InputEvent) => boolean;
+  priority?: number;
+};
+
 export async function createExampleApp(
-  inputManager: import("@core/input").InputManager,
+  inputManager: ExampleInputManager,
   renderManager: import("@core/rendering").RenderManager,
   platformService: import("@core/platform").PlatformService,
 ): Promise<AbstractContainer> {
   const context = {
     renderManager,
     platformService,
-    registerInputHandler: (handler: import("@core/input").InputHandler) => {
+    registerInputHandler: (handler: ExampleInputHandler) => {
       inputManager.addHandler(handler);
       return () => inputManager.removeHandler(handler);
     },

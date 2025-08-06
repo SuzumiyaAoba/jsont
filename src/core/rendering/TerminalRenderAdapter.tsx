@@ -95,7 +95,10 @@ export class TerminalRenderAdapter extends RenderAdapter {
   ): ButtonNode {
     return {
       type: "button",
-      props: { ...style, onClick },
+      props: { 
+        ...style, 
+        ...(onClick ? { onClick } : {})
+      },
       content,
     };
   }

@@ -62,7 +62,10 @@ export function createComponentSystem(
     enableTabNavigation?: boolean;
   } = {},
 ) {
-  const componentManager = new ComponentManager(
+  // Import classes at function level to avoid scope issues
+  const { ComponentManager: CM, ComponentFactory: CF } = require('./ComponentManager');
+  
+  const componentManager = new CM(
     inputManager,
     renderManager,
     platformService,
@@ -80,7 +83,7 @@ export function createComponentSystem(
     },
   );
 
-  const componentFactory = new ComponentFactory(componentManager);
+  const componentFactory = new CF(componentManager);
 
   return {
     componentManager,

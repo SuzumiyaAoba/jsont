@@ -99,7 +99,10 @@ export class WebRenderAdapter extends RenderAdapter {
   ): ButtonNode {
     return {
       type: "button",
-      props: { ...style, onClick },
+      props: { 
+        ...style, 
+        ...(onClick ? { onClick } : {})
+      },
       content,
     };
   }

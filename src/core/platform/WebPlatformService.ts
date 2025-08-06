@@ -330,6 +330,7 @@ class WebClipboardService implements ClipboardService {
  * Web notification service implementation
  */
 class WebNotificationService implements NotificationService {
+  private notificationCounter = 0;
   private activeNotifications = new Map<string, Notification>();
 
   async show(options: NotificationOptions): Promise<NotificationResult> {

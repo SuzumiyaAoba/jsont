@@ -348,6 +348,7 @@ class TerminalClipboardService implements ClipboardService {
  * Limited notification support - uses console output
  */
 class TerminalNotificationService implements NotificationService {
+  private notificationCounter = 0;
   async show(options: NotificationOptions): Promise<NotificationResult> {
     const notificationId = `notification-${++this.notificationCounter}`;
 

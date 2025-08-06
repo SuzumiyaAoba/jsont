@@ -101,11 +101,11 @@ export class SimpleButton extends SimpleAbstractComponent<SimpleButtonProps> {
     return {
       type: "button",
       key: this.getId(),
-      className: this.props.className,
-      testId: this.props.testId,
+      ...(this.props.className ? { className: this.props.className } : {}),
+      ...(this.props.testId ? { testId: this.props.testId } : {}),
       props: {
-        onClick: this.props.onClick,
-        disabled: this.props.disabled,
+        ...(this.props.onClick ? { onClick: this.props.onClick } : {}),
+        ...(this.props.disabled ? { disabled: this.props.disabled } : {}),
       },
       content: this.props.text,
       style: {
@@ -142,19 +142,19 @@ export class SimpleContainer extends SimpleAbstractComponent<SimpleContainerProp
     return {
       type: "container",
       key: this.getId(),
-      className: this.props.className,
-      testId: this.props.testId,
+      ...(this.props.className ? { className: this.props.className } : {}),
+      ...(this.props.testId ? { testId: this.props.testId } : {}),
       props: {
         direction: this.props.direction || "column",
-        gap: this.props.gap,
-        padding: this.props.padding,
+        ...(this.props.gap !== undefined ? { gap: this.props.gap } : {}),
+        ...(this.props.padding !== undefined ? { padding: this.props.padding } : {}),
       },
       children,
       style: {
         display: "flex",
-        flexDirection: this.props.direction || "column",
-        gap: this.props.gap,
-        padding: this.props.padding,
+        direction: this.props.direction || "column",
+        ...(this.props.gap !== undefined ? { gap: this.props.gap } : {}),
+        ...(this.props.padding !== undefined ? { padding: this.props.padding } : {}),
       },
     };
   }
@@ -180,16 +180,16 @@ export class SimpleText extends SimpleAbstractComponent<SimpleTextProps> {
     return {
       type: "text",
       key: this.getId(),
-      className: this.props.className,
-      testId: this.props.testId,
+      ...(this.props.className ? { className: this.props.className } : {}),
+      ...(this.props.testId ? { testId: this.props.testId } : {}),
       props: {
-        bold: this.props.bold,
-        color: this.props.color,
+        ...(this.props.bold ? { bold: this.props.bold } : {}),
+        ...(this.props.color ? { color: this.props.color } : {}),
       },
       content: this.props.content,
       style: {
-        color: this.props.color,
-        fontWeight: this.props.bold ? "bold" : "normal",
+        ...(this.props.color ? { color: this.props.color } : {}),
+        bold: this.props.bold || false,
       },
     };
   }
