@@ -206,6 +206,7 @@ export abstract class BaseInputHandler implements InputHandler {
 /**
  * Utility functions for input event handling
  */
+// biome-ignore lint/complexity/noStaticOnlyClass: Utility class pattern for input handling
 export class InputUtils {
   /**
    * Create a keyboard input event
