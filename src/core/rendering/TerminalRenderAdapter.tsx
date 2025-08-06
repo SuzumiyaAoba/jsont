@@ -80,6 +80,7 @@ export class TerminalRenderAdapter extends RenderAdapter {
   /**
    * Create an input node
    */
+  // biome-ignore lint/suspicious/noExplicitAny: Generic input options and style
   createInput(options: any, style: any = {}): InputNode {
     return {
       type: "input",
@@ -221,10 +222,12 @@ export class TerminalRenderAdapter extends RenderAdapter {
   /**
    * Map abstract container props to Ink Box props
    */
+  // biome-ignore lint/suspicious/noExplicitAny: Ink props have complex dynamic structure
   private mapToInkBoxProps(node: ContainerNode): any {
     const { props, style } = node;
     const mergedStyle = RenderUtils.mergeStyles(props, style);
 
+    // biome-ignore lint/suspicious/noExplicitAny: Ink props are dynamically constructed
     const inkProps: any = {};
 
     // Layout direction
@@ -323,10 +326,12 @@ export class TerminalRenderAdapter extends RenderAdapter {
   /**
    * Map abstract text props to Ink Text props
    */
+  // biome-ignore lint/suspicious/noExplicitAny: Ink text props have complex dynamic structure
   private mapToInkTextProps(node: TextNode | InputNode | ButtonNode): any {
     const { props, style } = node;
     const mergedStyle = RenderUtils.mergeStyles(props, style);
 
+    // biome-ignore lint/suspicious/noExplicitAny: Ink text props are dynamically constructed
     const inkProps: any = {};
 
     // Text color

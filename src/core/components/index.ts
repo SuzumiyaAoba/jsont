@@ -49,7 +49,6 @@ export * from "./SimpleAbstractComponent";
  * Create a basic component setup for multi-platform development
  */
 export function createComponentSystem(
-  // biome-ignore lint/suspicious/noExplicitAny: Generic input handler interface
   inputManager: {
     registerHandler(
       // biome-ignore lint/suspicious/noExplicitAny: Generic input handler interface

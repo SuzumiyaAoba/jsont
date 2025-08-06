@@ -131,6 +131,7 @@ export interface RenderNode extends BaseRenderProps {
   /** Node type */
   type: "container" | "text" | "input" | "button" | "image" | "spacer";
   /** Node properties specific to the type */
+  // biome-ignore lint/suspicious/noExplicitAny: Generic render node properties
   props: Record<string, any>;
   /** Child nodes */
   children?: RenderNode[];
@@ -229,6 +230,7 @@ export abstract class RenderAdapter {
   /**
    * Render a node tree to platform-specific output
    */
+  // biome-ignore lint/suspicious/noExplicitAny: Platform-specific render output
   abstract render(node: RenderNode, viewport: ViewportInfo): any;
 
   /**
@@ -316,6 +318,7 @@ export class RenderManager {
   /**
    * Render a node tree
    */
+  // biome-ignore lint/suspicious/noExplicitAny: Platform-specific render output
   render(node: RenderNode): any {
     return this.adapter.render(node, this.currentViewport);
   }
@@ -388,6 +391,7 @@ export class RenderManager {
 /**
  * Utility functions for render operations
  */
+// biome-ignore lint/complexity/noStaticOnlyClass: Utility class pattern for render operations
 export class RenderUtils {
   /**
    * Merge render styles with precedence
@@ -395,7 +399,8 @@ export class RenderUtils {
   static mergeStyles(...styles: (RenderStyle | undefined)[]): RenderStyle {
     return styles.reduce<RenderStyle>((merged, style) => {
       if (style) {
-        return { ...merged, ...style };
+        // biome-ignore lint/performance/noAccumulatingSpread: Object.assign is the recommended alternative to spread in reduce
+        return Object.assign(merged, style);
       }
       return merged;
     }, {});
@@ -504,6 +509,7 @@ export class RenderUtils {
    * Deep clone a render node
    */
   static cloneNode(node: RenderNode): RenderNode {
+    // biome-ignore lint/suspicious/noExplicitAny: Dynamic node cloning
     const cloned: any = {
       type: node.type,
       props: { ...node.props },

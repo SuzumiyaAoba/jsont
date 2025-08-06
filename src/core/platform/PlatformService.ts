@@ -491,6 +491,7 @@ export class PlatformServiceManager {
 /**
  * Utility functions for platform operations
  */
+// biome-ignore lint/complexity/noStaticOnlyClass: Utility class pattern for platform operations
 export class PlatformUtils {
   /**
    * Detect current platform type

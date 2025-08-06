@@ -19,6 +19,7 @@ export class FileOperationsExample {
   /**
    * Save JSON data to file (works on both terminal and web)
    */
+  // biome-ignore lint/suspicious/noExplicitAny: Generic JSON data type
   async saveJsonFile(data: any, filename = "data.json"): Promise<boolean> {
     const fileSystem = this.platformService.getFileSystem();
     const jsonContent = JSON.stringify(data, null, 2);
@@ -36,6 +37,7 @@ export class FileOperationsExample {
   /**
    * Load JSON data from file
    */
+  // biome-ignore lint/suspicious/noExplicitAny: Generic JSON return type
   async loadJsonFile(filename: string): Promise<any | null> {
     const fileSystem = this.platformService.getFileSystem();
 
@@ -97,6 +99,7 @@ export class ClipboardExample {
   /**
    * Copy JSON data to clipboard
    */
+  // biome-ignore lint/suspicious/noExplicitAny: Generic clipboard data type
   async copyToClipboard(data: any): Promise<boolean> {
     if (!this.platformService.hasCapability("hasClipboard")) {
       console.log("ℹ️  Clipboard not supported on this platform");
@@ -119,6 +122,7 @@ export class ClipboardExample {
   /**
    * Paste JSON data from clipboard
    */
+  // biome-ignore lint/suspicious/noExplicitAny: Generic clipboard return type
   async pasteFromClipboard(): Promise<any | null> {
     if (!this.platformService.hasCapability("hasClipboard")) {
       console.log("ℹ️  Clipboard not supported on this platform");
@@ -220,6 +224,7 @@ export class StorageExample {
   /**
    * Save user preferences
    */
+  // biome-ignore lint/suspicious/noExplicitAny: Generic preferences type
   async savePreferences(preferences: any): Promise<boolean> {
     if (!this.platformService.hasCapability("hasStorage")) {
       console.log("ℹ️  Storage not available on this platform");
@@ -240,6 +245,7 @@ export class StorageExample {
   /**
    * Load user preferences
    */
+  // biome-ignore lint/suspicious/noExplicitAny: Generic preferences return type
   async loadPreferences(): Promise<any | null> {
     if (!this.platformService.hasCapability("hasStorage")) {
       console.log("ℹ️  Storage not available on this platform");
@@ -297,6 +303,7 @@ export class JsonViewerPlatformExample {
   /**
    * Process JSON data with platform-specific operations
    */
+  // biome-ignore lint/suspicious/noExplicitAny: Generic JSON processing data type
   async processJsonData(data: any): Promise<void> {
     console.log("Processing JSON data...");
 

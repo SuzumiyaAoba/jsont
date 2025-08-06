@@ -482,8 +482,11 @@ export class ComponentStyling {
    * Merge multiple styles
    */
   private mergeStyles(...styles: RenderStyle[]): RenderStyle {
-    // Use Object.assign instead of spread for better performance
-    return styles.reduce((merged, style) => Object.assign(merged, style), {});
+    // Use Object.assign to avoid O(n²) complexity from spread in reduce
+    return styles.reduce((merged, style) => {
+      // biome-ignore lint/performance/noAccumulatingSpread: Object.assign is the recommended alternative to spread in reduce
+      return Object.assign(merged, style);
+    }, {} as RenderStyle);
   }
 
   /**
