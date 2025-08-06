@@ -571,9 +571,8 @@ export abstract class AbstractComponent<
       };
 
       if (this.inputHandler) {
-        this.focusUnsubscribe = this.context.registerInputHandler(
-          this.inputHandler,
-        );
+        this.focusUnsubscribe =
+          this.context.registerInputHandler(this.inputHandler) || (() => {});
       }
     }
   }

@@ -28,6 +28,7 @@ class WebFileSystemService implements FileSystemService {
     if (this.supportsFileSystemAccess) {
       try {
         // Use File System Access API if available
+        // biome-ignore lint/suspicious/noExplicitAny: File System Access API not fully typed
         const [fileHandle] = await (window as any).showOpenFilePicker({
           types: [
             {
@@ -62,6 +63,7 @@ class WebFileSystemService implements FileSystemService {
     if (this.supportsFileSystemAccess) {
       try {
         // Use File System Access API if available
+        // biome-ignore lint/suspicious/noExplicitAny: File System Access API not fully typed
         const fileHandle = await (window as any).showSaveFilePicker({
           suggestedName: _path.split("/").pop() || "file.txt",
           types: [
@@ -127,6 +129,7 @@ class WebFileSystemService implements FileSystemService {
   async readDir(path: string): Promise<FileSystemResult<FileInfo[]>> {
     if (this.supportsFileSystemAccess) {
       try {
+        // biome-ignore lint/suspicious/noExplicitAny: File System Access API not fully typed
         const dirHandle = await (window as any).showDirectoryPicker();
         const entries: FileInfo[] = [];
 
@@ -330,7 +333,6 @@ class WebClipboardService implements ClipboardService {
  * Web notification service implementation
  */
 class WebNotificationService implements NotificationService {
-  private notificationCounter = 0;
   private activeNotifications = new Map<string, Notification>();
 
   async show(options: NotificationOptions): Promise<NotificationResult> {
@@ -360,9 +362,11 @@ class WebNotificationService implements NotificationService {
     }
 
     const notificationId =
-      options.tag || `notification-${++this.notificationCounter}`;
+      options.tag ||
+      `notification-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
     try {
+      // biome-ignore lint/suspicious/noExplicitAny: Notification API options not fully typed
       const notificationOptions: any = {
         body: options.message,
       };

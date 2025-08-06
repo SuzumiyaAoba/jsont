@@ -11,6 +11,7 @@ import type { ReactElement } from "react";
  */
 export function createJsonViewerComponent(
   renderManager: RenderManager,
+  // biome-ignore lint/suspicious/noExplicitAny: Generic JSON data type for examples
   data: any,
 ): RenderNode {
   // Create the main container
@@ -196,7 +197,10 @@ export function WebExample(): ReactElement {
 /**
  * Example showing platform detection and adapter selection
  */
-export function createAdaptiveComponent(data: any): ReactElement {
+export function createAdaptiveComponent(
+  // biome-ignore lint/suspicious/noExplicitAny: Generic JSON data type for examples
+  data: any,
+): ReactElement {
   const {
     createTerminalRenderAdapter,
     createWebRenderAdapter,
@@ -224,6 +228,7 @@ export function createAdaptiveComponent(data: any): ReactElement {
  */
 export function createVirtualizedList(
   renderManager: RenderManager,
+  // biome-ignore lint/suspicious/noExplicitAny: Generic list items for examples
   items: any[],
   visibleCount = 10,
 ): RenderNode {

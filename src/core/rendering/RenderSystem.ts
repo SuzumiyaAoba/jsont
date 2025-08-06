@@ -3,6 +3,8 @@
  * Enables both terminal and web UI rendering through a unified interface
  */
 
+import { err, ok, type Result } from "neverthrow";
+
 /**
  * Base properties for all render nodes
  */
@@ -295,8 +297,9 @@ export class RenderManager {
   private currentViewport: ViewportInfo;
 
   constructor(adapter: RenderAdapter) {
-    if (!adapter) {
-      throw new Error("RenderAdapter is required");
+    const adapterResult = this.validateAdapter(adapter);
+    if (adapterResult.isErr()) {
+      throw adapterResult.error;
     }
     this.adapter = adapter;
     this.currentViewport = {
@@ -306,6 +309,17 @@ export class RenderManager {
       scrollY: 0,
       pixelRatio: 1,
     };
+  }
+  /**
+   * Validate render adapter
+   */
+  private validateAdapter(
+    adapter: RenderAdapter,
+  ): Result<RenderAdapter, Error> {
+    if (!adapter) {
+      return err(new Error("RenderAdapter is required"));
+    }
+    return ok(adapter);
   }
 
   /**

@@ -17,24 +17,24 @@ export type {
   TextNode,
   TextStyle,
   ViewportInfo,
-} from "./RenderSystem";
+} from "@core/rendering/RenderSystem";
 // Core rendering system
-export * from "./RenderSystem";
+export * from "@core/rendering/RenderSystem";
 export {
   RenderAdapter,
   RenderManager,
   RenderUtils,
-} from "./RenderSystem";
+} from "@core/rendering/RenderSystem";
 // Platform-specific adapters
-export * from "./TerminalRenderAdapter";
+export * from "@core/rendering/TerminalRenderAdapter";
 export {
   createTerminalRenderAdapter,
   TerminalRenderAdapter,
-} from "./TerminalRenderAdapter";
-export * from "./WebRenderAdapter";
+} from "@core/rendering/TerminalRenderAdapter";
+export * from "@core/rendering/WebRenderAdapter";
 
 export {
   createWebRenderAdapter,
   generateWebCSS,
   WebRenderAdapter,
-} from "./WebRenderAdapter";
+} from "@core/rendering/WebRenderAdapter";

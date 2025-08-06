@@ -18,28 +18,27 @@ export type {
   PlatformCapabilities,
   ProcessService,
   StorageService,
-} from "./PlatformService";
+} from "@core/platform/PlatformService";
 // Core platform service interfaces and abstractions
-export * from "./PlatformService";
+export * from "@core/platform/PlatformService";
 // Platform-specific implementations
-export * from "./TerminalPlatformService";
-export * from "./WebPlatformService";
+export * from "@core/platform/TerminalPlatformService";
+export * from "@core/platform/WebPlatformService";
 
 import {
   PlatformService,
   PlatformServiceManager,
   PlatformUtils,
-} from "./PlatformService";
-
+} from "@core/platform/PlatformService";
 import {
   createTerminalPlatformService,
   TerminalPlatformService,
-} from "./TerminalPlatformService";
-
+} from "@core/platform/TerminalPlatformService";
 import {
   createWebPlatformService,
   WebPlatformService,
-} from "./WebPlatformService";
+} from "@core/platform/WebPlatformService";
+import type { Result } from "neverthrow";
 
 // Export the classes and functions
 export {
@@ -88,7 +87,7 @@ export async function initializePlatformService(service?: PlatformService) {
 /**
  * Get the global platform service instance
  */
-export function getPlatformService(): PlatformService {
+export function getPlatformService(): Result<PlatformService, Error> {
   const manager = PlatformServiceManager.getInstance();
   return manager.getService();
 }

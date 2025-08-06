@@ -3,6 +3,8 @@
  * Provides unified interfaces for platform-specific operations
  */
 
+import { err, ok, type Result } from "neverthrow";
+
 /**
  * File system operation result
  */
@@ -441,13 +443,13 @@ export class PlatformServiceManager {
   /**
    * Get the current platform service
    */
-  getService(): PlatformService {
+  getService(): Result<PlatformService, Error> {
     if (!this.currentService) {
-      throw new Error(
-        "No platform service has been set. Call setService() first.",
+      return err(
+        new Error("No platform service has been set. Call setService() first."),
       );
     }
-    return this.currentService;
+    return ok(this.currentService);
   }
 
   /**
