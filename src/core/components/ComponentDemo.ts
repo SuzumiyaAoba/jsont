@@ -3,8 +3,8 @@
  * Shows the core concept of multi-platform component architecture
  */
 
-import type { PlatformService } from "../platform";
-import type { RenderManager, RenderNode } from "../rendering";
+import type { PlatformService } from "@core/platform";
+import type { RenderManager, RenderNode } from "@core/rendering";
 
 /**
  * Basic component interface demonstrating the abstraction concept

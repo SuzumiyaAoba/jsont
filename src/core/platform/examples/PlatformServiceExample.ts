@@ -3,8 +3,11 @@
  * Demonstrates how to use the unified platform abstraction
  */
 
-import { createPlatformService, initializePlatformService } from "../index";
-import type { PlatformService } from "../PlatformService";
+import type { PlatformService } from "@core/platform";
+import {
+  createPlatformService,
+  initializePlatformService,
+} from "@core/platform";
 
 /**
  * Example: File operations across platforms

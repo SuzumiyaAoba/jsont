@@ -467,15 +467,22 @@ export class ComponentStyling {
    * Create animation styles (web only)
    */
   createAnimationStyle(
-    _property: string,
-    _duration: keyof ComponentTheme["animation"]["duration"] = "normal",
+    property: string,
+    duration: keyof ComponentTheme["animation"]["duration"] = "normal",
   ): RenderStyle {
     if (this.platform === "terminal") {
       return {}; // No animations in terminal
     }
 
-    // Web-specific transition properties (extend RenderStyle if needed)
-    return {} as RenderStyle;
+    const durationMs = this.theme.animation.duration[duration];
+    const easing = this.theme.animation.easing;
+
+    // Web-specific transition properties
+    return {
+      transition: `${property} ${durationMs}ms ${easing}`,
+      // Add will-change for performance
+      willChange: property,
+    } as RenderStyle;
   }
 
   /**

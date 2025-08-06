@@ -509,8 +509,7 @@ export class RenderUtils {
    * Deep clone a render node
    */
   static cloneNode(node: RenderNode): RenderNode {
-    // biome-ignore lint/suspicious/noExplicitAny: Dynamic node cloning
-    const cloned: any = {
+    const cloned: Partial<RenderNode> & Pick<RenderNode, "type" | "props"> = {
       type: node.type,
       props: { ...node.props },
     };

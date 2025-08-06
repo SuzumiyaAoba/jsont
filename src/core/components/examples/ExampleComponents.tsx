@@ -24,7 +24,7 @@ import {
   type ComponentSize,
   type ComponentValidationResult,
   type ComponentVariant,
-} from "../index";
+} from "@core/components";
 
 /**
  * Button component properties

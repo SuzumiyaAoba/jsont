@@ -3,8 +3,8 @@
  * Shows how to create UI components that work on both terminal and web
  */
 
+import type { RenderManager, RenderNode } from "@core/rendering";
 import type { ReactElement } from "react";
-import type { RenderManager, RenderNode } from "../RenderSystem";
 
 /**
  * Create a simple JSON viewer component using the abstract rendering system
