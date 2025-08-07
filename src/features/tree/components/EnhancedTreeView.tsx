@@ -1,15 +1,25 @@
 /**
- * Enhanced TreeView component that integrates TreeEngine
- * Provides the same interface as the original TreeView but uses the UI-agnostic TreeEngine
+ * TreeView component that directly uses tree utilities for TUI JSON visualization
+ * Provides keyboard navigation and search without abstraction layers
  */
 
-import { useTreeEngineIntegration } from "@components/providers/EngineProvider";
-import type { JsontConfig } from "@core/config/index.js";
 import { useConfig } from "@core/context/ConfigContext";
 import type { KeyboardInput } from "@core/types/app";
 import type { JsonValue } from "@core/types/index";
-import type { TreeDisplayOptions, TreeLine } from "@features/tree/types/tree";
-import { getTreeLineText } from "@features/tree/utils/treeRenderer";
+import type {
+  TreeDisplayOptions,
+  TreeViewState,
+} from "@features/tree/types/tree";
+import {
+  buildTreeFromJson,
+  collapseAll,
+  expandAll,
+  toggleNodeExpansion,
+} from "@features/tree/utils/treeBuilder";
+import {
+  getTreeLineText,
+  renderTreeLines,
+} from "@features/tree/utils/treeRenderer";
 import { Box, Text } from "ink";
 import {
   type ReactElement,
@@ -20,7 +30,7 @@ import {
 } from "react";
 
 /**
- * Props interface for the Enhanced TreeView component
+ * Props interface for the TreeView component
  */
 export interface EnhancedTreeViewProps {
   /** JSON data to display in tree format */
@@ -42,86 +52,223 @@ export interface EnhancedTreeViewProps {
 }
 
 /**
- * Props for the TreeViewPresentation component
+ * TreeView component for interactive JSON tree visualization
+ *
+ * Features:
+ * - Keyboard navigation (j/k, arrows, page up/down, g/G)
+ * - Node expansion/collapse (Space/Enter, e/c for all)
+ * - Search filtering
+ * - Schema type display toggle (t)
+ * - Line number toggle (L)
+ * - Scrolling support for large datasets
+ *
+ * @param props - TreeView component props
+ * @returns JSX element containing the tree view interface
  */
-interface TreeViewPresentationProps {
-  /** Rendered tree data from engine */
-  renderResult: import("@core/engine/TreeEngine").TreeRenderResult;
-  /** Current engine state */
-  engineState: import("@core/engine/TreeEngine").TreeEngineState;
-  /** Configuration from context */
-  config: JsontConfig;
-  /** Display options */
-  options: Partial<TreeDisplayOptions>;
-  /** Component width */
-  width: number;
-  /** Component height */
-  height: number;
-  /** Content area height */
-  contentHeight: number;
-}
+export function EnhancedTreeView({
+  data,
+  height = 20,
+  width = 80,
+  searchTerm = "",
+  scrollOffset = 0,
+  options = {},
+  onKeyboardHandlerReady,
+}: EnhancedTreeViewProps): ReactElement {
+  const config = useConfig();
 
-/**
- * Pure presentational component for tree rendering
- * Separated from container logic for better architecture
- */
-function TreeViewPresentation({
-  renderResult,
-  engineState,
-  config,
-  options,
-  width,
-  height,
-  contentHeight,
-}: TreeViewPresentationProps): ReactElement {
-  // Helper function to render a tree line
-  const renderTreeLine = useCallback(
-    (line: TreeLine, index: number, isSelected: boolean) => {
-      const displayOptions: TreeDisplayOptions = {
-        ...config.display.tree,
-        ...options,
-        showSchemaTypes: engineState.showSchemaTypes,
-      };
-
-      const lineText = getTreeLineText(line, displayOptions);
-      const isMatched =
-        engineState.searchTerm &&
-        lineText.toLowerCase().includes(engineState.searchTerm.toLowerCase());
-
-      return (
-        <Box key={line.id} width={width}>
-          {engineState.showLineNumbers && (
-            <>
-              <Text color={isSelected ? "yellow" : "gray"}>
-                {isSelected ? ">" : " "}
-              </Text>
-              <Text
-                color={isSelected ? "yellow" : "gray"}
-                dimColor={!isSelected}
-              >
-                {String(index + 1).padStart(3, " ")}:
-              </Text>
-            </>
-          )}
-          {isSelected ? (
-            <Text backgroundColor="blue" color="white" bold>
-              {lineText}
-            </Text>
-          ) : (
-            <Text color={isMatched ? "yellow" : "gray"}>{lineText}</Text>
-          )}
-        </Box>
-      );
-    },
-    [
-      width,
-      engineState.showSchemaTypes,
-      engineState.searchTerm,
-      engineState.showLineNumbers,
-      config.display.tree,
-      options,
-    ],
+  // Build tree state from JSON data
+  const [treeState, setTreeState] = useState<TreeViewState>(() =>
+    buildTreeFromJson(data, { expandLevel: 2 }),
   );
+
+  // UI state
+  const [selectedLineIndex, setSelectedLineIndex] = useState(0);
+  const [showSchemaTypes, setShowSchemaTypes] = useState(false);
+  const [showLineNumbers, setShowLineNumbers] = useState(false);
+  const [currentScrollOffset, setCurrentScrollOffset] = useState(scrollOffset);
+
+  // Update tree when data changes
+  useEffect(() => {
+    const newTreeState = buildTreeFromJson(data, { expandLevel: 2 });
+    setTreeState(newTreeState);
+    setSelectedLineIndex(0);
+    setCurrentScrollOffset(0);
+  }, [data]);
+
+  // Update scroll offset when prop changes
+  useEffect(() => {
+    setCurrentScrollOffset(scrollOffset);
+  }, [scrollOffset]);
+
+  // Calculate display options
+  const displayOptions = useMemo(
+    (): TreeDisplayOptions => ({
+      ...config.display.tree,
+      ...options,
+      showSchemaTypes,
+    }),
+    [config.display.tree, options, showSchemaTypes],
+  );
+
+  // Render tree lines
+  const allLines = useMemo(
+    () => renderTreeLines(treeState, displayOptions),
+    [treeState, displayOptions],
+  );
+
+  // Filter lines based on search term
+  const filteredLines = useMemo(() => {
+    if (!searchTerm.trim()) return allLines;
+
+    // Optimized filtering with for-loop for large datasets
+    const filtered = [];
+    const searchLower = searchTerm.toLowerCase();
+    for (let i = 0; i < allLines.length; i++) {
+      const line = allLines[i];
+      if (line) {
+        const lineText = getTreeLineText(line, displayOptions);
+        if (lineText.toLowerCase().includes(searchLower)) {
+          filtered.push(line);
+        }
+      }
+    }
+    return filtered;
+  }, [allLines, searchTerm, displayOptions]);
+
+  // Note: Selection reset on search change is handled in keyboard input logic
+
+  // Calculate visible lines with scroll offset
+  const contentHeight = height - 2; // Reserve space for header and footer
+  const visibleLines = useMemo(() => {
+    const startIndex = Math.max(
+      0,
+      Math.min(currentScrollOffset, filteredLines.length - contentHeight),
+    );
+    const endIndex = Math.min(filteredLines.length, startIndex + contentHeight);
+    return filteredLines.slice(startIndex, endIndex);
+  }, [filteredLines, currentScrollOffset, contentHeight]);
+
+  // Calculate scroll info
+  const scrollInfo = useMemo(() => {
+    const totalLines = filteredLines.length;
+    const viewportStart = Math.max(
+      0,
+      Math.min(currentScrollOffset, totalLines - contentHeight),
+    );
+    const viewportEnd = Math.min(totalLines, viewportStart + contentHeight);
+    const hasScrollUp = viewportStart > 0;
+    const hasScrollDown = viewportEnd < totalLines;
+
+    return {
+      hasScrollUp,
+      hasScrollDown,
+      totalLines,
+      viewportStart,
+      viewportEnd,
+    };
+  }, [filteredLines.length, currentScrollOffset, contentHeight]);
+
+  // Handle keyboard input
+  const handleKeyboardInput = useCallback(
+    (input: string, key: KeyboardInput): boolean => {
+      // Navigation
+      if (key.upArrow || (input === "k" && !key.ctrl)) {
+        setSelectedLineIndex((prev) => Math.max(0, prev - 1));
+        return true;
+      }
+      if (key.downArrow || (input === "j" && !key.ctrl)) {
+        setSelectedLineIndex((prev) =>
+          Math.min(filteredLines.length - 1, prev + 1),
+        );
+        return true;
+      }
+      if (key.pageUp || (key.ctrl && input === "b")) {
+        setSelectedLineIndex((prev) =>
+          Math.max(0, prev - Math.floor(contentHeight / 2)),
+        );
+        return true;
+      }
+      if (key.pageDown || (key.ctrl && input === "f")) {
+        setSelectedLineIndex((prev) =>
+          Math.min(
+            filteredLines.length - 1,
+            prev + Math.floor(contentHeight / 2),
+          ),
+        );
+        return true;
+      }
+      if (input === "g") {
+        setSelectedLineIndex(0);
+        return true;
+      }
+      if (input === "G") {
+        setSelectedLineIndex(Math.max(0, filteredLines.length - 1));
+        return true;
+      }
+
+      // Node expansion/collapse
+      if (key.return || input === " ") {
+        const selectedLine = filteredLines[selectedLineIndex];
+        if (selectedLine?.hasChildren) {
+          setTreeState((prev) => toggleNodeExpansion(prev, selectedLine.id));
+        }
+        return true;
+      }
+      if (input === "e") {
+        setTreeState((prev) => expandAll(prev));
+        return true;
+      }
+      if (input === "c") {
+        setTreeState((prev) => collapseAll(prev));
+        return true;
+      }
+
+      // Toggle features
+      if (input === "t") {
+        setShowSchemaTypes((prev) => !prev);
+        return true;
+      }
+      if (input === "L") {
+        setShowLineNumbers((prev) => !prev);
+        return true;
+      }
+
+      return false;
+    },
+    [filteredLines, selectedLineIndex, contentHeight],
+  );
+
+  // Register keyboard handler with parent
+  useEffect(() => {
+    if (onKeyboardHandlerReady) {
+      onKeyboardHandlerReady(handleKeyboardInput);
+    }
+  }, [onKeyboardHandlerReady, handleKeyboardInput]);
+
+  // Auto-scroll to keep selected line visible
+  useEffect(() => {
+    const viewportStart = Math.max(
+      0,
+      Math.min(currentScrollOffset, filteredLines.length - contentHeight),
+    );
+    const viewportEnd = Math.min(
+      filteredLines.length,
+      viewportStart + contentHeight,
+    );
+
+    if (selectedLineIndex < viewportStart) {
+      setCurrentScrollOffset(selectedLineIndex);
+    } else if (selectedLineIndex >= viewportEnd) {
+      setCurrentScrollOffset(
+        Math.max(0, selectedLineIndex - contentHeight + 1),
+      );
+    }
+  }, [
+    selectedLineIndex,
+    currentScrollOffset,
+    contentHeight,
+    filteredLines.length,
+  ]);
 
   return (
     <Box flexDirection="column" width={width} height={height}>
@@ -134,187 +281,64 @@ function TreeViewPresentation({
 
       {/* Tree content */}
       <Box flexDirection="column" height={contentHeight}>
-        {renderResult.lines.length > 0 ? (
-          renderResult.lines.map((line, index) => {
-            const absoluteIndex = renderResult.visibleRange.start + index;
-            const isSelected = absoluteIndex === engineState.selectedLineIndex;
-            return renderTreeLine(line, absoluteIndex, isSelected);
+        {visibleLines.length > 0 ? (
+          visibleLines.map((line, index) => {
+            if (!line) return null;
+            const absoluteIndex = scrollInfo.viewportStart + index;
+            const isSelected = absoluteIndex === selectedLineIndex;
+            const lineText = getTreeLineText(line, displayOptions);
+            const isMatched =
+              searchTerm &&
+              lineText.toLowerCase().includes(searchTerm.toLowerCase());
+
+            return (
+              <Box key={line.id} width={width}>
+                {showLineNumbers && (
+                  <>
+                    <Text color={isSelected ? "yellow" : "gray"}>
+                      {isSelected ? ">" : " "}
+                    </Text>
+                    <Text
+                      color={isSelected ? "yellow" : "gray"}
+                      dimColor={!isSelected}
+                    >
+                      {String(absoluteIndex + 1).padStart(3, " ")}:
+                    </Text>
+                  </>
+                )}
+                {isSelected ? (
+                  <Text backgroundColor="blue" color="white" bold>
+                    {lineText}
+                  </Text>
+                ) : (
+                  <Text color={isMatched ? "yellow" : "gray"}>{lineText}</Text>
+                )}
+              </Box>
+            );
           })
         ) : (
           <Box width={width}>
             <Text color="gray" italic>
-              {engineState.searchTerm
-                ? "No matches found"
-                : "No data to display"}
+              {searchTerm ? "No matches found" : "No data to display"}
             </Text>
           </Box>
         )}
       </Box>
 
       {/* Footer with scroll info */}
-      {renderResult.hasScrollUp || renderResult.hasScrollDown ? (
+      {(scrollInfo.hasScrollUp || scrollInfo.hasScrollDown) && (
         <Box width={width} justifyContent="space-between">
           <Text color="gray">
-            {renderResult.hasScrollUp ? "↑ More above" : ""}
+            {scrollInfo.hasScrollUp ? "↑ More above" : ""}
           </Text>
           <Text color="gray">
-            Line {engineState.selectedLineIndex + 1} of{" "}
-            {renderResult.totalLines}
+            Line {selectedLineIndex + 1} of {scrollInfo.totalLines}
           </Text>
           <Text color="gray">
-            {renderResult.hasScrollDown ? "More below ↓" : ""}
+            {scrollInfo.hasScrollDown ? "More below ↓" : ""}
           </Text>
         </Box>
-      ) : null}
+      )}
     </Box>
-  );
-}
-
-/**
- * Enhanced TreeView component using TreeEngine for UI-agnostic tree processing
- *
- * Features:
- * - Keyboard navigation (j/k, arrows, page up/down, g/G)
- * - Node expansion/collapse (Space/Enter, e/c for all)
- * - Search filtering
- * - Schema type display toggle (t)
- * - Line number toggle (L)
- * - Scrolling support for large datasets
- *
- * @param props - Enhanced TreeView component props
- * @returns JSX element containing the tree view interface
- */
-export function EnhancedTreeView({
-  data,
-  height = 20,
-  width = 80,
-  searchTerm = "",
-  scrollOffset: _scrollOffset = 0,
-  options = {},
-  onKeyboardHandlerReady,
-}: EnhancedTreeViewProps): ReactElement {
-  const config = useConfig();
-  const { treeEngine } = useTreeEngineIntegration();
-
-  // Update engine data when props change
-  // biome-ignore lint/correctness/useExhaustiveDependencies: Adding treeEngine to deps would cause infinite loops
-  useEffect(() => {
-    treeEngine.updateData(data);
-  }, [data]); // Remove treeEngine from deps to avoid infinite loops
-
-  // Apply search filter
-  // biome-ignore lint/correctness/useExhaustiveDependencies: Adding treeEngine to deps would cause infinite loops
-  useEffect(() => {
-    treeEngine.applySearch(searchTerm);
-  }, [searchTerm]); // Remove treeEngine from deps to avoid infinite loops
-
-  // Local state to track engine state changes
-  const [localEngineState, setLocalEngineState] = useState(() =>
-    treeEngine.getState(),
-  );
-
-  // Calculate content height (total height - header - potential footer)
-  const contentHeight = useMemo(() => {
-    const headerHeight = 1; // Header takes 1 line
-    const maxFooterHeight = 1; // Footer may take 1 line
-    return Math.max(1, height - headerHeight - maxFooterHeight);
-  }, [height]);
-
-  // Create viewport options
-  const viewport = useMemo(
-    () => ({
-      height: contentHeight,
-      width,
-    }),
-    [contentHeight, width],
-  );
-
-  // Get rendered tree data from engine
-  // biome-ignore lint/correctness/useExhaustiveDependencies: selectedLineIndex and scrollOffset affect rendering output
-  const renderResult = useMemo(() => {
-    const renderOptions = {
-      displayOptions: {
-        ...config.display.tree,
-        ...options,
-        showSchemaTypes: localEngineState.showSchemaTypes,
-      },
-      engineState: localEngineState,
-    };
-    return treeEngine.render(renderOptions, viewport);
-  }, [
-    treeEngine,
-    config.display.tree,
-    options,
-    localEngineState.showSchemaTypes,
-    localEngineState.selectedLineIndex,
-    localEngineState.scrollOffset,
-    viewport,
-  ]);
-
-  // Handle keyboard input
-  // biome-ignore lint/correctness/useExhaustiveDependencies: Adding objects that recreate on every render would cause infinite loops
-  const handleKeyboardInput = useCallback(
-    (input: string, key: KeyboardInput): boolean => {
-      let command: string | null = null;
-
-      // Map keyboard input to tree commands
-      if (key.upArrow || (input === "k" && !key.ctrl)) {
-        command = "navigate-up";
-      } else if (key.downArrow || (input === "j" && !key.ctrl)) {
-        command = "navigate-down";
-      } else if (key.pageUp || (key.ctrl && input === "b")) {
-        command = "navigate-page-up";
-      } else if (key.pageDown || (key.ctrl && input === "f")) {
-        command = "navigate-page-down";
-      } else if (input === "g") {
-        command = "navigate-to-top";
-      } else if (input === "G") {
-        command = "navigate-to-bottom";
-      } else if (key.return || input === " ") {
-        command = "toggle-node";
-      } else if (input === "e") {
-        command = "expand-all";
-      } else if (input === "c") {
-        command = "collapse-all";
-      } else if (input === "t") {
-        command = "toggle-schema-types";
-      } else if (input === "L") {
-        command = "toggle-line-numbers";
-      }
-
-      if (command) {
-        const result = treeEngine.executeCommand(
-          // biome-ignore lint/suspicious/noExplicitAny: Engine command types are generic
-          command as any,
-        );
-
-        if (result.handled) {
-          setLocalEngineState(result.state);
-          return true;
-        }
-      }
-
-      return false;
-    },
-    [], // Remove all dependencies that recreate on every render to prevent infinite loops
-  );
-
-  // Register keyboard handler with parent
-  useEffect(() => {
-    if (onKeyboardHandlerReady) {
-      onKeyboardHandlerReady(handleKeyboardInput);
-    }
-  }, [onKeyboardHandlerReady, handleKeyboardInput]);
-
-  return (
-    <TreeViewPresentation
-      renderResult={renderResult}
-      engineState={localEngineState}
-      config={config}
-      options={options}
-      width={width}
-      height={height}
-      contentHeight={contentHeight}
-    />
   );
 }

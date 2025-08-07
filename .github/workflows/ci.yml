@@ -58,7 +58,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node-version: [18, 20, 22]
+        node-version: [20]  # Reduced to single version to prevent memory issues
     steps:
       - uses: actions/checkout@v4
       
@@ -74,11 +74,13 @@ jobs:
           npm install --force @biomejs/cli-linux-x64 @rollup/rollup-linux-x64-gnu
       
       - name: Run tests
-        run: npm run test:run
+        run: npm run test:ci
+        env:
+          NODE_OPTIONS: "--max-old-space-size=6144"
         
       - name: Upload coverage reports
         uses: codecov/codecov-action@v5
-        if: matrix.node-version == '18'
+        if: matrix.node-version == '20'
         with:
           fail_ci_if_error: false
 
