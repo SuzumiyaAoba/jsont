@@ -28,8 +28,8 @@ export default defineConfig({
         singleThread: true, // Force single-threaded execution
       },
     },
-    testTimeout: 30000, // Reasonable timeout for most tests
-    hookTimeout: 10000,
+    testTimeout: 30000, // Extended timeout for tree processing, SQL conversion, and complex component tests
+    hookTimeout: 10000, // Allow sufficient time for test setup/teardown with JSON fixtures
     maxConcurrency: 1, // Limit concurrent tests within a file
     coverage: {
       provider: "v8",

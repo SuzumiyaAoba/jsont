@@ -120,11 +120,22 @@ export function EnhancedTreeView({
   const filteredLines = useMemo(() => {
     if (!searchTerm.trim()) return allLines;
 
-    return allLines.filter((line) => {
-      const lineText = getTreeLineText(line, displayOptions);
-      return lineText.toLowerCase().includes(searchTerm.toLowerCase());
-    });
+    // Optimized filtering with for-loop for large datasets
+    const filtered = [];
+    const searchLower = searchTerm.toLowerCase();
+    for (let i = 0; i < allLines.length; i++) {
+      const line = allLines[i];
+      if (line) {
+        const lineText = getTreeLineText(line, displayOptions);
+        if (lineText.toLowerCase().includes(searchLower)) {
+          filtered.push(line);
+        }
+      }
+    }
+    return filtered;
   }, [allLines, searchTerm, displayOptions]);
+
+  // Note: Selection reset on search change is handled in keyboard input logic
 
   // Calculate visible lines with scroll offset
   const contentHeight = height - 2; // Reserve space for header and footer
@@ -272,6 +283,7 @@ export function EnhancedTreeView({
       <Box flexDirection="column" height={contentHeight}>
         {visibleLines.length > 0 ? (
           visibleLines.map((line, index) => {
+            if (!line) return null;
             const absoluteIndex = scrollInfo.viewportStart + index;
             const isSelected = absoluteIndex === selectedLineIndex;
             const lineText = getTreeLineText(line, displayOptions);
