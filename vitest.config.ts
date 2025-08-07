@@ -18,6 +18,18 @@ export default defineConfig({
     environment: "jsdom",
     globals: true,
     setupFiles: ["./src/vitest.setup.ts"],
+    // Optimize memory usage and prevent OOM errors
+    pool: "forks",
+    poolOptions: {
+      forks: {
+        minForks: 1,
+        maxForks: 2, // Limit concurrent test files to reduce memory usage
+      },
+    },
+    isolate: true,
+    fileParallelism: false, // Run test files sequentially to reduce memory pressure
+    testTimeout: 60000, // Increase timeout for memory-intensive tests
+    hookTimeout: 30000,
     coverage: {
       provider: "v8",
       reporter: ["text", "json", "html"],
