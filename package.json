@@ -12,7 +12,7 @@
     "start": "node dist/index.js",
     "test": "node --max-old-space-size=8192 node_modules/.bin/vitest",
     "test:ui": "vitest --ui",
-    "test:run": "node --max-old-space-size=8192 node_modules/.bin/vitest run",
+    "test:run": "node --max-old-space-size=16384 --expose-gc node_modules/.bin/vitest run",
     "test:watch": "vitest --watch",
     "lint": "biome lint ./src",
     "lint:fix": "biome lint --write ./src",

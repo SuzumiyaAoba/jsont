@@ -19,17 +19,18 @@ export default defineConfig({
     globals: true,
     setupFiles: ["./src/vitest.setup.ts"],
     // Optimize memory usage and prevent OOM errors
-    pool: "forks",
+    pool: "threads",
     poolOptions: {
-      forks: {
-        minForks: 1,
-        maxForks: 2, // Limit concurrent test files to reduce memory usage
+      threads: {
+        maxThreads: 1, // Run only one test file at a time
+        minThreads: 1,
+        isolate: true,
+        singleThread: true, // Force single-threaded execution
       },
     },
-    isolate: true,
-    fileParallelism: false, // Run test files sequentially to reduce memory pressure
     testTimeout: 60000, // Increase timeout for memory-intensive tests
     hookTimeout: 30000,
+    maxConcurrency: 1, // Limit concurrent tests within a file
     coverage: {
       provider: "v8",
       reporter: ["text", "json", "html"],
