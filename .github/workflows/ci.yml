@@ -76,7 +76,7 @@ jobs:
       - name: Run tests
         run: npm run test:ci
         env:
-          NODE_OPTIONS: "--max-old-space-size=6144 --gc-interval=100"
+          NODE_OPTIONS: "--max-old-space-size=6144"
         
       - name: Upload coverage reports
         uses: codecov/codecov-action@v5
