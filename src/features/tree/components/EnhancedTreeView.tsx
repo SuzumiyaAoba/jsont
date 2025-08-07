@@ -198,7 +198,7 @@ export function EnhancedTreeView({
       // Node expansion/collapse
       if (key.return || input === " ") {
         const selectedLine = filteredLines[selectedLineIndex];
-        if (selectedLine && selectedLine.hasChildren) {
+        if (selectedLine?.hasChildren) {
           setTreeState((prev) => toggleNodeExpansion(prev, selectedLine.id));
         }
         return true;
