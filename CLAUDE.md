@@ -18,8 +18,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `npm run test:run` - Run tests once and exit
 - `npm run test:watch` - Run tests in explicit watch mode
 - `npm run test:ui` - Open Vitest UI for interactive testing
+- `npm run test:ci` - Run CI-optimized tests (memory-limited, single-threaded)
 - `npm run test -- tree` - Run specific test files matching "tree"
 - `npm run test -- --coverage` - Run tests with coverage reporting
+
+**Memory-Intensive Test Exclusions**: Several tests are excluded in CI for memory optimization:
+- Performance tests, JSON processing tests, SQL converter tests, integration tests
+- See `vitest.config.ts` exclude list for complete details
 
 ### Code Quality
 - `npm run check` - Run Biome linter and formatter checks
@@ -49,10 +54,16 @@ The codebase follows a feature-driven clean architecture with clear separation o
 
 #### Core Layer (`src/core/`)
 - **Services**: `AppService` orchestrates application lifecycle and initialization
-- **Utils**: Terminal management, process lifecycle, stdin handling, error handling, LRU cache
-- **Types**: Application-wide type definitions
-- **Config**: YAML configuration loading and validation
-- **Context**: React context providers for configuration
+- **Utils**: Comprehensive utility libraries
+  - Terminal management (`terminal.ts`, `processManager.ts`)
+  - Advanced stdin processing (`stdinHandler.ts`) 
+  - Error handling with recovery suggestions (`errorHandler.ts`)
+  - LRU caching system (`lruCache.ts`)
+  - CLI argument parsing (`cliParser.ts`)
+  - Data conversion system (`dataConverters/`) with SQL, XML, YAML, CSV, JSON Schema support
+- **Types**: Application-wide type definitions and interfaces
+- **Config**: YAML configuration system with schema validation, hot reloading, and defaults
+- **Context**: React context providers for configuration management
 
 #### Features Layer (`src/features/`)
 Organized by feature domains, each containing:
@@ -75,6 +86,24 @@ Organized by feature domains, each containing:
 - `status/` - Status bar and line number display
 - `settings/` - Interactive settings TUI with live preview and validation
 
+#### Component Architecture (`src/components/`)
+- **Providers**: Application-wide context and state providers (`AppStateProvider`)
+- **Content**: View routing and content management (`ContentRouter`)
+- **Modals**: Modal management system (`ModalManager`)
+- **Status**: Status bar and line number management (`StatusBarManager`) 
+- **Keyboard**: Input handling coordination (`KeyboardManager`)
+
+#### Hooks Architecture (`src/hooks/`)
+- **State Hooks**: Application state management (`useAppState`, `useLayoutCalculations`)
+- **Handler Hooks**: Keyboard input processing (`useKeyboardHandler`, `useSearchHandlers`)  
+- **Calculation Hooks**: Terminal and layout calculations (`useTerminalCalculations`)
+- **Export Hooks**: Data export functionality (`useExportHandlers`)
+
+#### Store Architecture (`src/store/`)
+- **Jotai Atoms**: Atomic state management for ui, search, navigation, settings, debug, jq, export
+- **Typed Hooks**: Strongly-typed atom accessors for type safety
+- **Provider Setup**: Jotai provider configuration and initialization
+
 #### Data Export Capabilities
 - **Supported Formats**: JSON, YAML, CSV, XML, SQL, JSON Schema
 - **Data Converters**: Modular converter system in `@core/utils/dataConverters/`
@@ -82,15 +111,26 @@ Organized by feature domains, each containing:
 - **XML Export**: Hierarchical data representation with configurable options
 
 ### State Management
-- React hooks for local component state
-- Jotai for atomic global state where needed
-- State lifted to App.tsx for cross-feature coordination
+- **React Hooks**: Local component state and feature-specific logic
+- **Jotai Atomic State**: Global state management via atomic approach
+  - `src/store/atoms/` - Atomic state definitions (ui, search, navigation, settings, debug, jq, export)
+  - `src/store/hooks/` - Typed hooks for accessing atoms (useUI, useSearch, useNavigation, etc.)
+  - `src/store/Provider.tsx` - Jotai provider setup
+- **App-level State**: AppStateProvider in `src/components/providers/` coordinates global application state
+- **State Coordination**: App.tsx and AppStateProvider orchestrate communication between features
 
 ### Keyboard Input Architecture
-- Unified keyboard handling through Ink's `useInput` in App.tsx
-- Delegation pattern: App.tsx routes input to active feature components
-- Each feature can register keyboard handlers via callback props
-- Advanced stdin handling supports keyboard input even in pipe mode
+- **Central Dispatch**: App.tsx uses unified `useInput` hook for all keyboard input
+- **Handler Delegation**: App.tsx routes input to currently active feature components
+- **Handler Registration Pattern**: Features register keyboard handlers via callback props
+- **Handler Architecture**: `src/hooks/handlers/` contains specialized input handlers:
+  - `globalHandler.ts` - Application-wide shortcuts (quit, help, etc.)
+  - `navigationHandler.ts` - Movement and navigation shortcuts
+  - `searchHandler.ts` - Search mode input handling
+  - `jqHandler.ts` - jq query input handling
+  - `helpHandler.ts` - Help system navigation
+- **Keyboard Manager**: `src/components/keyboard/KeyboardManager.tsx` coordinates handler registration
+- **Advanced stdin**: Sophisticated stdin processing enables keyboard input even in pipe mode
 
 ## Technical Stack
 
@@ -124,10 +164,12 @@ Organized by feature domains, each containing:
 ## Development Guidelines
 
 ### Import Standards
-- **Always use extensionless imports** for TypeScript files
-- **Use path aliases**: `@/*`, `@core/*`, `@features/*`, `@store/*`, `@components/*`, `@hooks/*` instead of relative paths
-- **Organize imports**: external → aliases → relative
-- **Note**: tsup build only supports `@/*`, `@core/*`, and `@features/*` aliases
+- **Always use extensionless imports** for TypeScript files (required by build system)
+- **Path Alias Usage**: 
+  - **Development**: All aliases available (`@/*`, `@core/*`, `@features/*`, `@store/*`, `@components/*`, `@hooks/*`)
+  - **Build Limitation**: tsup only supports `@/*`, `@core/*`, and `@features/*` aliases
+  - **Critical**: Use supported aliases to avoid build failures
+- **Import Organization**: external dependencies → path aliases → relative imports
 - **Example**:
   ```typescript
   import { Box, Text } from "ink";
@@ -186,6 +228,15 @@ The application implements sophisticated stdin processing to enable keyboard nav
 - **Memory Usage Monitoring**: Automated tests to prevent memory leaks
 - **CI/CD Integration**: Performance regression detection in build pipeline
 
+### CI/CD Optimization
+- **Memory Constraints**: CI environment optimized for limited memory (6GB max)
+- **Test Configuration**: 
+  - `npm run test:ci` uses `vitest.config.ci.ts` with stricter memory limits
+  - Single-threaded execution with maxThreads: 1
+  - Selective test exclusions for memory-intensive tests
+- **Node Options**: `NODE_OPTIONS="--max-old-space-size=6144"` for heap size control
+- **Build Pipeline**: Performance regression detection with automated test exclusions
+
 ## Configuration System
 
 ### YAML Configuration
@@ -226,12 +277,21 @@ keybindings:
 
 ## Testing Strategy
 
-- **Comprehensive Coverage**: 150+ tests across all utilities and components
-- **Test Types**: Unit tests for utilities, integration tests for components, performance tests
-- **Test Environment**: Node.js environment with Vitest globals
-- **Patterns**: Feature-specific test suites with clear scenarios
+- **Test Coverage**: 800+ tests across all utilities, components, and integrations
+- **Test Architecture**: 
+  - **Co-located Tests**: `.spec.ts` files alongside implementation
+  - **Feature Testing**: Each feature has comprehensive test suites
+  - **Integration Tests**: Full application testing in `src/integration/`
+  - **Performance Tests**: Automated benchmarking to prevent regressions
+- **Test Environment**: 
+  - **Runtime**: Node.js with jsdom for DOM simulation
+  - **Framework**: Vitest with globals enabled
+  - **Setup**: `src/vitest.setup.ts` for test initialization
+- **Memory Optimization**: 
+  - **CI Configuration**: Single-threaded execution to prevent OOM errors
+  - **Test Exclusions**: Memory-intensive tests excluded in CI (see vitest.config.ts)
+  - **Thread Pool**: Limited to 1 thread with 30s timeout for complex tests
 - **Coverage**: v8 provider with text, JSON, and HTML reporting
-- **Performance Tests**: Automated benchmarking to prevent regressions
 
 ## Common Development Patterns
 
@@ -272,12 +332,21 @@ useEffect(() => {
 }, [onKeyboardHandlerReady, handleKeyboardInput]);
 ```
 
+## Future Architecture Plans
+
+The project has plans for **UI separation architecture** to enable future GUI (Web) version support:
+- **Planned Engines**: `src/core/engine/` will contain UI-agnostic business logic (JsonEngine, TreeEngine, SearchEngine)
+- **Planned Adapters**: `src/core/adapters/` will provide UI abstraction layer (UIAdapter, UIController)  
+- **Goal**: Enable multiple UI frontends (current TUI + future Web UI) sharing core business logic
+- **Status**: Architecture planning complete, implementation pending
+
 ## Important Development Reminders
 
 - **Always use extensionless imports** - The build system requires this
-- **Prefer path aliases over relative imports** - Use `@core/*`, `@features/*`, etc.
-- **Test files use `.spec.ts` suffix** - All tests are co-located with implementation
+- **Use supported path aliases** - `@/*`, `@core/*`, `@features/*` work in build; `@store/*`, `@components/*`, `@hooks/*` work in dev only
+- **Test files use `.spec.ts` suffix** - All tests are co-located with implementation  
 - **Run `npm run check` before committing** - Ensures code quality standards
+- **Memory-aware testing** - Use `npm run test:ci` for memory-constrained environments
 - **Never assume libraries are available** - Always check existing dependencies first
 - **Use `neverthrow` Result pattern** - Avoid throwing exceptions in favor of explicit error handling
 - **Follow feature-based architecture** - Keep components, types, and utils together within feature directories
