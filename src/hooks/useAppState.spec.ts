@@ -2,8 +2,8 @@
  * Tests for useAppState hook
  */
 
+import { useAppState } from "@hooks/useAppState";
 import { act, renderHook } from "@testing-library/react";
-import { useAppState } from "./useAppState";
 
 describe("useAppState", () => {
   describe("Initial state", () => {

@@ -3,7 +3,7 @@
  */
 
 import { CONFIG } from "@core/config/constants";
-import { TerminalManager } from "./terminal";
+import { TerminalManager } from "@core/utils/terminal";
 
 describe("TerminalManager", () => {
   let manager: TerminalManager;

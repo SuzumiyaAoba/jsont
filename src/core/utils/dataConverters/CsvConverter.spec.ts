@@ -2,7 +2,7 @@
  * Tests for CsvConverter
  */
 
-import { CsvConverter } from "./CsvConverter";
+import { CsvConverter } from "@core/utils/dataConverters/CsvConverter";
 
 describe("CsvConverter", () => {
   let converter: CsvConverter;

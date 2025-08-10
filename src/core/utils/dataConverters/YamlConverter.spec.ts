@@ -2,7 +2,7 @@
  * Tests for YamlConverter
  */
 
-import { YamlConverter } from "./YamlConverter";
+import { YamlConverter } from "@core/utils/dataConverters/YamlConverter";
 
 describe("YamlConverter", () => {
   let converter: YamlConverter;
@@ -75,13 +75,17 @@ describe("YamlConverter", () => {
       expect(result.isOk()).toBe(true);
     });
 
-    it("should handle validation errors", () => {
-      // Create a circular reference which js-yaml might handle gracefully
+    it("should reject circular references", () => {
+      // Create a circular reference which should fail validation
       const circularObj: any = { name: "test" };
       circularObj.self = circularObj;
 
-      const result = converter.validate(circularObj);
-      expect(result.isOk()).toBe(true); // js-yaml handles circular refs with skipInvalid
+      const result = converter.validate(circularObj as any);
+      expect(result.isErr()).toBe(true);
+      if (result.isErr()) {
+        expect(result.error.type).toBe("VALIDATION_ERROR");
+        expect(result.error.format).toBe("yaml");
+      }
     });
 
     it("should handle functions gracefully", () => {

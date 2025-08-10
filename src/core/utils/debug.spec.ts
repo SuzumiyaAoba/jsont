@@ -3,7 +3,7 @@
  */
 
 import { DEBUG_PREFIX } from "@core/config/constants";
-import { DebugLogger } from "./debug";
+import { DebugLogger } from "@core/utils/debug";
 
 describe("DebugLogger", () => {
   let consoleErrorSpy: ReturnType<typeof vi.spyOn>;
