@@ -401,20 +401,39 @@ describe("AppStateProvider", () => {
 
   describe("State Updates", () => {
     it("should handle data export dialog state changes", () => {
-      renderWithProvider();
+      render(
+        <ConfigProvider config={DEFAULT_CONFIG}>
+          <AppStateProvider
+            initialData={null}
+            initialError={null}
+            keyboardEnabled={false}
+          >
+            <TestComponent />
+          </AppStateProvider>
+        </ConfigProvider>,
+      );
 
       // The data export dialog should be initialized with isVisible: false
       const appState = JSON.parse(
-        screen.getByTestId("terminal-calculations").textContent || "{}",
+        screen.getAllByTestId("terminal-calculations")[0].textContent || "{}",
       );
       expect(appState).toBeDefined();
     });
 
     it("should maintain stable references for memoized values", () => {
-      const { rerender } = renderWithProvider();
-      const initialContent = screen.getByTestId(
-        "terminal-calculations",
-      ).textContent;
+      const { rerender, unmount } = render(
+        <ConfigProvider config={DEFAULT_CONFIG}>
+          <AppStateProvider
+            initialData={null}
+            initialError={null}
+            keyboardEnabled={false}
+          >
+            <TestComponent />
+          </AppStateProvider>
+        </ConfigProvider>,
+      );
+      const initialContent = screen.getAllByTestId("terminal-calculations")[0]
+        .textContent;
 
       // Rerender with same props
       rerender(
@@ -429,10 +448,13 @@ describe("AppStateProvider", () => {
         </ConfigProvider>,
       );
 
-      const rerenderedContent = screen.getByTestId(
+      const rerenderedContent = screen.getAllByTestId(
         "terminal-calculations",
-      ).textContent;
+      )[0].textContent;
       expect(rerenderedContent).toBe(initialContent);
+
+      // Cleanup
+      unmount();
     });
   });
 

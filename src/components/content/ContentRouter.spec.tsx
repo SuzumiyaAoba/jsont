@@ -259,21 +259,29 @@ describe("ContentRouter", () => {
     vi.clearAllMocks();
   });
 
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
   describe("Basic Rendering", () => {
     it("should render with default collapsible mode", () => {
-      render(<TestWrapper displayData={{ name: "test" }} />);
+      const { unmount } = render(
+        <TestWrapper displayData={{ name: "test" }} />,
+      );
 
       // With default mocks, collapsible mode should be active
       expect(screen.getByTestId("collapsible-view")).toBeInTheDocument();
       expect(screen.getByTestId("collapsible-data")).toHaveTextContent(
         '{"name":"test"}',
       );
+      unmount();
     });
 
     it("should handle null display data", () => {
-      render(<TestWrapper displayData={null} />);
+      const { unmount } = render(<TestWrapper displayData={null} />);
       expect(screen.getByTestId("collapsible-view")).toBeInTheDocument();
       expect(screen.getByTestId("collapsible-data")).toHaveTextContent("null");
+      unmount();
     });
 
     it("should handle complex nested data", () => {
@@ -285,25 +293,28 @@ describe("ContentRouter", () => {
         metadata: { count: 2, created: "2023-01-01" },
       };
 
-      render(<TestWrapper displayData={complexData} />);
+      const { unmount } = render(<TestWrapper displayData={complexData} />);
       expect(screen.getByTestId("collapsible-view")).toBeInTheDocument();
       expect(screen.getByTestId("collapsible-data")).toHaveTextContent(
         JSON.stringify(complexData),
       );
+      unmount();
     });
 
     it("should render component structure correctly", () => {
-      render(<TestWrapper keyboardEnabled={true} />);
+      const { unmount } = render(<TestWrapper keyboardEnabled={true} />);
 
       // Should render the content router with mocked components
       expect(screen.getByTestId("collapsible-view")).toBeInTheDocument();
+      unmount();
     });
 
     it("should handle keyboard enabled state", () => {
-      render(<TestWrapper keyboardEnabled={true} />);
+      const { unmount } = render(<TestWrapper keyboardEnabled={true} />);
 
       // Component should render without errors when keyboard is enabled
       expect(screen.getByTestId("collapsible-view")).toBeInTheDocument();
+      unmount();
     });
   });
 });
