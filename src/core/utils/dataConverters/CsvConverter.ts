@@ -134,6 +134,11 @@ export class CsvConverter extends BaseDataConverter<CsvOptions> {
 
     const headers = Array.from(allKeys).sort();
 
+    // Handle empty objects - return empty string
+    if (headers.length === 0) {
+      return "";
+    }
+
     // Build CSV content
     const lines: string[] = [];
 
