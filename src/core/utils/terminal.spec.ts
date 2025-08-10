@@ -7,7 +7,7 @@ import { TerminalManager } from "./terminal";
 
 describe("TerminalManager", () => {
   let manager: TerminalManager;
-  let mockStdoutWrite: ReturnType<typeof vi.spyOn>;
+  let mockStdoutWrite: any;
   let originalIsTTY: boolean | undefined;
 
   beforeEach(() => {
@@ -239,7 +239,6 @@ describe("TerminalManager", () => {
     });
 
     it("should return false when process.stdin.isTTY is null", () => {
-      // @ts-expect-error - Testing edge case
       Object.defineProperty(process.stdin, "isTTY", {
         value: null,
         writable: true,

@@ -374,16 +374,12 @@ describe("useAppState", () => {
         result.current.setExportDialog({
           isVisible: true,
           mode: "advanced",
-          selectedFormat: "csv",
-          fileName: "data.csv",
         });
       });
 
       expect(result.current.exportDialog).toEqual({
         isVisible: true,
         mode: "advanced",
-        selectedFormat: "csv",
-        fileName: "data.csv",
       });
     });
 

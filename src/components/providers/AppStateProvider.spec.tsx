@@ -415,7 +415,7 @@ describe("AppStateProvider", () => {
 
       // The data export dialog should be initialized with isVisible: false
       const appState = JSON.parse(
-        screen.getAllByTestId("terminal-calculations")[0].textContent || "{}",
+        screen.getAllByTestId("terminal-calculations")[0]?.textContent || "{}",
       );
       expect(appState).toBeDefined();
     });
@@ -433,7 +433,7 @@ describe("AppStateProvider", () => {
         </ConfigProvider>,
       );
       const initialContent = screen.getAllByTestId("terminal-calculations")[0]
-        .textContent;
+        ?.textContent;
 
       // Rerender with same props
       rerender(
@@ -450,7 +450,7 @@ describe("AppStateProvider", () => {
 
       const rerenderedContent = screen.getAllByTestId(
         "terminal-calculations",
-      )[0].textContent;
+      )[0]?.textContent;
       expect(rerenderedContent).toBe(initialContent);
 
       // Cleanup

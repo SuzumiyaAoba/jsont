@@ -26,7 +26,7 @@ describe("CsvConverter", () => {
     });
 
     it("should validate undefined data", () => {
-      const result = converter.validate(undefined);
+      const result = converter.validate(null as any);
       expect(result.isOk()).toBe(true);
     });
 
@@ -61,7 +61,7 @@ describe("CsvConverter", () => {
     });
 
     it("should reject functions", () => {
-      const result = converter.validate(() => {});
+      const result = converter.validate((() => {}) as any);
       expect(result.isErr()).toBe(true);
       if (result.isErr()) {
         expect(result.error.type).toBe("VALIDATION_ERROR");
@@ -73,7 +73,7 @@ describe("CsvConverter", () => {
     });
 
     it("should reject symbols", () => {
-      const result = converter.validate(Symbol("test"));
+      const result = converter.validate(Symbol("test") as any);
       expect(result.isErr()).toBe(true);
     });
   });
@@ -99,7 +99,7 @@ describe("CsvConverter", () => {
     });
 
     it("should handle undefined data", () => {
-      const result = converter.convert(undefined);
+      const result = converter.convert(undefined as any);
       expect(result.isOk()).toBe(true);
       if (result.isOk()) {
         expect(result.value).toBe("");

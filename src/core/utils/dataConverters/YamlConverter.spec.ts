@@ -26,7 +26,7 @@ describe("YamlConverter", () => {
     });
 
     it("should validate undefined data", () => {
-      const result = converter.validate(undefined);
+      const result = converter.validate(undefined as any);
       expect(result.isOk()).toBe(true);
     });
 
@@ -71,7 +71,7 @@ describe("YamlConverter", () => {
     });
 
     it("should validate dates", () => {
-      const result = converter.validate(new Date());
+      const result = converter.validate(new Date() as any);
       expect(result.isOk()).toBe(true);
     });
 
@@ -85,12 +85,12 @@ describe("YamlConverter", () => {
     });
 
     it("should handle functions gracefully", () => {
-      const result = converter.validate(() => "test");
+      const result = converter.validate((() => "test") as any);
       expect(result.isErr()).toBe(true); // Functions are not valid YAML
     });
 
     it("should handle symbols", () => {
-      const result = converter.validate(Symbol("test"));
+      const result = converter.validate(Symbol("test") as any);
       expect(result.isErr()).toBe(true); // Symbols are not valid YAML
     });
 
@@ -160,7 +160,7 @@ describe("YamlConverter", () => {
     });
 
     it("should convert undefined data", () => {
-      const result = converter.convert(undefined);
+      const result = converter.convert(undefined as any);
       expect(result.isOk()).toBe(true);
       if (result.isOk()) {
         expect(result.value.trim()).toBe("");
@@ -376,7 +376,7 @@ describe("YamlConverter", () => {
         anotherValid: 42,
       };
 
-      const result = converter.convert(data, { skipInvalid: true });
+      const result = converter.convert(data as any, { skipInvalid: true });
       expect(result.isOk()).toBe(true);
       if (result.isOk()) {
         expect(result.value).toContain("validValue: test");
@@ -431,7 +431,7 @@ describe("YamlConverter", () => {
       // BigInt is not serializable by js-yaml by default
       const data = { bigNumber: BigInt(123456789012345678901234567890n) };
 
-      const result = converter.convert(data);
+      const result = converter.convert(data as any);
       expect(result.isOk()).toBe(true); // js-yaml might handle this with skipInvalid
     });
 

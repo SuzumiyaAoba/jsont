@@ -68,6 +68,7 @@ describe("DebugLogger", () => {
         success: true,
         canUseKeyboard: true,
         data: { test: "data" },
+        error: null,
       });
 
       expect(consoleErrorSpy).toHaveBeenCalledWith(
@@ -83,6 +84,7 @@ describe("DebugLogger", () => {
         success: true,
         canUseKeyboard: true,
         data: { test: "data" },
+        error: null,
       });
 
       expect(consoleErrorSpy).not.toHaveBeenCalled();
@@ -96,7 +98,7 @@ describe("DebugLogger", () => {
         success: false,
         canUseKeyboard: false,
         data: null,
-        error: new Error("Test error"),
+        error: "Test error",
       });
 
       expect(consoleErrorSpy).not.toHaveBeenCalled();
@@ -110,6 +112,7 @@ describe("DebugLogger", () => {
         success: true,
         canUseKeyboard: false,
         data: { test: "data" },
+        error: null,
       });
 
       expect(consoleErrorSpy).toHaveBeenCalledWith(
@@ -326,6 +329,7 @@ describe("DebugLogger", () => {
         success: true,
         canUseKeyboard: true,
         data: { test: "data" },
+        error: null,
       });
 
       expect(consoleErrorSpy).toHaveBeenCalledTimes(3);
@@ -341,6 +345,7 @@ describe("DebugLogger", () => {
         success: true,
         canUseKeyboard: true,
         data: { test: "data" },
+        error: null,
       });
 
       expect(consoleErrorSpy).not.toHaveBeenCalled();
