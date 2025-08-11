@@ -315,6 +315,53 @@ describe("searchUtils", () => {
         { text: "test", isMatch: true },
       ]);
     });
+
+    it("should highlight regex patterns when regex mode is enabled", () => {
+      const result = highlightSearchInLine(
+        "Email: user@example.com",
+        "\w+@\w+\.\w+",
+        true,
+      );
+
+      expect(result).toEqual([
+        { text: "Email: ", isMatch: false },
+        { text: "user@example.com", isMatch: true },
+      ]);
+    });
+
+    it("should handle multiple regex matches in one line", () => {
+      const result = highlightSearchInLine(
+        "Emails: user@test.com admin@test.com",
+        "\w+@\w+\.\w+",
+        true,
+      );
+
+      expect(result).toEqual([
+        { text: "Emails: ", isMatch: false },
+        { text: "user@test.com", isMatch: true },
+        { text: " ", isMatch: false },
+        { text: "admin@test.com", isMatch: true },
+      ]);
+    });
+
+    it("should fallback to literal search for invalid regex", () => {
+      const result = highlightSearchInLine(
+        "hello [unclosed",
+        "[unclosed",
+        true,
+      );
+
+      expect(result).toEqual([
+        { text: "hello ", isMatch: false },
+        { text: "[unclosed", isMatch: true },
+      ]);
+    });
+
+    it("should work normally when regex mode is disabled", () => {
+      const result = highlightSearchInLine("user@example.com", "\w+", false);
+
+      expect(result).toEqual([{ text: "user@example.com", isMatch: false }]);
+    });
   });
 
   describe("regex mode functions", () => {

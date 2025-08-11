@@ -6,12 +6,14 @@ import type {
   DataProcessor,
 } from "@features/common/types/viewer";
 import { jsonHighlighter } from "@features/json-rendering/utils/jsonHighlighter";
+import { useIsRegexMode } from "@store/hooks/useSearch";
 import { memo, type ReactElement, useMemo } from "react";
 
 export const JsonViewer = memo(function JsonViewer(
   props: BaseViewerProps,
 ): ReactElement {
   const config = useConfig();
+  const isRegexMode = useIsRegexMode();
 
   // Create data processor that uses configuration for indentation - memoized
   const jsonDataProcessor: DataProcessor = useMemo(
@@ -37,6 +39,7 @@ export const JsonViewer = memo(function JsonViewer(
   return (
     <BaseViewer
       {...props}
+      isRegexMode={isRegexMode}
       dataProcessor={jsonDataProcessor}
       highlighter={jsonHighlighter}
       emptyStateConfig={{

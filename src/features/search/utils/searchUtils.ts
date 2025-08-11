@@ -225,41 +225,84 @@ export function lineContainsSearch(line: string, searchTerm: string): boolean {
 export function highlightSearchInLine(
   line: string,
   searchTerm: string,
+  isRegexMode = false,
 ): Array<{ text: string; isMatch: boolean }> {
   if (!searchTerm.trim()) {
     return [{ text: line, isMatch: false }];
   }
 
   const parts: Array<{ text: string; isMatch: boolean }> = [];
-  const lineLower = line.toLowerCase();
-  const searchTermLower = searchTerm.toLowerCase();
-  let lastIndex = 0;
 
-  while (true) {
-    const foundIndex = lineLower.indexOf(searchTermLower, lastIndex);
-    if (foundIndex === -1) {
+  if (isRegexMode) {
+    try {
+      const regex = new RegExp(searchTerm, "gi");
+      let lastIndex = 0;
+      let match = regex.exec(line);
+
+      while (match !== null) {
+        // Add text before match
+        if (match.index > lastIndex) {
+          parts.push({
+            text: line.substring(lastIndex, match.index),
+            isMatch: false,
+          });
+        }
+
+        // Add match
+        parts.push({
+          text: match[0],
+          isMatch: true,
+        });
+
+        lastIndex = match.index + match[0].length;
+
+        // Prevent infinite loop for zero-length matches
+        if (match[0].length === 0) {
+          regex.lastIndex++;
+        }
+
+        match = regex.exec(line);
+      }
+
       // Add remaining text
       if (lastIndex < line.length) {
         parts.push({ text: line.substring(lastIndex), isMatch: false });
       }
-      break;
+    } catch (_error) {
+      // Invalid regex - fall back to literal string search
+      return highlightSearchInLine(line, searchTerm, false);
     }
+  } else {
+    const lineLower = line.toLowerCase();
+    const searchTermLower = searchTerm.toLowerCase();
+    let lastIndex = 0;
 
-    // Add text before match
-    if (foundIndex > lastIndex) {
+    while (true) {
+      const foundIndex = lineLower.indexOf(searchTermLower, lastIndex);
+      if (foundIndex === -1) {
+        // Add remaining text
+        if (lastIndex < line.length) {
+          parts.push({ text: line.substring(lastIndex), isMatch: false });
+        }
+        break;
+      }
+
+      // Add text before match
+      if (foundIndex > lastIndex) {
+        parts.push({
+          text: line.substring(lastIndex, foundIndex),
+          isMatch: false,
+        });
+      }
+
+      // Add match
       parts.push({
-        text: line.substring(lastIndex, foundIndex),
-        isMatch: false,
+        text: line.substring(foundIndex, foundIndex + searchTerm.length),
+        isMatch: true,
       });
+
+      lastIndex = foundIndex + searchTerm.length;
     }
-
-    // Add match
-    parts.push({
-      text: line.substring(foundIndex, foundIndex + searchTerm.length),
-      isMatch: true,
-    });
-
-    lastIndex = foundIndex + searchTerm.length;
   }
 
   return parts;

@@ -19,9 +19,15 @@ export class JsonHighlighter implements Highlighter {
     tokens: HighlightToken[],
     searchTerm: string,
     isCurrentResult: boolean = false,
+    isRegexMode: boolean = false,
   ): HighlightToken[] {
     // Use existing search highlighting function directly
-    return applySearchHighlighting(tokens, searchTerm, isCurrentResult);
+    return applySearchHighlighting(
+      tokens,
+      searchTerm,
+      isCurrentResult,
+      isRegexMode,
+    );
   }
 }
 

@@ -265,47 +265,132 @@ export function applySearchHighlighting(
   tokens: HighlightToken[],
   searchTerm: string,
   isCurrentResult: boolean = false,
+  isRegexMode: boolean = false,
 ): HighlightToken[] {
   if (!searchTerm.trim()) {
     return tokens;
   }
 
   const highlightedTokens: HighlightToken[] = [];
-  const searchTermLower = searchTerm.toLowerCase();
 
   for (const token of tokens) {
-    const tokenLower = token.text.toLowerCase();
-    let startIndex = 0;
+    if (isRegexMode) {
+      try {
+        const regex = new RegExp(searchTerm, "gi");
+        let lastIndex = 0;
+        let match = regex.exec(token.text);
 
-    while (true) {
-      const foundIndex = tokenLower.indexOf(searchTermLower, startIndex);
-      if (foundIndex === -1) {
-        // Add remaining text
-        if (startIndex < token.text.length) {
+        while (match !== null) {
+          // Add text before match
+          if (match.index > lastIndex) {
+            highlightedTokens.push({
+              text: token.text.substring(lastIndex, match.index),
+              color: token.color,
+            });
+          }
+
+          // Add match with search highlighting
           highlightedTokens.push({
-            text: token.text.substring(startIndex),
+            text: match[0],
+            color: isCurrentResult ? "white" : "black",
+            isMatch: true,
+          });
+
+          lastIndex = match.index + match[0].length;
+
+          // Prevent infinite loop for zero-length matches
+          if (match[0].length === 0) {
+            regex.lastIndex++;
+          }
+
+          match = regex.exec(token.text);
+        }
+
+        // Add remaining text
+        if (lastIndex < token.text.length) {
+          highlightedTokens.push({
+            text: token.text.substring(lastIndex),
             color: token.color,
           });
         }
-        break;
-      }
+      } catch (_error) {
+        // Invalid regex - fall back to literal string search
+        const tokenLower = token.text.toLowerCase();
+        const searchTermLower = searchTerm.toLowerCase();
+        let startIndex = 0;
 
-      // Add text before match
-      if (foundIndex > startIndex) {
+        while (true) {
+          const foundIndex = tokenLower.indexOf(searchTermLower, startIndex);
+          if (foundIndex === -1) {
+            // Add remaining text
+            if (startIndex < token.text.length) {
+              highlightedTokens.push({
+                text: token.text.substring(startIndex),
+                color: token.color,
+              });
+            }
+            break;
+          }
+
+          // Add text before match
+          if (foundIndex > startIndex) {
+            highlightedTokens.push({
+              text: token.text.substring(startIndex, foundIndex),
+              color: token.color,
+            });
+          }
+
+          // Add match with search highlighting
+          highlightedTokens.push({
+            text: token.text.substring(
+              foundIndex,
+              foundIndex + searchTerm.length,
+            ),
+            color: isCurrentResult ? "white" : "black",
+            isMatch: true,
+          });
+
+          startIndex = foundIndex + searchTerm.length;
+        }
+      }
+    } else {
+      const tokenLower = token.text.toLowerCase();
+      const searchTermLower = searchTerm.toLowerCase();
+      let startIndex = 0;
+
+      while (true) {
+        const foundIndex = tokenLower.indexOf(searchTermLower, startIndex);
+        if (foundIndex === -1) {
+          // Add remaining text
+          if (startIndex < token.text.length) {
+            highlightedTokens.push({
+              text: token.text.substring(startIndex),
+              color: token.color,
+            });
+          }
+          break;
+        }
+
+        // Add text before match
+        if (foundIndex > startIndex) {
+          highlightedTokens.push({
+            text: token.text.substring(startIndex, foundIndex),
+            color: token.color,
+          });
+        }
+
+        // Add match with search highlighting
         highlightedTokens.push({
-          text: token.text.substring(startIndex, foundIndex),
-          color: token.color,
+          text: token.text.substring(
+            foundIndex,
+            foundIndex + searchTerm.length,
+          ),
+          color: isCurrentResult ? "white" : "black",
+          isMatch: true,
         });
+
+        startIndex = foundIndex + searchTerm.length;
       }
-
-      // Add match with search highlighting
-      highlightedTokens.push({
-        text: token.text.substring(foundIndex, foundIndex + searchTerm.length),
-        color: isCurrentResult ? "white" : "black",
-        isMatch: true,
-      });
-
-      startIndex = foundIndex + searchTerm.length;
     }
   }
 

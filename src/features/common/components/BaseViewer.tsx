@@ -47,6 +47,7 @@ export function BaseViewer({
   currentSearchIndex = 0,
   visibleLines,
   showLineNumbers = false,
+  isRegexMode = false,
   dataProcessor,
   highlighter,
   contentRenderer,
@@ -118,6 +119,7 @@ export function BaseViewer({
           syntaxTokens,
           searchTerm,
           isCurrentResult,
+          isRegexMode,
         )
       : syntaxTokens;
 

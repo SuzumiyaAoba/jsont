@@ -106,7 +106,8 @@
       "Bash(gh run cancel:*)",
       "Bash(NODE_OPTIONS=\"--max-old-space-size=6144\" npm run test:ci)",
       "mcp__serena__think_about_task_adherence",
-      "Bash(NODE_ENV=development npx tsx debug_csv_output.ts)"
+      "Bash(NODE_ENV=development npx tsx debug_csv_output.ts)",
+      "mcp__serena__find_referencing_symbols"
     ],
     "deny": []
   }

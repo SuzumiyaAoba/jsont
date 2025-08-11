@@ -10,6 +10,7 @@ import {
   handleSchemaError,
   inferJsonSchema,
 } from "@features/schema/utils/schemaUtils";
+import { useIsRegexMode } from "@store/hooks/useSearch";
 
 // Define the data processor for schema generation
 const schemaDataProcessor: DataProcessor = (data: JsonValue | null) => {
@@ -30,9 +31,12 @@ const schemaDataProcessor: DataProcessor = (data: JsonValue | null) => {
 };
 
 export function SchemaViewer(props: BaseViewerProps) {
+  const isRegexMode = useIsRegexMode();
+
   return (
     <BaseViewer
       {...props}
+      isRegexMode={isRegexMode}
       dataProcessor={schemaDataProcessor}
       highlighter={jsonHighlighter}
       emptyStateConfig={{
