@@ -8,6 +8,7 @@ import {
   currentSearchResultAtom,
   cycleScopeAtom,
   hasSearchResultsAtom,
+  isRegexModeAtom_,
   isSearchingAtom,
   nextSearchResultAtom,
   previousSearchResultAtom,
@@ -18,6 +19,7 @@ import {
   searchStateAtom,
   searchTermAtom,
   startSearchAtom,
+  toggleRegexModeAtom,
   updateSearchResultsAtom,
 } from "@store/atoms/search";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
@@ -41,6 +43,9 @@ export const useCurrentSearchResult = () =>
 export const useStartSearch = () => useSetAtom(startSearchAtom);
 export const useCancelSearch = () => useSetAtom(cancelSearchAtom);
 export const useUpdateSearchResults = () => useSetAtom(updateSearchResultsAtom);
+export const useToggleRegexMode = () => useSetAtom(toggleRegexModeAtom);
+
+export const useIsRegexMode = () => useAtomValue(isRegexModeAtom_);
 export const useNextSearchResult = () => useSetAtom(nextSearchResultAtom);
 export const usePreviousSearchResult = () =>
   useSetAtom(previousSearchResultAtom);

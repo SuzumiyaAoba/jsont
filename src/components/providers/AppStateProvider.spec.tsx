@@ -120,6 +120,7 @@ const mockSearchState = {
   results: [],
   searchResults: [],
   currentResultIndex: 0,
+  isRegexMode: false,
 };
 
 const mockJqState = {

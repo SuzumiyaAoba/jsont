@@ -21,6 +21,7 @@ export function searchInJson(
   data: JsonValue,
   searchTerm: string,
   searchScope: SearchScope = "all",
+  isRegexMode = false,
 ): SearchResult[] {
   if (!data || !searchTerm.trim()) {
     return [];
@@ -29,10 +30,10 @@ export function searchInJson(
   const jsonString = JSON.stringify(data, null, 2);
 
   if (searchScope === "all") {
-    return searchInText(jsonString, searchTerm);
+    return searchInText(jsonString, searchTerm, isRegexMode);
   }
 
-  return searchInJsonWithScope(data, searchTerm, searchScope);
+  return searchInJsonWithScope(data, searchTerm, searchScope, isRegexMode);
 }
 
 /**
@@ -54,6 +55,7 @@ export function searchInJsonWithScope(
   data: JsonValue,
   searchTerm: string,
   searchScope: "keys" | "values",
+  isRegexMode = false,
 ): SearchResult[] {
   if (!data || !searchTerm.trim()) {
     return [];
@@ -114,6 +116,7 @@ export function searchInJsonWithScope(
         lineIndex,
         0,
         fullLine,
+        isRegexMode,
       );
       results.push(...keyMatches);
     } else if (searchScope === "values") {
@@ -124,6 +127,7 @@ export function searchInJsonWithScope(
         lineIndex,
         colonIndex + 1,
         fullLine,
+        isRegexMode,
       );
       results.push(...valueMatches);
     }
@@ -144,6 +148,7 @@ export function searchInJsonSchema(
   data: JsonValue,
   searchTerm: string,
   searchScope: SearchScope = "all",
+  isRegexMode = false,
 ): SearchResult[] {
   if (!data || !searchTerm.trim()) {
     return [];
@@ -154,12 +159,17 @@ export function searchInJsonSchema(
     const schemaString = formatJsonSchema(schema);
 
     if (searchScope === "all") {
-      return searchInText(schemaString, searchTerm);
+      return searchInText(schemaString, searchTerm, isRegexMode);
     }
 
     // For schema search with scope, parse the formatted schema as JSON
     const parsedSchema = JSON.parse(schemaString);
-    return searchInJsonWithScope(parsedSchema, searchTerm, searchScope);
+    return searchInJsonWithScope(
+      parsedSchema,
+      searchTerm,
+      searchScope,
+      isRegexMode,
+    );
   } catch (error) {
     // If schema generation fails, return empty results
     console.warn("Failed to generate schema for search:", error);
@@ -174,34 +184,28 @@ export function searchInJsonSchema(
  * @param searchTerm - Term to search for (case-insensitive)
  * @returns Array of search results with line and column information
  */
-export function searchInText(text: string, searchTerm: string): SearchResult[] {
+export function searchInText(
+  text: string,
+  searchTerm: string,
+  isRegexMode = false,
+): SearchResult[] {
   if (!text || !searchTerm.trim()) {
     return [];
   }
 
   const results: SearchResult[] = [];
   const lines = text.split("\n");
-  const searchTermLower = searchTerm.toLowerCase();
 
   lines.forEach((line, lineIndex) => {
-    const lineLower = line.toLowerCase();
-    let startIndex = 0;
-
-    // Find all occurrences in this line
-    while (true) {
-      const foundIndex = lineLower.indexOf(searchTermLower, startIndex);
-      if (foundIndex === -1) break;
-
-      results.push({
-        lineIndex,
-        columnStart: foundIndex,
-        columnEnd: foundIndex + searchTerm.length,
-        matchText: line.substring(foundIndex, foundIndex + searchTerm.length),
-        contextLine: line,
-      });
-
-      startIndex = foundIndex + 1;
-    }
+    const matches = findMatchesInText(
+      line,
+      searchTerm,
+      lineIndex,
+      0,
+      line,
+      isRegexMode,
+    );
+    results.push(...matches);
   });
 
   return results;
@@ -291,25 +295,70 @@ function findMatchesInText(
   lineIndex: number,
   columnOffset: number,
   contextLine: string,
+  isRegexMode = false,
 ): SearchResult[] {
   const results: SearchResult[] = [];
-  const textLower = text.toLowerCase();
-  const searchTermLower = searchTerm.toLowerCase();
-  let startIndex = 0;
 
-  while (true) {
-    const foundIndex = textLower.indexOf(searchTermLower, startIndex);
-    if (foundIndex === -1) break;
+  if (isRegexMode) {
+    try {
+      const regex = new RegExp(searchTerm, "gi");
+      let match = regex.exec(text);
+      while (match !== null) {
+        results.push({
+          lineIndex,
+          columnStart: match.index + columnOffset,
+          columnEnd: match.index + match[0].length + columnOffset,
+          matchText: match[0],
+          contextLine,
+        });
 
-    results.push({
-      lineIndex,
-      columnStart: foundIndex + columnOffset,
-      columnEnd: foundIndex + searchTerm.length + columnOffset,
-      matchText: text.substring(foundIndex, foundIndex + searchTerm.length),
-      contextLine,
-    });
+        // Prevent infinite loop for zero-length matches
+        if (match[0].length === 0) {
+          regex.lastIndex++;
+        }
 
-    startIndex = foundIndex + 1;
+        match = regex.exec(text);
+      }
+    } catch (_error) {
+      // Invalid regex - fall back to literal string search
+      const textLower = text.toLowerCase();
+      const searchTermLower = searchTerm.toLowerCase();
+      let startIndex = 0;
+
+      while (true) {
+        const foundIndex = textLower.indexOf(searchTermLower, startIndex);
+        if (foundIndex === -1) break;
+
+        results.push({
+          lineIndex,
+          columnStart: foundIndex + columnOffset,
+          columnEnd: foundIndex + searchTerm.length + columnOffset,
+          matchText: text.substring(foundIndex, foundIndex + searchTerm.length),
+          contextLine,
+        });
+
+        startIndex = foundIndex + 1;
+      }
+    }
+  } else {
+    const textLower = text.toLowerCase();
+    const searchTermLower = searchTerm.toLowerCase();
+    let startIndex = 0;
+
+    while (true) {
+      const foundIndex = textLower.indexOf(searchTermLower, startIndex);
+      if (foundIndex === -1) break;
+
+      results.push({
+        lineIndex,
+        columnStart: foundIndex + columnOffset,
+        columnEnd: foundIndex + searchTerm.length + columnOffset,
+        matchText: text.substring(foundIndex, foundIndex + searchTerm.length),
+        contextLine,
+      });
+
+      startIndex = foundIndex + 1;
+    }
   }
 
   return results;
@@ -329,6 +378,14 @@ export function getSearchScopeDisplayName(scope: SearchScope): string {
     default:
       return "All";
   }
+}
+
+export function toggleRegexMode(currentMode: boolean): boolean {
+  return !currentMode;
+}
+
+export function getRegexModeDisplayName(isRegexMode: boolean): string {
+  return isRegexMode ? ".*" : "Aa";
 }
 
 /**

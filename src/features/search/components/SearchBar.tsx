@@ -3,6 +3,7 @@ import type {
   SearchState,
 } from "@features/search/types/search.js";
 import {
+  getRegexModeDisplayName,
   getSearchNavigationInfo,
   getSearchScopeDisplayName,
 } from "@features/search/utils/searchUtils.js";
@@ -37,6 +38,11 @@ export const SearchBar = memo(function SearchBar({
     [searchState.searchScope],
   );
 
+  const regexModeDisplayName = useMemo(
+    () => getRegexModeDisplayName(searchState.isRegexMode),
+    [searchState.isRegexMode],
+  );
+
   // Render search input with cursor - memoized
   const { beforeCursor, atCursor, afterCursor } = useMemo(
     () => renderTextWithCursor(searchInput, searchCursorPosition),
@@ -59,7 +65,7 @@ export const SearchBar = memo(function SearchBar({
               </Text>
               <Text color="gray" dimColor>
                 {" "}
-                (Enter: confirm, Esc: cancel, Tab: scope)
+                (Enter: confirm, Esc: cancel, Tab: scope, Ctrl+R: regex)
               </Text>
             </>
           ) : (
@@ -82,6 +88,17 @@ export const SearchBar = memo(function SearchBar({
             })}
           >
             {scopeDisplayName}
+          </Text>
+          <Text color="cyan">]</Text>
+          <Text color="gray"> </Text>
+          <Text color="cyan">[</Text>
+          <Text
+            color={searchState.isRegexMode ? "green" : "gray"}
+            {...(searchState.isRegexMode && {
+              backgroundColor: "darkGreen",
+            })}
+          >
+            {regexModeDisplayName}
           </Text>
           <Text color="cyan">]</Text>
         </Box>

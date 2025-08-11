@@ -10,6 +10,7 @@ export interface SearchState {
   searchResults: SearchResult[];
   currentResultIndex: number;
   searchScope: SearchScope;
+  isRegexMode: boolean;
 }
 
 export interface SearchResult {

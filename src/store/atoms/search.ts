@@ -17,6 +17,7 @@ export const searchTermAtom = atom<string>("");
 export const searchResultsAtom = atom<SearchResult[]>([]);
 export const currentResultIndexAtom = atom<number>(0);
 export const searchScopeAtom = atom<SearchScope>("all");
+const isRegexModeAtom = atom<boolean>(false);
 
 // Derived search state atom (for compatibility)
 export const searchStateAtom = atom<SearchState>((get) => ({
@@ -25,6 +26,7 @@ export const searchStateAtom = atom<SearchState>((get) => ({
   searchResults: get(searchResultsAtom),
   currentResultIndex: get(currentResultIndexAtom),
   searchScope: get(searchScopeAtom),
+  isRegexMode: get(isRegexModeAtom),
 }));
 
 // Search actions
@@ -45,11 +47,26 @@ export const cancelSearchAtom = atom(null, (_, set) => {
 
 export const updateSearchResultsAtom = atom(
   null,
-  (_, set, results: SearchResult[]) => {
+  (
+    _,
+    set,
+    {
+      results,
+      isRegexMode,
+    }: { results: SearchResult[]; isRegexMode?: boolean },
+  ) => {
     set(searchResultsAtom, results);
     set(currentResultIndexAtom, 0);
+    if (isRegexMode !== undefined) {
+      set(isRegexModeAtom, isRegexMode);
+    }
   },
 );
+export const toggleRegexModeAtom = atom(null, (get, set) => {
+  set(isRegexModeAtom, !get(isRegexModeAtom));
+});
+
+export const isRegexModeAtom_ = atom((get) => get(isRegexModeAtom));
 
 export const nextSearchResultAtom = atom(null, (get, set) => {
   const results = get(searchResultsAtom);

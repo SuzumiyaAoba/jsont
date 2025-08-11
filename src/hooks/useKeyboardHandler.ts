@@ -37,6 +37,7 @@ export interface KeyboardHandlerDependencies {
   startSearch: (term: string) => void;
   cancelSearch: () => void;
   cycleScope: () => void;
+  toggleRegexMode: () => void;
   nextSearchResult: () => void;
   previousSearchResult: () => void;
 
@@ -117,6 +118,7 @@ export function useKeyboardHandler(deps: KeyboardHandlerDependencies) {
     startSearch,
     cancelSearch,
     cycleScope,
+    toggleRegexMode,
     nextSearchResult,
     previousSearchResult,
     jqState,
@@ -186,6 +188,7 @@ export function useKeyboardHandler(deps: KeyboardHandlerDependencies) {
     startSearch,
     cancelSearch,
     cycleScope,
+    toggleRegexMode,
     resetScroll,
     keybindings,
     updateDebugInfoCallback,

@@ -1,5 +1,6 @@
 import {
   getNextSearchScope,
+  getRegexModeDisplayName,
   getSearchNavigationInfo,
   getSearchScopeDisplayName,
   highlightSearchInLine,
@@ -7,6 +8,7 @@ import {
   searchInJson,
   searchInJsonWithScope,
   searchInText,
+  toggleRegexMode,
 } from "@features/search/utils/searchUtils.js";
 import { describe, expect, it } from "vitest";
 
@@ -312,6 +314,176 @@ describe("searchUtils", () => {
         { text: "hello ", isMatch: false },
         { text: "test", isMatch: true },
       ]);
+    });
+  });
+
+  describe("regex mode functions", () => {
+    describe("toggleRegexMode", () => {
+      it("should toggle regex mode from false to true", () => {
+        expect(toggleRegexMode(false)).toBe(true);
+      });
+
+      it("should toggle regex mode from true to false", () => {
+        expect(toggleRegexMode(true)).toBe(false);
+      });
+    });
+
+    describe("getRegexModeDisplayName", () => {
+      it("should return '.*' for regex mode enabled", () => {
+        expect(getRegexModeDisplayName(true)).toBe(".*");
+      });
+
+      it("should return 'Aa' for regex mode disabled", () => {
+        expect(getRegexModeDisplayName(false)).toBe("Aa");
+      });
+    });
+  });
+
+  describe("searchInJson with regex mode", () => {
+    const testData = {
+      name: "John Doe",
+      email: "john.doe@example.com",
+      age: 30,
+      city: "New York",
+      description: "Software engineer with 5+ years experience",
+    };
+
+    it("should find regex matches in all content", () => {
+      // Test email pattern
+      const results = searchInJson(testData, "\w+@\w+\.\w+", "all", true);
+      expect(results.length).toBeGreaterThan(0);
+      expect(results[0]?.matchText).toBe("john.doe@example.com");
+    });
+
+    it("should find regex matches only in keys", () => {
+      // Test keys ending with 'e'
+      const results = searchInJson(testData, "\w*e$", "keys", true);
+      expect(results.length).toBeGreaterThan(0);
+      expect(results.some((r) => r.matchText === "name")).toBe(true);
+    });
+
+    it("should find regex matches only in values", () => {
+      // Test number pattern
+      const results = searchInJson(testData, "\d+", "values", true);
+      expect(results.length).toBeGreaterThan(0);
+      expect(results[0]?.matchText).toBe("30");
+    });
+
+    it("should handle invalid regex gracefully", () => {
+      // Invalid regex should fall back to literal string search
+      const results = searchInJson(testData, "[invalid", "all", true);
+      expect(results).toEqual([]); // Should not find literal "[invalid"
+    });
+
+    it("should work with case insensitive regex", () => {
+      // Regex with 'i' flag is handled internally
+      const results = searchInJson(testData, "JOHN", "all", true);
+      expect(results.length).toBeGreaterThan(0);
+      expect(results[0]?.matchText).toBe("John");
+    });
+
+    it("should handle zero-length matches correctly", () => {
+      // Test word boundaries
+      const results = searchInJson(testData, "\b", "all", true);
+      expect(results.length).toBeGreaterThan(0);
+    });
+  });
+
+  describe("searchInText with regex mode", () => {
+    const testText = `{
+  "name": "John",
+  "age": 30,
+  "email": "john@test.com",
+  "city": "New York"
+}`;
+
+    it("should find regex patterns in text", () => {
+      // Test email pattern
+      const results = searchInText(testText, "\\w+@\\w+\\.\\w+", true);
+      expect(results.length).toBe(1);
+      expect(results[0]?.matchText).toBe("john@test.com");
+    });
+
+    it("should handle multiple regex matches", () => {
+      // Test quoted strings pattern
+      const results = searchInText(testText, '"[^"]*"', true);
+      expect(results.length).toBeGreaterThan(0);
+    });
+
+    it("should fall back to literal search for invalid regex", () => {
+      // Invalid regex should not throw error
+      const results = searchInText(testText, "[unclosed", true);
+      expect(results).toBeDefined();
+      expect(Array.isArray(results)).toBe(true);
+    });
+
+    it("should work without regex mode (backward compatibility)", () => {
+      const results = searchInText(testText, "John", false);
+      expect(results.length).toBe(1);
+      expect(results[0]?.matchText).toBe("John");
+    });
+  });
+
+  describe("searchInJsonWithScope with regex mode", () => {
+    const testData = {
+      firstName: "Alice",
+      lastName: "Smith",
+      email: "alice.smith@company.com",
+      phoneNumber: "555-123-4567",
+      address: {
+        streetAddress: "123 Main St",
+        cityName: "Boston",
+      },
+    };
+
+    it("should find regex matches in keys scope", () => {
+      // Test keys containing 'Name'
+      const results = searchInJsonWithScope(testData, "\\w*Name", "keys", true);
+      expect(results.length).toBe(3); // firstName, lastName, cityName
+      expect(results.some((r) => r.matchText === "firstName")).toBe(true);
+      expect(results.some((r) => r.matchText === "lastName")).toBe(true);
+      expect(results.some((r) => r.matchText === "cityName")).toBe(true);
+    });
+
+    it("should find regex matches in values scope", () => {
+      // Test phone number pattern
+      const results = searchInJsonWithScope(
+        testData,
+        "\\d{3}-\\d{3}-\\d{4}",
+        "values",
+        true,
+      );
+      expect(results.length).toBe(1);
+      expect(results[0]?.matchText).toBe("555-123-4567");
+    });
+
+    it("should handle email regex in values", () => {
+      const results = searchInJsonWithScope(
+        testData,
+        "\\w+\\.\\w+@\\w+\\.\\w+",
+        "values",
+        true,
+      );
+      expect(results.length).toBe(1);
+      expect(results[0]?.matchText).toBe("alice.smith@company.com");
+    });
+
+    it("should handle invalid regex gracefully in scoped search", () => {
+      const results = searchInJsonWithScope(testData, "[invalid", "keys", true);
+      expect(results).toBeDefined();
+      expect(Array.isArray(results)).toBe(true);
+    });
+
+    it("should work with complex nested regex patterns", () => {
+      // Test street addresses (numbers followed by words)
+      const results = searchInJsonWithScope(
+        testData,
+        "\\d+\\s+\\w+\\s+\\w+",
+        "values",
+        true,
+      );
+      expect(results.length).toBe(1);
+      expect(results[0]?.matchText).toBe("123 Main St");
     });
   });
 });
