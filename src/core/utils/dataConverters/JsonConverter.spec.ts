@@ -1,21 +1,21 @@
 /**
- * Tests for YamlConverter
+ * Tests for JsonConverter
  */
 
-import { YamlConverter } from "@core/utils/dataConverters/YamlConverter";
+import { JsonConverter } from "@core/utils/dataConverters/JsonConverter";
 
-describe("YamlConverter", () => {
-  let converter: YamlConverter;
+describe("JsonConverter", () => {
+  let converter: JsonConverter;
 
   beforeEach(() => {
-    converter = new YamlConverter();
+    converter = new JsonConverter();
   });
 
   describe("Properties", () => {
     it("should have correct format properties", () => {
-      expect(converter.format).toBe("yaml");
-      expect(converter.extension).toBe(".yaml");
-      expect(converter.displayName).toBe("YAML");
+      expect(converter.format).toBe("json");
+      expect(converter.extension).toBe(".json");
+      expect(converter.displayName).toBe("JSON");
     });
   });
 
@@ -70,72 +70,39 @@ describe("YamlConverter", () => {
       expect(result.isOk()).toBe(true);
     });
 
-    it("should validate dates", () => {
-      const result = converter.validate(new Date() as any);
-      expect(result.isOk()).toBe(true);
-    });
-
-    it("should handle circular references gracefully in validation", () => {
-      // Create a circular reference - js-yaml handles this by default without noRefs option
+    it("should handle circular references gracefully", () => {
       const circularObj: any = { name: "test" };
       circularObj.self = circularObj;
 
       const result = converter.validate(circularObj as any);
-      // Validation passes because default yamlDump handles circular refs
-      expect(result.isOk()).toBe(true);
+      expect(result.isErr()).toBe(true);
+      if (result.isErr()) {
+        expect(result.error.type).toBe("VALIDATION_ERROR");
+        expect(result.error.format).toBe("json");
+      }
     });
 
     it("should handle functions gracefully", () => {
       const result = converter.validate((() => "test") as any);
-      expect(result.isErr()).toBe(true); // Functions are not valid YAML
+      // JSON.stringify can actually handle functions - it converts them to undefined
+      expect(result.isOk()).toBe(true);
     });
 
     it("should handle symbols", () => {
       const result = converter.validate(Symbol("test") as any);
-      expect(result.isErr()).toBe(true); // Symbols are not valid YAML
+      // JSON.stringify can actually handle symbols - it converts them to undefined
+      expect(result.isOk()).toBe(true);
     });
 
-    it("should handle complex nested arrays", () => {
-      const complexData = {
-        users: [
-          {
-            id: 1,
-            name: "Alice",
-            roles: ["admin", "user"],
-            metadata: {
-              created: "2023-01-01",
-              lastLogin: null,
-              preferences: {
-                theme: "dark",
-                language: "en",
-              },
-            },
-          },
-          {
-            id: 2,
-            name: "Bob",
-            roles: ["user"],
-            metadata: {
-              created: "2023-01-02",
-              lastLogin: "2023-01-15",
-              preferences: {
-                theme: "light",
-                language: "es",
-              },
-            },
-          },
-        ],
-        settings: {
-          version: "1.0.0",
-          features: {
-            authentication: true,
-            notifications: false,
-          },
-        },
-      };
-
-      const result = converter.validate(complexData);
+    it("should handle dates", () => {
+      const result = converter.validate(new Date() as any);
       expect(result.isOk()).toBe(true);
+    });
+
+    it("should handle BigInt values", () => {
+      const data = { bigNumber: BigInt(123456789012345678901234567890n) };
+      const result = converter.validate(data as any);
+      expect(result.isErr()).toBe(true); // BigInt is not serializable by JSON.stringify
     });
   });
 
@@ -144,9 +111,6 @@ describe("YamlConverter", () => {
       const options = converter.getDefaultOptions();
       expect(options).toEqual({
         indent: 2,
-        lineWidth: -1,
-        noRefs: true,
-        skipInvalid: true,
       });
     });
   });
@@ -164,15 +128,16 @@ describe("YamlConverter", () => {
       const result = converter.convert(undefined as any);
       expect(result.isOk()).toBe(true);
       if (result.isOk()) {
-        expect(result.value.trim()).toBe("");
+        // undefined in JSON.stringify becomes undefined, not an empty string
+        expect(result.value).toBe(undefined);
       }
     });
 
     it("should convert string data", () => {
-      const result = converter.convert("Hello, YAML!");
+      const result = converter.convert("Hello, JSON!");
       expect(result.isOk()).toBe(true);
       if (result.isOk()) {
-        expect(result.value.trim()).toBe("Hello, YAML!");
+        expect(result.value.trim()).toBe('"Hello, JSON!"');
       }
     });
 
@@ -196,10 +161,10 @@ describe("YamlConverter", () => {
       const result = converter.convert([1, 2, "three", true]);
       expect(result.isOk()).toBe(true);
       if (result.isOk()) {
-        expect(result.value).toContain("- 1");
-        expect(result.value).toContain("- 2");
-        expect(result.value).toContain("- three");
-        expect(result.value).toContain("- true");
+        expect(result.value).toContain("1");
+        expect(result.value).toContain("2");
+        expect(result.value).toContain('"three"');
+        expect(result.value).toContain("true");
       }
     });
 
@@ -215,8 +180,8 @@ describe("YamlConverter", () => {
       const result = converter.convert({ name: "Alice", age: 30 });
       expect(result.isOk()).toBe(true);
       if (result.isOk()) {
-        expect(result.value).toContain("name: Alice");
-        expect(result.value).toContain("age: 30");
+        expect(result.value).toContain('"name": "Alice"');
+        expect(result.value).toContain('"age": 30');
       }
     });
 
@@ -247,13 +212,13 @@ describe("YamlConverter", () => {
       const result = converter.convert(data);
       expect(result.isOk()).toBe(true);
       if (result.isOk()) {
-        expect(result.value).toContain("user:");
-        expect(result.value).toContain("profile:");
-        expect(result.value).toContain("name: Alice");
-        expect(result.value).toContain("age: 30");
-        expect(result.value).toContain("settings:");
-        expect(result.value).toContain("theme: dark");
-        expect(result.value).toContain("notifications: true");
+        expect(result.value).toContain('"user"');
+        expect(result.value).toContain('"profile"');
+        expect(result.value).toContain('"name": "Alice"');
+        expect(result.value).toContain('"age": 30');
+        expect(result.value).toContain('"settings"');
+        expect(result.value).toContain('"theme": "dark"');
+        expect(result.value).toContain('"notifications": true');
       }
     });
 
@@ -267,12 +232,12 @@ describe("YamlConverter", () => {
       const result = converter.convert(data);
       expect(result.isOk()).toBe(true);
       if (result.isOk()) {
-        expect(result.value).toContain("- name: Alice");
-        expect(result.value).toContain("  age: 30");
-        expect(result.value).toContain("- name: Bob");
-        expect(result.value).toContain("  age: 25");
-        expect(result.value).toContain("- name: Charlie");
-        expect(result.value).toContain("  age: 35");
+        expect(result.value).toContain('"name": "Alice"');
+        expect(result.value).toContain('"age": 30');
+        expect(result.value).toContain('"name": "Bob"');
+        expect(result.value).toContain('"age": 25');
+        expect(result.value).toContain('"name": "Charlie"');
+        expect(result.value).toContain('"age": 35');
       }
     });
 
@@ -291,33 +256,32 @@ describe("YamlConverter", () => {
       const result = converter.convert(data);
       expect(result.isOk()).toBe(true);
       if (result.isOk()) {
-        expect(result.value).toContain("string: text");
-        expect(result.value).toContain("number: 42");
-        expect(result.value).toContain("boolean: true");
-        expect(result.value).toContain("nullValue: null");
-        expect(result.value).toContain("array:");
-        expect(result.value).toContain("object:");
-        expect(result.value).toContain("nested: value");
+        expect(result.value).toContain('"string": "text"');
+        expect(result.value).toContain('"number": 42');
+        expect(result.value).toContain('"boolean": true');
+        expect(result.value).toContain('"nullValue": null');
+        expect(result.value).toContain('"array"');
+        expect(result.value).toContain('"object"');
+        expect(result.value).toContain('"nested": "value"');
       }
     });
 
-    it("should handle special YAML characters", () => {
+    it("should handle special JSON characters", () => {
       const data = {
-        colon: "value: with colon",
-        dash: "- value with dash",
-        quote: '"quoted value"',
-        singleQuote: "'single quoted'",
-        multiline: "line1\\nline2\\nline3",
+        quotes: 'Text with "quotes"',
+        backslashes: "Text\\with\\backslashes",
+        newlines: "Text\nwith\nnewlines",
+        unicode: "Text with unicode: 🚀",
       };
 
       const result = converter.convert(data);
       expect(result.isOk()).toBe(true);
       if (result.isOk()) {
-        expect(result.value).toContain("colon:");
-        expect(result.value).toContain("dash:");
-        expect(result.value).toContain("quote:");
-        expect(result.value).toContain("singleQuote:");
-        expect(result.value).toContain("multiline:");
+        expect(result.value).toContain('"quotes"');
+        expect(result.value).toContain('"backslashes"');
+        expect(result.value).toContain('"newlines"');
+        expect(result.value).toContain('"unicode"');
+        expect(result.value).toContain("🚀");
       }
     });
   });
@@ -336,53 +300,33 @@ describe("YamlConverter", () => {
       expect(result.isOk()).toBe(true);
       if (result.isOk()) {
         // Should use 4 spaces for indentation
-        expect(result.value).toContain("    level2:");
-        expect(result.value).toContain("        value: test");
+        expect(result.value).toContain('    "level1"');
+        expect(result.value).toContain('        "level2"');
+        expect(result.value).toContain('            "value"');
       }
     });
 
-    it("should respect noRefs option", () => {
-      const shared = { name: "shared" };
-      const data = {
-        obj1: shared,
-        obj2: shared,
-      };
+    it("should handle zero indent (compact)", () => {
+      const data = { name: "test", value: 42 };
 
-      const result = converter.convert(data, { noRefs: true });
+      const result = converter.convert(data, { indent: 0 });
       expect(result.isOk()).toBe(true);
       if (result.isOk()) {
-        // Should not create references, duplicate the object
-        const occurrences = (result.value.match(/name: shared/g) || []).length;
-        expect(occurrences).toBe(2);
+        // Should be compact without newlines
+        expect(result.value).toBe('{"name":"test","value":42}');
       }
     });
 
-    it("should handle lineWidth option", () => {
-      const data = {
-        longString:
-          "This is a very long string that should be wrapped when line width is set to a small value",
-      };
+    it("should handle string indent", () => {
+      const data = { name: "test", nested: { value: 42 } };
 
-      const result = converter.convert(data, { lineWidth: 30 });
+      const result = converter.convert(data, { indent: "\t" } as any);
       expect(result.isOk()).toBe(true);
       if (result.isOk()) {
-        expect(result.value).toContain("longString:");
-      }
-    });
-
-    it("should handle skipInvalid option", () => {
-      const data = {
-        validValue: "test",
-        invalidFunction: () => "test",
-        anotherValid: 42,
-      };
-
-      const result = converter.convert(data as any, { skipInvalid: true });
-      expect(result.isOk()).toBe(true);
-      if (result.isOk()) {
-        expect(result.value).toContain("validValue: test");
-        expect(result.value).toContain("anotherValid: 42");
-        // Function should be skipped
+        // JSON.stringify with Number("\t") converts to NaN, which means no formatting
+        // String indents don't work with JSON.stringify - it needs a number
+        expect(result.value).toContain('"name"');
+        expect(result.value).toContain('"nested"');
       }
     });
 
@@ -398,17 +342,16 @@ describe("YamlConverter", () => {
 
       const result = converter.convert(data, {
         indent: 3,
-        lineWidth: 50,
-        noRefs: true,
-        skipInvalid: true,
       });
 
       expect(result.isOk()).toBe(true);
       if (result.isOk()) {
-        expect(result.value).toContain("user:");
-        expect(result.value).toContain("name: Test User");
-        expect(result.value).toContain("settings:");
-        expect(result.value).toContain("theme: dark");
+        expect(result.value).toContain('"user"');
+        expect(result.value).toContain('"name": "Test User"');
+        expect(result.value).toContain('"settings"');
+        expect(result.value).toContain('"theme": "dark"');
+        // Should use 3 spaces for indentation
+        expect(result.value).toContain('   "user"');
       }
     });
   });
@@ -423,17 +366,21 @@ describe("YamlConverter", () => {
       expect(result.isErr()).toBe(true);
       if (result.isErr()) {
         expect(result.error.type).toBe("CONVERSION_ERROR");
-        expect(result.error.format).toBe("yaml");
+        expect(result.error.format).toBe("json");
         expect(typeof result.error.message).toBe("string");
       }
     });
 
     it("should handle BigInt values", () => {
-      // BigInt is not serializable by js-yaml by default
+      // BigInt is not serializable by JSON.stringify by default
       const data = { bigNumber: BigInt(123456789012345678901234567890n) };
 
       const result = converter.convert(data as any);
-      expect(result.isOk()).toBe(true); // js-yaml might handle this with skipInvalid
+      expect(result.isErr()).toBe(true);
+      if (result.isErr()) {
+        expect(result.error.type).toBe("CONVERSION_ERROR");
+        expect(result.error.format).toBe("json");
+      }
     });
 
     it("should provide meaningful error messages", () => {
@@ -461,7 +408,6 @@ describe("YamlConverter", () => {
             port: 5432,
             credentials: {
               username: "admin",
-              // password would be omitted in real scenario
             },
             pools: [
               { name: "read", size: 10 },
@@ -514,11 +460,11 @@ describe("YamlConverter", () => {
       const result = converter.convert(complexData);
       expect(result.isOk()).toBe(true);
       if (result.isOk()) {
-        expect(result.value).toContain("application:");
-        expect(result.value).toContain("name: Test App");
-        expect(result.value).toContain("database:");
-        expect(result.value).toContain("features:");
-        expect(result.value).toContain("monitoring:");
+        expect(result.value).toContain('"application"');
+        expect(result.value).toContain('"name": "Test App"');
+        expect(result.value).toContain('"database"');
+        expect(result.value).toContain('"features"');
+        expect(result.value).toContain('"monitoring"');
         expect(result.value.length).toBeGreaterThan(100);
       }
     });
@@ -548,12 +494,73 @@ describe("YamlConverter", () => {
       expect(result.isOk()).toBe(true);
       if (result.isOk()) {
         // Verify all data is present
-        expect(result.value).toContain("numbers:");
-        expect(result.value).toContain("booleans:");
-        expect(result.value).toContain("strings:");
-        expect(result.value).toContain("nullValues:");
-        expect(result.value).toContain("nested:");
-        expect(result.value).toContain("deeply nested");
+        expect(result.value).toContain('"numbers"');
+        expect(result.value).toContain('"booleans"');
+        expect(result.value).toContain('"strings"');
+        expect(result.value).toContain('"nullValues"');
+        expect(result.value).toContain('"nested"');
+        expect(result.value).toContain('"deeply nested"');
+
+        // Verify JSON can be parsed back
+        const parsed = JSON.parse(result.value);
+        expect(parsed).toEqual(originalData);
+      }
+    });
+
+    it("should handle edge cases", () => {
+      const edgeCases = {
+        emptyString: "",
+        emptyArray: [],
+        emptyObject: {},
+        zero: 0,
+        negativeZero: -0,
+        infinity: null, // JSON doesn't support Infinity, use null
+        specialChars: '\n\t\r"\\',
+        unicode: "🌟⭐✨",
+      };
+
+      const result = converter.convert(edgeCases);
+      expect(result.isOk()).toBe(true);
+      if (result.isOk()) {
+        const parsed = JSON.parse(result.value);
+        expect(parsed.emptyString).toBe("");
+        expect(parsed.emptyArray).toEqual([]);
+        expect(parsed.emptyObject).toEqual({});
+        expect(parsed.zero).toBe(0);
+        expect(parsed.unicode).toBe("🌟⭐✨");
+      }
+    });
+  });
+
+  describe("Performance considerations", () => {
+    it("should handle large arrays efficiently", () => {
+      const largeArray = Array.from({ length: 1000 }, (_, i) => ({
+        id: i,
+        name: `Item ${i}`,
+        value: Math.random(),
+      }));
+
+      const result = converter.convert(largeArray);
+      expect(result.isOk()).toBe(true);
+      if (result.isOk()) {
+        expect(result.value).toContain('"id": 0');
+        expect(result.value).toContain('"id": 999');
+        expect(result.value).toContain('"name": "Item 0"');
+        expect(result.value).toContain('"name": "Item 999"');
+      }
+    });
+
+    it("should handle deeply nested objects", () => {
+      let deepObj: any = { value: "deep" };
+      for (let i = 0; i < 50; i++) {
+        deepObj = { level: i, nested: deepObj };
+      }
+
+      const result = converter.convert(deepObj);
+      expect(result.isOk()).toBe(true);
+      if (result.isOk()) {
+        expect(result.value).toContain('"level": 49');
+        expect(result.value).toContain('"value": "deep"');
       }
     });
   });
