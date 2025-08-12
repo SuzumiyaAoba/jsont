@@ -95,5 +95,6 @@ export interface Highlighter {
     searchTerm: string,
     isCurrentResult?: boolean,
     isRegexMode?: boolean,
+    currentResultPosition?: { columnStart: number; columnEnd: number } | null,
   ) => HighlightToken[];
 }

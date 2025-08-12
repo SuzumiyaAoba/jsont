@@ -266,14 +266,18 @@ export function applySearchHighlighting(
   searchTerm: string,
   isCurrentResult: boolean = false,
   isRegexMode: boolean = false,
+  currentResultPosition?: { columnStart: number; columnEnd: number } | null,
 ): HighlightToken[] {
   if (!searchTerm.trim()) {
     return tokens;
   }
 
   const highlightedTokens: HighlightToken[] = [];
+  let tokenStartPosition = 0; // Track position in the original line
 
   for (const token of tokens) {
+    let hasMatch = false;
+
     if (isRegexMode) {
       try {
         const regex = new RegExp(searchTerm, "gi");
@@ -281,6 +285,8 @@ export function applySearchHighlighting(
         let match = regex.exec(token.text);
 
         while (match !== null) {
+          hasMatch = true;
+
           // Add text before match
           if (match.index > lastIndex) {
             highlightedTokens.push({
@@ -289,10 +295,21 @@ export function applySearchHighlighting(
             });
           }
 
+          // Calculate absolute position of this match
+          const matchAbsoluteStart = tokenStartPosition + match.index;
+          const matchAbsoluteEnd = matchAbsoluteStart + match[0].length;
+
+          // Check if this specific match is the current result
+          const isThisMatchCurrent =
+            isCurrentResult &&
+            currentResultPosition &&
+            matchAbsoluteStart >= currentResultPosition.columnStart &&
+            matchAbsoluteEnd <= currentResultPosition.columnEnd;
+
           // Add match with search highlighting
           highlightedTokens.push({
             text: match[0],
-            color: isCurrentResult ? "white" : "black",
+            color: isThisMatchCurrent ? "white" : "black",
             isMatch: true,
           });
 
@@ -306,8 +323,8 @@ export function applySearchHighlighting(
           match = regex.exec(token.text);
         }
 
-        // Add remaining text
-        if (lastIndex < token.text.length) {
+        // Add remaining text after all matches
+        if (hasMatch && lastIndex < token.text.length) {
           highlightedTokens.push({
             text: token.text.substring(lastIndex),
             color: token.color,
@@ -315,6 +332,7 @@ export function applySearchHighlighting(
         }
       } catch (_error) {
         // Invalid regex - fall back to literal string search
+        hasMatch = false;
         const tokenLower = token.text.toLowerCase();
         const searchTermLower = searchTerm.toLowerCase();
         let startIndex = 0;
@@ -323,7 +341,7 @@ export function applySearchHighlighting(
           const foundIndex = tokenLower.indexOf(searchTermLower, startIndex);
           if (foundIndex === -1) {
             // Add remaining text
-            if (startIndex < token.text.length) {
+            if (hasMatch && startIndex < token.text.length) {
               highlightedTokens.push({
                 text: token.text.substring(startIndex),
                 color: token.color,
@@ -331,6 +349,8 @@ export function applySearchHighlighting(
             }
             break;
           }
+
+          hasMatch = true;
 
           // Add text before match
           if (foundIndex > startIndex) {
@@ -340,13 +360,24 @@ export function applySearchHighlighting(
             });
           }
 
+          // Calculate absolute position of this match
+          const matchAbsoluteStart = tokenStartPosition + foundIndex;
+          const matchAbsoluteEnd = matchAbsoluteStart + searchTerm.length;
+
+          // Check if this specific match is the current result
+          const isThisMatchCurrent =
+            isCurrentResult &&
+            currentResultPosition &&
+            matchAbsoluteStart >= currentResultPosition.columnStart &&
+            matchAbsoluteEnd <= currentResultPosition.columnEnd;
+
           // Add match with search highlighting
           highlightedTokens.push({
             text: token.text.substring(
               foundIndex,
               foundIndex + searchTerm.length,
             ),
-            color: isCurrentResult ? "white" : "black",
+            color: isThisMatchCurrent ? "white" : "black",
             isMatch: true,
           });
 
@@ -362,7 +393,7 @@ export function applySearchHighlighting(
         const foundIndex = tokenLower.indexOf(searchTermLower, startIndex);
         if (foundIndex === -1) {
           // Add remaining text
-          if (startIndex < token.text.length) {
+          if (hasMatch && startIndex < token.text.length) {
             highlightedTokens.push({
               text: token.text.substring(startIndex),
               color: token.color,
@@ -370,6 +401,8 @@ export function applySearchHighlighting(
           }
           break;
         }
+
+        hasMatch = true;
 
         // Add text before match
         if (foundIndex > startIndex) {
@@ -379,19 +412,38 @@ export function applySearchHighlighting(
           });
         }
 
+        // Calculate absolute position of this match
+        const matchAbsoluteStart = tokenStartPosition + foundIndex;
+        const matchAbsoluteEnd = matchAbsoluteStart + searchTerm.length;
+
+        // Check if this specific match is the current result
+        const isThisMatchCurrent =
+          isCurrentResult &&
+          currentResultPosition &&
+          matchAbsoluteStart >= currentResultPosition.columnStart &&
+          matchAbsoluteEnd <= currentResultPosition.columnEnd;
+
         // Add match with search highlighting
         highlightedTokens.push({
           text: token.text.substring(
             foundIndex,
             foundIndex + searchTerm.length,
           ),
-          color: isCurrentResult ? "white" : "black",
+          color: isThisMatchCurrent ? "white" : "black",
           isMatch: true,
         });
 
         startIndex = foundIndex + searchTerm.length;
       }
     }
+
+    // If no matches found in this token, add the original token unchanged
+    if (!hasMatch) {
+      highlightedTokens.push(token);
+    }
+
+    // Update token position for the next token
+    tokenStartPosition += token.text.length;
   }
 
   return highlightedTokens;

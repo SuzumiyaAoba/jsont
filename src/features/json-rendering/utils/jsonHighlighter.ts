@@ -20,6 +20,7 @@ export class JsonHighlighter implements Highlighter {
     searchTerm: string,
     isCurrentResult: boolean = false,
     isRegexMode: boolean = false,
+    currentResultPosition?: { columnStart: number; columnEnd: number } | null,
   ): HighlightToken[] {
     // Use existing search highlighting function directly
     return applySearchHighlighting(
@@ -27,6 +28,7 @@ export class JsonHighlighter implements Highlighter {
       searchTerm,
       isCurrentResult,
       isRegexMode,
+      currentResultPosition,
     );
   }
 }

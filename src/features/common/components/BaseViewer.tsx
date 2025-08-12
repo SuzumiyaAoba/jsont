@@ -114,12 +114,28 @@ export function BaseViewer({
       searchTerm &&
       (hasSearchResults(originalIndex) || searchTerm.trim().length > 0);
 
+    // Get current result position if this line contains the current result
+    let currentResultPosition: {
+      columnStart: number;
+      columnEnd: number;
+    } | null = null;
+    if (isCurrentResult && searchResults.length && currentSearchIndex >= 0) {
+      const currentResult = searchResults[currentSearchIndex];
+      if (currentResult && currentResult.lineIndex === originalIndex) {
+        currentResultPosition = {
+          columnStart: currentResult.columnStart,
+          columnEnd: currentResult.columnEnd,
+        };
+      }
+    }
+
     const highlightedTokens = shouldHighlightSearch
       ? highlighter.applySearchHighlighting(
           syntaxTokens,
           searchTerm,
           isCurrentResult,
           isRegexMode,
+          currentResultPosition,
         )
       : syntaxTokens;
 
@@ -133,8 +149,8 @@ export function BaseViewer({
             return (
               <Text
                 key={key}
-                color={isCurrentResult ? "black" : "white"}
-                backgroundColor={isCurrentResult ? "yellow" : "blue"}
+                color={token.color}
+                backgroundColor={token.color === "white" ? "yellow" : "blue"}
               >
                 {token.text}
               </Text>

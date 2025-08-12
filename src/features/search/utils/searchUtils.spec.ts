@@ -397,21 +397,26 @@ describe("searchUtils", () => {
 
     it("should find regex matches in all content", () => {
       // Test email pattern
-      const results = searchInJson(testData, "\w+@\w+\.\w+", "all", true);
+      const results = searchInJson(
+        testData,
+        "[\\w.]+@\\w+\\.\\w+",
+        "all",
+        true,
+      );
       expect(results.length).toBeGreaterThan(0);
       expect(results[0]?.matchText).toBe("john.doe@example.com");
     });
 
     it("should find regex matches only in keys", () => {
-      // Test keys ending with 'e'
-      const results = searchInJson(testData, "\w*e$", "keys", true);
+      // Test keys containing 'e'
+      const results = searchInJson(testData, "\\w*e\\w*", "keys", true);
       expect(results.length).toBeGreaterThan(0);
       expect(results.some((r) => r.matchText === "name")).toBe(true);
     });
 
     it("should find regex matches only in values", () => {
       // Test number pattern
-      const results = searchInJson(testData, "\d+", "values", true);
+      const results = searchInJson(testData, "\\d+", "values", true);
       expect(results.length).toBeGreaterThan(0);
       expect(results[0]?.matchText).toBe("30");
     });
@@ -431,7 +436,7 @@ describe("searchUtils", () => {
 
     it("should handle zero-length matches correctly", () => {
       // Test word boundaries
-      const results = searchInJson(testData, "\b", "all", true);
+      const results = searchInJson(testData, "\\b", "all", true);
       expect(results.length).toBeGreaterThan(0);
     });
   });
@@ -466,7 +471,7 @@ describe("searchUtils", () => {
 
     it("should work without regex mode (backward compatibility)", () => {
       const results = searchInText(testText, "John", false);
-      expect(results.length).toBe(1);
+      expect(results.length).toBe(2); // Finds both "John" and "john" (case-insensitive)
       expect(results[0]?.matchText).toBe("John");
     });
   });

@@ -268,6 +268,11 @@ export function highlightSearchInLine(
       if (lastIndex < line.length) {
         parts.push({ text: line.substring(lastIndex), isMatch: false });
       }
+
+      // If no matches found, return the whole line as non-match
+      if (parts.length === 0) {
+        parts.push({ text: line, isMatch: false });
+      }
     } catch (_error) {
       // Invalid regex - fall back to literal string search
       return highlightSearchInLine(line, searchTerm, false);
