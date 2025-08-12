@@ -319,7 +319,7 @@ describe("searchUtils", () => {
     it("should highlight regex patterns when regex mode is enabled", () => {
       const result = highlightSearchInLine(
         "Email: user@example.com",
-        "\w+@\w+\.\w+",
+        "\\w+@\\w+\\.\\w+",
         true,
       );
 
@@ -332,7 +332,7 @@ describe("searchUtils", () => {
     it("should handle multiple regex matches in one line", () => {
       const result = highlightSearchInLine(
         "Emails: user@test.com admin@test.com",
-        "\w+@\w+\.\w+",
+        "\\w+@\\w+\\.\\w+",
         true,
       );
 

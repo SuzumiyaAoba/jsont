@@ -238,8 +238,20 @@ export function highlightSearchInLine(
       const regex = new RegExp(searchTerm, "gi");
       let lastIndex = 0;
       let match = regex.exec(line);
+      let matchCount = 0;
+      const maxMatches = 100; // Reasonable limit for highlighting in a single line
+      const startTime = Date.now();
+      const maxTime = 200; // Maximum 200ms for line highlighting
 
-      while (match !== null) {
+      while (match !== null && matchCount < maxMatches) {
+        // Check for timeout to prevent ReDoS attacks - using a generous timeout
+        if (Date.now() - startTime > maxTime) {
+          console.warn(
+            "Regex highlighting timed out, falling back to literal search",
+          );
+          return highlightSearchInLine(line, searchTerm, false);
+        }
+
         // Add text before match
         if (match.index > lastIndex) {
           parts.push({
@@ -255,6 +267,7 @@ export function highlightSearchInLine(
         });
 
         lastIndex = match.index + match[0].length;
+        matchCount++;
 
         // Prevent infinite loop for zero-length matches
         if (match[0].length === 0) {
@@ -328,6 +341,39 @@ export function getSearchNavigationInfo(
 }
 
 /**
+ * Helper function for literal string search in text
+ */
+function findLiteralMatches(
+  text: string,
+  searchTerm: string,
+  lineIndex: number,
+  columnOffset: number,
+  contextLine: string,
+): SearchResult[] {
+  const results: SearchResult[] = [];
+  const textLower = text.toLowerCase();
+  const searchTermLower = searchTerm.toLowerCase();
+  let startIndex = 0;
+
+  while (true) {
+    const foundIndex = textLower.indexOf(searchTermLower, startIndex);
+    if (foundIndex === -1) break;
+
+    results.push({
+      lineIndex,
+      columnStart: foundIndex + columnOffset,
+      columnEnd: foundIndex + searchTerm.length + columnOffset,
+      matchText: text.substring(foundIndex, foundIndex + searchTerm.length),
+      contextLine,
+    });
+
+    startIndex = foundIndex + 1;
+  }
+
+  return results;
+}
+
+/**
  * Find all matches of a search term in a text segment
  *
  * @param text - Text to search in
@@ -345,68 +391,69 @@ function findMatchesInText(
   contextLine: string,
   isRegexMode = false,
 ): SearchResult[] {
+  if (!isRegexMode) {
+    return findLiteralMatches(
+      text,
+      searchTerm,
+      lineIndex,
+      columnOffset,
+      contextLine,
+    );
+  }
+
   const results: SearchResult[] = [];
 
-  if (isRegexMode) {
-    try {
-      const regex = new RegExp(searchTerm, "gi");
-      let match = regex.exec(text);
-      while (match !== null) {
-        results.push({
+  try {
+    const regex = new RegExp(searchTerm, "gi");
+    let match = regex.exec(text);
+    let matchCount = 0;
+    const maxMatches = 1000; // Prevent excessive matches that could slow down UI
+    const startTime = Date.now();
+    const maxTime = 100; // Maximum 100ms per regex operation
+
+    while (match !== null && matchCount < maxMatches) {
+      // Check for timeout to prevent ReDoS attacks
+      if (Date.now() - startTime > maxTime) {
+        console.warn("Regex search timed out, falling back to literal search");
+        return findLiteralMatches(
+          text,
+          searchTerm,
           lineIndex,
-          columnStart: match.index + columnOffset,
-          columnEnd: match.index + match[0].length + columnOffset,
-          matchText: match[0],
+          columnOffset,
           contextLine,
-        });
-
-        // Prevent infinite loop for zero-length matches
-        if (match[0].length === 0) {
-          regex.lastIndex++;
-        }
-
-        match = regex.exec(text);
+        );
       }
-    } catch (_error) {
-      // Invalid regex - fall back to literal string search
-      const textLower = text.toLowerCase();
-      const searchTermLower = searchTerm.toLowerCase();
-      let startIndex = 0;
-
-      while (true) {
-        const foundIndex = textLower.indexOf(searchTermLower, startIndex);
-        if (foundIndex === -1) break;
-
-        results.push({
-          lineIndex,
-          columnStart: foundIndex + columnOffset,
-          columnEnd: foundIndex + searchTerm.length + columnOffset,
-          matchText: text.substring(foundIndex, foundIndex + searchTerm.length),
-          contextLine,
-        });
-
-        startIndex = foundIndex + 1;
-      }
-    }
-  } else {
-    const textLower = text.toLowerCase();
-    const searchTermLower = searchTerm.toLowerCase();
-    let startIndex = 0;
-
-    while (true) {
-      const foundIndex = textLower.indexOf(searchTermLower, startIndex);
-      if (foundIndex === -1) break;
 
       results.push({
         lineIndex,
-        columnStart: foundIndex + columnOffset,
-        columnEnd: foundIndex + searchTerm.length + columnOffset,
-        matchText: text.substring(foundIndex, foundIndex + searchTerm.length),
+        columnStart: match.index + columnOffset,
+        columnEnd: match.index + match[0].length + columnOffset,
+        matchText: match[0],
         contextLine,
       });
 
-      startIndex = foundIndex + 1;
+      matchCount++;
+
+      // Prevent infinite loop for zero-length matches
+      if (match[0].length === 0) {
+        regex.lastIndex++;
+      }
+
+      match = regex.exec(text);
     }
+
+    if (matchCount >= maxMatches) {
+      console.warn("Maximum matches reached, some results may be truncated");
+    }
+  } catch (_error) {
+    // Invalid regex - fall back to literal string search
+    return findLiteralMatches(
+      text,
+      searchTerm,
+      lineIndex,
+      columnOffset,
+      contextLine,
+    );
   }
 
   return results;

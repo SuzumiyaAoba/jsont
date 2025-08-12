@@ -283,8 +283,18 @@ export function applySearchHighlighting(
         const regex = new RegExp(searchTerm, "gi");
         let lastIndex = 0;
         let match = regex.exec(token.text);
+        let matchCount = 0;
+        const maxMatches = 50; // Reasonable limit for token highlighting
+        const startTime = Date.now();
+        const maxTime = 100; // Maximum 100ms for token highlighting
 
-        while (match !== null) {
+        while (match !== null && matchCount < maxMatches) {
+          // Check for timeout to prevent ReDoS attacks
+          if (Date.now() - startTime > maxTime) {
+            console.warn("Token regex highlighting timed out, using fallback");
+            hasMatch = false;
+            break;
+          }
           hasMatch = true;
 
           // Add text before match
@@ -314,6 +324,7 @@ export function applySearchHighlighting(
           });
 
           lastIndex = match.index + match[0].length;
+          matchCount++;
 
           // Prevent infinite loop for zero-length matches
           if (match[0].length === 0) {
