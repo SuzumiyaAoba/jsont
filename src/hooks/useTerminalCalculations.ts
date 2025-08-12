@@ -111,14 +111,10 @@ export function useTerminalCalculations({
   const jqBarHeight = useMemo(() => {
     if (!jqState.isActive) return 0;
 
-    // Fixed height to prevent layout changes when error state changes:
+    // JQ Query actual height is 5 lines:
     // - Border: 2 lines (top + bottom)
-    // - Padding: 2 lines (top + bottom)
-    // - Query label: 1 line
-    // - Input field: 1 line
-    // - Status line: 1 line
-    // - Reserved for potential error: 3 lines
-    return 8; // Fixed height regardless of error state
+    // - Query label + Input + Status with padding: 3 lines
+    return 5;
   }, [jqState.isActive]);
 
   // Calculate status bar height dynamically based on content length
@@ -160,12 +156,10 @@ export function useTerminalCalculations({
     // SearchBar uses borderStyle="single" + padding={1}
     // Available width = terminalWidth - 4 (2 borders + 2 padding)
     const availableWidth = Math.max(terminalWidth - 4, 20);
-    const contentLines = Math.ceil(searchContent.length / availableWidth);
+    const _contentLines = Math.ceil(searchContent.length / availableWidth);
 
-    // Total height = contentLines + 2 (borders) + 2 (padding) = contentLines + 4
-    // But Ink optimizes this, so use conservative calculation
-    const calculatedHeight = contentLines + 3;
-    return Math.max(3, calculatedHeight); // Minimum 3 lines
+    // SearchBar actual height is 3 lines (border + padding + content)
+    return 3;
   }, [
     searchState.isSearching,
     searchState.searchTerm,
@@ -211,8 +205,8 @@ export function useTerminalCalculations({
   const currentDataLines = schemaVisible ? schemaLines : jsonLines;
   const maxScroll = Math.max(0, currentDataLines - visibleLines);
 
-  // Simplified search mode calculation
-  const searchModeVisibleLines = visibleLines;
+  // Search mode calculation - account for SearchBar height
+  const searchModeVisibleLines = Math.max(1, visibleLines - searchBarHeight);
   const maxScrollSearchMode = Math.max(
     0,
     currentDataLines - searchModeVisibleLines,

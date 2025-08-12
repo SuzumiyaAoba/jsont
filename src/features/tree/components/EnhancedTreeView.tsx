@@ -26,6 +26,7 @@ import {
   useCallback,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 
@@ -235,7 +236,7 @@ export function EnhancedTreeView({
 
       return false;
     },
-    [filteredLines, selectedLineIndex, contentHeight],
+    [filteredLines, contentHeight, selectedLineIndex],
   );
 
   // Register keyboard handler with parent
@@ -245,11 +246,18 @@ export function EnhancedTreeView({
     }
   }, [onKeyboardHandlerReady, handleKeyboardInput]);
 
+  // Use ref to get current scroll offset without causing dependency issues
+  const currentScrollOffsetRef = useRef(currentScrollOffset);
+  currentScrollOffsetRef.current = currentScrollOffset;
+
   // Auto-scroll to keep selected line visible
   useEffect(() => {
     const viewportStart = Math.max(
       0,
-      Math.min(currentScrollOffset, filteredLines.length - contentHeight),
+      Math.min(
+        currentScrollOffsetRef.current,
+        filteredLines.length - contentHeight,
+      ),
     );
     const viewportEnd = Math.min(
       filteredLines.length,
@@ -263,12 +271,7 @@ export function EnhancedTreeView({
         Math.max(0, selectedLineIndex - contentHeight + 1),
       );
     }
-  }, [
-    selectedLineIndex,
-    currentScrollOffset,
-    contentHeight,
-    filteredLines.length,
-  ]);
+  }, [selectedLineIndex, contentHeight, filteredLines.length]);
 
   return (
     <Box flexDirection="column" width={width} height={height}>

@@ -14,7 +14,7 @@ import { SchemaViewer } from "@features/schema/components/SchemaViewer";
 import { EnhancedTreeView } from "@features/tree/components/EnhancedTreeView";
 import { Box } from "ink";
 import type { ReactElement, RefObject } from "react";
-import { useCallback } from "react";
+import { useCallback, useMemo } from "react";
 
 interface ContentRouterProps {
   displayData: JsonValue;
@@ -36,6 +36,7 @@ export function ContentRouter({
   const {
     ui,
     searchState,
+    jqState,
     scrollOffset,
     setScrollOffset,
     exportDialog,
@@ -51,7 +52,8 @@ export function ContentRouter({
     helpVisible,
   } = ui;
 
-  const { visibleLines, searchModeVisibleLines } = terminalCalculations;
+  const { visibleLines, searchModeVisibleLines, jqBarHeight } =
+    terminalCalculations;
 
   // Handle scroll changes for collapsible viewer
   const handleCollapsibleScrollChange = useCallback(
@@ -61,11 +63,29 @@ export function ContentRouter({
     [setScrollOffset],
   );
 
-  // Calculate effective visible lines based on search state
-  const effectiveVisibleLines =
-    searchState.isSearching || searchState.searchTerm
-      ? searchModeVisibleLines
-      : visibleLines;
+  // Calculate effective visible lines based on search state and JQ state
+  const effectiveVisibleLines = useMemo(() => {
+    let lines = visibleLines;
+
+    // Adjust for SearchBar when active
+    if (searchState.isSearching || searchState.searchTerm) {
+      lines = searchModeVisibleLines;
+    }
+
+    // Additional adjustment for JQ Query when active
+    if (jqState.isActive) {
+      lines = Math.max(1, lines - jqBarHeight);
+    }
+
+    return lines;
+  }, [
+    visibleLines,
+    searchModeVisibleLines,
+    searchState.isSearching,
+    searchState.searchTerm,
+    jqState.isActive,
+    jqBarHeight,
+  ]);
 
   // Don't show content when help is visible (it's handled by ModalManager)
   if (helpVisible) {
