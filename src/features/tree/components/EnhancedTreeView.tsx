@@ -88,6 +88,10 @@ export function EnhancedTreeView({
   const [showLineNumbers, setShowLineNumbers] = useState(false);
   const [currentScrollOffset, setCurrentScrollOffset] = useState(scrollOffset);
 
+  // Refs to avoid dependency issues
+  const selectedLineIndexRef = useRef(selectedLineIndex);
+  selectedLineIndexRef.current = selectedLineIndex;
+
   // Update tree when data changes
   useEffect(() => {
     const newTreeState = buildTreeFromJson(data, { expandLevel: 2 });
@@ -209,7 +213,7 @@ export function EnhancedTreeView({
 
       // Node expansion/collapse
       if (key.return || input === " ") {
-        const selectedLine = filteredLines[selectedLineIndex];
+        const selectedLine = filteredLines[selectedLineIndexRef.current];
         if (selectedLine?.hasChildren) {
           setTreeState((prev) => toggleNodeExpansion(prev, selectedLine.id));
         }
@@ -236,15 +240,18 @@ export function EnhancedTreeView({
 
       return false;
     },
-    [filteredLines, contentHeight, selectedLineIndex],
+    [filteredLines, contentHeight],
   );
 
-  // Register keyboard handler with parent
+  // Register keyboard handler with parent - only once on mount
+  // biome-ignore lint/correctness/useExhaustiveDependencies: Intentional omission to prevent infinite loop
   useEffect(() => {
     if (onKeyboardHandlerReady) {
       onKeyboardHandlerReady(handleKeyboardInput);
     }
-  }, [onKeyboardHandlerReady, handleKeyboardInput]);
+    // Intentionally omitting handleKeyboardInput to prevent infinite re-registration
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [onKeyboardHandlerReady]);
 
   // Use ref to get current scroll offset without causing dependency issues
   const currentScrollOffsetRef = useRef(currentScrollOffset);
