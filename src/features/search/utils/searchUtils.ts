@@ -21,6 +21,7 @@ export function searchInJson(
   data: JsonValue,
   searchTerm: string,
   searchScope: SearchScope = "all",
+  isRegexMode = false,
 ): SearchResult[] {
   if (!data || !searchTerm.trim()) {
     return [];
@@ -29,10 +30,10 @@ export function searchInJson(
   const jsonString = JSON.stringify(data, null, 2);
 
   if (searchScope === "all") {
-    return searchInText(jsonString, searchTerm);
+    return searchInText(jsonString, searchTerm, isRegexMode);
   }
 
-  return searchInJsonWithScope(data, searchTerm, searchScope);
+  return searchInJsonWithScope(data, searchTerm, searchScope, isRegexMode);
 }
 
 /**
@@ -54,6 +55,7 @@ export function searchInJsonWithScope(
   data: JsonValue,
   searchTerm: string,
   searchScope: "keys" | "values",
+  isRegexMode = false,
 ): SearchResult[] {
   if (!data || !searchTerm.trim()) {
     return [];
@@ -114,6 +116,7 @@ export function searchInJsonWithScope(
         lineIndex,
         0,
         fullLine,
+        isRegexMode,
       );
       results.push(...keyMatches);
     } else if (searchScope === "values") {
@@ -124,6 +127,7 @@ export function searchInJsonWithScope(
         lineIndex,
         colonIndex + 1,
         fullLine,
+        isRegexMode,
       );
       results.push(...valueMatches);
     }
@@ -144,6 +148,7 @@ export function searchInJsonSchema(
   data: JsonValue,
   searchTerm: string,
   searchScope: SearchScope = "all",
+  isRegexMode = false,
 ): SearchResult[] {
   if (!data || !searchTerm.trim()) {
     return [];
@@ -154,12 +159,17 @@ export function searchInJsonSchema(
     const schemaString = formatJsonSchema(schema);
 
     if (searchScope === "all") {
-      return searchInText(schemaString, searchTerm);
+      return searchInText(schemaString, searchTerm, isRegexMode);
     }
 
     // For schema search with scope, parse the formatted schema as JSON
     const parsedSchema = JSON.parse(schemaString);
-    return searchInJsonWithScope(parsedSchema, searchTerm, searchScope);
+    return searchInJsonWithScope(
+      parsedSchema,
+      searchTerm,
+      searchScope,
+      isRegexMode,
+    );
   } catch (error) {
     // If schema generation fails, return empty results
     console.warn("Failed to generate schema for search:", error);
@@ -174,34 +184,28 @@ export function searchInJsonSchema(
  * @param searchTerm - Term to search for (case-insensitive)
  * @returns Array of search results with line and column information
  */
-export function searchInText(text: string, searchTerm: string): SearchResult[] {
+export function searchInText(
+  text: string,
+  searchTerm: string,
+  isRegexMode = false,
+): SearchResult[] {
   if (!text || !searchTerm.trim()) {
     return [];
   }
 
   const results: SearchResult[] = [];
   const lines = text.split("\n");
-  const searchTermLower = searchTerm.toLowerCase();
 
   lines.forEach((line, lineIndex) => {
-    const lineLower = line.toLowerCase();
-    let startIndex = 0;
-
-    // Find all occurrences in this line
-    while (true) {
-      const foundIndex = lineLower.indexOf(searchTermLower, startIndex);
-      if (foundIndex === -1) break;
-
-      results.push({
-        lineIndex,
-        columnStart: foundIndex,
-        columnEnd: foundIndex + searchTerm.length,
-        matchText: line.substring(foundIndex, foundIndex + searchTerm.length),
-        contextLine: line,
-      });
-
-      startIndex = foundIndex + 1;
-    }
+    const matches = findMatchesInText(
+      line,
+      searchTerm,
+      lineIndex,
+      0,
+      line,
+      isRegexMode,
+    );
+    results.push(...matches);
   });
 
   return results;
@@ -221,41 +225,102 @@ export function lineContainsSearch(line: string, searchTerm: string): boolean {
 export function highlightSearchInLine(
   line: string,
   searchTerm: string,
+  isRegexMode = false,
 ): Array<{ text: string; isMatch: boolean }> {
   if (!searchTerm.trim()) {
     return [{ text: line, isMatch: false }];
   }
 
   const parts: Array<{ text: string; isMatch: boolean }> = [];
-  const lineLower = line.toLowerCase();
-  const searchTermLower = searchTerm.toLowerCase();
-  let lastIndex = 0;
 
-  while (true) {
-    const foundIndex = lineLower.indexOf(searchTermLower, lastIndex);
-    if (foundIndex === -1) {
+  if (isRegexMode) {
+    try {
+      const regex = new RegExp(searchTerm, "gi");
+      let lastIndex = 0;
+      let match = regex.exec(line);
+      let matchCount = 0;
+      const maxMatches = 100; // Reasonable limit for highlighting in a single line
+      const startTime = Date.now();
+      const maxTime = 200; // Maximum 200ms for line highlighting
+
+      while (match !== null && matchCount < maxMatches) {
+        // Check for timeout to prevent ReDoS attacks - using a generous timeout
+        if (Date.now() - startTime > maxTime) {
+          console.warn(
+            "Regex highlighting timed out, falling back to literal search",
+          );
+          return highlightSearchInLine(line, searchTerm, false);
+        }
+
+        // Add text before match
+        if (match.index > lastIndex) {
+          parts.push({
+            text: line.substring(lastIndex, match.index),
+            isMatch: false,
+          });
+        }
+
+        // Add match
+        parts.push({
+          text: match[0],
+          isMatch: true,
+        });
+
+        lastIndex = match.index + match[0].length;
+        matchCount++;
+
+        // Prevent infinite loop for zero-length matches
+        if (match[0].length === 0) {
+          regex.lastIndex++;
+        }
+
+        match = regex.exec(line);
+      }
+
       // Add remaining text
       if (lastIndex < line.length) {
         parts.push({ text: line.substring(lastIndex), isMatch: false });
       }
-      break;
-    }
 
-    // Add text before match
-    if (foundIndex > lastIndex) {
+      // If no matches found, return the whole line as non-match
+      if (parts.length === 0) {
+        parts.push({ text: line, isMatch: false });
+      }
+    } catch (_error) {
+      // Invalid regex - fall back to literal string search
+      return highlightSearchInLine(line, searchTerm, false);
+    }
+  } else {
+    const lineLower = line.toLowerCase();
+    const searchTermLower = searchTerm.toLowerCase();
+    let lastIndex = 0;
+
+    while (true) {
+      const foundIndex = lineLower.indexOf(searchTermLower, lastIndex);
+      if (foundIndex === -1) {
+        // Add remaining text
+        if (lastIndex < line.length) {
+          parts.push({ text: line.substring(lastIndex), isMatch: false });
+        }
+        break;
+      }
+
+      // Add text before match
+      if (foundIndex > lastIndex) {
+        parts.push({
+          text: line.substring(lastIndex, foundIndex),
+          isMatch: false,
+        });
+      }
+
+      // Add match
       parts.push({
-        text: line.substring(lastIndex, foundIndex),
-        isMatch: false,
+        text: line.substring(foundIndex, foundIndex + searchTerm.length),
+        isMatch: true,
       });
+
+      lastIndex = foundIndex + searchTerm.length;
     }
-
-    // Add match
-    parts.push({
-      text: line.substring(foundIndex, foundIndex + searchTerm.length),
-      isMatch: true,
-    });
-
-    lastIndex = foundIndex + searchTerm.length;
   }
 
   return parts;
@@ -276,16 +341,9 @@ export function getSearchNavigationInfo(
 }
 
 /**
- * Find all matches of a search term in a text segment
- *
- * @param text - Text to search in
- * @param searchTerm - Term to search for
- * @param lineIndex - Line number for the results
- * @param columnOffset - Column offset to add to match positions
- * @param contextLine - Full line context for search results
- * @returns Array of search results
+ * Helper function for literal string search in text
  */
-function findMatchesInText(
+function findLiteralMatches(
   text: string,
   searchTerm: string,
   lineIndex: number,
@@ -316,6 +374,92 @@ function findMatchesInText(
 }
 
 /**
+ * Find all matches of a search term in a text segment
+ *
+ * @param text - Text to search in
+ * @param searchTerm - Term to search for
+ * @param lineIndex - Line number for the results
+ * @param columnOffset - Column offset to add to match positions
+ * @param contextLine - Full line context for search results
+ * @returns Array of search results
+ */
+function findMatchesInText(
+  text: string,
+  searchTerm: string,
+  lineIndex: number,
+  columnOffset: number,
+  contextLine: string,
+  isRegexMode = false,
+): SearchResult[] {
+  if (!isRegexMode) {
+    return findLiteralMatches(
+      text,
+      searchTerm,
+      lineIndex,
+      columnOffset,
+      contextLine,
+    );
+  }
+
+  const results: SearchResult[] = [];
+
+  try {
+    const regex = new RegExp(searchTerm, "gi");
+    let match = regex.exec(text);
+    let matchCount = 0;
+    const maxMatches = 1000; // Prevent excessive matches that could slow down UI
+    const startTime = Date.now();
+    const maxTime = 100; // Maximum 100ms per regex operation
+
+    while (match !== null && matchCount < maxMatches) {
+      // Check for timeout to prevent ReDoS attacks
+      if (Date.now() - startTime > maxTime) {
+        console.warn("Regex search timed out, falling back to literal search");
+        return findLiteralMatches(
+          text,
+          searchTerm,
+          lineIndex,
+          columnOffset,
+          contextLine,
+        );
+      }
+
+      results.push({
+        lineIndex,
+        columnStart: match.index + columnOffset,
+        columnEnd: match.index + match[0].length + columnOffset,
+        matchText: match[0],
+        contextLine,
+      });
+
+      matchCount++;
+
+      // Prevent infinite loop for zero-length matches
+      if (match[0].length === 0) {
+        regex.lastIndex++;
+      }
+
+      match = regex.exec(text);
+    }
+
+    if (matchCount >= maxMatches) {
+      console.warn("Maximum matches reached, some results may be truncated");
+    }
+  } catch (_error) {
+    // Invalid regex - fall back to literal string search
+    return findLiteralMatches(
+      text,
+      searchTerm,
+      lineIndex,
+      columnOffset,
+      contextLine,
+    );
+  }
+
+  return results;
+}
+
+/**
  * Get display name for search scope
  */
 export function getSearchScopeDisplayName(scope: SearchScope): string {
@@ -329,6 +473,14 @@ export function getSearchScopeDisplayName(scope: SearchScope): string {
     default:
       return "All";
   }
+}
+
+export function toggleRegexMode(currentMode: boolean): boolean {
+  return !currentMode;
+}
+
+export function getRegexModeDisplayName(isRegexMode: boolean): string {
+  return isRegexMode ? ".*" : "Aa";
 }
 
 /**

@@ -51,6 +51,7 @@ export function KeyboardManager({
     startSearch,
     cancelSearch,
     cycleScope,
+    toggleRegexMode,
     nextSearchResult,
     previousSearchResult,
     jqState,
@@ -167,6 +168,7 @@ export function KeyboardManager({
     startSearch,
     cancelSearch,
     cycleScope,
+    toggleRegexMode,
     nextSearchResult,
     previousSearchResult,
 

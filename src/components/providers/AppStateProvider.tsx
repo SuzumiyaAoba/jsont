@@ -46,6 +46,7 @@ import {
   useSearchInput,
   useSearchState,
   useStartSearch,
+  useToggleRegexMode,
 } from "@store/hooks/useSearch";
 import {
   useToggleCollapsible,
@@ -73,6 +74,7 @@ interface AppStateContextValue {
   startSearch: ReturnType<typeof useStartSearch>;
   cancelSearch: ReturnType<typeof useCancelSearch>;
   cycleScope: ReturnType<typeof useCycleScope>;
+  toggleRegexMode: ReturnType<typeof useToggleRegexMode>;
   nextSearchResult: ReturnType<typeof useNextSearchResult>;
   previousSearchResult: ReturnType<typeof usePreviousSearchResult>;
 
@@ -164,6 +166,7 @@ export function AppStateProvider({
   const startSearch = useStartSearch();
   const cancelSearch = useCancelSearch();
   const cycleScope = useCycleScope();
+  const toggleRegexMode = useToggleRegexMode();
   const nextSearchResult = useNextSearchResult();
   const previousSearchResult = usePreviousSearchResult();
 
@@ -245,6 +248,7 @@ export function AppStateProvider({
       startSearch,
       cancelSearch,
       cycleScope,
+      toggleRegexMode,
       nextSearchResult,
       previousSearchResult,
 
@@ -313,6 +317,7 @@ export function AppStateProvider({
       startSearch,
       cancelSearch,
       cycleScope,
+      toggleRegexMode,
       nextSearchResult,
       previousSearchResult,
       scrollOffset,

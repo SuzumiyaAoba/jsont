@@ -12,6 +12,7 @@ export interface BaseViewerProps {
   currentSearchIndex?: number;
   visibleLines?: number;
   showLineNumbers?: boolean;
+  isRegexMode?: boolean;
 }
 
 /**
@@ -93,5 +94,7 @@ export interface Highlighter {
     tokens: HighlightToken[],
     searchTerm: string,
     isCurrentResult?: boolean,
+    isRegexMode?: boolean,
+    currentResultPosition?: { columnStart: number; columnEnd: number } | null,
   ) => HighlightToken[];
 }

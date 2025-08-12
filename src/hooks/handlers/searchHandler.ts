@@ -18,6 +18,7 @@ export interface SearchHandlerDependencies {
   startSearch: (term: string) => void;
   cancelSearch: () => void;
   cycleScope: () => void;
+  toggleRegexMode: () => void;
   resetScroll: () => void;
   keybindings: IKeybindingMatcher;
   updateDebugInfoCallback: (action: string, input: string) => void;
@@ -42,6 +43,7 @@ export function useSearchHandler(deps: SearchHandlerDependencies) {
     startSearch,
     cancelSearch,
     cycleScope,
+    toggleRegexMode,
     resetScroll,
     keybindings,
     updateDebugInfoCallback,
@@ -69,6 +71,11 @@ export function useSearchHandler(deps: SearchHandlerDependencies) {
         // Toggle search scope
         updateDebugInfoCallback("Toggle search scope", input);
         cycleScope();
+        return true;
+      } else if (key.ctrl && input === "r") {
+        // Toggle regex mode
+        updateDebugInfoCallback("Toggle regex mode", input);
+        toggleRegexMode();
         return true;
       } else if (
         handleTextInput(
@@ -99,6 +106,7 @@ export function useSearchHandler(deps: SearchHandlerDependencies) {
       keybindings,
       cancelSearch,
       cycleScope,
+      toggleRegexMode,
       handleTextInput,
       setSearchInput,
       setSearchCursorPosition,

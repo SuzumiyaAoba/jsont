@@ -75,23 +75,26 @@ export function useSearchHandlers({
             initialData as JsonValue,
             searchState.searchTerm,
             searchState.searchScope,
+            searchState.isRegexMode,
           )
         : searchInJson(
             initialData as JsonValue,
             searchState.searchTerm,
             searchState.searchScope,
+            searchState.isRegexMode,
           );
 
-      updateSearchResults(results);
+      updateSearchResults({ results });
 
       // Reset scroll to top after search
       resetScroll();
     } else {
-      updateSearchResults([]);
+      updateSearchResults({ results: [] });
     }
   }, [
     searchState.searchTerm,
     searchState.searchScope,
+    searchState.isRegexMode,
     initialData,
     schemaVisible,
     updateSearchResults,

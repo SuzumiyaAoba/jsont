@@ -25,6 +25,7 @@ describe("search types", () => {
         searchResults: [],
         currentResultIndex: 0,
         searchScope: "all",
+        isRegexMode: false,
       };
 
       expect(searchState.isSearching).toBe(false);
@@ -42,6 +43,7 @@ describe("search types", () => {
           searchResults: [],
           currentResultIndex: 0,
           searchScope: "all",
+          isRegexMode: false,
         },
         {
           isSearching: false,
@@ -49,6 +51,7 @@ describe("search types", () => {
           searchResults: [],
           currentResultIndex: 0,
           searchScope: "keys",
+          isRegexMode: false,
         },
         {
           isSearching: false,
@@ -56,6 +59,7 @@ describe("search types", () => {
           searchResults: [],
           currentResultIndex: 0,
           searchScope: "values",
+          isRegexMode: false,
         },
       ];
 

@@ -158,6 +158,7 @@ const createMockSearchState = (overrides = {}) => ({
   results: [],
   searchResults: [],
   currentResultIndex: 0,
+  isRegexMode: false,
   ...overrides,
 });
 
