@@ -219,7 +219,6 @@ export function AppStateProvider({
   const terminalCalculations = useTerminalCalculations({
     keyboardEnabled,
     error: initialError,
-    searchInput: searchInput,
     initialData,
     collapsibleMode: ui.collapsibleMode,
   });

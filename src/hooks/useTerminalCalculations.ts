@@ -21,7 +21,6 @@ import { useEffect, useMemo, useState } from "react";
 interface UseTerminalCalculationsProps {
   keyboardEnabled: boolean;
   error: string | null;
-  searchInput: string;
   initialData: unknown;
   collapsibleMode: boolean;
 }
@@ -29,7 +28,6 @@ interface UseTerminalCalculationsProps {
 export function useTerminalCalculations({
   keyboardEnabled,
   error,
-  searchInput,
   initialData,
   collapsibleMode,
 }: UseTerminalCalculationsProps) {
@@ -140,34 +138,11 @@ export function useTerminalCalculations({
   const searchBarHeight = useMemo(() => {
     if (!searchState.isSearching && !searchState.searchTerm) return 0;
 
-    const terminalWidth = terminalSize.width;
-    let searchContent = "";
-
-    if (searchState.isSearching) {
-      searchContent = `Search: ${searchInput} (Enter: confirm, Esc: cancel)`;
-    } else {
-      const navigationInfo =
-        searchState.searchResults.length > 0
-          ? `${searchState.currentResultIndex + 1}/${searchState.searchResults.length}`
-          : "0/0";
-      searchContent = `Search: ${searchState.searchTerm} (${navigationInfo}) n: next, N: prev, s: new search`;
-    }
-
-    // SearchBar uses borderStyle="single" + padding={1}
-    // Available width = terminalWidth - 4 (2 borders + 2 padding)
-    const availableWidth = Math.max(terminalWidth - 4, 20);
-    const _contentLines = Math.ceil(searchContent.length / availableWidth);
+    // SearchBar uses a fixed height regardless of content
 
     // SearchBar actual height is 3 lines (border + padding + content)
     return 3;
-  }, [
-    searchState.isSearching,
-    searchState.searchTerm,
-    searchInput,
-    searchState.searchResults.length,
-    searchState.currentResultIndex,
-    terminalSize.width,
-  ]);
+  }, [searchState.isSearching, searchState.searchTerm]);
 
   // Conservative calculation to ensure first line is always visible
   const terminalHeight = terminalSize.height;

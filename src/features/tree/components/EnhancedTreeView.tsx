@@ -88,7 +88,7 @@ export function EnhancedTreeView({
   const [showLineNumbers, setShowLineNumbers] = useState(false);
   const [currentScrollOffset, setCurrentScrollOffset] = useState(scrollOffset);
 
-  // Refs to avoid dependency issues
+  // Use ref to access current selectedLineIndex without causing dependency issues
   const selectedLineIndexRef = useRef(selectedLineIndex);
   selectedLineIndexRef.current = selectedLineIndex;
 
@@ -243,28 +243,18 @@ export function EnhancedTreeView({
     [filteredLines, contentHeight],
   );
 
-  // Register keyboard handler with parent - only once on mount
-  // biome-ignore lint/correctness/useExhaustiveDependencies: Intentional omission to prevent infinite loop
+  // Register keyboard handler with parent when it changes
   useEffect(() => {
     if (onKeyboardHandlerReady) {
       onKeyboardHandlerReady(handleKeyboardInput);
     }
-    // Intentionally omitting handleKeyboardInput to prevent infinite re-registration
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [onKeyboardHandlerReady]);
-
-  // Use ref to get current scroll offset without causing dependency issues
-  const currentScrollOffsetRef = useRef(currentScrollOffset);
-  currentScrollOffsetRef.current = currentScrollOffset;
+  }, [onKeyboardHandlerReady, handleKeyboardInput]);
 
   // Auto-scroll to keep selected line visible
   useEffect(() => {
     const viewportStart = Math.max(
       0,
-      Math.min(
-        currentScrollOffsetRef.current,
-        filteredLines.length - contentHeight,
-      ),
+      Math.min(currentScrollOffset, filteredLines.length - contentHeight),
     );
     const viewportEnd = Math.min(
       filteredLines.length,
@@ -278,7 +268,12 @@ export function EnhancedTreeView({
         Math.max(0, selectedLineIndex - contentHeight + 1),
       );
     }
-  }, [selectedLineIndex, contentHeight, filteredLines.length]);
+  }, [
+    selectedLineIndex,
+    contentHeight,
+    filteredLines.length,
+    currentScrollOffset,
+  ]);
 
   return (
     <Box flexDirection="column" width={width} height={height}>
