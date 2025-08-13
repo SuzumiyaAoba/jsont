@@ -483,20 +483,6 @@ npm run type-check    # TypeScript type checking
 - **Feature Request**: Provide specific use cases and expected benefits
 - **Performance Issue**: Include file size, processing time, and system specifications
 
-## 📊 Roadmap
-
-### 🎯 Coming Soon
-- [ ] **Plugin System**: Custom filters and exporters
-- [ ] **Theme System**: Custom color scheme support
-- [ ] **API Mode**: Use as RESTful API
-- [ ] **Web Interface**: Browser-based GUI
-
-### 🔮 Future Vision
-- [ ] **Real-time Collaboration**: Multi-user data exploration
-- [ ] **AI Assistant**: Natural language query generation
-- [ ] **Database Integration**: Direct DB connection and query execution
-- [ ] **Visualization Features**: Graph and chart generation
-
 ## 📄 License
 
 **MIT License** - See [LICENSE](LICENSE) file for details
