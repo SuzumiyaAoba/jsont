@@ -105,14 +105,13 @@ export function useTerminalCalculations({
     terminalSize.width,
   ]);
 
+  // JQ bar height constant
+  const JQ_BAR_TOTAL_LINES = 5; // 2 border + 3 content lines
+
   // Calculate JQ input bar height when active (fixed height to prevent layout shifts)
   const jqBarHeight = useMemo(() => {
     if (!jqState.isActive) return 0;
-
-    // JQ Query actual height is 5 lines:
-    // - Border: 2 lines (top + bottom)
-    // - Query label + Input + Status with padding: 3 lines
-    return 5;
+    return JQ_BAR_TOTAL_LINES;
   }, [jqState.isActive]);
 
   // Calculate status bar height dynamically based on content length

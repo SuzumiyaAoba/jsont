@@ -70,7 +70,7 @@ export function ModalManager({
       {/* Debug Log Viewer - fullscreen modal overlay - highest priority */}
       {debugLogViewerVisible && (
         <DebugLogViewer
-          height={terminalSize.height - 1}
+          height={Math.max(1, terminalSize.height - 1)}
           width={terminalSize.width}
           onExit={() => setDebugLogViewerVisible(false)}
         />

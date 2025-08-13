@@ -14,7 +14,7 @@ import { SchemaViewer } from "@features/schema/components/SchemaViewer";
 import { EnhancedTreeView } from "@features/tree/components/EnhancedTreeView";
 import { Box } from "ink";
 import type { ReactElement, RefObject } from "react";
-import { useCallback, useMemo } from "react";
+import { useCallback } from "react";
 
 interface ContentRouterProps {
   displayData: JsonValue;
@@ -36,7 +36,6 @@ export function ContentRouter({
   const {
     ui,
     searchState,
-    jqState,
     scrollOffset,
     setScrollOffset,
     exportDialog,
@@ -52,8 +51,7 @@ export function ContentRouter({
     helpVisible,
   } = ui;
 
-  const { visibleLines, searchModeVisibleLines, jqBarHeight } =
-    terminalCalculations;
+  const { visibleLines } = terminalCalculations;
 
   // Handle scroll changes for collapsible viewer
   const handleCollapsibleScrollChange = useCallback(
@@ -63,29 +61,7 @@ export function ContentRouter({
     [setScrollOffset],
   );
 
-  // Calculate effective visible lines based on search state and JQ state
-  const effectiveVisibleLines = useMemo(() => {
-    let lines = visibleLines;
-
-    // Adjust for SearchBar when active
-    if (searchState.isSearching || searchState.searchTerm) {
-      lines = searchModeVisibleLines;
-    }
-
-    // Additional adjustment for JQ Query when active
-    if (jqState.isActive) {
-      lines = Math.max(1, lines - jqBarHeight);
-    }
-
-    return lines;
-  }, [
-    visibleLines,
-    searchModeVisibleLines,
-    searchState.isSearching,
-    searchState.searchTerm,
-    jqState.isActive,
-    jqBarHeight,
-  ]);
+  // Use visibleLines directly from terminalCalculations (already accounts for all UI states)
 
   // Don't show content when help is visible (it's handled by ModalManager)
   if (helpVisible) {
@@ -99,7 +75,7 @@ export function ContentRouter({
         {treeViewMode ? (
           <EnhancedTreeView
             data={displayData as JsonValue | null}
-            height={effectiveVisibleLines}
+            height={visibleLines}
             scrollOffset={scrollOffset}
             searchTerm={searchState.searchTerm}
             options={{
@@ -118,7 +94,7 @@ export function ContentRouter({
             searchTerm={searchState.searchTerm}
             searchResults={searchState.searchResults}
             currentSearchIndex={searchState.currentResultIndex}
-            visibleLines={effectiveVisibleLines}
+            visibleLines={visibleLines}
             showLineNumbers={lineNumbersVisible}
             onScrollChange={handleCollapsibleScrollChange}
           />
@@ -129,7 +105,7 @@ export function ContentRouter({
             searchTerm={searchState.searchTerm}
             searchResults={searchState.searchResults}
             currentSearchIndex={searchState.currentResultIndex}
-            visibleLines={effectiveVisibleLines}
+            visibleLines={visibleLines}
             showLineNumbers={lineNumbersVisible}
           />
         ) : (
@@ -139,7 +115,7 @@ export function ContentRouter({
             searchTerm={searchState.searchTerm}
             searchResults={searchState.searchResults}
             currentSearchIndex={searchState.currentResultIndex}
-            visibleLines={effectiveVisibleLines}
+            visibleLines={visibleLines}
             showLineNumbers={lineNumbersVisible}
           />
         )}
