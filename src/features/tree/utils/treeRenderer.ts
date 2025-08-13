@@ -209,6 +209,15 @@ export function getTreeLineText(
     }
   }
 
+  // Add collapsed indicators for objects and arrays that have children but are not expanded
+  if (line.hasChildren && !line.isExpanded) {
+    if (line.type === "object") {
+      displayText += " {...}";
+    } else if (line.type === "array") {
+      displayText += " [...]";
+    }
+  }
+
   // Add schema type if enabled
   if (options?.showSchemaTypes && line.schemaType) {
     displayText += ` <${line.schemaType}>`;
