@@ -26,35 +26,58 @@
   },
   "keywords": [
     "json",
+    "json-viewer",
     "tui",
     "terminal",
     "cli",
-    "viewer",
+    "interactive",
     "jq",
     "jsonata",
-    "schema",
-    "interactive",
+    "json-schema",
     "tree-view",
     "search",
+    "regex",
     "export",
     "xml",
     "sql",
     "csv",
     "yaml",
+    "react",
+    "ink",
+    "typescript",
+    "performance",
+    "virtualization",
     "configuration",
     "settings",
     "debug",
     "navigation",
     "collapsible",
-    "syntax-highlighting"
+    "syntax-highlighting",
+    "data-analysis",
+    "api-development",
+    "devops",
+    "json5",
+    "streaming",
+    "large-files"
   ],
-  "author": "",
+  "author": {
+    "name": "SuzumiyaAoba",
+    "url": "https://github.com/SuzumiyaAoba"
+  },
   "license": "MIT",
-  "description": "Interactive terminal JSON viewer with tree display, search, jq/JSONata queries, schema generation, and multi-format export (JSON/YAML/CSV/XML/SQL)",
+  "description": "高性能ターミナルJSONビューワー - インタラクティブなデータ探索、jq/JSONataクエリ、正規表現検索、スキーマ生成、多形式エクスポート対応 (JSON/YAML/CSV/XML/SQL)",
   "engines": {
     "node": ">=18.0.0",
     "npm": ">=8.0.0"
   },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/SuzumiyaAoba/jsont.git"
+  },
+  "bugs": {
+    "url": "https://github.com/SuzumiyaAoba/jsont/issues"
+  },
+  "homepage": "https://github.com/SuzumiyaAoba/jsont#readme",
   "dependencies": {
     "@types/react": "^19.1.9",
     "defu": "^6.1.4",
