@@ -88,9 +88,13 @@ export function EnhancedTreeView({
   const [showLineNumbers, setShowLineNumbers] = useState(false);
   const [currentScrollOffset, setCurrentScrollOffset] = useState(scrollOffset);
 
-  // Use ref to access current selectedLineIndex without causing dependency issues
+  // Use refs to access current values without causing dependency issues
   const selectedLineIndexRef = useRef(selectedLineIndex);
   selectedLineIndexRef.current = selectedLineIndex;
+
+  const handleKeyboardInputRef = useRef<
+    ((input: string, key: KeyboardInput) => boolean) | undefined
+  >(undefined);
 
   // Update tree when data changes
   useEffect(() => {
@@ -173,7 +177,7 @@ export function EnhancedTreeView({
     };
   }, [filteredLines.length, currentScrollOffset, contentHeight]);
 
-  // Handle keyboard input
+  // Handle keyboard input - store in ref to avoid dependency issues
   const handleKeyboardInput = useCallback(
     (input: string, key: KeyboardInput): boolean => {
       // Navigation
@@ -243,12 +247,18 @@ export function EnhancedTreeView({
     [filteredLines, contentHeight],
   );
 
-  // Register keyboard handler with parent when it changes
+  // Store handler in ref for stable reference
+  handleKeyboardInputRef.current = handleKeyboardInput;
+
+  // Register keyboard handler with parent - use wrapper to avoid dependency issues
   useEffect(() => {
     if (onKeyboardHandlerReady) {
-      onKeyboardHandlerReady(handleKeyboardInput);
+      const stableHandler = (input: string, key: KeyboardInput): boolean => {
+        return handleKeyboardInputRef.current?.(input, key) ?? false;
+      };
+      onKeyboardHandlerReady(stableHandler);
     }
-  }, [onKeyboardHandlerReady, handleKeyboardInput]);
+  }, [onKeyboardHandlerReady]);
 
   // Auto-scroll to keep selected line visible
   useEffect(() => {
