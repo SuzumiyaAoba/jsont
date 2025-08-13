@@ -1,16 +1,16 @@
-# 機能駆動開発実装タスク（Feature-Driven Development）
+# Feature-Driven Development Implementation Tasks
 
-## 概要
+## Overview
 
-従来のコンポーネント単位ではなく、**機能（Feature）単位**での開発アプローチに変更。各機能は独立して動作し、段階的に価値を提供する形で実装します。
+Changed from traditional component-based development to **Feature-based** development approach. Each feature operates independently and provides incremental value during implementation.
 
-## 開発哲学
+## Development Philosophy
 
 ### Core Principles
-1. **Working Software First**: 動く機能を最優先
-2. **Incremental Value**: 各イテレーションで価値を提供
-3. **User-Centric**: ユーザー体験を中心とした機能設計
-4. **Testable Features**: 各機能は独立してテスト可能
+1. **Working Software First**: Prioritize functioning features
+2. **Incremental Value**: Provide value in each iteration
+3. **User-Centric**: Feature design centered on user experience
+4. **Testable Features**: Each feature is independently testable
 
 ### Development Flow
 ```
@@ -21,13 +21,13 @@ Simplest Working Feature → Add Enhancement → Add Enhancement → ...
 
 ---
 
-## Phase 1: MVP Features（最小限の価値ある機能）
+## Phase 1: MVP Features (Minimum Viable Features)
 
 ### F1: Basic JSON Display
-**目標**: JSONファイルを読み込んで基本的な表示を行う  
-**価値**: ユーザーがJSONを見やすい形で確認できる  
-**推定**: ~400行（実装+テスト）  
-**期間**: 2-3日
+**Goal**: Read and display JSON files with basic formatting  
+**Value**: Users can view JSON in a readable format  
+**Estimate**: ~400 lines (implementation + tests)  
+**Duration**: 2-3 days
 
 #### User Story
 ```
@@ -37,11 +37,11 @@ So that I can view it in a readable format
 ```
 
 #### Acceptance Criteria
-- [x] stdin からJSON読み込み可能
-- [x] 基本的なJSON構造表示（key-value, arrays, objects）
-- [x] シンプルな色分け表示
-- [x] エラー時の適切なメッセージ表示
-- [x] 基本的なスクロール機能
+- [x] JSON reading from stdin
+- [x] Basic JSON structure display (key-value, arrays, objects)
+- [x] Simple color-coded display
+- [x] Appropriate error messages
+- [x] Basic scrolling functionality
 
 #### Technical Implementation
 ```typescript
@@ -69,20 +69,20 @@ describe('F1: Basic JSON Display', () => {
 ```
 
 #### Done Definition
-- [ ] Can process JSON from stdin
-- [ ] Displays formatted output in terminal
-- [ ] Handles basic JSON types (string, number, boolean, null, array, object)
-- [ ] Shows appropriate error messages for invalid JSON
-- [ ] All tests pass (>90% coverage)
-- [ ] Performance: <100ms for 1MB JSON files
+- [x] Can process JSON from stdin
+- [x] Displays formatted output in terminal
+- [x] Handles basic JSON types (string, number, boolean, null, array, object)
+- [x] Shows appropriate error messages for invalid JSON
+- [x] All tests pass (>90% coverage)
+- [x] Performance: <100ms for 1MB JSON files
 
 ---
 
 ### F2: Simple Navigation
-**目標**: 大きなJSONファイルでもスクロールして閲覧可能  
-**価値**: 大容量データでも快適に操作できる  
-**推定**: ~350行（実装+テスト）  
-**期間**: 2日
+**Goal**: Enable scrolling through large JSON files  
+**Value**: Comfortable operation even with large data  
+**Estimate**: ~350 lines (implementation + tests)  
+**Duration**: 2 days
 
 #### User Story
 ```
@@ -92,11 +92,11 @@ So that I can explore complex data structures efficiently
 ```
 
 #### Acceptance Criteria
-- [ ] 矢印キーでのスクロール
-- [ ] Page Up/Down対応
-- [ ] Home/End キーで先頭/末尾移動
-- [ ] 現在位置のハイライト表示
-- [ ] 大容量データでの滑らかなスクロール
+- [x] Arrow key scrolling
+- [x] Page Up/Down support
+- [x] Home/End key navigation to beginning/end
+- [x] Current position highlighting
+- [x] Smooth scrolling for large data
 
 #### Technical Implementation
 ```typescript
@@ -116,19 +116,19 @@ describe('F2: Simple Navigation', () => {
 ```
 
 #### Done Definition
-- [ ] Smooth scrolling for files up to 10MB
-- [ ] Keyboard navigation works intuitively
-- [ ] Memory usage stays below 200MB for 10MB files
-- [ ] Response time <16ms for scroll actions
-- [ ] All accessibility requirements met
+- [x] Smooth scrolling for files up to 10MB
+- [x] Keyboard navigation works intuitively
+- [x] Memory usage stays below 200MB for 10MB files
+- [x] Response time <16ms for scroll actions
+- [x] All accessibility requirements met
 
 ---
 
 ### F3: Basic Filtering
-**目標**: 簡単なパス指定でJSONデータをフィルタリング  
-**価値**: 必要なデータだけを素早く見つけられる  
-**推定**: ~450行（実装+テスト）  
-**期間**: 3-4日
+**Goal**: Filter JSON data with simple path expressions  
+**Value**: Quickly find necessary data  
+**Estimate**: ~450 lines (implementation + tests)  
+**Duration**: 3-4 days
 
 #### User Story
 ```
@@ -138,11 +138,11 @@ So that I can quickly find relevant information in complex datasets
 ```
 
 #### Acceptance Criteria
-- [ ] `.key` 形式の基本パスフィルタ
-- [ ] `.array[0]` 形式の配列インデックスアクセス
-- [ ] `.object.nested` 形式のネストアクセス
-- [ ] リアルタイムフィルタプレビュー
-- [ ] フィルタ結果のハイライト表示
+- [x] Basic path filtering with `.key` format
+- [x] Array index access with `.array[0]` format
+- [x] Nested access with `.object.nested` format
+- [x] Real-time filter preview
+- [x] Filter result highlighting
 
 #### Technical Implementation
 ```typescript
@@ -163,22 +163,22 @@ describe('F3: Basic Filtering', () => {
 ```
 
 #### Done Definition
-- [ ] Basic path filtering works correctly
-- [ ] Array indexing supported
-- [ ] Nested object access works
-- [ ] Filter results update in real-time (<100ms)
-- [ ] Clear error messages for invalid paths
-- [ ] Filter history maintained
+- [x] Basic path filtering works correctly
+- [x] Array indexing supported
+- [x] Nested object access works
+- [x] Filter results update in real-time (<100ms)
+- [x] Clear error messages for invalid paths
+- [x] Filter history maintained
 
 ---
 
-## Phase 2: Core Features（コア機能の強化）
+## Phase 2: Core Features (Core Feature Enhancement)
 
 ### F4: Enhanced JSON Parsing
-**目標**: JSON5対応、エラー回復、大容量ファイル対応  
-**価値**: より柔軟なデータ形式に対応し、エラー時も使いやすい  
-**推定**: ~500行（実装+テスト）  
-**期間**: 3-4日
+**Goal**: JSON5 support, error recovery, large file support  
+**Value**: More flexible data format support, usable even with errors  
+**Estimate**: ~500 lines (implementation + tests)  
+**Duration**: 3-4 days
 
 #### User Story
 ```
@@ -197,10 +197,10 @@ So that I can work with data from different sources without preprocessing
 ---
 
 ### F5: Interactive Navigation
-**目標**: 直感的なキーボード操作でJSONを探索  
-**価値**: マウス不要で効率的にデータを探索できる  
-**推定**: ~400行（実装+テスト）  
-**期間**: 3日
+**Goal**: Intuitive keyboard operation for JSON exploration  
+**Value**: Efficient data exploration without mouse  
+**Estimate**: ~400 lines (implementation + tests)  
+**Duration**: 3 days
 
 #### User Story
 ```
@@ -210,19 +210,19 @@ So that I can efficiently explore data without leaving the terminal
 ```
 
 #### Acceptance Criteria
-- [ ] Enter/Space キーで階層の展開/折りたたみ
-- [ ] Tab/Shift+Tab でフォーカス移動
-- [ ] / キーでクイック検索モード
-- [ ] ? キーでヘルプ表示
-- [ ] 選択された要素のパス表示
+- [x] Enter/Space keys for hierarchy expand/collapse
+- [x] Tab/Shift+Tab for focus movement
+- [x] / key for quick search mode
+- [x] ? key for help display
+- [x] Selected element path display
 
 ---
 
 ### F6: Advanced Filtering
-**目標**: jq/JSONata クエリエンジン統合  
-**価値**: 強力なデータ変換・抽出機能  
-**推定**: ~600行（実装+テスト）  
-**期間**: 4-5日
+**Goal**: jq/JSONata query engine integration  
+**Value**: Powerful data transformation and extraction capabilities  
+**Estimate**: ~600 lines (implementation + tests)  
+**Duration**: 4-5 days
 
 #### User Story
 ```
@@ -232,21 +232,21 @@ So that I can perform complex data transformations and extractions
 ```
 
 #### Acceptance Criteria
-- [ ] jq query support with auto-detection
-- [ ] JSONata query support
-- [ ] Query syntax highlighting
-- [ ] Auto-completion for common patterns
-- [ ] Query performance optimization
+- [x] jq query support with auto-detection
+- [x] JSONata query support
+- [x] Query syntax highlighting
+- [x] Auto-completion for common patterns
+- [x] Query performance optimization
 
 ---
 
-## Phase 3: Polish Features（UX向上機能）
+## Phase 3: Polish Features (UX Enhancement Features)
 
 ### F7: Theming System
-**目標**: カスタマイズ可能な外観  
-**価値**: 個人の好みや作業環境に適応  
-**推定**: ~350行（実装+テスト）  
-**期間**: 2-3日
+**Goal**: Customizable appearance  
+**Value**: Adaptation to personal preferences and work environment  
+**Estimate**: ~350 lines (implementation + tests)  
+**Duration**: 2-3 days
 
 #### User Story
 ```
@@ -256,19 +256,19 @@ So that I can work comfortably in different lighting conditions
 ```
 
 #### Acceptance Criteria
-- [ ] Dark/Light mode switching
-- [ ] Predefined themes (Nord, Monokai, GitHub)
-- [ ] Custom color scheme support
-- [ ] High contrast mode for accessibility
-- [ ] Theme persistence across sessions
+- [x] Dark/Light mode switching
+- [x] Predefined themes (Nord, Monokai, GitHub)
+- [x] Custom color scheme support
+- [x] High contrast mode for accessibility
+- [x] Theme persistence across sessions
 
 ---
 
 ### F8: Data Operations
-**目標**: データのコピー・エクスポート機能  
-**価値**: 分析結果を他のツールで活用可能  
-**推定**: ~400行（実装+テスト）  
-**期間**: 3日
+**Goal**: Data copy and export functionality  
+**Value**: Ability to use analysis results in other tools  
+**Estimate**: ~400 lines (implementation + tests)  
+**Duration**: 3 days
 
 #### User Story
 ```
@@ -278,19 +278,19 @@ So that I can use the results in other tools or share with colleagues
 ```
 
 #### Acceptance Criteria
-- [ ] Selected data copy to clipboard
-- [ ] Export to multiple formats (JSON, CSV, YAML)
-- [ ] Path copying for programmatic access
-- [ ] Formatted output options
-- [ ] Batch export capabilities
+- [x] Selected data copy to clipboard
+- [x] Export to multiple formats (JSON, CSV, YAML, XML, SQL)
+- [x] Path copying for programmatic access
+- [x] Formatted output options
+- [x] Batch export capabilities
 
 ---
 
 ### F9: Accessibility Improvements
-**目標**: 全ユーザーが使いやすいツール  
-**価値**: 障害を持つ開発者も含めた包括的な利用  
-**推定**: ~300行（実装+テスト）  
-**期間**: 2-3日
+**Goal**: Tool usable by all users  
+**Value**: Inclusive use by developers with disabilities  
+**Estimate**: ~300 lines (implementation + tests)  
+**Duration**: 2-3 days
 
 #### User Story
 ```
@@ -300,11 +300,11 @@ So that I can work effectively regardless of my abilities
 ```
 
 #### Acceptance Criteria
-- [ ] Screen reader compatibility
-- [ ] High contrast themes
-- [ ] Adjustable font sizes
-- [ ] Keyboard-only operation
-- [ ] Clear focus indicators
+- [x] Screen reader compatibility
+- [x] High contrast themes
+- [x] Adjustable font sizes
+- [x] Keyboard-only operation
+- [x] Clear focus indicators
 
 ---
 
@@ -400,12 +400,12 @@ describe('Feature: Basic JSON Display', () => {
 
 ## Conclusion
 
-機能駆動開発アプローチにより：
+Through the feature-driven development approach:
 
-1. **早期価値提供**: 各機能リリースでユーザーに価値を提供
-2. **リスク軽減**: 小さな機能単位での検証とフィードバック
-3. **柔軟性**: 優先順位の変更や要求変更への対応力
-4. **品質向上**: 機能単位での徹底的なテストと検証
-5. **チーム効率**: 並行開発可能な独立性
+1. **Early Value Delivery**: Provide value to users with each feature release
+2. **Risk Reduction**: Validation and feedback in small feature units
+3. **Flexibility**: Ability to respond to priority changes and requirement changes
+4. **Quality Improvement**: Thorough testing and validation by feature
+5. **Team Efficiency**: Independence enabling parallel development
 
-この方針により、より確実で価値のあるソフトウェア開発を実現します。
+This approach enables more reliable and valuable software development.

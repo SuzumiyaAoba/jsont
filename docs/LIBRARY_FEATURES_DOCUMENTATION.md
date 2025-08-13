@@ -1,22 +1,22 @@
-# ライブラリ機能詳細ドキュメント
+# Library Features Documentation
 
-## 概要
+## Overview
 
-本ドキュメントでは、jsontプロジェクトで使用予定の各ライブラリについて、具体的な利用機能、実装方法、設定詳細を説明します。
+This document describes the specific utilization features, implementation methods, and configuration details for each library used in the jsont project.
 
 ---
 
-## 1. Jotai - アトミック状態管理
+## 1. Jotai - Atomic State Management
 
-### 利用予定機能
+### Planned Features
 
-#### 1.1 基本アトム
+#### 1.1 Basic Atoms
 
 ```typescript
 // src/store/atoms.ts
 import { atom } from 'jotai';
 
-// プリミティブアトム
+// Primitive atoms
 export const jsonDataAtom = atom<unknown>(null);
 export const filterAtom = atom<string>('');
 export const selectedPathAtom = atom<string[]>([]);
@@ -26,10 +26,10 @@ export const themeAtom = atom<'dark' | 'light'>('dark');
 export const isFilterModeAtom = atom<boolean>(false);
 ```
 
-#### 1.2 計算アトム（Derived Atoms）
+#### 1.2 Derived Atoms
 
 ```typescript
-// 計算されたデータ
+// Computed data
 export const filteredDataAtom = atom((get) => {
   const data = get(jsonDataAtom);
   const filter = get(filterAtom);
@@ -39,11 +39,11 @@ export const filteredDataAtom = atom((get) => {
   try {
     return applyFilter(data, filter);
   } catch (error) {
-    return data; // フィルタエラー時は元データを返す
+    return data; // Return original data on filter error
   }
 });
 
-// JSON統計情報
+// JSON statistics
 export const jsonStatsAtom = atom((get) => {
   const data = get(jsonDataAtom);
   if (!data) return null;
@@ -56,7 +56,7 @@ export const jsonStatsAtom = atom((get) => {
   };
 });
 
-// 表示用データ（仮想化対応）
+// Display data (virtualization ready)
 export const displayDataAtom = atom((get) => {
   const data = get(filteredDataAtom);
   const viewMode = get(viewModeAtom);
@@ -65,10 +65,10 @@ export const displayDataAtom = atom((get) => {
 });
 ```
 
-#### 1.3 非同期アトム
+#### 1.3 Async Atoms
 
 ```typescript
-// 非同期フィルタ処理
+// Async filter processing
 export const asyncFilterAtom = atom(
   null,
   async (get, set, filter: string) => {
@@ -78,7 +78,7 @@ export const asyncFilterAtom = atom(
     set(errorAtom, null);
     
     try {
-      // 重い処理を非同期で実行
+      // Execute heavy processing asynchronously
       const result = await processFilterAsync(data, filter);
       set(filteredDataAtom, result);
     } catch (error) {
@@ -88,12 +88,12 @@ export const asyncFilterAtom = atom(
 );
 ```
 
-#### 1.4 永続化アトム
+#### 1.4 Persistent Atoms
 
 ```typescript
 import { atomWithStorage } from 'jotai/utils';
 
-// 設定の永続化
+// Persistent configuration
 export const configAtom = atomWithStorage('jsont-config', {
   theme: 'dark' as const,
   fontSize: 14,
@@ -102,14 +102,14 @@ export const configAtom = atomWithStorage('jsont-config', {
   keyBindings: defaultKeyBindings,
 });
 
-// フィルタ履歴の永続化
+// Persistent filter history
 export const filterHistoryAtom = atomWithStorage<string[]>('jsont-filter-history', []);
 ```
 
-#### 1.5 デバッグ用アトム
+#### 1.5 Debug Atoms
 
 ```typescript
-// 開発時のデバッグ機能
+// Debug functionality for development
 export const debugAtom = atom((get) => {
   if (process.env.NODE_ENV !== 'development') return null;
   
@@ -122,9 +122,9 @@ export const debugAtom = atom((get) => {
 });
 ```
 
-### 実装パターン
+### Implementation Patterns
 
-#### カスタムフック
+#### Custom Hooks
 
 ```typescript
 // src/hooks/useJsonStore.ts
@@ -173,91 +173,91 @@ export function useNavigation() {
 
 ---
 
-## 2. es-toolkit - 高性能ユーティリティ
+## 2. es-toolkit - High-Performance Utilities
 
-### 利用予定機能
+### Planned Features
 
-#### 2.1 配列操作
+#### 2.1 Array Operations
 
 ```typescript
 // src/utils/arrayUtils.ts
 import { chunk, uniq, groupBy, sortBy, flatten } from 'es-toolkit';
 
 export class ArrayProcessor {
-  // 大量データの分割処理
+  // Chunk large data for processing
   static chunkData<T>(data: T[], size: number): T[][] {
     return chunk(data, size);
   }
   
-  // 重複削除
+  // Remove duplicates
   static removeDuplicates<T>(data: T[]): T[] {
     return uniq(data);
   }
   
-  // グループ化
+  // Group by key
   static groupByKey<T>(data: T[], keyFn: (item: T) => string): Record<string, T[]> {
     return groupBy(data, keyFn);
   }
   
-  // ソート
+  // Sort by property
   static sortByProperty<T>(data: T[], propertyFn: (item: T) => any): T[] {
     return sortBy(data, propertyFn);
   }
   
-  // フラット化
+  // Flatten array
   static flattenArray<T>(data: T[][]): T[] {
     return flatten(data);
   }
 }
 ```
 
-#### 2.2 オブジェクト操作
+#### 2.2 Object Operations
 
 ```typescript
 // src/utils/objectUtils.ts
 import { pick, omit, get, set, has, merge, clone } from 'es-toolkit';
 
 export class ObjectProcessor {
-  // プロパティ選択
+  // Select properties
   static selectProperties<T>(obj: T, keys: string[]): Partial<T> {
     return pick(obj, keys);
   }
   
-  // プロパティ除外
+  // Exclude properties
   static excludeProperties<T>(obj: T, keys: string[]): Partial<T> {
     return omit(obj, keys);
   }
   
-  // ネストしたプロパティアクセス
+  // Access nested properties
   static getNestedValue(obj: unknown, path: string): unknown {
     return get(obj, path);
   }
   
-  // ネストしたプロパティ設定
+  // Set nested properties
   static setNestedValue(obj: unknown, path: string, value: unknown): unknown {
     return set(clone(obj), path, value);
   }
   
-  // プロパティ存在確認
+  // Check property existence
   static hasProperty(obj: unknown, path: string): boolean {
     return has(obj, path);
   }
   
-  // オブジェクトマージ
+  // Merge objects
   static mergeObjects<T>(...objects: T[]): T {
     return merge({}, ...objects);
   }
 }
 ```
 
-#### 2.3 関数ユーティリティ
+#### 2.3 Function Utilities
 
 ```typescript
 // src/utils/functionUtils.ts
 import { debounce, throttle, memoize, once } from 'es-toolkit';
 
 export class FunctionUtils {
-  // デバウンス（フィルタ入力用）
+  // Debounce (for filter input)
   static createDebouncedFilter(
     filterFn: (filter: string) => void,
     delay: number = 300
@@ -265,7 +265,7 @@ export class FunctionUtils {
     return debounce(filterFn, delay);
   }
   
-  // スロットル（スクロール処理用）
+  // Throttle (for scroll processing)
   static createThrottledScroll(
     scrollFn: (position: number) => void,
     delay: number = 16
@@ -273,42 +273,42 @@ export class FunctionUtils {
     return throttle(scrollFn, delay);
   }
   
-  // メモ化（重い計算用）
+  // Memoize (for heavy calculations)
   static memoizeJsonProcessing<T extends (...args: any[]) => any>(fn: T): T {
     return memoize(fn);
   }
   
-  // 一度だけ実行（初期化用）
+  // Execute once (for initialization)
   static onceOnly<T extends (...args: any[]) => any>(fn: T): T {
     return once(fn);
   }
 }
 ```
 
-#### 2.4 パフォーマンス最適化
+#### 2.4 Performance Optimization
 
 ```typescript
 // src/utils/performance.ts
 import { debounce, memoize } from 'es-toolkit';
 
-// JSON処理の最適化
+// JSON processing optimization
 export const optimizedJsonProcessor = {
-  // メモ化されたJSONパース
+  // Memoized JSON parsing
   parseJson: memoize((jsonString: string) => {
     return JSON.parse(jsonString);
   }),
   
-  // メモ化されたJSONストリンガイ
+  // Memoized JSON stringification
   stringifyJson: memoize((data: unknown, space?: number) => {
     return JSON.stringify(data, null, space);
   }),
   
-  // デバウンスされたフィルタ適用
+  // Debounced filter application
   applyFilter: debounce(async (data: unknown, filter: string) => {
     return await processFilter(data, filter);
   }, 300),
   
-  // メモ化された深度計算
+  // Memoized depth calculation
   calculateDepth: memoize((obj: unknown): number => {
     if (obj === null || typeof obj !== 'object') return 0;
     if (Array.isArray(obj)) {
@@ -322,11 +322,11 @@ export const optimizedJsonProcessor = {
 
 ---
 
-## 3. @tanstack/react-virtual - 仮想スクロール
+## 3. @tanstack/react-virtual - Virtual Scrolling
 
-### 利用予定機能
+### Planned Features
 
-#### 3.1 基本的な仮想スクロール
+#### 3.1 Basic Virtual Scrolling
 
 ```typescript
 // src/components/VirtualizedJsonViewer.tsx
@@ -350,7 +350,7 @@ export function VirtualizedJsonViewer({
     count: data.length,
     getScrollElement: () => parentRef.current,
     estimateSize: useCallback((index: number) => {
-      // アイテムタイプに応じた推定高さ
+      // Estimated height based on item type
       const item = data[index];
       switch (item.type) {
         case 'object-start':
@@ -364,7 +364,7 @@ export function VirtualizedJsonViewer({
           return 24;
       }
     }, [data]),
-    overscan: 10, // 表示領域外の追加レンダリング数
+    overscan: 10, // Additional rendering outside visible area
   });
   
   return (
@@ -404,10 +404,10 @@ export function VirtualizedJsonViewer({
 }
 ```
 
-#### 3.2 動的サイズ対応
+#### 3.2 Dynamic Size Support
 
 ```typescript
-// 動的サイズ計算
+// Dynamic size calculation
 export function useDynamicSizeVirtualizer(data: JsonDisplayItem[]) {
   const parentRef = useRef<HTMLDivElement>(null);
   
@@ -416,10 +416,10 @@ export function useDynamicSizeVirtualizer(data: JsonDisplayItem[]) {
     getScrollElement: () => parentRef.current,
     estimateSize: (index) => {
       const item = data[index];
-      // 内容に基づく動的サイズ計算
+      // Dynamic size calculation based on content
       return calculateItemHeight(item);
     },
-    // 測定後のサイズ調整
+    // Size adjustment after measurement
     measureElement: (element) => {
       return element.getBoundingClientRect().height;
     },
@@ -441,10 +441,10 @@ function calculateItemHeight(item: JsonDisplayItem): number {
 }
 ```
 
-#### 3.3 スクロール制御
+#### 3.3 Scroll Control
 
 ```typescript
-// スクロール制御機能
+// Scroll control functionality
 export function useScrollControl(virtualizer: any) {
   const scrollToIndex = useCallback((index: number, align: 'start' | 'center' | 'end' = 'center') => {
     virtualizer.scrollToIndex(index, { align });
@@ -467,10 +467,10 @@ export function useScrollControl(virtualizer: any) {
 }
 ```
 
-#### 3.4 パフォーマンス最適化
+#### 3.4 Performance Optimization
 
 ```typescript
-// メモ化されたバーチャライザー
+// Memoized virtualizer
 export const MemoizedVirtualizedViewer = React.memo(VirtualizedJsonViewer, (prevProps, nextProps) => {
   return (
     prevProps.data.length === nextProps.data.length &&
@@ -479,7 +479,7 @@ export const MemoizedVirtualizedViewer = React.memo(VirtualizedJsonViewer, (prev
   );
 });
 
-// オーバースキャンの動的調整
+// Dynamic overscan adjustment
 export function useAdaptiveOverscan(itemCount: number) {
   return useMemo(() => {
     if (itemCount < 100) return 5;
@@ -491,11 +491,11 @@ export function useAdaptiveOverscan(itemCount: number) {
 
 ---
 
-## 4. jq-web + JSONata - ハイブリッドクエリエンジン
+## 4. jq-web + JSONata - Hybrid Query Engine
 
-### 利用予定機能
+### Planned Features
 
-#### 4.1 統合クエリプロセッサ
+#### 4.1 Integrated Query Processor
 
 ```typescript
 // src/utils/queryProcessor.ts
@@ -518,7 +518,7 @@ export class HybridQueryProcessor {
     const startTime = performance.now();
     
     try {
-      // クエリタイプの自動判定
+      // Automatic query type detection
       const engine = this.detectQueryEngine(query);
       
       let result: unknown;
@@ -550,38 +550,38 @@ export class HybridQueryProcessor {
   }
   
   private static detectQueryEngine(query: string): 'jq' | 'jsonata' | 'native' {
-    // jqパターンの検出
+    // jq pattern detection
     const jqPatterns = [
-      /^\..*\|/, // パイプ演算子
-      /select\(/, // select関数
-      /map\(/, // map関数
-      /group_by\(/, // group_by関数
-      /reduce/, // reduce関数
-      /\[\]/, // 配列インデックス
+      /^\..*\|/, // Pipe operator
+      /select\(/, // select function
+      /map\(/, // map function
+      /group_by\(/, // group_by function
+      /reduce/, // reduce function
+      /\[\]/, // array index
     ];
     
     if (jqPatterns.some(pattern => pattern.test(query))) {
       return 'jq';
     }
     
-    // JSONataパターンの検出
+    // JSONata pattern detection
     const jsonataPatterns = [
-      /^\$/, // ルート参照
-      /\[.*\]/, // 配列フィルタ
-      /\{.*\}/, // オブジェクト構築
-      /\?/, // 条件演算子
+      /^\$/, // Root reference
+      /\[.*\]/, // Array filter
+      /\{.*\}/, // Object construction
+      /\?/, // Conditional operator
     ];
     
     if (jsonataPatterns.some(pattern => pattern.test(query))) {
       return 'jsonata';
     }
     
-    // シンプルなパス表現はネイティブ処理
+    // Simple path expressions use native processing
     return 'native';
   }
   
   private static async executeJqQuery(data: unknown, query: string): Promise<unknown> {
-    // キャッシュチェック
+    // Cache check
     const cacheKey = `${JSON.stringify(data)}_${query}`;
     if (this.jqCache.has(cacheKey)) {
       return this.jqCache.get(cacheKey);
@@ -589,7 +589,7 @@ export class HybridQueryProcessor {
     
     const result = await jq(data, query);
     
-    // 結果をキャッシュ（メモリ使用量制限）
+    // Cache result (with memory usage limit)
     if (this.jqCache.size > 100) {
       const firstKey = this.jqCache.keys().next().value;
       this.jqCache.delete(firstKey);
@@ -600,7 +600,7 @@ export class HybridQueryProcessor {
   }
   
   private static async executeJsonataQuery(data: unknown, query: string): Promise<unknown> {
-    // キャッシュチェック
+    // Cache check
     if (this.jsonataCache.has(query)) {
       const expression = this.jsonataCache.get(query);
       return await expression.evaluate(data);
@@ -608,7 +608,7 @@ export class HybridQueryProcessor {
     
     const expression = jsonata(query);
     
-    // 式をキャッシュ
+    // Cache expression
     if (this.jsonataCache.size > 100) {
       const firstKey = this.jsonataCache.keys().next().value;
       this.jsonataCache.delete(firstKey);
@@ -619,7 +619,7 @@ export class HybridQueryProcessor {
   }
   
   private static executeNativeQuery(data: unknown, query: string): unknown {
-    // シンプルなパス表現をネイティブ処理
+    // Native processing for simple path expressions
     const path = query.replace(/^\$\.?/, '').split('.');
     let result = data;
     
@@ -627,7 +627,7 @@ export class HybridQueryProcessor {
       if (result == null) break;
       
       if (segment.includes('[') && segment.includes(']')) {
-        // 配列インデックス処理
+        // Array index processing
         const [key, indexStr] = segment.split('[');
         const index = parseInt(indexStr.replace(']', ''));
         result = (result as any)[key]?.[index];
@@ -641,18 +641,18 @@ export class HybridQueryProcessor {
 }
 ```
 
-#### 4.2 クエリ検証とオートコンプリート
+#### 4.2 Query Validation and Autocompletion
 
 ```typescript
-// クエリ検証機能
+// Query validation functionality
 export class QueryValidator {
   static validateJqSyntax(query: string): ValidationResult {
     try {
-      // 基本的なjq構文チェック
+      // Basic jq syntax check
       const commonErrors = [
-        { pattern: /\|\s*$/, message: 'パイプ演算子の後に式が必要です' },
-        { pattern: /\(\s*$/, message: '括弧が閉じられていません' },
-        { pattern: /\[\s*$/, message: '配列インデックスが閉じられていません' },
+        { pattern: /\|\s*$/, message: 'Expression required after pipe operator' },
+        { pattern: /\(\s*$/, message: 'Unclosed parenthesis' },
+        { pattern: /\[\s*$/, message: 'Unclosed array index' },
       ];
       
       for (const { pattern, message } of commonErrors) {
@@ -670,7 +670,7 @@ export class QueryValidator {
   static getAutoComplete(query: string, data: unknown): string[] {
     const suggestions: string[] = [];
     
-    // データ構造からの候補生成
+    // Generate suggestions from data structure
     if (data && typeof data === 'object') {
       const keys = Object.keys(data);
       keys.forEach(key => {
@@ -679,7 +679,7 @@ export class QueryValidator {
       });
     }
     
-    // 一般的なjq関数
+    // Common jq functions
     const jqFunctions = [
       'select()', 'map()', 'filter()', 'sort()', 'group_by()',
       'length', 'keys', 'values', 'type', 'empty',
@@ -687,16 +687,16 @@ export class QueryValidator {
     
     suggestions.push(...jqFunctions);
     
-    // 現在のクエリに基づくフィルタリング
+    // Filter based on current query
     return suggestions.filter(s => s.startsWith(query.split(' ').pop() || ''));
   }
 }
 ```
 
-#### 4.3 リアルタイムクエリ実行
+#### 4.3 Real-time Query Execution
 
 ```typescript
-// リアルタイムクエリフック
+// Real-time query hook
 export function useRealtimeQuery(data: unknown) {
   const [query, setQuery] = useAtom(filterAtom);
   const [result, setResult] = useState<QueryResult | null>(null);
@@ -735,11 +735,11 @@ export function useRealtimeQuery(data: unknown) {
 
 ---
 
-## 5. clipboardy - クリップボード操作
+## 5. clipboardy - Clipboard Operations
 
-### 利用予定機能
+### Planned Features
 
-#### 5.1 基本的なクリップボード操作
+#### 5.1 Basic Clipboard Operations
 
 ```typescript
 // src/utils/clipboard.ts
@@ -812,21 +812,21 @@ export class ClipboardManager {
   
   private static formatPath(path: string[]): string {
     return path.map(segment => {
-      // 数値インデックスの場合
+      // Numeric index case
       if (/^\d+$/.test(segment)) {
         return `[${segment}]`;
       }
-      // 特殊文字を含む場合
+      // Special characters case
       if (/[^a-zA-Z0-9_]/.test(segment)) {
         return `["${segment}"]`;
       }
-      // 通常のプロパティ
+      // Regular property
       return `.${segment}`;
     }).join('');
   }
   
   private static convertToYaml(value: unknown): string {
-    // 簡易YAML変換
+    // Simple YAML conversion
     const json = JSON.stringify(value, null, 2);
     return json
       .replace(/"/g, '')
@@ -839,18 +839,18 @@ export class ClipboardManager {
   
   private static convertToCsv(value: unknown): string {
     if (!Array.isArray(value)) {
-      throw new Error('CSV変換には配列データが必要です');
+      throw new Error('CSV conversion requires array data');
     }
     
     if (value.length === 0) {
       return '';
     }
     
-    // ヘッダー行の生成
+    // Generate header row
     const headers = Object.keys(value[0] || {});
     const headerRow = headers.map(h => `"${h}"`).join(',');
     
-    // データ行の生成
+    // Generate data rows
     const dataRows = value.map(item =>
       headers.map(header => {
         const cellValue = (item as any)[header];
@@ -864,7 +864,7 @@ export class ClipboardManager {
 }
 ```
 
-#### 5.2 クリップボード操作のUI統合
+#### 5.2 UI Integration for Clipboard Operations
 
 ```typescript
 // src/hooks/useClipboard.ts
@@ -880,11 +880,11 @@ export function useClipboard() {
     const result = await copyFn();
     
     if (result.success) {
-      // 成功フィードバック（短時間表示）
-      setError('コピーしました');
+      // Success feedback (brief display)
+      setError('Copied to clipboard');
       setTimeout(() => setError(null), 2000);
     } else {
-      setError(result.error || 'コピーに失敗しました');
+      setError(result.error || 'Copy failed');
     }
   }, [setError]);
   
@@ -910,11 +910,11 @@ export function useClipboard() {
 
 ---
 
-## 6. react-syntax-highlighter - 構文ハイライト
+## 6. react-syntax-highlighter - Syntax Highlighting
 
-### 利用予定機能
+### Planned Features
 
-#### 6.1 JSON構文ハイライト
+#### 6.1 JSON Syntax Highlighting
 
 ```typescript
 // src/components/SyntaxHighlightedJson.tsx
@@ -961,7 +961,7 @@ export function SyntaxHighlightedJson({
     <div className="syntax-highlighted-json">
       {collapsible && lines.length > 10 && (
         <button onClick={() => setCollapsed(!collapsed)}>
-          {collapsed ? '展開' : '折りたたみ'}
+          {collapsed ? 'Expand' : 'Collapse'}
         </button>
       )}
       
@@ -993,7 +993,7 @@ export function SyntaxHighlightedJson({
       
       {lines.length > displayLines.length && (
         <div className="truncated-indicator">
-          ... {lines.length - displayLines.length} 行が省略されています
+          ... {lines.length - displayLines.length} lines truncated
         </div>
       )}
     </div>
@@ -1001,10 +1001,10 @@ export function SyntaxHighlightedJson({
 }
 ```
 
-#### 6.2 テーマカスタマイズ
+#### 6.2 Theme Customization
 
 ```typescript
-// カスタムテーマ定義
+// Custom theme definitions
 export const customJsonThemes = {
   jsontDark: {
     'code[class*="language-"]': {
@@ -1066,25 +1066,25 @@ export const customJsonThemes = {
 
 ---
 
-## 実装優先順位
+## Implementation Priority
 
-### Phase 1: 基本機能（Week 1-2）
-1. Jotai基本状態管理
-2. es-toolkit基本ユーティリティ
-3. @tanstack/react-virtual基本実装
+### Phase 1: Basic Features (Week 1-2)
+1. Basic Jotai state management
+2. es-toolkit basic utilities
+3. @tanstack/react-virtual basic implementation
 
-### Phase 2: 高度機能（Week 3-4）
-1. ハイブリッドクエリエンジン
-2. クリップボード統合
-3. 構文ハイライト
+### Phase 2: Advanced Features (Week 3-4)
+1. Hybrid query engine
+2. Clipboard integration
+3. Syntax highlighting
 
-### Phase 3: 最適化（Week 5-6）
-1. パフォーマンス最適化
-2. キャッシュ機能
-3. エラーハンドリング強化
+### Phase 3: Optimization (Week 5-6)
+1. Performance optimization
+2. Caching functionality
+3. Enhanced error handling
 
 ---
 
-## まとめ
+## Summary
 
-各ライブラリの具体的な利用機能を定義し、実装方針を明確化しました。段階的な導入により、リスクを最小限に抑えながら機能向上を図ることができます。
+Specific utilization features for each library have been defined, and implementation policies have been clarified. Through staged introduction, feature improvements can be achieved while minimizing risks.

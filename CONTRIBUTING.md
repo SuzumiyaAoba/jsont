@@ -1,77 +1,77 @@
 # Contributing to jsont
 
-jsont プロジェクトへの貢献を歓迎します！このドキュメントでは、プロジェクトへの効果的な貢献方法について説明します。
+We welcome contributions to the jsont project! This document explains how to effectively contribute to the project.
 
-## 🚀 開発環境のセットアップ
+## 🚀 Development Environment Setup
 
-### 前提条件
-- **Node.js**: 18.0.0 以上
-- **npm**: 8.0.0 以上
-- **Git**: 最新版推奨
+### Prerequisites
+- **Node.js**: 18.0.0 or higher
+- **npm**: 8.0.0 or higher
+- **Git**: Latest version recommended
 
-### セットアップ手順
+### Setup Steps
 ```bash
-# 1. リポジトリをフォーク・クローン
+# 1. Fork and clone the repository
 git clone https://github.com/YOUR_USERNAME/jsont.git
 cd jsont
 
-# 2. 依存関係のインストール
+# 2. Install dependencies
 npm install
 
-# 3. 開発モードで起動
+# 3. Start in development mode
 npm run dev
 
-# 4. テスト実行
+# 4. Run tests
 npm run test
 ```
 
-## 📋 開発ワークフロー
+## 📋 Development Workflow
 
-### ブランチ戦略
-- `master`: 本番用ブランチ（プルリクエストのターゲット）
-- `feature/功能名`: 新機能開発用ブランチ
-- `fix/修正内容`: バグ修正用ブランチ
-- `docs/内容`: ドキュメント更新用ブランチ
+### Branch Strategy
+- `master`: Production branch (pull request target)
+- `feature/feature-name`: New feature development branch
+- `fix/fix-description`: Bug fix branch
+- `docs/content`: Documentation update branch
 
-### 開発手順
+### Development Process
 ```bash
-# 1. 最新のmasterから開発ブランチを作成
+# 1. Create development branch from latest master
 git checkout master
 git pull origin master
 git checkout -b feature/your-feature-name
 
-# 2. 変更を実装
-# コード実装、テスト作成
+# 2. Implement changes
+# Code implementation, test creation
 
-# 3. コード品質チェック
+# 3. Code quality check
 npm run check        # lint + format + type check
-npm run test:run     # 全テストの実行
+npm run test:run     # Run all tests
 
-# 4. コミット
+# 4. Commit
 git add .
 git commit -m "feat: implement new feature"
 
-# 5. プッシュとプルリクエスト作成
+# 5. Push and create pull request
 git push origin feature/your-feature-name
 ```
 
-## 🧪 テスト戦略
+## 🧪 Testing Strategy
 
-### テスト実行
+### Running Tests
 ```bash
-npm run test          # 監視モードでテスト
-npm run test:run      # 一度だけテスト実行
-npm run test:ui       # テストUIで実行
-npm run test:ci       # CI環境向け実行（メモリ最適化）
+npm run test          # Test in watch mode
+npm run test:run      # Run tests once
+npm run test:ui       # Run with test UI
+npm run test:ci       # CI environment execution (memory optimized)
 ```
 
-### テスト作成ガイドライン
-- **単体テスト**: 各機能・ユーティリティ関数は `.spec.ts` ファイルで網羅
-- **統合テスト**: 機能間の連携は `src/integration/` 下に配置
-- **パフォーマンステスト**: 大容量データ処理の性能確認
-- **カバレッジ**: 新規コードは 85% 以上のテストカバレッジを維持
+### Test Creation Guidelines
+- **Unit Tests**: Each feature/utility function covered in `.spec.ts` files
+- **Integration Tests**: Feature interaction placed under `src/integration/`
+- **Performance Tests**: Performance verification for large data processing
+- **Coverage**: Maintain 85%+ test coverage for new code
 
-### テスト例
+### Test Examples
 ```typescript
 // src/features/search/utils/searchUtils.spec.ts
 describe('searchInJsonWithScope', () => {
@@ -90,177 +90,177 @@ describe('searchInJsonWithScope', () => {
 });
 ```
 
-## 💻 コード品質基準
+## 💻 Code Quality Standards
 
 ### TypeScript
-- **strictest設定**: `@tsconfig/strictest` の設定を継承
-- **型安全性**: `any` 型の使用は最小限に抑制
-- **インターフェース**: 明確な型定義とドキュメント化
+- **Strictest Configuration**: Inherits `@tsconfig/strictest` settings
+- **Type Safety**: Minimize use of `any` type
+- **Interfaces**: Clear type definitions and documentation
 
-### コードスタイル（Biome）
+### Code Style (Biome)
 ```bash
-npm run check        # 全チェック（lint + format + type）
-npm run check:write  # 自動修正適用
-npm run lint         # リント実行
-npm run format       # フォーマット実行
+npm run check        # All checks (lint + format + type)
+npm run check:write  # Apply automatic fixes
+npm run lint         # Run linter
+npm run format       # Run formatter
 ```
 
-### アーキテクチャ原則
-- **機能駆動設計**: 機能単位での実装とテスト
-- **クリーンアーキテクチャ**: レイヤー分離と依存性の管理
-- **パフォーマンス重視**: 大容量データでも快適な動作
-- **拡張性**: プラグインシステムやカスタマイズ機能への対応
+### Architecture Principles
+- **Feature-Driven Design**: Implementation and testing by feature
+- **Clean Architecture**: Layer separation and dependency management
+- **Performance-Focused**: Smooth operation even with large data
+- **Extensibility**: Support for plugin system and customization features
 
-## 🐛 Issue と プルリクエスト
+## 🐛 Issues and Pull Requests
 
-### Issue 報告
-新しいIssueを作成する際は、以下のテンプレートを使用してください：
+### Issue Reporting
+When creating a new issue, please use the following templates:
 
 #### Bug Report
 ```markdown
-## 🐛 バグ概要
-バグの簡潔な説明
+## 🐛 Bug Summary
+Brief description of the bug
 
-## 📋 再現手順
-1. `echo '{"test": true}' | jsont` を実行
-2. `S` キーを押す
-3. エラーが発生
+## 📋 Reproduction Steps
+1. Run `echo '{"test": true}' | jsont`
+2. Press `S` key
+3. Error occurs
 
-## 💡 期待する動作
-正常にスキーマビューが表示される
+## 💡 Expected Behavior
+Schema view should display normally
 
-## 😵 実際の動作
-エラーメッセージが表示される
+## 😵 Actual Behavior
+Error message is displayed
 
-## 🔧 環境情報
+## 🔧 Environment Information
 - OS: macOS 14.1
 - Node.js: v18.19.0
 - jsont version: 1.0.0
-- ターミナル: iTerm2
+- Terminal: iTerm2
 ```
 
 #### Feature Request
 ```markdown
-## 🚀 機能概要
-新機能の簡潔な説明
+## 🚀 Feature Summary
+Brief description of the new feature
 
-## 🎯 ユースケース
-この機能がどのような場面で必要か
+## 🎯 Use Cases
+Situations where this feature is needed
 
-## 💡 提案する実装
-可能であれば実装案を提示
+## 💡 Proposed Implementation
+Implementation proposal if available
 
-## 📄 追加情報
-参考資料やサンプルがあれば記載
+## 📄 Additional Information
+Reference materials or samples if available
 ```
 
-### プルリクエスト
-- **コミットメッセージ**: Conventional Commits 形式を使用
-  - `feat:` 新機能
-  - `fix:` バグ修正
-  - `docs:` ドキュメント更新
-  - `refactor:` リファクタリング
-  - `test:` テスト追加・修正
-  - `perf:` パフォーマンス改善
-- **説明**: 変更内容、理由、テスト方法を明記
-- **レビュー**: コードレビューでのフィードバックに対応
+### Pull Requests
+- **Commit Messages**: Use Conventional Commits format
+  - `feat:` New feature
+  - `fix:` Bug fix
+  - `docs:` Documentation update
+  - `refactor:` Refactoring
+  - `test:` Test addition/modification
+  - `perf:` Performance improvement
+- **Description**: Clearly state changes, reasons, and testing methods
+- **Review**: Respond to feedback in code reviews
 
-### プルリクエストテンプレート
+### Pull Request Template
 ```markdown
-## 📝 概要
-変更内容の概要
+## 📝 Summary
+Overview of changes
 
-## 🔧 変更種別
-- [ ] 新機能 (feat)
-- [ ] バグ修正 (fix)
-- [ ] ドキュメント (docs)
-- [ ] リファクタリング (refactor)
-- [ ] テスト (test)
-- [ ] パフォーマンス (perf)
+## 🔧 Change Type
+- [ ] New feature (feat)
+- [ ] Bug fix (fix)
+- [ ] Documentation (docs)
+- [ ] Refactoring (refactor)
+- [ ] Test (test)
+- [ ] Performance (perf)
 
-## 🧪 テスト
-- [ ] 新しいテストを追加
-- [ ] 既存のテストが通過
-- [ ] 手動テストを実施
+## 🧪 Testing
+- [ ] Added new tests
+- [ ] Existing tests pass
+- [ ] Manual testing conducted
 
-## 📋 チェックリスト
-- [ ] `npm run check` が通過
-- [ ] テストカバレッジが維持されている
-- [ ] ドキュメントが更新されている
-- [ ] 破壊的変更がある場合は明記
+## 📋 Checklist
+- [ ] `npm run check` passes
+- [ ] Test coverage is maintained
+- [ ] Documentation is updated
+- [ ] Breaking changes are documented if applicable
 ```
 
-## 🎯 開発ガイドライン
+## 🎯 Development Guidelines
 
-### 機能開発
-1. **機能要求の理解**: Issue やディスカッションで要求を明確化
-2. **設計検討**: 既存アーキテクチャとの整合性を確認
-3. **プロトタイプ**: 小さなプロトタイプで概念実証
-4. **テスト駆動開発**: テストを先に作成してから実装
-5. **パフォーマンス確認**: 大容量データでの動作検証
-6. **ドキュメント更新**: README やヘルプの更新
+### Feature Development
+1. **Understand Requirements**: Clarify requirements through issues or discussions
+2. **Design Consideration**: Check consistency with existing architecture
+3. **Prototype**: Create small prototypes for proof of concept
+4. **Test-Driven Development**: Create tests before implementation
+5. **Performance Verification**: Verify operation with large data
+6. **Documentation Update**: Update README and help
 
-### コードレビュー
-- **建設的フィードバック**: 改善提案と理由を明確に
-- **知識共有**: なぜその実装が良いか・悪いかを説明
-- **学習機会**: レビューを通じてお互いのスキル向上
-- **迅速な対応**: レビュー依頼から24時間以内に初回レスポンス
+### Code Review
+- **Constructive Feedback**: Provide clear improvement suggestions and reasons
+- **Knowledge Sharing**: Explain why implementations are good or bad
+- **Learning Opportunity**: Improve each other's skills through reviews
+- **Prompt Response**: Initial response within 24 hours of review request
 
-## 🔧 よくある問題と解決策
+## 🔧 Common Issues and Solutions
 
-### パフォーマンステスト失敗
+### Performance Test Failures
 ```bash
-# メモリ使用量の最適化
+# Memory usage optimization
 NODE_OPTIONS="--max-old-space-size=6144" npm run test:ci
 
-# 特定のテストをスキップ
+# Skip specific tests
 npm run test -- --exclude="performance"
 ```
 
-### TypeScript エラー
+### TypeScript Errors
 ```bash
-# 型チェックのみ実行
+# Run type check only
 npm run type-check
 
-# 増分ビルド
+# Incremental build
 npx tsc --incremental
 ```
 
-### Import エラー
-- パスエイリアスは `@/*`, `@core/*`, `@features/*` を使用
-- 拡張子なしインポートが必須（ビルドシステム要件）
+### Import Errors
+- Use path aliases `@/*`, `@core/*`, `@features/*`
+- Extensionless imports are required (build system requirement)
 
-## 🌟 貢献の認識
+## 🌟 Recognition of Contributions
 
 ### Contributors
-すべての貢献者は README の Contributors セクションに掲載されます。
+All contributors will be listed in the Contributors section of the README.
 
-### 貢献の種類
-- **コード**: 新機能、バグ修正、リファクタリング
-- **ドキュメント**: README、ガイド、コメントの改善
-- **テスト**: テスト追加、テストケース改善
-- **Issue**: バグ報告、機能要求、質問
-- **レビュー**: コードレビュー、設計ディスカッション
-- **翻訳**: 多言語対応、ローカライゼーション
+### Types of Contributions
+- **Code**: New features, bug fixes, refactoring
+- **Documentation**: Improvements to README, guides, comments
+- **Testing**: Test additions, test case improvements
+- **Issues**: Bug reports, feature requests, questions
+- **Reviews**: Code reviews, design discussions
+- **Translation**: Multi-language support, localization
 
-## 📞 コミュニケーション
+## 📞 Communication
 
-### 質問・相談
-- **GitHub Issues**: バグ報告、機能要求
-- **GitHub Discussions**: 設計相談、使用方法の質問
-- **Pull Request**: コードに関する詳細な議論
+### Questions & Consultation
+- **GitHub Issues**: Bug reports, feature requests
+- **GitHub Discussions**: Design consultation, usage questions
+- **Pull Requests**: Detailed discussions about code
 
-### 連絡方法
-- 日本語・英語どちらでも対応可能
-- 技術的な質問は Issue で公開討論を推奨
-- 設計に関する大きな変更は Discussion で事前相談
+### Contact Methods
+- Both Japanese and English are supported
+- Technical questions are recommended for public discussion in Issues
+- Large design changes should be discussed in advance via Discussions
 
 ---
 
-## 🙏 感謝
+## 🙏 Thanks
 
-jsont プロジェクトへの貢献をお考えいただき、ありがとうございます！
-あなたの貢献が、多くの開発者の生産性向上に役立ちます。
+Thank you for considering contributing to the jsont project!
+Your contributions will help improve the productivity of many developers.
 
-質問や不明点がございましたら、遠慮なく Issue を作成してください。
-一緒により良いツールを作りましょう！
+If you have any questions or concerns, please feel free to create an Issue.
+Let's build better tools together!

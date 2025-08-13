@@ -1,23 +1,23 @@
 # jsont API Documentation
 
-jsont の主要な API、型定義、および拡張可能なインターフェースについて説明します。
+This document describes the main APIs, type definitions, and extensible interfaces of jsont.
 
-## 📋 目次
+## 📋 Table of Contents
 
-- [基本型定義](#基本型定義)
-- [アプリケーション状態](#アプリケーション状態)  
-- [検索・フィルタリング](#検索フィルタリング)
-- [設定・カスタマイズ](#設定カスタマイズ)
-- [エクスポート機能](#エクスポート機能)
-- [パフォーマンス](#パフォーマンス)
-- [拡張性](#拡張性)
+- [Basic Type Definitions](#basic-type-definitions)
+- [Application State](#application-state)  
+- [Search & Filtering](#search--filtering)
+- [Settings & Customization](#settings--customization)
+- [Export Features](#export-features)
+- [Performance](#performance)
+- [Extensibility](#extensibility)
 
-## 🔤 基本型定義
+## 🔤 Basic Type Definitions
 
-### JSON データ型
+### JSON Data Types
 
 ```typescript
-// 基本的な JSON 値の型定義
+// Basic JSON value type definitions
 export type JsonValue =
   | string
   | number
@@ -33,68 +33,68 @@ export interface JsonObject {
 export interface JsonArray extends Array<JsonValue> {}
 ```
 
-### パース結果
+### Parse Results
 
 ```typescript
 export interface ParseResult {
   success: boolean;
   data: JsonValue | null;
   error: string | null;
-  suggestion?: string;          // エラー時の修正提案
-  parseTime?: number;           // パース処理時間（ms）
-  validation?: ValidationResult; // 詳細な検証結果
+  suggestion?: string;          // Error correction suggestions
+  parseTime?: number;           // Parse processing time (ms)
+  validation?: ValidationResult; // Detailed validation results
 }
 
 export interface ValidationResult {
   isValid: boolean;
   error?: string;
-  suggestion?: string;          // 具体的な修正提案
-  stats?: JsonStats;           // データ統計情報
-  warnings: string[];          // 非致命的な警告
+  suggestion?: string;          // Specific correction suggestions
+  stats?: JsonStats;           // Data statistics
+  warnings: string[];          // Non-fatal warnings
 }
 ```
 
-### JSON 統計情報
+### JSON Statistics
 
 ```typescript
 export interface JsonStats {
-  size: number;                 // JSON文字列のサイズ（バイト）
-  depth: number;               // ネストの最大深度
-  keys: string[];              // 全ユニークキー一覧
-  types: Record<string, number>; // 型別出現回数
+  size: number;                 // JSON string size (bytes)
+  depth: number;               // Maximum nesting depth
+  keys: string[];              // List of all unique keys
+  types: Record<string, number>; // Occurrence count by type
 }
 ```
 
-## 🏗️ アプリケーション状態
+## 🏗️ Application State
 
-### ビューモード
+### View Modes
 
 ```typescript
 export const VIEW_MODES = [
-  "raw",        // プレーン JSON 表示
-  "tree",       // ツリー階層表示
-  "collapsible", // 折りたたみ可能表示
-  "schema",     // JSON スキーマ表示
-  "settings",   // 設定画面
+  "raw",        // Plain JSON display
+  "tree",       // Tree hierarchy display
+  "collapsible", // Collapsible display
+  "schema",     // JSON schema display
+  "settings",   // Settings screen
 ] as const;
 
 export type ViewMode = typeof VIEW_MODES[number];
 ```
 
-### アプリケーション状態
+### Application State
 
 ```typescript
 export interface AppState {
-  data: JsonValue;              // 表示中の JSON データ
-  filter: string;               // 適用中のフィルター/クエリ
-  error: string | null;         // エラー状態
-  selectedPath: string[];       // 現在選択中のパス
-  isFilterMode: boolean;        // フィルターモード状態
-  viewMode: ViewMode;          // 現在のビューモード
+  data: JsonValue;              // Currently displayed JSON data
+  filter: string;               // Applied filter/query
+  error: string | null;         // Error state
+  selectedPath: string[];       // Currently selected path
+  isFilterMode: boolean;        // Filter mode state
+  viewMode: ViewMode;          // Current view mode
 }
 ```
 
-### キーボード入力
+### Keyboard Input
 
 ```typescript
 export interface KeyboardInput {
@@ -114,48 +114,48 @@ export interface KeyboardInput {
 }
 ```
 
-## 🔍 検索・フィルタリング
+## 🔍 Search & Filtering
 
-### 検索状態
+### Search State
 
 ```typescript
 export interface SearchState {
-  isSearching: boolean;         // 検索モード状態
-  searchTerm: string;          // 検索文字列
-  searchResults: SearchResult[]; // 検索結果一覧
-  currentResultIndex: number;   // 現在選択中の結果インデックス
-  searchScope: SearchScope;     // 検索範囲スコープ
-  isRegexMode: boolean;        // 正規表現モード
+  isSearching: boolean;         // Search mode state
+  searchTerm: string;          // Search string
+  searchResults: SearchResult[]; // Search results list
+  currentResultIndex: number;   // Current selected result index
+  searchScope: SearchScope;     // Search scope
+  isRegexMode: boolean;        // Regular expression mode
 }
 
 export type SearchScope = "all" | "keys" | "values";
 
 export interface SearchResult {
-  lineIndex: number;           // マッチした行番号
-  columnStart: number;         // マッチ開始列
-  columnEnd: number;          // マッチ終了列
-  matchText: string;          // マッチしたテキスト
-  contextLine: string;        // コンテキスト行
-  path: string[];             // JSON パス
+  lineIndex: number;           // Matched line number
+  columnStart: number;         // Match start column
+  columnEnd: number;          // Match end column
+  matchText: string;          // Matched text
+  contextLine: string;        // Context line
+  path: string[];             // JSON path
 }
 ```
 
-### フィルタリング
+### Filtering
 
 ```typescript
 export interface FilterResult {
   success: boolean;
-  data?: JsonValue;            // フィルタ後データ
-  error?: string;             // エラー詳細
-  executionTime?: number;      // 実行時間（ms）
-  engine?: "jq" | "jsonata" | "native"; // 使用エンジン
+  data?: JsonValue;            // Filtered data
+  error?: string;             // Error details
+  executionTime?: number;      // Execution time (ms)
+  engine?: "jq" | "jsonata" | "native"; // Engine used
 }
 
-// フィルター関数型
+// Filter function type
 export type JsonFilter = (data: JsonValue, filter: string) => JsonValue;
 ```
 
-### jq クエリ統合
+### jq Query Integration
 
 ```typescript
 export interface JqQueryResult {
@@ -168,18 +168,18 @@ export interface JqQueryResult {
 }
 
 export interface JqState {
-  isActive: boolean;           // jq モード状態
-  query: string;              // 現在のクエリ
-  result?: JsonValue;         // クエリ結果
-  error?: string;             // エラー詳細
-  isExecuting: boolean;       // 実行中フラグ
-  history: string[];          // クエリ履歴
+  isActive: boolean;           // jq mode state
+  query: string;              // Current query
+  result?: JsonValue;         // Query result
+  error?: string;             // Error details
+  isExecuting: boolean;       // Execution flag
+  history: string[];          // Query history
 }
 ```
 
-## ⚙️ 設定・カスタマイズ
+## ⚙️ Settings & Customization
 
-### 設定インターフェース
+### Configuration Interface
 
 ```typescript
 export interface Config {
@@ -236,21 +236,21 @@ export interface KeybindingConfig {
 }
 ```
 
-### パフォーマンス設定
+### Performance Settings
 
 ```typescript
 export interface PerformanceConfig {
-  cacheSize: number;           // LRU キャッシュサイズ
-  maxFileSize: number;         // 最大ファイルサイズ（バイト）
-  virtualScrolling: boolean;   // 仮想スクロール有効化
-  backgroundProcessing: boolean; // バックグラウンド処理
-  memoryLimit: number;         // メモリ使用制限（MB）
+  cacheSize: number;           // LRU cache size
+  maxFileSize: number;         // Maximum file size (bytes)
+  virtualScrolling: boolean;   // Enable virtual scrolling
+  backgroundProcessing: boolean; // Background processing
+  memoryLimit: number;         // Memory usage limit (MB)
 }
 ```
 
-## 📤 エクスポート機能
+## 📤 Export Features
 
-### エクスポート形式
+### Export Formats
 
 ```typescript
 export type ExportFormat = 
@@ -278,7 +278,7 @@ export interface ExportResult {
 }
 ```
 
-### スキーマ生成
+### Schema Generation
 
 ```typescript
 export interface SchemaGenerationOptions {
@@ -302,26 +302,26 @@ export interface JsonSchema {
 }
 ```
 
-## ⚡ パフォーマンス
+## ⚡ Performance
 
-### 仮想化
+### Virtualization
 
 ```typescript
 export interface VirtualItem {
-  index: number;               // アイテムインデックス
-  start: number;              // 開始位置（ピクセル）
-  size: number;               // サイズ（ピクセル）
-  key: string | number;       // ユニークキー
+  index: number;               // Item index
+  start: number;              // Start position (pixels)
+  size: number;               // Size (pixels)
+  key: string | number;       // Unique key
 }
 
 export interface VirtualScrollConfig {
-  itemHeight: number;         // デフォルトアイテム高さ
-  overscan: number;          // オーバースキャン項目数
-  scrollingDelay: number;    // スクロール遅延（ms）
+  itemHeight: number;         // Default item height
+  overscan: number;          // Overscan item count
+  scrollingDelay: number;    // Scrolling delay (ms)
 }
 ```
 
-### キャッシュシステム
+### Cache System
 
 ```typescript
 export interface CacheStats {
@@ -340,9 +340,9 @@ export interface CacheEntry<T> {
 }
 ```
 
-## 🔌 拡張性
+## 🔌 Extensibility
 
-### プラグインシステム（計画中）
+### Plugin System (Planned)
 
 ```typescript
 export interface Plugin {
@@ -367,7 +367,7 @@ export type DataExporter = (
 export type CommandHandler = (args: string[]) => Promise<void>;
 ```
 
-### カスタムテーマ
+### Custom Themes
 
 ```typescript
 export interface ThemeDefinition {
@@ -395,9 +395,9 @@ export interface SyntaxHighlighting {
 }
 ```
 
-## 🎯 コンポーネント Props
+## 🎯 Component Props
 
-### JsonViewer コンポーネント
+### JsonViewer Component
 
 ```typescript
 export interface JsonViewerProps {
@@ -415,7 +415,7 @@ export interface JsonViewerProps {
 }
 ```
 
-### TreeView コンポーネント
+### TreeView Component
 
 ```typescript
 export interface TreeViewProps {
@@ -439,31 +439,31 @@ export interface TreeDisplayOptions {
 }
 ```
 
-## 📊 統計・メトリクス
+## 📊 Statistics & Metrics
 
-### パフォーマンスメトリクス
+### Performance Metrics
 
 ```typescript
 export interface PerformanceMetrics {
-  parseTime: number;           // パース時間（ms）
-  renderTime: number;          // レンダー時間（ms）
-  searchTime: number;          // 検索時間（ms）
-  memoryUsage: number;         // メモリ使用量（MB）
-  cacheHitRate: number;        // キャッシュヒット率
+  parseTime: number;           // Parse time (ms)
+  renderTime: number;          // Render time (ms)
+  searchTime: number;          // Search time (ms)
+  memoryUsage: number;         // Memory usage (MB)
+  cacheHitRate: number;        // Cache hit rate
 }
 
 export interface UsageStatistics {
-  sessionDuration: number;     // セッション時間（秒）
-  commandsExecuted: number;    // 実行コマンド数
-  filesProcessed: number;      // 処理ファイル数
-  averageFileSize: number;     // 平均ファイルサイズ（MB）
-  featuresUsed: string[];      // 使用機能一覧
+  sessionDuration: number;     // Session time (seconds)
+  commandsExecuted: number;    // Number of commands executed
+  filesProcessed: number;      // Number of files processed
+  averageFileSize: number;     // Average file size (MB)
+  featuresUsed: string[];      // List of features used
 }
 ```
 
-## 🛠️ ユーティリティ関数
+## 🛠️ Utility Functions
 
-### 型ガード
+### Type Guards
 
 ```typescript
 export function isJsonObject(value: JsonValue): value is JsonObject {
@@ -479,7 +479,7 @@ export function isPrimitive(value: JsonValue): value is string | number | boolea
 }
 ```
 
-### パス操作
+### Path Operations
 
 ```typescript
 export function getValueByPath(data: JsonValue, path: string[]): JsonValue;
@@ -488,7 +488,7 @@ export function hasPath(data: JsonValue, path: string[]): boolean;
 export function getAllPaths(data: JsonValue): string[][];
 ```
 
-### フォーマッティング
+### Formatting
 
 ```typescript
 export interface FormatterOptions {
@@ -506,36 +506,36 @@ export type JsonFormatter = (
 
 ---
 
-## 🔧 開発者向け情報
+## 🔧 Developer Information
 
-### 型安全性
+### Type Safety
 
-- 全ての公開 API は厳密な TypeScript 型定義を提供
-- `any` 型の使用は最小限に抑制
-- ジェネリクスを活用した柔軟性と型安全性の両立
+- All public APIs provide strict TypeScript type definitions
+- Use of `any` type is minimized
+- Balance flexibility and type safety through generics
 
-### パフォーマンス考慮事項
+### Performance Considerations
 
-- 大容量データでのメモリ効率
-- 遅延ロードと仮想化による UI 応答性
-- LRU キャッシュによる計算結果の再利用
-- バックグラウンド処理による非ブロッキング操作
+- Memory efficiency for large data
+- UI responsiveness through lazy loading and virtualization
+- Computation result reuse via LRU cache
+- Non-blocking operations through background processing
 
-### 拡張ガイドライン
+### Extension Guidelines
 
-- プラグインシステムでの機能追加
-- カスタムエクスポーター実装
-- 独自フィルタリングロジック
-- テーマとスタイルのカスタマイズ
+- Feature addition through plugin system
+- Custom exporter implementation
+- Custom filtering logic
+- Theme and style customization
 
 ---
 
-## 📞 サポート
+## 📞 Support
 
-API の使用方法や拡張に関する質問は、以下までお気軽にお問い合わせください：
+For questions about API usage or extensions, please feel free to contact us:
 
-- **GitHub Issues**: バグ報告・機能要求
-- **GitHub Discussions**: 実装相談・質問
-- **コードレビュー**: プルリクエストでの詳細議論
+- **GitHub Issues**: Bug reports and feature requests
+- **GitHub Discussions**: Implementation consultation and questions
+- **Code Review**: Detailed discussion in pull requests
 
-この API ドキュメントは、jsont の継続的な開発と共に更新されます。
+This API documentation is updated continuously with the ongoing development of jsont.
