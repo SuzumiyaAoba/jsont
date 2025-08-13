@@ -198,6 +198,15 @@ export function getTreeLineText(
         displayText = "1:"; // fallback
       }
     }
+
+    // Add collapsed indicators for objects and arrays that have children but are not expanded
+    if (line.hasChildren && !line.isExpanded) {
+      if (line.type === "object") {
+        displayText += " {...}";
+      } else if (line.type === "array") {
+        displayText += " [...]";
+      }
+    }
   }
 
   // Add schema type if enabled

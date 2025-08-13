@@ -207,7 +207,7 @@ describe("treeRenderer", () => {
       };
 
       const text = getTreeLineText(line);
-      expect(text).toBe("├─ items");
+      expect(text).toBe("├─ items [...]");
     });
 
     it("should show '.' for root object nodes", () => {
@@ -290,6 +290,86 @@ describe("treeRenderer", () => {
 
       const text = getTreeLineText(line, options);
       expect(text).toBe("├─ name: John");
+    });
+
+    it("should show {...} for collapsed objects", () => {
+      const line = {
+        id: "test",
+        level: 1,
+        prefix: "├─ ",
+        key: "user",
+        value: "",
+        type: "object" as const,
+        isExpanded: false,
+        hasChildren: true,
+      };
+
+      const text = getTreeLineText(line);
+      expect(text).toBe("├─ user {...}");
+    });
+
+    it("should show [...] for collapsed arrays", () => {
+      const line = {
+        id: "test",
+        level: 1,
+        prefix: "├─ ",
+        key: "items",
+        value: "",
+        type: "array" as const,
+        isExpanded: false,
+        hasChildren: true,
+      };
+
+      const text = getTreeLineText(line);
+      expect(text).toBe("├─ items [...]");
+    });
+
+    it("should not show indicators for expanded objects", () => {
+      const line = {
+        id: "test",
+        level: 1,
+        prefix: "├─ ",
+        key: "user",
+        value: "",
+        type: "object" as const,
+        isExpanded: true,
+        hasChildren: true,
+      };
+
+      const text = getTreeLineText(line);
+      expect(text).toBe("├─ user");
+    });
+
+    it("should not show indicators for expanded arrays", () => {
+      const line = {
+        id: "test",
+        level: 1,
+        prefix: "├─ ",
+        key: "items",
+        value: "",
+        type: "array" as const,
+        isExpanded: true,
+        hasChildren: true,
+      };
+
+      const text = getTreeLineText(line);
+      expect(text).toBe("├─ items");
+    });
+
+    it("should not show indicators for objects without children", () => {
+      const line = {
+        id: "test",
+        level: 1,
+        prefix: "├─ ",
+        key: "empty",
+        value: "",
+        type: "object" as const,
+        isExpanded: false,
+        hasChildren: false,
+      };
+
+      const text = getTreeLineText(line);
+      expect(text).toBe("├─ empty");
     });
   });
 
