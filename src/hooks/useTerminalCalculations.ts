@@ -21,7 +21,6 @@ import { useEffect, useMemo, useState } from "react";
 interface UseTerminalCalculationsProps {
   keyboardEnabled: boolean;
   error: string | null;
-  searchInput: string;
   initialData: unknown;
   collapsibleMode: boolean;
 }
@@ -29,7 +28,6 @@ interface UseTerminalCalculationsProps {
 export function useTerminalCalculations({
   keyboardEnabled,
   error,
-  searchInput,
   initialData,
   collapsibleMode,
 }: UseTerminalCalculationsProps) {
@@ -107,18 +105,13 @@ export function useTerminalCalculations({
     terminalSize.width,
   ]);
 
+  // JQ bar height constant
+  const JQ_BAR_TOTAL_LINES = 5; // 2 border + 3 content lines
+
   // Calculate JQ input bar height when active (fixed height to prevent layout shifts)
   const jqBarHeight = useMemo(() => {
     if (!jqState.isActive) return 0;
-
-    // Fixed height to prevent layout changes when error state changes:
-    // - Border: 2 lines (top + bottom)
-    // - Padding: 2 lines (top + bottom)
-    // - Query label: 1 line
-    // - Input field: 1 line
-    // - Status line: 1 line
-    // - Reserved for potential error: 3 lines
-    return 8; // Fixed height regardless of error state
+    return JQ_BAR_TOTAL_LINES;
   }, [jqState.isActive]);
 
   // Calculate status bar height dynamically based on content length
@@ -144,36 +137,11 @@ export function useTerminalCalculations({
   const searchBarHeight = useMemo(() => {
     if (!searchState.isSearching && !searchState.searchTerm) return 0;
 
-    const terminalWidth = terminalSize.width;
-    let searchContent = "";
+    // SearchBar uses a fixed height regardless of content
 
-    if (searchState.isSearching) {
-      searchContent = `Search: ${searchInput} (Enter: confirm, Esc: cancel)`;
-    } else {
-      const navigationInfo =
-        searchState.searchResults.length > 0
-          ? `${searchState.currentResultIndex + 1}/${searchState.searchResults.length}`
-          : "0/0";
-      searchContent = `Search: ${searchState.searchTerm} (${navigationInfo}) n: next, N: prev, s: new search`;
-    }
-
-    // SearchBar uses borderStyle="single" + padding={1}
-    // Available width = terminalWidth - 4 (2 borders + 2 padding)
-    const availableWidth = Math.max(terminalWidth - 4, 20);
-    const contentLines = Math.ceil(searchContent.length / availableWidth);
-
-    // Total height = contentLines + 2 (borders) + 2 (padding) = contentLines + 4
-    // But Ink optimizes this, so use conservative calculation
-    const calculatedHeight = contentLines + 3;
-    return Math.max(3, calculatedHeight); // Minimum 3 lines
-  }, [
-    searchState.isSearching,
-    searchState.searchTerm,
-    searchInput,
-    searchState.searchResults.length,
-    searchState.currentResultIndex,
-    terminalSize.width,
-  ]);
+    // SearchBar actual height is 3 lines (border + padding + content)
+    return 3;
+  }, [searchState.isSearching, searchState.searchTerm]);
 
   // Conservative calculation to ensure first line is always visible
   const terminalHeight = terminalSize.height;
@@ -211,8 +179,8 @@ export function useTerminalCalculations({
   const currentDataLines = schemaVisible ? schemaLines : jsonLines;
   const maxScroll = Math.max(0, currentDataLines - visibleLines);
 
-  // Simplified search mode calculation
-  const searchModeVisibleLines = visibleLines;
+  // Search mode calculation - account for SearchBar height
+  const searchModeVisibleLines = Math.max(1, visibleLines - searchBarHeight);
   const maxScrollSearchMode = Math.max(
     0,
     currentDataLines - searchModeVisibleLines,

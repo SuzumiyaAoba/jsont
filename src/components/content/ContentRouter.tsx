@@ -51,7 +51,7 @@ export function ContentRouter({
     helpVisible,
   } = ui;
 
-  const { visibleLines, searchModeVisibleLines } = terminalCalculations;
+  const { visibleLines } = terminalCalculations;
 
   // Handle scroll changes for collapsible viewer
   const handleCollapsibleScrollChange = useCallback(
@@ -61,11 +61,7 @@ export function ContentRouter({
     [setScrollOffset],
   );
 
-  // Calculate effective visible lines based on search state
-  const effectiveVisibleLines =
-    searchState.isSearching || searchState.searchTerm
-      ? searchModeVisibleLines
-      : visibleLines;
+  // Use visibleLines directly from terminalCalculations (already accounts for all UI states)
 
   // Don't show content when help is visible (it's handled by ModalManager)
   if (helpVisible) {
@@ -79,7 +75,7 @@ export function ContentRouter({
         {treeViewMode ? (
           <EnhancedTreeView
             data={displayData as JsonValue | null}
-            height={effectiveVisibleLines}
+            height={visibleLines}
             scrollOffset={scrollOffset}
             searchTerm={searchState.searchTerm}
             options={{
@@ -98,7 +94,7 @@ export function ContentRouter({
             searchTerm={searchState.searchTerm}
             searchResults={searchState.searchResults}
             currentSearchIndex={searchState.currentResultIndex}
-            visibleLines={effectiveVisibleLines}
+            visibleLines={visibleLines}
             showLineNumbers={lineNumbersVisible}
             onScrollChange={handleCollapsibleScrollChange}
           />
@@ -109,7 +105,7 @@ export function ContentRouter({
             searchTerm={searchState.searchTerm}
             searchResults={searchState.searchResults}
             currentSearchIndex={searchState.currentResultIndex}
-            visibleLines={effectiveVisibleLines}
+            visibleLines={visibleLines}
             showLineNumbers={lineNumbersVisible}
           />
         ) : (
@@ -119,7 +115,7 @@ export function ContentRouter({
             searchTerm={searchState.searchTerm}
             searchResults={searchState.searchResults}
             currentSearchIndex={searchState.currentResultIndex}
-            visibleLines={effectiveVisibleLines}
+            visibleLines={visibleLines}
             showLineNumbers={lineNumbersVisible}
           />
         )}

@@ -42,7 +42,6 @@ describe("Custom Hooks Interfaces", () => {
       const result = useTerminalCalculations({
         keyboardEnabled: true,
         error: null,
-        searchInput: "",
         initialData: {},
         collapsibleMode: false,
       });
@@ -63,7 +62,6 @@ describe("Custom Hooks Interfaces", () => {
       const result = useTerminalCalculations({
         keyboardEnabled: true,
         error: null,
-        searchInput: "",
         initialData: {},
         collapsibleMode: false,
       });
@@ -165,7 +163,6 @@ describe("Custom Hooks Interfaces", () => {
       const validProps = {
         keyboardEnabled: true,
         error: null,
-        searchInput: "",
         initialData: { test: "data" },
         collapsibleMode: false,
       };
@@ -200,7 +197,6 @@ describe("Custom Hooks Interfaces", () => {
       const propsWithError = {
         keyboardEnabled: true,
         error: "Test error",
-        searchInput: "test",
         initialData: null,
         collapsibleMode: true,
       };

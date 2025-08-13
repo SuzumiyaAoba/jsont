@@ -26,6 +26,7 @@ import {
   useCallback,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 
@@ -86,6 +87,14 @@ export function EnhancedTreeView({
   const [showSchemaTypes, setShowSchemaTypes] = useState(false);
   const [showLineNumbers, setShowLineNumbers] = useState(false);
   const [currentScrollOffset, setCurrentScrollOffset] = useState(scrollOffset);
+
+  // Use refs to access current values without causing dependency issues
+  const selectedLineIndexRef = useRef(selectedLineIndex);
+  selectedLineIndexRef.current = selectedLineIndex;
+
+  const handleKeyboardInputRef = useRef<
+    ((input: string, key: KeyboardInput) => boolean) | undefined
+  >(undefined);
 
   // Update tree when data changes
   useEffect(() => {
@@ -168,7 +177,7 @@ export function EnhancedTreeView({
     };
   }, [filteredLines.length, currentScrollOffset, contentHeight]);
 
-  // Handle keyboard input
+  // Handle keyboard input - store in ref to avoid dependency issues
   const handleKeyboardInput = useCallback(
     (input: string, key: KeyboardInput): boolean => {
       // Navigation
@@ -208,7 +217,7 @@ export function EnhancedTreeView({
 
       // Node expansion/collapse
       if (key.return || input === " ") {
-        const selectedLine = filteredLines[selectedLineIndex];
+        const selectedLine = filteredLines[selectedLineIndexRef.current];
         if (selectedLine?.hasChildren) {
           setTreeState((prev) => toggleNodeExpansion(prev, selectedLine.id));
         }
@@ -235,15 +244,21 @@ export function EnhancedTreeView({
 
       return false;
     },
-    [filteredLines, selectedLineIndex, contentHeight],
+    [filteredLines, contentHeight],
   );
 
-  // Register keyboard handler with parent
+  // Store handler in ref for stable reference
+  handleKeyboardInputRef.current = handleKeyboardInput;
+
+  // Register keyboard handler with parent - use wrapper to avoid dependency issues
   useEffect(() => {
     if (onKeyboardHandlerReady) {
-      onKeyboardHandlerReady(handleKeyboardInput);
+      const stableHandler = (input: string, key: KeyboardInput): boolean => {
+        return handleKeyboardInputRef.current?.(input, key) ?? false;
+      };
+      onKeyboardHandlerReady(stableHandler);
     }
-  }, [onKeyboardHandlerReady, handleKeyboardInput]);
+  }, [onKeyboardHandlerReady]);
 
   // Auto-scroll to keep selected line visible
   useEffect(() => {
@@ -265,9 +280,9 @@ export function EnhancedTreeView({
     }
   }, [
     selectedLineIndex,
-    currentScrollOffset,
     contentHeight,
     filteredLines.length,
+    currentScrollOffset,
   ]);
 
   return (
