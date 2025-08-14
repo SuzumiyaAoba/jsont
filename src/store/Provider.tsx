@@ -5,7 +5,7 @@
 import { Provider as JotaiRootProvider } from "jotai";
 import type { ReactNode } from "react";
 
-interface JotaiProviderProps {
+export interface JotaiProviderProps {
   children: ReactNode;
 }
 
