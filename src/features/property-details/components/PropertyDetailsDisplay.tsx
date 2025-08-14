@@ -111,7 +111,7 @@ export function PropertyDetailsDisplay({
         <Text color="gray" dimColor>
           {"Value".padStart(LABEL_WIDTH)}
         </Text>
-        <Text> {details.valueString}</Text>
+        <Text wrap="wrap"> {details.valueString}</Text>
       </Text>
     </Box>,
   );
