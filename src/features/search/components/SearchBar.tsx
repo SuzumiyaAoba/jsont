@@ -50,7 +50,13 @@ export const SearchBar = memo(function SearchBar({
   );
 
   return (
-    <Box borderStyle="single" borderColor="yellow" padding={1} width="100%">
+    <Box
+      borderStyle="single"
+      borderColor="yellow"
+      padding={1}
+      width="100%"
+      minHeight={3}
+    >
       <Box flexDirection="row" width="100%">
         <Box flexGrow={1}>
           {searchState.isSearching ? (

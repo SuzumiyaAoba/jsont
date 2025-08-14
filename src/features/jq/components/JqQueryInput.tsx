@@ -60,6 +60,7 @@ export function JqQueryInput({
       width="100%"
       flexDirection="column"
       flexShrink={0}
+      minHeight={5}
     >
       <Box marginBottom={1}>
         <Text bold color="cyan">
