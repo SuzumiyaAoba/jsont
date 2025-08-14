@@ -104,14 +104,16 @@ export function PropertyDetailsDisplay({
     );
   }
 
-  // Value section (always shown)
+  // Value section (always shown) - reserve 2 lines for proper display
   sections.push(
-    <Text key="value">
-      <Text color="gray" dimColor>
-        {"Value".padStart(LABEL_WIDTH)}
-      </Text>{" "}
-      {details.valueString}
-    </Text>,
+    <Box key="value" flexDirection="column" height={2}>
+      <Box>
+        <Text color="gray" dimColor>
+          {"Value".padStart(LABEL_WIDTH)}
+        </Text>{" "}
+        <Text>{details.valueString}</Text>
+      </Box>
+    </Box>,
   );
 
   // Show all available sections (don't limit by height parameter)
@@ -121,7 +123,7 @@ export function PropertyDetailsDisplay({
     <Box
       flexDirection="column"
       width={width}
-      height={8} // Fixed height: 1 header + 5 content + 2 borders
+      height={9} // Fixed height: 1 header + 5 content (Value=2 lines) + 2 borders + 1 extra for Value
       borderStyle="single"
       borderColor="gray"
     >

@@ -167,16 +167,16 @@ export function useTerminalCalculations({
     // - Header: 1 line ("Property Details")
     // - Borders: 2 lines (top + bottom)
     // - Content sections: Fixed height for all possible sections
-    //   1. Path section
-    //   2. Key section
-    //   3. Type section
-    //   4. Children section
-    //   5. Value section
+    //   1. Path section (1 line)
+    //   2. Key section (1 line)
+    //   3. Type section (1 line)
+    //   4. Children section (1 line)
+    //   5. Value section (2 lines) - expanded for better display
 
-    const FIXED_CONTENT_LINES = 5; // Always reserve space for all 5 sections
+    const FIXED_CONTENT_LINES = 6; // 4 single-line sections + 2 lines for Value section
 
     // Total height: header + fixed content + borders
-    return 1 + FIXED_CONTENT_LINES + 2; // = 8 lines total
+    return 1 + FIXED_CONTENT_LINES + 2; // = 9 lines total
   }, [propertyDetailsConfig.enabled, treeViewMode, uiCollapsibleMode]);
 
   // Conservative calculation to ensure first line is always visible
