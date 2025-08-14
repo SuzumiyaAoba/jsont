@@ -157,7 +157,7 @@ export function EnhancedTreeView({
   // Note: Selection reset on search change is handled in keyboard input logic
 
   // Calculate visible lines with scroll offset
-  const contentHeight = height - 4; // Reserve space for header(1), footer(1), and content borders(2)
+  const contentHeight = height - 2; // Reserve space for header(1) and footer(1), borders handled in Box height
   const visibleLines = useMemo(() => {
     const startIndex = Math.max(
       0,
@@ -315,7 +315,7 @@ export function EnhancedTreeView({
       {/* Tree content - with border */}
       <Box
         flexDirection="column"
-        height={contentHeight}
+        height={contentHeight + 2}
         borderStyle="single"
         borderColor="gray"
         width="100%"
