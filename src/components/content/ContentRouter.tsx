@@ -71,7 +71,13 @@ export function ContentRouter({
   return (
     <>
       {/* Main content area */}
-      <Box flexGrow={1} flexDirection="column">
+      <Box
+        flexGrow={1}
+        flexDirection="column"
+        borderStyle="single"
+        borderColor="gray"
+        minHeight={3}
+      >
         {treeViewMode ? (
           <EnhancedTreeView
             data={displayData as JsonValue | null}

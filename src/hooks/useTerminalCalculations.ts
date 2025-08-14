@@ -190,12 +190,15 @@ export function useTerminalCalculations({
   // Conservative calculation to ensure first line is always visible
   const terminalHeight = terminalSize.height;
   // Reserve space for UI elements but ensure we have at least 5 visible lines
+  // Add 2 lines for main content area border (top + bottom)
+  const mainContentBorderHeight = 2;
   const reservedSpace = Math.min(
     debugBarHeight +
       statusBarHeight +
       searchBarHeight +
       jqBarHeight +
       propertyDetailsHeight +
+      mainContentBorderHeight +
       2,
     terminalHeight - 5,
   );
