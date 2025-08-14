@@ -17,9 +17,9 @@ import type { JsonValue } from "@core/types/index";
 import type { NavigationAction } from "@features/collapsible/types/collapsible";
 import { ConfirmationDialog, NotificationToast } from "@features/common";
 import { PropertyDetailsDisplay } from "@features/property-details";
-import { usePropertyDetails } from "@store/hooks";
 import { Box } from "ink";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { usePropertyDetails } from "@/store/hooks";
 
 /**
  * Main application component for the JSON TUI Viewer - Refactored with Modular Components

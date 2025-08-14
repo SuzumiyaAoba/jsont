@@ -43,7 +43,8 @@ export function useTerminalCalculations({
     treeViewMode,
     collapsibleMode: uiCollapsibleMode,
   } = useUI();
-  const { config: propertyDetailsConfig } = usePropertyDetails();
+  const { config: propertyDetailsConfig, details: propertyDetails } =
+    usePropertyDetails();
 
   // Terminal size state
   const [terminalSize, setTerminalSize] = useState({
@@ -157,9 +158,11 @@ export function useTerminalCalculations({
   // Calculate property details height - reserve fixed height for consistent layout
   const propertyDetailsHeight = useMemo(() => {
     // Only reserve height when property details are enabled AND displayed in current view mode
-    // Property details are only shown in tree and collapsible modes
+    // Property details are only shown in tree and collapsible modes AND when details exist
     const isPropertyDetailsVisible =
-      propertyDetailsConfig.enabled && (treeViewMode || uiCollapsibleMode);
+      propertyDetailsConfig.enabled &&
+      (treeViewMode || uiCollapsibleMode) &&
+      !!propertyDetails;
 
     if (!isPropertyDetailsVisible) return 0;
 
@@ -177,7 +180,12 @@ export function useTerminalCalculations({
 
     // Total height: header + fixed content + borders
     return 1 + FIXED_CONTENT_LINES + 2; // = 9 lines total
-  }, [propertyDetailsConfig.enabled, treeViewMode, uiCollapsibleMode]);
+  }, [
+    propertyDetailsConfig.enabled,
+    treeViewMode,
+    uiCollapsibleMode,
+    propertyDetails,
+  ]);
 
   // Conservative calculation to ensure first line is always visible
   const terminalHeight = terminalSize.height;

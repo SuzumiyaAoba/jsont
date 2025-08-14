@@ -160,7 +160,7 @@ export function extractPropertyDetailsFromPath(
   path: (string | number)[],
   originalData: JsonValue,
 ): PropertyDetails | null {
-  if (!originalData) return null;
+  if (originalData === null || originalData === undefined) return null;
 
   try {
     // Navigate to the value at the given path
