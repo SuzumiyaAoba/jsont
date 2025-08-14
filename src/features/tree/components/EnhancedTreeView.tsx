@@ -95,6 +95,9 @@ export function EnhancedTreeView({
   const selectedLineIndexRef = useRef(selectedLineIndex);
   selectedLineIndexRef.current = selectedLineIndex;
 
+  const filteredLinesRef = useRef<typeof filteredLines>([]);
+  const updatePropertyDetailsRef = useRef(updatePropertyDetails);
+
   const handleKeyboardInputRef = useRef<
     ((input: string, key: KeyboardInput) => boolean) | undefined
   >(undefined);
@@ -147,6 +150,10 @@ export function EnhancedTreeView({
     return filtered;
   }, [allLines, searchTerm, displayOptions]);
 
+  // Update refs to current values
+  filteredLinesRef.current = filteredLines;
+  updatePropertyDetailsRef.current = updatePropertyDetails;
+
   // Note: Selection reset on search change is handled in keyboard input logic
 
   // Calculate visible lines with scroll offset
@@ -190,7 +197,7 @@ export function EnhancedTreeView({
       }
       if (key.downArrow || (input === "j" && !key.ctrl)) {
         setSelectedLineIndex((prev) =>
-          Math.min(filteredLines.length - 1, prev + 1),
+          Math.min(filteredLinesRef.current.length - 1, prev + 1),
         );
         return true;
       }
@@ -203,7 +210,7 @@ export function EnhancedTreeView({
       if (key.pageDown || (key.ctrl && input === "f")) {
         setSelectedLineIndex((prev) =>
           Math.min(
-            filteredLines.length - 1,
+            filteredLinesRef.current.length - 1,
             prev + Math.floor(contentHeight / 2),
           ),
         );
@@ -214,13 +221,14 @@ export function EnhancedTreeView({
         return true;
       }
       if (input === "G") {
-        setSelectedLineIndex(Math.max(0, filteredLines.length - 1));
+        setSelectedLineIndex(Math.max(0, filteredLinesRef.current.length - 1));
         return true;
       }
 
       // Node expansion/collapse
       if (key.return || input === " ") {
-        const selectedLine = filteredLines[selectedLineIndexRef.current];
+        const selectedLine =
+          filteredLinesRef.current[selectedLineIndexRef.current];
         if (selectedLine?.hasChildren) {
           setTreeState((prev) => toggleNodeExpansion(prev, selectedLine.id));
         }
@@ -247,7 +255,7 @@ export function EnhancedTreeView({
 
       return false;
     },
-    [filteredLines, contentHeight],
+    [contentHeight],
   );
 
   // Store handler in ref for stable reference
@@ -265,12 +273,13 @@ export function EnhancedTreeView({
 
   // Auto-scroll to keep selected line visible
   useEffect(() => {
+    const filteredLinesLength = filteredLinesRef.current.length;
     const viewportStart = Math.max(
       0,
-      Math.min(currentScrollOffset, filteredLines.length - contentHeight),
+      Math.min(currentScrollOffset, filteredLinesLength - contentHeight),
     );
     const viewportEnd = Math.min(
-      filteredLines.length,
+      filteredLinesLength,
       viewportStart + contentHeight,
     );
 
@@ -281,23 +290,18 @@ export function EnhancedTreeView({
         Math.max(0, selectedLineIndex - contentHeight + 1),
       );
     }
-  }, [
-    selectedLineIndex,
-    contentHeight,
-    filteredLines.length,
-    currentScrollOffset,
-  ]);
+  }, [selectedLineIndex, contentHeight, currentScrollOffset]);
 
   // Update property details when selected line changes
   useEffect(() => {
-    const selectedLine = filteredLines[selectedLineIndex];
+    const selectedLine = filteredLinesRef.current[selectedLineIndex];
     if (selectedLine && data) {
       const details = extractPropertyDetailsFromTreeLine(selectedLine, data);
-      updatePropertyDetails(details);
+      updatePropertyDetailsRef.current(details);
     } else {
-      updatePropertyDetails(null);
+      updatePropertyDetailsRef.current(null);
     }
-  }, [selectedLineIndex, filteredLines, data, updatePropertyDetails]);
+  }, [selectedLineIndex, data]);
 
   return (
     <Box flexDirection="column" width={width} height={height}>

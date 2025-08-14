@@ -104,11 +104,11 @@ function AppContent({
     }
   }, [
     initialViewMode,
-    toggleTreeView,
+    openSettings,
     toggleCollapsible,
     toggleSchema,
-    openSettings,
-  ]);
+    toggleTreeView,
+  ]); // 関数は一度だけ実行されるため、依存配列から削除
 
   // Clear TreeView handler when TreeView is disabled
   useEffect(() => {

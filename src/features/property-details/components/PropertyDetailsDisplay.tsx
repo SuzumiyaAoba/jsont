@@ -3,6 +3,7 @@
  */
 
 import { Box, Text } from "ink";
+import type React from "react";
 import type {
   PropertyDetails,
   PropertyDetailsConfig,
@@ -39,57 +40,113 @@ export function PropertyDetailsDisplay({
   // Calculate available width for content (accounting for borders and padding)
   const contentWidth = Math.max(0, width - 2);
 
-  // Prepare display text sections
-  const sections: string[] = [];
+  // Prepare display text sections - always create all sections
+  const sections: React.ReactElement[] = [];
 
-  // Path section
+  // Define label width for right alignment (longest label is "Children")
+  const LABEL_WIDTH = 8; // "Children".length
+
+  // Path section - always reserve space
   if (config.showPath && details.pathString) {
-    sections.push(`Path: ${details.pathString}`);
+    sections.push(
+      <Text key="path">
+        <Text color="gray" dimColor>
+          {"Path".padStart(LABEL_WIDTH)}
+        </Text>{" "}
+        {details.pathString}
+      </Text>,
+    );
+  } else if (config.showPath) {
+    sections.push(
+      <Text key="path">
+        <Text color="gray" dimColor>
+          {"Path".padStart(LABEL_WIDTH)}
+        </Text>{" "}
+        -
+      </Text>,
+    );
   }
 
-  // Key section
+  // Key section - always reserve space
   if (details.key !== null && details.key !== "") {
     const keyText =
       typeof details.key === "number" ? `[${details.key}]` : `"${details.key}"`;
-    sections.push(`Key: ${keyText}`);
+    sections.push(
+      <Text key="key">
+        <Text color="gray" dimColor>
+          {"Key".padStart(LABEL_WIDTH)}
+        </Text>{" "}
+        {keyText}
+      </Text>,
+    );
+  } else {
+    sections.push(
+      <Text key="key">
+        <Text color="gray" dimColor>
+          {"Key".padStart(LABEL_WIDTH)}
+        </Text>{" "}
+        root
+      </Text>,
+    );
   }
 
-  // Type section
+  // Type section - always reserve space
   if (config.showType) {
-    sections.push(`Type: ${details.type}`);
+    sections.push(
+      <Text key="type">
+        <Text color="gray" dimColor>
+          {"Type".padStart(LABEL_WIDTH)}
+        </Text>{" "}
+        {details.type}
+      </Text>,
+    );
   }
 
-  // Children count section
-  if (
-    config.showChildrenCount &&
-    details.hasChildren &&
-    details.childrenCount !== undefined
-  ) {
-    const countText =
-      details.type === "array"
-        ? `${details.childrenCount} items`
-        : `${details.childrenCount} properties`;
-    sections.push(`Children: ${countText}`);
+  // Children count section - always reserve space
+  if (config.showChildrenCount) {
+    if (details.hasChildren && details.childrenCount !== undefined) {
+      const countText =
+        details.type === "array"
+          ? `${details.childrenCount} items`
+          : `${details.childrenCount} properties`;
+      sections.push(
+        <Text key="children">
+          <Text color="gray" dimColor>
+            {"Children".padStart(LABEL_WIDTH)}
+          </Text>{" "}
+          {countText}
+        </Text>,
+      );
+    } else {
+      sections.push(
+        <Text key="children">
+          <Text color="gray" dimColor>
+            {"Children".padStart(LABEL_WIDTH)}
+          </Text>{" "}
+          -
+        </Text>,
+      );
+    }
   }
 
   // Value section (always shown)
-  sections.push(`Value: ${details.valueString}`);
-
-  // Truncate sections if they exceed available width
-  const truncatedSections = sections.map((section) => {
-    if (section.length <= contentWidth) {
-      return section;
-    }
-    return `${section.slice(0, contentWidth - 3)}...`;
-  });
+  sections.push(
+    <Text key="value">
+      <Text color="gray" dimColor>
+        {"Value".padStart(LABEL_WIDTH)}
+      </Text>{" "}
+      {details.valueString}
+    </Text>,
+  );
 
   // Show all available sections (don't limit by height parameter)
-  const sectionsToShow = truncatedSections;
+  const sectionsToShow = sections;
 
   return (
     <Box
       flexDirection="column"
       width={width}
+      height={8} // Fixed height: 1 header + 5 content + 2 borders
       borderStyle="single"
       borderColor="gray"
     >
@@ -102,8 +159,8 @@ export function PropertyDetailsDisplay({
 
       {/* Content */}
       {sectionsToShow.map((section) => (
-        <Box key={section} width={contentWidth}>
-          <Text>{section}</Text>
+        <Box key={section.key} width={contentWidth}>
+          {section}
         </Box>
       ))}
     </Box>

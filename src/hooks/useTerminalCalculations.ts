@@ -14,6 +14,7 @@ import {
 } from "@features/status/utils/statusUtils";
 import { useDebugInfo } from "@store/hooks/useDebug";
 import { useJqState } from "@store/hooks/useJq";
+import { usePropertyDetails } from "@store/hooks/usePropertyDetails";
 import { useSearchState } from "@store/hooks/useSearch";
 import { useUI } from "@store/hooks/useUI";
 import { useEffect, useMemo, useState } from "react";
@@ -35,7 +36,14 @@ export function useTerminalCalculations({
   const searchState = useSearchState();
   const jqState = useJqState();
   const [debugInfo] = useDebugInfo();
-  const { debugVisible, helpVisible, schemaVisible } = useUI();
+  const {
+    debugVisible,
+    helpVisible,
+    schemaVisible,
+    treeViewMode,
+    collapsibleMode: uiCollapsibleMode,
+  } = useUI();
+  const { config: propertyDetailsConfig } = usePropertyDetails();
 
   // Terminal size state
   const [terminalSize, setTerminalSize] = useState({
@@ -101,8 +109,11 @@ export function useTerminalCalculations({
     keyboardEnabled,
     searchState.isSearching,
     searchState.searchTerm,
-    debugInfo,
+    debugInfo?.lastKey,
+    debugInfo?.lastKeyAction,
+    debugInfo?.timestamp,
     terminalSize.width,
+    debugInfo,
   ]);
 
   // JQ bar height constant
@@ -143,11 +154,41 @@ export function useTerminalCalculations({
     return 3;
   }, [searchState.isSearching, searchState.searchTerm]);
 
+  // Calculate property details height - reserve fixed height for consistent layout
+  const propertyDetailsHeight = useMemo(() => {
+    // Only reserve height when property details are enabled AND displayed in current view mode
+    // Property details are only shown in tree and collapsible modes
+    const isPropertyDetailsVisible =
+      propertyDetailsConfig.enabled && (treeViewMode || uiCollapsibleMode);
+
+    if (!isPropertyDetailsVisible) return 0;
+
+    // PropertyDetailsDisplay fixed height calculation:
+    // - Header: 1 line ("Property Details")
+    // - Borders: 2 lines (top + bottom)
+    // - Content sections: Fixed height for all possible sections
+    //   1. Path section
+    //   2. Key section
+    //   3. Type section
+    //   4. Children section
+    //   5. Value section
+
+    const FIXED_CONTENT_LINES = 5; // Always reserve space for all 5 sections
+
+    // Total height: header + fixed content + borders
+    return 1 + FIXED_CONTENT_LINES + 2; // = 8 lines total
+  }, [propertyDetailsConfig.enabled, treeViewMode, uiCollapsibleMode]);
+
   // Conservative calculation to ensure first line is always visible
   const terminalHeight = terminalSize.height;
   // Reserve space for UI elements but ensure we have at least 5 visible lines
   const reservedSpace = Math.min(
-    debugBarHeight + statusBarHeight + searchBarHeight + jqBarHeight + 2,
+    debugBarHeight +
+      statusBarHeight +
+      searchBarHeight +
+      jqBarHeight +
+      propertyDetailsHeight +
+      2,
     terminalHeight - 5,
   );
   const visibleLines = Math.max(5, terminalHeight - reservedSpace);
@@ -195,6 +236,7 @@ export function useTerminalCalculations({
     statusBarHeight,
     searchBarHeight,
     jqBarHeight,
+    propertyDetailsHeight,
     UI_RESERVED_LINES: 0, // No reserved lines to ensure first line visibility
     visibleLines,
     searchModeVisibleLines,
