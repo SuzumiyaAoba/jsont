@@ -1,23 +1,10 @@
 /**
  * Zod validation schemas for jsont configuration
  * This provides runtime validation and type safety for configuration loading
+ * Types are derived from these schemas to ensure consistency
  */
 
 import { z } from "zod";
-import type {
-  BehaviorConfig,
-  DisplayConfig,
-  InterfaceConfig,
-  JsonDisplayConfig,
-  JsontConfig,
-  KeyBindings,
-  ModeKeys,
-  NavigationConfig,
-  NavigationKeys,
-  SearchConfig,
-  SearchKeys,
-  TreeDisplayConfig,
-} from "./types.js";
 
 // Base primitive schemas
 const stringArraySchema = z.array(z.string()).min(1);
@@ -84,7 +71,7 @@ const navigationKeysSchema = z.object({
   pageDown: stringArraySchema,
   top: stringArraySchema,
   bottom: stringArraySchema,
-}) satisfies z.ZodType<NavigationKeys>;
+});
 
 // Mode keys schema
 const modeKeysSchema = z.object({
@@ -99,28 +86,28 @@ const modeKeysSchema = z.object({
   export: stringArraySchema,
   exportData: stringArraySchema,
   quit: stringArraySchema,
-}) satisfies z.ZodType<ModeKeys>;
+});
 
 // Search keys schema
 const searchKeysSchema = z.object({
   next: stringArraySchema,
   previous: stringArraySchema,
   exit: stringArraySchema,
-}) satisfies z.ZodType<SearchKeys>;
+});
 
 // Key bindings schema
 const keyBindingsSchema = z.object({
   navigation: navigationKeysSchema,
   modes: modeKeysSchema,
   search: searchKeysSchema,
-}) satisfies z.ZodType<KeyBindings>;
+});
 
 // JSON display configuration schema
 const jsonDisplayConfigSchema = z.object({
   indent: positiveNumberSchema.max(10),
   useTabs: z.boolean(),
   maxLineLength: positiveNumberSchema.max(1000),
-}) satisfies z.ZodType<JsonDisplayConfig>;
+});
 
 // Tree display configuration schema
 const treeDisplayConfigSchema = z.object({
@@ -129,7 +116,7 @@ const treeDisplayConfigSchema = z.object({
   maxValueLength: positiveNumberSchema.max(1000),
   useUnicodeTree: z.boolean(),
   showSchemaTypes: z.boolean(),
-}) satisfies z.ZodType<TreeDisplayConfig>;
+});
 
 // Interface configuration schema
 const interfaceConfigSchema = z.object({
@@ -138,41 +125,70 @@ const interfaceConfigSchema = z.object({
   defaultHeight: positiveNumberSchema.max(1000),
   showStatusBar: z.boolean(),
   appearance: appearanceConfigSchema,
-}) satisfies z.ZodType<InterfaceConfig>;
+});
 
 // Display configuration schema
 const displayConfigSchema = z.object({
   json: jsonDisplayConfigSchema,
   tree: treeDisplayConfigSchema,
   interface: interfaceConfigSchema,
-}) satisfies z.ZodType<DisplayConfig>;
+});
 
 // Search configuration schema
 const searchConfigSchema = z.object({
   caseSensitive: z.boolean(),
   regex: z.boolean(),
   highlight: z.boolean(),
-}) satisfies z.ZodType<SearchConfig>;
+});
 
 // Navigation configuration schema
 const navigationConfigSchema = z.object({
   halfPageScroll: z.boolean(),
   autoScroll: z.boolean(),
   scrollOffset: nonNegativeNumberSchema.max(100),
-}) satisfies z.ZodType<NavigationConfig>;
+});
 
 // Behavior configuration schema
 const behaviorConfigSchema = z.object({
   search: searchConfigSchema,
   navigation: navigationConfigSchema,
-}) satisfies z.ZodType<BehaviorConfig>;
+});
 
 // Full configuration schema
 export const jsontConfigSchema = z.object({
   keybindings: keyBindingsSchema,
   display: displayConfigSchema,
   behavior: behaviorConfigSchema,
-}) satisfies z.ZodType<JsontConfig>;
+});
+
+// =============================================================================
+// TYPE DEFINITIONS DERIVED FROM SCHEMAS
+// =============================================================================
+
+// Base types derived from schemas
+export type NavigationKeys = z.infer<typeof navigationKeysSchema>;
+export type ModeKeys = z.infer<typeof modeKeysSchema>;
+export type SearchKeys = z.infer<typeof searchKeysSchema>;
+export type KeyBindings = z.infer<typeof keyBindingsSchema>;
+
+// Configuration types
+export type JsonDisplayConfig = z.infer<typeof jsonDisplayConfigSchema>;
+export type TreeDisplayConfig = z.infer<typeof treeDisplayConfigSchema>;
+export type InterfaceConfig = z.infer<typeof interfaceConfigSchema>;
+export type DisplayConfig = z.infer<typeof displayConfigSchema>;
+
+export type SearchConfig = z.infer<typeof searchConfigSchema>;
+export type NavigationConfig = z.infer<typeof navigationConfigSchema>;
+export type BehaviorConfig = z.infer<typeof behaviorConfigSchema>;
+
+// Appearance types
+export type BorderConfig = z.infer<typeof borderConfigSchema>;
+export type ColorConfig = z.infer<typeof colorConfigSchema>;
+export type HeightConfig = z.infer<typeof heightConfigSchema>;
+export type AppearanceConfig = z.infer<typeof appearanceConfigSchema>;
+
+// Main configuration type
+export type JsontConfig = z.infer<typeof jsontConfigSchema>;
 
 // Partial configuration schema for user overrides
 export const partialJsontConfigSchema = z
@@ -265,6 +281,9 @@ export const partialJsontConfigSchema = z
       .partial(),
   })
   .partial();
+
+// Partial configuration type derived from schema
+export type PartialJsontConfig = z.infer<typeof partialJsontConfigSchema>;
 
 /**
  * Validate a complete configuration object
