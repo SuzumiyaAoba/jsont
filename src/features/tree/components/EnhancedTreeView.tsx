@@ -157,7 +157,7 @@ export function EnhancedTreeView({
   // Note: Selection reset on search change is handled in keyboard input logic
 
   // Calculate visible lines with scroll offset
-  const contentHeight = height - 2; // Reserve space for header and footer
+  const contentHeight = height - 4; // Reserve space for header(1), footer(1), and content borders(2)
   const visibleLines = useMemo(() => {
     const startIndex = Math.max(
       0,
