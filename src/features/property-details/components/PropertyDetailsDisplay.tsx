@@ -47,48 +47,32 @@ export function PropertyDetailsDisplay({
   const LABEL_WIDTH = 8; // "Children".length
 
   // Path section - always reserve space
-  if (config.showPath && details.pathString) {
+  if (config.showPath) {
     sections.push(
       <Text key="path">
         <Text color="gray" dimColor>
           {"Path".padStart(LABEL_WIDTH)}
         </Text>{" "}
-        {details.pathString}
-      </Text>,
-    );
-  } else if (config.showPath) {
-    sections.push(
-      <Text key="path">
-        <Text color="gray" dimColor>
-          {"Path".padStart(LABEL_WIDTH)}
-        </Text>{" "}
-        -
+        {details.pathString || "-"}
       </Text>,
     );
   }
 
   // Key section - always reserve space
-  if (details.key !== null && details.key !== "") {
-    const keyText =
-      typeof details.key === "number" ? `[${details.key}]` : `"${details.key}"`;
-    sections.push(
-      <Text key="key">
-        <Text color="gray" dimColor>
-          {"Key".padStart(LABEL_WIDTH)}
-        </Text>{" "}
-        {keyText}
-      </Text>,
-    );
-  } else {
-    sections.push(
-      <Text key="key">
-        <Text color="gray" dimColor>
-          {"Key".padStart(LABEL_WIDTH)}
-        </Text>{" "}
-        root
-      </Text>,
-    );
-  }
+  const keyText =
+    details.key !== null && details.key !== ""
+      ? typeof details.key === "number"
+        ? `[${details.key}]`
+        : `"${details.key}"`
+      : "root";
+  sections.push(
+    <Text key="key">
+      <Text color="gray" dimColor>
+        {"Key".padStart(LABEL_WIDTH)}
+      </Text>{" "}
+      {keyText}
+    </Text>,
+  );
 
   // Type section - always reserve space
   if (config.showType) {
@@ -104,29 +88,20 @@ export function PropertyDetailsDisplay({
 
   // Children count section - always reserve space
   if (config.showChildrenCount) {
-    if (details.hasChildren && details.childrenCount !== undefined) {
-      const countText =
-        details.type === "array"
+    const childrenText =
+      details.hasChildren && details.childrenCount !== undefined
+        ? details.type === "array"
           ? `${details.childrenCount} items`
-          : `${details.childrenCount} properties`;
-      sections.push(
-        <Text key="children">
-          <Text color="gray" dimColor>
-            {"Children".padStart(LABEL_WIDTH)}
-          </Text>{" "}
-          {countText}
-        </Text>,
-      );
-    } else {
-      sections.push(
-        <Text key="children">
-          <Text color="gray" dimColor>
-            {"Children".padStart(LABEL_WIDTH)}
-          </Text>{" "}
-          -
-        </Text>,
-      );
-    }
+          : `${details.childrenCount} properties`
+        : "-";
+    sections.push(
+      <Text key="children">
+        <Text color="gray" dimColor>
+          {"Children".padStart(LABEL_WIDTH)}
+        </Text>{" "}
+        {childrenText}
+      </Text>,
+    );
   }
 
   // Value section (always shown)
