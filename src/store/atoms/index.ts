@@ -12,6 +12,8 @@ export * from "./export";
 export * from "./jq";
 // Navigation atoms
 export * from "./navigation";
+// Property details atoms
+export * from "./propertyDetailsAtoms";
 // Search atoms
 export * from "./search";
 // UI state atoms

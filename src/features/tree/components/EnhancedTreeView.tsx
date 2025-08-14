@@ -6,6 +6,7 @@
 import { useConfig } from "@core/context/ConfigContext";
 import type { KeyboardInput } from "@core/types/app";
 import type { JsonValue } from "@core/types/index";
+import { extractPropertyDetailsFromTreeLine } from "@features/property-details";
 import type {
   TreeDisplayOptions,
   TreeViewState,
@@ -20,6 +21,7 @@ import {
   getTreeLineText,
   renderTreeLines,
 } from "@features/tree/utils/treeRenderer";
+import { usePropertyDetails } from "@store/hooks";
 import { Box, Text } from "ink";
 import {
   type ReactElement,
@@ -76,6 +78,7 @@ export function EnhancedTreeView({
   onKeyboardHandlerReady,
 }: EnhancedTreeViewProps): ReactElement {
   const config = useConfig();
+  const { updatePropertyDetails } = usePropertyDetails();
 
   // Build tree state from JSON data
   const [treeState, setTreeState] = useState<TreeViewState>(() =>
@@ -284,6 +287,17 @@ export function EnhancedTreeView({
     filteredLines.length,
     currentScrollOffset,
   ]);
+
+  // Update property details when selected line changes
+  useEffect(() => {
+    const selectedLine = filteredLines[selectedLineIndex];
+    if (selectedLine && data) {
+      const details = extractPropertyDetailsFromTreeLine(selectedLine, data);
+      updatePropertyDetails(details);
+    } else {
+      updatePropertyDetails(null);
+    }
+  }, [selectedLineIndex, filteredLines, data, updatePropertyDetails]);
 
   return (
     <Box flexDirection="column" width={width} height={height}>
