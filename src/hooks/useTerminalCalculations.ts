@@ -117,8 +117,8 @@ export function useTerminalCalculations({
     debugInfo,
   ]);
 
-  // JQ bar height constant
-  const JQ_BAR_TOTAL_LINES = 5; // 2 border + 3 content lines
+  // JQ bar height constant - updated for minHeight={5} + borders
+  const JQ_BAR_TOTAL_LINES = 7; // minHeight(5) + borders(2) = 7 lines
 
   // Calculate JQ input bar height when active (fixed height to prevent layout shifts)
   const jqBarHeight = useMemo(() => {
@@ -149,9 +149,7 @@ export function useTerminalCalculations({
   const searchBarHeight = useMemo(() => {
     if (!searchState.isSearching && !searchState.searchTerm) return 0;
 
-    // SearchBar uses a fixed height regardless of content
-
-    // SearchBar actual height is 3 lines (border + padding + content)
+    // SearchBar uses height={3} which includes borders and padding
     return 3;
   }, [searchState.isSearching, searchState.searchTerm]);
 

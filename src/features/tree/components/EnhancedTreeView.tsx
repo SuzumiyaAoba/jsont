@@ -71,7 +71,7 @@ export interface EnhancedTreeViewProps {
 export function EnhancedTreeView({
   data,
   height = 20,
-  width = 80,
+  width: _width = 80,
   searchTerm = "",
   scrollOffset = 0,
   options = {},
@@ -157,7 +157,7 @@ export function EnhancedTreeView({
   // Note: Selection reset on search change is handled in keyboard input logic
 
   // Calculate visible lines with scroll offset
-  const contentHeight = height - 2; // Reserve space for header and footer
+  const contentHeight = height - 4; // Reserve space for header(1), footer(1), and borders(2)
   const visibleLines = useMemo(() => {
     const startIndex = Math.max(
       0,
@@ -304,16 +304,22 @@ export function EnhancedTreeView({
   }, [selectedLineIndex, data]);
 
   return (
-    <Box flexDirection="column" width={width} height={height}>
-      {/* Header */}
-      <Box width={width}>
+    <Box flexDirection="column" width="100%" height={height}>
+      {/* Header - outside border */}
+      <Box width="100%">
         <Text color="green" bold>
           TREE VIEW (j/k: navigate, Space: toggle, t: types, L: lines)
         </Text>
       </Box>
 
-      {/* Tree content */}
-      <Box flexDirection="column" height={contentHeight}>
+      {/* Tree content - with border */}
+      <Box
+        flexDirection="column"
+        flexGrow={1}
+        borderStyle="single"
+        borderColor="gray"
+        width="100%"
+      >
         {visibleLines.length > 0 ? (
           visibleLines.map((line, index) => {
             if (!line) return null;
@@ -325,7 +331,7 @@ export function EnhancedTreeView({
               lineText.toLowerCase().includes(searchTerm.toLowerCase());
 
             return (
-              <Box key={line.id} width={width}>
+              <Box key={line.id} width="100%">
                 {showLineNumbers && (
                   <>
                     <Text color={isSelected ? "yellow" : "gray"}>
@@ -350,7 +356,7 @@ export function EnhancedTreeView({
             );
           })
         ) : (
-          <Box width={width}>
+          <Box width="100%">
             <Text color="gray" italic>
               {searchTerm ? "No matches found" : "No data to display"}
             </Text>
@@ -358,17 +364,11 @@ export function EnhancedTreeView({
         )}
       </Box>
 
-      {/* Footer with scroll info */}
+      {/* Footer with scroll info - outside border */}
       {(scrollInfo.hasScrollUp || scrollInfo.hasScrollDown) && (
-        <Box width={width} justifyContent="space-between">
-          <Text color="gray">
-            {scrollInfo.hasScrollUp ? "↑ More above" : ""}
-          </Text>
+        <Box width="100%" justifyContent="center">
           <Text color="gray">
             Line {selectedLineIndex + 1} of {scrollInfo.totalLines}
-          </Text>
-          <Text color="gray">
-            {scrollInfo.hasScrollDown ? "More below ↓" : ""}
           </Text>
         </Box>
       )}
