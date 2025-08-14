@@ -82,6 +82,7 @@ const mockTerminalCalculations = {
   statusBarHeight: 1,
   searchBarHeight: 1,
   jqBarHeight: 1,
+  propertyDetailsHeight: 0,
   UI_RESERVED_LINES: 4,
   visibleLines: 20,
   searchModeVisibleLines: 18,

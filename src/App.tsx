@@ -16,8 +16,10 @@ import type {
 import type { JsonValue } from "@core/types/index";
 import type { NavigationAction } from "@features/collapsible/types/collapsible";
 import { ConfirmationDialog, NotificationToast } from "@features/common";
+import { PropertyDetailsDisplay } from "@features/property-details";
 import { Box } from "ink";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { usePropertyDetails } from "@/store/hooks";
 
 /**
  * Main application component for the JSON TUI Viewer - Refactored with Modular Components
@@ -68,6 +70,9 @@ function AppContent({
     terminalCalculations,
   } = useAppState();
 
+  const { details: propertyDetails, config: propertyDetailsConfig } =
+    usePropertyDetails();
+
   const [treeViewKeyboardHandler, setTreeViewKeyboardHandler] =
     useState<KeyboardHandler | null>(null);
 
@@ -99,10 +104,10 @@ function AppContent({
     }
   }, [
     initialViewMode,
-    toggleTreeView,
+    openSettings,
     toggleCollapsible,
     toggleSchema,
-    openSettings,
+    toggleTreeView,
   ]);
 
   // Clear TreeView handler when TreeView is disabled
@@ -180,6 +185,15 @@ function AppContent({
           safeSetTreeViewKeyboardHandler={safeSetTreeViewKeyboardHandler}
           collapsibleViewerRef={collapsibleViewerRef}
         />
+
+        {/* Property details display at the bottom */}
+        {(currentMode === "tree" || currentMode === "collapsible") && (
+          <PropertyDetailsDisplay
+            details={propertyDetails}
+            config={propertyDetailsConfig}
+            width={terminalCalculations.terminalSize.width}
+          />
+        )}
 
         {/* Keyboard input manager */}
         <KeyboardManager

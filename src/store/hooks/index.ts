@@ -10,6 +10,8 @@ export * from "./useExport";
 export * from "./useJq";
 // Navigation hooks
 export * from "./useNavigation";
+// Property details hooks
+export * from "./usePropertyDetails";
 // Search hooks
 export * from "./useSearch";
 // Settings hooks
