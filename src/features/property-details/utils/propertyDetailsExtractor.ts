@@ -19,6 +19,27 @@ function getValueType(value: JsonValue): PropertyDetails["type"] {
 /**
  * Format a JSON value as a display string without truncation
  */
+/**
+ * Format value for Property Details display without truncation
+ * Shows full content instead of summary for arrays and objects
+ */
+function formatValueForPropertyDetails(value: JsonValue): string {
+  if (value === null) return "null";
+  if (typeof value === "string") return `"${value}"`;
+  if (typeof value === "boolean" || typeof value === "number") {
+    return String(value);
+  }
+  if (Array.isArray(value)) {
+    // Don't show value for arrays, only show in Children count
+    return "-";
+  }
+  if (typeof value === "object") {
+    // Don't show value for objects, only show in Children count
+    return "-";
+  }
+  return String(value);
+}
+
 function formatValue(value: JsonValue): string {
   if (value === null) return "null";
   if (typeof value === "string") return `"${value}"`;
@@ -115,7 +136,7 @@ export function extractPropertyDetailsFromTreeLine(
     line.originalValue !== undefined ? line.originalValue : actualValue;
 
   const type = getValueType(valueToUse);
-  const valueString = line.value || formatValue(valueToUse); // Use line.value (formatted) or format the actual value
+  const valueString = line.value || formatValueForPropertyDetails(valueToUse); // Use line.value (formatted) or format the actual value without truncation
   const pathString = path.length > 0 ? path.join(".") : "root";
   const hasChildren = line.hasChildren || false;
   const childrenCount = getChildrenCount(valueToUse);
