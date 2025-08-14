@@ -117,14 +117,11 @@ export function useTerminalCalculations({
     debugInfo,
   ]);
 
-  // JQ bar height constant - updated for minHeight={5} + borders
-  const JQ_BAR_TOTAL_LINES = 7; // minHeight(5) + borders(2) = 7 lines
-
-  // Calculate JQ input bar height when active (fixed height to prevent layout shifts)
+  // Calculate JQ input bar height when active (using config value)
   const jqBarHeight = useMemo(() => {
     if (!jqState.isActive) return 0;
-    return JQ_BAR_TOTAL_LINES;
-  }, [jqState.isActive]);
+    return config.display.interface.appearance.heights.jqInput;
+  }, [jqState.isActive, config.display.interface.appearance.heights.jqInput]);
 
   // Calculate status bar height dynamically based on content length
   const statusBarHeight = useMemo(() => {
@@ -149,9 +146,13 @@ export function useTerminalCalculations({
   const searchBarHeight = useMemo(() => {
     if (!searchState.isSearching && !searchState.searchTerm) return 0;
 
-    // SearchBar uses height={3} which includes borders and padding
-    return 3;
-  }, [searchState.isSearching, searchState.searchTerm]);
+    // Use configured search bar height
+    return config.display.interface.appearance.heights.searchBar;
+  }, [
+    searchState.isSearching,
+    searchState.searchTerm,
+    config.display.interface.appearance.heights.searchBar,
+  ]);
 
   // Calculate property details height - reserve fixed height for consistent layout
   const propertyDetailsHeight = useMemo(() => {
@@ -164,25 +165,14 @@ export function useTerminalCalculations({
 
     if (!isPropertyDetailsVisible) return 0;
 
-    // PropertyDetailsDisplay fixed height calculation:
-    // - Header: 1 line ("Property Details")
-    // - Borders: 2 lines (top + bottom)
-    // - Content sections: Fixed height for all possible sections
-    //   1. Path section (1 line)
-    //   2. Key section (1 line)
-    //   3. Type section (1 line)
-    //   4. Children section (1 line)
-    //   5. Value section (2 lines) - expanded for better display
-
-    const FIXED_CONTENT_LINES = 6; // 4 single-line sections + 2 lines for Value section
-
-    // Total height: header + fixed content + borders
-    return 1 + FIXED_CONTENT_LINES + 2; // = 9 lines total
+    // Use configured property details height
+    return config.display.interface.appearance.heights.propertyDetails;
   }, [
     propertyDetailsConfig.enabled,
     treeViewMode,
     uiCollapsibleMode,
     propertyDetails,
+    config.display.interface.appearance.heights.propertyDetails,
   ]);
 
   // Conservative calculation to ensure first line is always visible

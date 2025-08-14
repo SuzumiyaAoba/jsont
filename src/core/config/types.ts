@@ -68,6 +68,87 @@ export interface InterfaceConfig {
   defaultHeight: number;
   /** Status bar configuration */
   showStatusBar: boolean;
+  /** UI appearance configuration */
+  appearance: AppearanceConfig;
+}
+
+/** UI appearance configuration */
+export interface AppearanceConfig {
+  /** Border style configuration */
+  borders: BorderConfig;
+  /** Color theme configuration */
+  colors: ColorConfig;
+  /** Component height configuration */
+  heights: HeightConfig;
+}
+
+/** Border appearance configuration */
+export interface BorderConfig {
+  /** Default border style */
+  style: "single" | "double" | "round" | "classic";
+  /** Border colors for different components */
+  colors: {
+    /** Main content area border color */
+    mainContent: string;
+    /** Search bar border color */
+    search: string;
+    /** JQ input border color (when no dynamic status) */
+    jq: string;
+    /** Settings panel border colors */
+    settings: {
+      /** Normal state border color */
+      normal: string;
+      /** Edit mode border color */
+      editing: string;
+    };
+    /** Help viewer border color */
+    help: string;
+    /** Debug components border color */
+    debug: string;
+    /** Property details border color */
+    propertyDetails: string;
+    /** Export dialog border color */
+    export: string;
+  };
+}
+
+/** Color theme configuration */
+export interface ColorConfig {
+  /** Primary color for headers and emphasis */
+  primary: string;
+  /** Secondary color for highlights */
+  secondary: string;
+  /** Success state color */
+  success: string;
+  /** Warning state color */
+  warning: string;
+  /** Error state color */
+  error: string;
+  /** Info state color */
+  info: string;
+  /** Muted/disabled color */
+  muted: string;
+  /** Text colors */
+  text: {
+    /** Primary text color */
+    primary: string;
+    /** Secondary text color */
+    secondary: string;
+    /** Dimmed text color */
+    dimmed: string;
+  };
+}
+
+/** Component height configuration */
+export interface HeightConfig {
+  /** Search bar height (including borders) */
+  searchBar: number;
+  /** JQ input component height (including borders) */
+  jqInput: number;
+  /** Property details display height */
+  propertyDetails: number;
+  /** Settings header height */
+  settingsHeader: number;
 }
 
 export interface SearchConfig {

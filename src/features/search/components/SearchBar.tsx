@@ -1,3 +1,4 @@
+import { useConfig } from "@core/context/ConfigContext";
 import type {
   SearchScope,
   SearchState,
@@ -24,6 +25,8 @@ export const SearchBar = memo(function SearchBar({
   searchCursorPosition = 0,
   onScopeChange: _onScopeChange,
 }: SearchBarProps) {
+  const config = useConfig();
+
   const navigationInfo = useMemo(
     () =>
       getSearchNavigationInfo(
@@ -49,37 +52,46 @@ export const SearchBar = memo(function SearchBar({
     [searchInput, searchCursorPosition],
   );
 
+  // Get appearance settings
+  const borderStyle = config.display.interface.appearance.borders.style;
+  const borderColor = config.display.interface.appearance.borders.colors.search;
+  const height = config.display.interface.appearance.heights.searchBar;
+  const labelColor = config.display.interface.appearance.colors.secondary;
+  const textColor = config.display.interface.appearance.colors.text.primary;
+  const mutedColor = config.display.interface.appearance.colors.muted;
+  const primaryColor = config.display.interface.appearance.colors.primary;
+
   return (
     <Box
-      borderStyle="single"
-      borderColor="yellow"
+      borderStyle={borderStyle}
+      borderColor={borderColor}
       padding={1}
       width="100%"
-      height={3}
+      height={height}
       overflow="hidden"
     >
       <Box flexDirection="row" width="100%">
         <Box flexGrow={1}>
           {searchState.isSearching ? (
             <>
-              <Text color="yellow">Search: </Text>
-              <Text color="white">
+              <Text color={labelColor}>Search: </Text>
+              <Text color={textColor}>
                 {beforeCursor}
-                <Text color="black" backgroundColor="yellow">
+                <Text color="black" backgroundColor={labelColor}>
                   {atCursor}
                 </Text>
                 {afterCursor}
               </Text>
-              <Text color="gray" dimColor>
+              <Text color={mutedColor} dimColor>
                 {" "}
                 (Enter: confirm, Esc: cancel, Tab: scope, Ctrl+R: regex)
               </Text>
             </>
           ) : (
             <>
-              <Text color="yellow">Search: </Text>
-              <Text color="white">{searchState.searchTerm}</Text>
-              <Text color="gray" dimColor>
+              <Text color={labelColor}>Search: </Text>
+              <Text color={textColor}>{searchState.searchTerm}</Text>
+              <Text color={mutedColor} dimColor>
                 {" "}
                 ({navigationInfo}) n: next, N: prev, /: new search, Tab: scope
               </Text>
@@ -87,27 +99,31 @@ export const SearchBar = memo(function SearchBar({
           )}
         </Box>
         <Box marginLeft={2}>
-          <Text color="cyan">[</Text>
+          <Text color={primaryColor}>[</Text>
           <Text
-            color="white"
+            color={textColor}
             {...(searchState.searchScope === "all" && {
-              backgroundColor: "blue",
+              backgroundColor: config.display.interface.appearance.colors.info,
             })}
           >
             {scopeDisplayName}
           </Text>
-          <Text color="cyan">]</Text>
-          <Text color="gray"> </Text>
-          <Text color="cyan">[</Text>
+          <Text color={primaryColor}>]</Text>
+          <Text color={mutedColor}> </Text>
+          <Text color={primaryColor}>[</Text>
           <Text
-            color={searchState.isRegexMode ? "green" : "gray"}
+            color={
+              searchState.isRegexMode
+                ? config.display.interface.appearance.colors.success
+                : mutedColor
+            }
             {...(searchState.isRegexMode && {
               backgroundColor: "darkGreen",
             })}
           >
             {regexModeDisplayName}
           </Text>
-          <Text color="cyan">]</Text>
+          <Text color={primaryColor}>]</Text>
         </Box>
       </Box>
     </Box>

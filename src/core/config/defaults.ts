@@ -51,6 +51,44 @@ export const DEFAULT_CONFIG: JsontConfig = {
       debugMode: false,
       defaultHeight: 24,
       showStatusBar: true,
+      appearance: {
+        borders: {
+          style: "single",
+          colors: {
+            mainContent: "gray",
+            search: "yellow",
+            jq: "blue",
+            settings: {
+              normal: "cyan",
+              editing: "yellow",
+            },
+            help: "cyan",
+            debug: "blue",
+            propertyDetails: "gray",
+            export: "yellow",
+          },
+        },
+        colors: {
+          primary: "cyan",
+          secondary: "yellow",
+          success: "green",
+          warning: "yellow",
+          error: "red",
+          info: "blue",
+          muted: "gray",
+          text: {
+            primary: "white",
+            secondary: "gray",
+            dimmed: "gray",
+          },
+        },
+        heights: {
+          searchBar: 3,
+          jqInput: 7,
+          propertyDetails: 9,
+          settingsHeader: 4,
+        },
+      },
     },
   },
   behavior: {

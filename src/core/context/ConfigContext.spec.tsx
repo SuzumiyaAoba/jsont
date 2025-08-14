@@ -33,6 +33,44 @@ vi.mock("../../config/index.js", () => ({
         debugMode: false,
         defaultHeight: 24,
         showStatusBar: true,
+        appearance: {
+          borders: {
+            style: "single" as const,
+            colors: {
+              mainContent: "gray",
+              search: "yellow",
+              jq: "blue",
+              settings: {
+                normal: "cyan",
+                editing: "yellow",
+              },
+              help: "cyan",
+              debug: "blue",
+              propertyDetails: "gray",
+              export: "yellow",
+            },
+          },
+          colors: {
+            primary: "cyan",
+            secondary: "yellow",
+            success: "green",
+            warning: "yellow",
+            error: "red",
+            info: "blue",
+            muted: "gray",
+            text: {
+              primary: "white",
+              secondary: "gray",
+              dimmed: "gray",
+            },
+          },
+          heights: {
+            searchBar: 3,
+            jqInput: 7,
+            propertyDetails: 9,
+            settingsHeader: 4,
+          },
+        },
       },
     },
     keybindings: {
@@ -123,6 +161,44 @@ describe("ConfigContext", () => {
             debugMode: true,
             defaultHeight: 30,
             showStatusBar: false,
+            appearance: {
+              borders: {
+                style: "single" as const,
+                colors: {
+                  mainContent: "gray",
+                  search: "yellow",
+                  jq: "blue",
+                  settings: {
+                    normal: "cyan",
+                    editing: "yellow",
+                  },
+                  help: "cyan",
+                  debug: "blue",
+                  propertyDetails: "gray",
+                  export: "yellow",
+                },
+              },
+              colors: {
+                primary: "cyan",
+                secondary: "yellow",
+                success: "green",
+                warning: "yellow",
+                error: "red",
+                info: "blue",
+                muted: "gray",
+                text: {
+                  primary: "white",
+                  secondary: "gray",
+                  dimmed: "gray",
+                },
+              },
+              heights: {
+                searchBar: 3,
+                jqInput: 7,
+                propertyDetails: 9,
+                settingsHeader: 4,
+              },
+            },
           },
         },
         keybindings: {

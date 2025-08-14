@@ -2,6 +2,7 @@
  * Collapsible JSON viewer component - Refactored with modular hooks
  */
 
+import { useConfig } from "@core/context/ConfigContext";
 import type { JsonValue, SearchResult } from "@core/types/index";
 import type { NavigationAction } from "@features/collapsible/types/collapsible";
 import { Box } from "ink";
@@ -44,9 +45,13 @@ export const CollapsibleJsonViewer = forwardRef<
   ref,
 ) {
   // Use custom hooks for state management
-  const { collapsibleState, setCollapsibleState, config } =
-    useCollapsibleState(data);
-  const displayLines = useDisplayLines(collapsibleState, config);
+  const config = useConfig();
+  const {
+    collapsibleState,
+    setCollapsibleState,
+    config: localConfig,
+  } = useCollapsibleState(data);
+  const displayLines = useDisplayLines(collapsibleState, localConfig);
   const { searchResultsByLine, renderLineWithHighlighting } =
     useSearchHighlighting(searchTerm, searchResults);
 
@@ -154,8 +159,10 @@ export const CollapsibleJsonViewer = forwardRef<
   return (
     <Box
       flexDirection="column"
-      borderStyle="single"
-      borderColor="gray"
+      borderStyle={config.display.interface.appearance.borders.style}
+      borderColor={
+        config.display.interface.appearance.borders.colors.mainContent
+      }
       width="100%"
     >
       {renderedLines}
