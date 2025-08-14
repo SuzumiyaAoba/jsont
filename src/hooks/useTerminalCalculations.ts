@@ -149,9 +149,8 @@ export function useTerminalCalculations({
   const searchBarHeight = useMemo(() => {
     if (!searchState.isSearching && !searchState.searchTerm) return 0;
 
-    // SearchBar uses minHeight={3} which includes borders
-    // Actual content: 1 line + padding(1) + borders(2) = 4 lines minimum
-    return 4;
+    // SearchBar uses height={3} which includes borders and padding
+    return 3;
   }, [searchState.isSearching, searchState.searchTerm]);
 
   // Calculate property details height - reserve fixed height for consistent layout

@@ -55,7 +55,7 @@ export const SearchBar = memo(function SearchBar({
       borderColor="yellow"
       padding={1}
       width="100%"
-      height={4}
+      height={3}
       overflow="hidden"
     >
       <Box flexDirection="row" width="100%">
