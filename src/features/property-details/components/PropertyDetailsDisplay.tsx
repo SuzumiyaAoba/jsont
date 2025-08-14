@@ -105,13 +105,30 @@ export function PropertyDetailsDisplay({
   }
 
   // Value section (always shown) - reserve 2 lines for proper display
+  // Use full value for primitive types, hide for complex types
+  const getFullValueDisplay = (details: PropertyDetails): string => {
+    if (details.type === "array" || details.type === "object") {
+      return "-";
+    }
+    // For primitive types, use the original value to avoid truncation
+    if (details.value === null) return "null";
+    if (typeof details.value === "string") return `"${details.value}"`;
+    if (
+      typeof details.value === "boolean" ||
+      typeof details.value === "number"
+    ) {
+      return String(details.value);
+    }
+    return details.valueString; // fallback to formatted string
+  };
+
   sections.push(
     <Box key="value" flexDirection="column" height={2}>
       <Text>
         <Text color="gray" dimColor>
           {"Value".padStart(LABEL_WIDTH)}
         </Text>
-        <Text wrap="wrap"> {details.valueString}</Text>
+        <Text wrap="wrap"> {getFullValueDisplay(details)}</Text>
       </Text>
     </Box>,
   );
