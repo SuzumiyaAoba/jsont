@@ -316,8 +316,10 @@ export function EnhancedTreeView({
       <Box
         flexDirection="column"
         flexGrow={1}
-        borderStyle="single"
-        borderColor="gray"
+        borderStyle={config.display.interface.appearance.borders.style}
+        borderColor={
+          config.display.interface.appearance.borders.colors.mainContent
+        }
         width="100%"
       >
         {visibleLines.length > 0 ? (
