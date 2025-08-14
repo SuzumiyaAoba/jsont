@@ -22,4 +22,4 @@ export type {
   SearchConfig,
   SearchKeys,
   TreeDisplayConfig,
-} from "./schema.js";
+} from "./schema";

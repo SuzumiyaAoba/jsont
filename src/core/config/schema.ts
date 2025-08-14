@@ -191,6 +191,7 @@ export type AppearanceConfig = z.infer<typeof appearanceConfigSchema>;
 export type JsontConfig = z.infer<typeof jsontConfigSchema>;
 
 // Partial configuration schema for user overrides
+// Note: This creates a deeply partial schema where all nested properties are optional
 export const partialJsontConfigSchema = z
   .object({
     keybindings: z
@@ -199,86 +200,23 @@ export const partialJsontConfigSchema = z
         modes: modeKeysSchema.partial(),
         search: searchKeysSchema.partial(),
       })
-      .partial(),
+      .partial()
+      .optional(),
     display: z
       .object({
         json: jsonDisplayConfigSchema.partial(),
         tree: treeDisplayConfigSchema.partial(),
-        interface: z
-          .object({
-            showLineNumbers: z.boolean().optional(),
-            debugMode: z.boolean().optional(),
-            defaultHeight: positiveNumberSchema.max(1000).optional(),
-            showStatusBar: z.boolean().optional(),
-            appearance: z
-              .object({
-                borders: z
-                  .object({
-                    style: borderStyleSchema.optional(),
-                    colors: z
-                      .object({
-                        mainContent: colorStringSchema.optional(),
-                        search: colorStringSchema.optional(),
-                        jq: colorStringSchema.optional(),
-                        settings: z
-                          .object({
-                            normal: colorStringSchema.optional(),
-                            editing: colorStringSchema.optional(),
-                          })
-                          .partial()
-                          .optional(),
-                        help: colorStringSchema.optional(),
-                        debug: colorStringSchema.optional(),
-                        propertyDetails: colorStringSchema.optional(),
-                        export: colorStringSchema.optional(),
-                      })
-                      .partial()
-                      .optional(),
-                  })
-                  .partial()
-                  .optional(),
-                colors: z
-                  .object({
-                    primary: colorStringSchema.optional(),
-                    secondary: colorStringSchema.optional(),
-                    success: colorStringSchema.optional(),
-                    warning: colorStringSchema.optional(),
-                    error: colorStringSchema.optional(),
-                    info: colorStringSchema.optional(),
-                    muted: colorStringSchema.optional(),
-                    text: z
-                      .object({
-                        primary: colorStringSchema.optional(),
-                        secondary: colorStringSchema.optional(),
-                        dimmed: colorStringSchema.optional(),
-                      })
-                      .partial()
-                      .optional(),
-                  })
-                  .partial()
-                  .optional(),
-                heights: z
-                  .object({
-                    searchBar: positiveNumberSchema.max(20).optional(),
-                    jqInput: positiveNumberSchema.max(30).optional(),
-                    propertyDetails: positiveNumberSchema.max(50).optional(),
-                    settingsHeader: positiveNumberSchema.max(10).optional(),
-                  })
-                  .partial()
-                  .optional(),
-              })
-              .partial()
-              .optional(),
-          })
-          .partial(),
+        interface: interfaceConfigSchema.partial(),
       })
-      .partial(),
+      .partial()
+      .optional(),
     behavior: z
       .object({
         search: searchConfigSchema.partial(),
         navigation: navigationConfigSchema.partial(),
       })
-      .partial(),
+      .partial()
+      .optional(),
   })
   .partial();
 

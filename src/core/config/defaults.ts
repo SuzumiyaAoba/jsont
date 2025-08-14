@@ -2,7 +2,7 @@
  * Default configuration values for jsont application
  */
 
-import type { JsontConfig } from "./types.js";
+import type { JsontConfig } from "./types";
 
 export const DEFAULT_CONFIG: JsontConfig = {
   keybindings: {

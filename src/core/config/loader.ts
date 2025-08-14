@@ -8,13 +8,13 @@ import { homedir } from "node:os";
 import { join } from "node:path";
 import { createDefu } from "defu";
 import { load as yamlLoad } from "js-yaml";
-import { DEFAULT_CONFIG } from "./defaults.js";
+import { DEFAULT_CONFIG } from "./defaults";
 import {
   coerceToPartialConfig,
   getValidationErrors,
   safeValidatePartialJsontConfig,
-} from "./schema.js";
-import type { JsontConfig, PartialJsontConfig } from "./types.js";
+} from "./schema";
+import type { JsontConfig, PartialJsontConfig } from "./types";
 
 /**
  * Custom defu instance that replaces arrays instead of concatenating them

@@ -2,7 +2,7 @@
  * Utility functions for accessing appearance configuration
  */
 
-import type { AppearanceConfig } from "./types.js";
+import type { AppearanceConfig } from "./types";
 
 export type BorderStyle = "single" | "double" | "round" | "classic";
 export type ComponentType =
@@ -53,7 +53,7 @@ export function getThemeColor(
   if (colorType === "text") {
     return appearance.colors.text.primary;
   }
-  return appearance.colors[colorType] as string;
+  return appearance.colors[colorType];
 }
 
 /**
@@ -74,32 +74,4 @@ export function getComponentHeight(
   component: keyof AppearanceConfig["heights"],
 ): number {
   return appearance.heights[component];
-}
-
-/**
- * Get search bar height
- */
-export function getSearchBarHeight(appearance: AppearanceConfig): number {
-  return appearance.heights.searchBar;
-}
-
-/**
- * Get JQ input height
- */
-export function getJqInputHeight(appearance: AppearanceConfig): number {
-  return appearance.heights.jqInput;
-}
-
-/**
- * Get property details height
- */
-export function getPropertyDetailsHeight(appearance: AppearanceConfig): number {
-  return appearance.heights.propertyDetails;
-}
-
-/**
- * Get settings header height
- */
-export function getSettingsHeaderHeight(appearance: AppearanceConfig): number {
-  return appearance.heights.settingsHeader;
 }

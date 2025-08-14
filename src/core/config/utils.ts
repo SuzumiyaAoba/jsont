@@ -3,8 +3,8 @@
  */
 
 import { createDefu } from "defu";
-import { DEFAULT_CONFIG } from "./defaults.js";
-import type { JsontConfig, PartialJsontConfig } from "./types.js";
+import { DEFAULT_CONFIG } from "./defaults";
+import type { JsontConfig, PartialJsontConfig } from "./types";
 
 /**
  * Custom defu instance that replaces arrays instead of concatenating them

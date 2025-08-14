@@ -2,7 +2,7 @@
  * Configuration management exports
  */
 
-export { DEFAULT_CONFIG } from "./defaults.js";
+export { DEFAULT_CONFIG } from "./defaults";
 export {
   createConfig,
   createPartialConfig,
@@ -12,7 +12,7 @@ export {
   loadConfigFromPath,
   mergeConfigs,
   validateConfigWithDetails,
-} from "./loader.js";
+} from "./loader";
 export type {
   BehaviorConfig,
   DisplayConfig,
@@ -27,7 +27,7 @@ export type {
   SearchConfig,
   SearchKeys,
   TreeDisplayConfig,
-} from "./types.js";
+} from "./types";
 export {
   applyConfigPreset,
   CONFIG_BUILDERS,
@@ -37,4 +37,4 @@ export {
   getConfigSummary,
   isDefaultConfig,
   smartMergeConfigs,
-} from "./utils.js";
+} from "./utils";

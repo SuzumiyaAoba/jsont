@@ -53,13 +53,14 @@ export const SearchBar = memo(function SearchBar({
   );
 
   // Get appearance settings
-  const borderStyle = config.display.interface.appearance.borders.style;
-  const borderColor = config.display.interface.appearance.borders.colors.search;
-  const height = config.display.interface.appearance.heights.searchBar;
-  const labelColor = config.display.interface.appearance.colors.secondary;
-  const textColor = config.display.interface.appearance.colors.text.primary;
-  const mutedColor = config.display.interface.appearance.colors.muted;
-  const primaryColor = config.display.interface.appearance.colors.primary;
+  const appearance = config.display.interface.appearance;
+  const borderStyle = appearance.borders.style;
+  const borderColor = appearance.borders.colors.search;
+  const height = appearance.heights.searchBar;
+  const labelColor = appearance.colors.secondary;
+  const textColor = appearance.colors.text.primary;
+  const mutedColor = appearance.colors.muted;
+  const primaryColor = appearance.colors.primary;
 
   return (
     <Box
@@ -103,7 +104,7 @@ export const SearchBar = memo(function SearchBar({
           <Text
             color={textColor}
             {...(searchState.searchScope === "all" && {
-              backgroundColor: config.display.interface.appearance.colors.info,
+              backgroundColor: appearance.colors.info,
             })}
           >
             {scopeDisplayName}
@@ -113,9 +114,7 @@ export const SearchBar = memo(function SearchBar({
           <Text color={primaryColor}>[</Text>
           <Text
             color={
-              searchState.isRegexMode
-                ? config.display.interface.appearance.colors.success
-                : mutedColor
+              searchState.isRegexMode ? appearance.colors.success : mutedColor
             }
             {...(searchState.isRegexMode && {
               backgroundColor: "darkGreen",

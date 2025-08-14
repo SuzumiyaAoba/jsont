@@ -25,13 +25,20 @@ export function JqQueryInput({
 }: JqQueryInputProps) {
   const config = useConfig();
 
+  // Get appearance settings
+  const appearance = config.display.interface.appearance;
+  const borderStyle = appearance.borders.style;
+  const height = appearance.heights.jqInput;
+  const primaryColor = appearance.colors.primary;
+  const mutedColor = appearance.colors.muted;
+  const textColor = appearance.colors.text.primary;
+  const errorColor = appearance.colors.error;
+
   const getStatusColor = () => {
-    if (jqState.isProcessing)
-      return config.display.interface.appearance.colors.warning;
-    if (jqState.error) return config.display.interface.appearance.colors.error;
-    if (jqState.transformedData !== null)
-      return config.display.interface.appearance.colors.success;
-    return config.display.interface.appearance.borders.colors.jq;
+    if (jqState.isProcessing) return appearance.colors.warning;
+    if (jqState.error) return appearance.colors.error;
+    if (jqState.transformedData !== null) return appearance.colors.success;
+    return appearance.borders.colors.jq;
   };
 
   const getStatusText = () => {
@@ -56,14 +63,6 @@ export function JqQueryInput({
     queryInput,
     cursorPosition,
   );
-
-  // Get appearance settings
-  const borderStyle = config.display.interface.appearance.borders.style;
-  const height = config.display.interface.appearance.heights.jqInput;
-  const primaryColor = config.display.interface.appearance.colors.primary;
-  const mutedColor = config.display.interface.appearance.colors.muted;
-  const textColor = config.display.interface.appearance.colors.text.primary;
-  const errorColor = config.display.interface.appearance.colors.error;
 
   return (
     <Box
