@@ -211,7 +211,14 @@ export function BaseViewer({
   const renderContent = contentRenderer || defaultContentRenderer;
 
   return (
-    <Box flexDirection="column">
+    <Box
+      flexDirection="column"
+      borderStyle="single"
+      borderColor="gray"
+      width="100%"
+      height={visibleLines || 10}
+      overflow="hidden"
+    >
       {renderContent(
         lines,
         visibleLineData,

@@ -304,16 +304,22 @@ export function EnhancedTreeView({
   }, [selectedLineIndex, data]);
 
   return (
-    <Box flexDirection="column" width={width} height={height}>
-      {/* Header */}
-      <Box width={width}>
+    <Box flexDirection="column" width="100%" height={height}>
+      {/* Header - outside border */}
+      <Box width="100%">
         <Text color="green" bold>
           TREE VIEW (j/k: navigate, Space: toggle, t: types, L: lines)
         </Text>
       </Box>
 
-      {/* Tree content */}
-      <Box flexDirection="column" height={contentHeight}>
+      {/* Tree content - with border */}
+      <Box
+        flexDirection="column"
+        height={contentHeight}
+        borderStyle="single"
+        borderColor="gray"
+        width="100%"
+      >
         {visibleLines.length > 0 ? (
           visibleLines.map((line, index) => {
             if (!line) return null;
@@ -325,7 +331,7 @@ export function EnhancedTreeView({
               lineText.toLowerCase().includes(searchTerm.toLowerCase());
 
             return (
-              <Box key={line.id} width={width}>
+              <Box key={line.id} width="100%">
                 {showLineNumbers && (
                   <>
                     <Text color={isSelected ? "yellow" : "gray"}>
@@ -350,7 +356,7 @@ export function EnhancedTreeView({
             );
           })
         ) : (
-          <Box width={width}>
+          <Box width="100%">
             <Text color="gray" italic>
               {searchTerm ? "No matches found" : "No data to display"}
             </Text>
@@ -358,17 +364,11 @@ export function EnhancedTreeView({
         )}
       </Box>
 
-      {/* Footer with scroll info */}
+      {/* Footer with scroll info - outside border */}
       {(scrollInfo.hasScrollUp || scrollInfo.hasScrollDown) && (
-        <Box width={width} justifyContent="space-between">
-          <Text color="gray">
-            {scrollInfo.hasScrollUp ? "↑ More above" : ""}
-          </Text>
+        <Box width="100%" justifyContent="center">
           <Text color="gray">
             Line {selectedLineIndex + 1} of {scrollInfo.totalLines}
-          </Text>
-          <Text color="gray">
-            {scrollInfo.hasScrollDown ? "More below ↓" : ""}
           </Text>
         </Box>
       )}

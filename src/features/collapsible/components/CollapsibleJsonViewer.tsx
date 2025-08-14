@@ -151,5 +151,14 @@ export const CollapsibleJsonViewer = forwardRef<
     lineNumberWidth,
   ]);
 
-  return <Box flexDirection="column">{renderedLines}</Box>;
+  return (
+    <Box
+      flexDirection="column"
+      borderStyle="single"
+      borderColor="gray"
+      width="100%"
+    >
+      {renderedLines}
+    </Box>
+  );
 });
