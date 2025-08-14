@@ -52,8 +52,8 @@ export function PropertyDetailsDisplay({
       <Text key="path">
         <Text color="gray" dimColor>
           {"Path".padStart(LABEL_WIDTH)}
-        </Text>{" "}
-        {details.pathString || "-"}
+        </Text>
+        <Text> {details.pathString || "-"}</Text>
       </Text>,
     );
   }
@@ -69,8 +69,8 @@ export function PropertyDetailsDisplay({
     <Text key="key">
       <Text color="gray" dimColor>
         {"Key".padStart(LABEL_WIDTH)}
-      </Text>{" "}
-      {keyText}
+      </Text>
+      <Text> {keyText}</Text>
     </Text>,
   );
 
@@ -80,8 +80,8 @@ export function PropertyDetailsDisplay({
       <Text key="type">
         <Text color="gray" dimColor>
           {"Type".padStart(LABEL_WIDTH)}
-        </Text>{" "}
-        {details.type}
+        </Text>
+        <Text> {details.type}</Text>
       </Text>,
     );
   }
@@ -98,8 +98,8 @@ export function PropertyDetailsDisplay({
       <Text key="children">
         <Text color="gray" dimColor>
           {"Children".padStart(LABEL_WIDTH)}
-        </Text>{" "}
-        {childrenText}
+        </Text>
+        <Text> {childrenText}</Text>
       </Text>,
     );
   }
@@ -107,12 +107,12 @@ export function PropertyDetailsDisplay({
   // Value section (always shown) - reserve 2 lines for proper display
   sections.push(
     <Box key="value" flexDirection="column" height={2}>
-      <Box>
+      <Text>
         <Text color="gray" dimColor>
           {"Value".padStart(LABEL_WIDTH)}
-        </Text>{" "}
-        <Text>{details.valueString}</Text>
-      </Box>
+        </Text>
+        <Text> {details.valueString}</Text>
+      </Text>
     </Box>,
   );
 
