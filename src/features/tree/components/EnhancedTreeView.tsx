@@ -71,7 +71,7 @@ export interface EnhancedTreeViewProps {
 export function EnhancedTreeView({
   data,
   height = 20,
-  width = 80,
+  width: _width = 80,
   searchTerm = "",
   scrollOffset = 0,
   options = {},
