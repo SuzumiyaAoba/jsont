@@ -40,10 +40,27 @@ export interface LineNumberProps {
 }
 
 /**
+ * Enhanced line data that includes highlighting information
+ */
+export interface EnhancedLineData {
+  text: string;
+  originalLineIndex: number;
+  tokens: HighlightToken[];
+}
+
+/**
  * Data processing function type for different viewer types
  * Takes raw data and returns formatted lines for display
  */
 export type DataProcessor = (data: JsonValue | null) => string[] | null;
+
+/**
+ * Enhanced data processing function that preserves highlighting information
+ * across line splits
+ */
+export type EnhancedDataProcessor = (
+  data: JsonValue | null,
+) => EnhancedLineData[] | null;
 
 /**
  * Content renderer function type for BaseViewer

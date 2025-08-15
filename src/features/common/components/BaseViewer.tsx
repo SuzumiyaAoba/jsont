@@ -187,11 +187,14 @@ export function BaseViewer({
     for (let i = 0; i < allLines.length; i++) {
       const line = allLines[i];
 
+      if (!line) continue;
+
       // Heuristics to detect if this is a continuation of the previous line:
       // 1. Line starts with whitespace but doesn't contain structural JSON elements
       // 2. Previous line ended mid-word or mid-value
       const isLikelyContinuation =
         i > 0 &&
+        allLines[i - 1] &&
         // Starts with whitespace and doesn't have JSON structural elements
         ((line.match(/^\s+/) &&
           !line.includes(":") &&
@@ -200,7 +203,7 @@ export function BaseViewer({
           !line.includes("[") &&
           !line.includes("]")) ||
           // Previous line didn't end with comma, brace, or bracket (likely split mid-value)
-          !allLines[i - 1].match(/[,{}[\]"]\s*$/));
+          !allLines[i - 1]!.match(/[,{}[\]"]\s*$/));
 
       if (!isLikelyContinuation) {
         // This appears to be a new logical line
