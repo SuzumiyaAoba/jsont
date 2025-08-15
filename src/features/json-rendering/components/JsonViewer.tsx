@@ -30,31 +30,34 @@ export const JsonViewer = memo(function JsonViewer(
 
         // Handle long lines by applying maxLineLength limit for better display
         const maxLineLength = config.display.json.maxLineLength;
-        const processedLines = lines.flatMap((line) => {
-          if (line.length <= maxLineLength) {
-            return [line];
-          }
-          // Split long lines at word boundaries when possible
-          const chunks: string[] = [];
-          let remaining = line;
+        const processedLines: string[] = [];
 
-          while (remaining.length > maxLineLength) {
-            let splitIndex = maxLineLength;
-            // Try to find a good break point (space, comma, etc.)
-            const breakPoint = remaining.lastIndexOf(" ", maxLineLength);
-            if (breakPoint > maxLineLength * 0.7) {
-              splitIndex = breakPoint + 1;
+        lines.forEach((line, originalLineIndex) => {
+          if (line.length <= maxLineLength) {
+            processedLines.push(line);
+          } else {
+            // Split long lines at word boundaries when possible
+            const chunks: string[] = [];
+            let remaining = line;
+
+            while (remaining.length > maxLineLength) {
+              let splitIndex = maxLineLength;
+              // Try to find a good break point (space, comma, etc.)
+              const breakPoint = remaining.lastIndexOf(" ", maxLineLength);
+              if (breakPoint > maxLineLength * 0.7) {
+                splitIndex = breakPoint + 1;
+              }
+
+              chunks.push(remaining.substring(0, splitIndex));
+              remaining = remaining.substring(splitIndex);
             }
 
-            chunks.push(remaining.substring(0, splitIndex));
-            remaining = remaining.substring(splitIndex);
-          }
+            if (remaining.length > 0) {
+              chunks.push(remaining);
+            }
 
-          if (remaining.length > 0) {
-            chunks.push(remaining);
+            processedLines.push(...chunks);
           }
-
-          return chunks;
         });
 
         return processedLines;

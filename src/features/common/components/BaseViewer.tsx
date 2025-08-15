@@ -172,30 +172,71 @@ export function BaseViewer({
 
   // Default content renderer
   const defaultContentRenderer: ContentRenderer = (
-    _lines,
+    allLines,
     visibleLineData,
     startLine,
     _endLine,
     formatLineNumber,
     renderLineWithHighlighting,
   ) => {
+    // Build a mapping from display line index to original line number
+    // This works by tracking when lines appear to be continuations vs new logical lines
+    const lineMapping = new Map<number, number>();
+    let currentOriginalLine = 1;
+
+    for (let i = 0; i < allLines.length; i++) {
+      const line = allLines[i];
+
+      // Heuristics to detect if this is a continuation of the previous line:
+      // 1. Line starts with whitespace but doesn't contain structural JSON elements
+      // 2. Previous line ended mid-word or mid-value
+      const isLikelyContinuation =
+        i > 0 &&
+        // Starts with whitespace and doesn't have JSON structural elements
+        ((line.match(/^\s+/) &&
+          !line.includes(":") &&
+          !line.includes("{") &&
+          !line.includes("}") &&
+          !line.includes("[") &&
+          !line.includes("]")) ||
+          // Previous line didn't end with comma, brace, or bracket (likely split mid-value)
+          !allLines[i - 1].match(/[,{}[\]"]\s*$/));
+
+      if (!isLikelyContinuation) {
+        // This appears to be a new logical line
+        lineMapping.set(i, currentOriginalLine);
+        currentOriginalLine++;
+      } else {
+        // This is a continuation of the previous logical line
+        const prevOriginalLine =
+          lineMapping.get(i - 1) || currentOriginalLine - 1;
+        lineMapping.set(i, prevOriginalLine);
+      }
+    }
+
     return (
       <Box flexDirection="column">
         {visibleLineData.map((line, index) => {
-          const originalIndex = startLine + index;
-          const isCurrentResult = isCurrentResultLine(originalIndex);
+          const displayLineIndex = startLine + index;
+          const isCurrentResult = isCurrentResultLine(displayLineIndex);
+
+          // Use the mapping to get the original line number, or fall back to display index + 1
+          const originalLineNumber =
+            lineMapping.get(displayLineIndex) || displayLineIndex + 1;
 
           return (
-            <Box key={originalIndex} flexDirection="row" width="100%">
+            <Box key={displayLineIndex} flexDirection="row" width="100%">
               {showLineNumbers && (
                 <Box marginRight={1} flexShrink={0}>
-                  <Text color="gray">{formatLineNumber(originalIndex)}:</Text>
+                  <Text color="gray">
+                    {formatLineNumber(originalLineNumber)}:
+                  </Text>
                 </Box>
               )}
               <Box flexGrow={1} flexShrink={0} minWidth={0}>
                 {renderLineWithHighlighting(
                   line,
-                  originalIndex,
+                  displayLineIndex,
                   searchTerm,
                   isCurrentResult,
                 )}
