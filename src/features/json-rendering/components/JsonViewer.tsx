@@ -120,7 +120,7 @@ export const JsonViewer = memo(function JsonViewer(
   );
 
   // Create a custom content renderer that handles syntax highlighting for split lines
-  const customContentRenderer: ContentRenderer = useMemo(() => {
+  const customContentRenderer: ContentRenderer | undefined = useMemo(() => {
     if (!props.data) return undefined;
 
     // Pre-process the original JSON data to create a mapping of lines to tokens
@@ -283,7 +283,7 @@ export const JsonViewer = memo(function JsonViewer(
       isRegexMode={isRegexMode}
       dataProcessor={jsonDataProcessor}
       highlighter={jsonHighlighter}
-      contentRenderer={customContentRenderer}
+      {...(customContentRenderer && { contentRenderer: customContentRenderer })}
       emptyStateConfig={{
         message: "No JSON data to display",
         color: "gray",
