@@ -4,6 +4,7 @@
 
 import type { JsonArray, JsonObject, JsonValue } from "@core/types/index";
 import { LRUCache } from "@core/utils/lruCache";
+import { keys, values } from "es-toolkit/compat";
 
 // Cache for schema inference to improve performance with LRU eviction
 const schemaCache = new LRUCache<string, JsonSchema>(200); // Reduced size for better memory efficiency
@@ -194,7 +195,7 @@ function getTypeKey(schema: JsonSchemaProperty): string {
   }
 
   if (schema.properties) {
-    const propKeys = Object.keys(schema.properties).sort();
+    const propKeys = keys(schema.properties).sort();
     parts.push(`props:${propKeys.join(",")}`);
   }
 
@@ -274,8 +275,8 @@ export function getSchemaStats(schema: JsonSchema): SchemaStats {
     stats.typeDistribution[type] = (stats.typeDistribution[type] || 0) + 1;
 
     if (s.properties) {
-      stats.totalProperties += Object.keys(s.properties).length;
-      for (const prop of Object.values(s.properties)) {
+      stats.totalProperties += keys(s.properties).length;
+      for (const prop of values(s.properties)) {
         analyzeSchema(prop, depth + 1);
       }
     }

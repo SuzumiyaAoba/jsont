@@ -2,6 +2,8 @@
  * Debug Logger - アプリケーション内でデバッグログを蓄積・管理するシステム
  */
 
+import { uniq } from "es-toolkit";
+
 export type DebugLogLevel = "info" | "warn" | "error" | "debug";
 
 export interface DebugLogEntry {
@@ -129,8 +131,7 @@ class DebugLoggerClass {
    * 利用可能なカテゴリを取得
    */
   getCategories(): string[] {
-    const categories = new Set(this.logs.map((log) => log.category));
-    return Array.from(categories).sort();
+    return uniq(this.logs.map((log) => log.category)).sort();
   }
 
   /**

@@ -5,6 +5,7 @@
 
 import type { CliArgs } from "@core/types/app";
 import { VIEW_MODES, type ViewMode } from "@core/types/index";
+import { includes } from "es-toolkit/compat";
 
 /**
  * Parse command line arguments
@@ -58,7 +59,7 @@ export function parseCliArgs(argv: string[] = process.argv): CliArgs {
  * Check if a string is a valid view mode
  */
 function isValidViewMode(mode: string): mode is ViewMode {
-  return VIEW_MODES.includes(mode as ViewMode);
+  return includes(VIEW_MODES, mode as ViewMode);
 }
 
 /**

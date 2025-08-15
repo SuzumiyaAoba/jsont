@@ -3,6 +3,7 @@
  */
 
 import { LRUCache } from "@core/utils/lruCache";
+import { keys } from "es-toolkit/compat";
 import { Box, Text, useInput } from "ink";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { DebugLogEntry, DebugLogLevel } from "../utils/debugLogger";
@@ -27,7 +28,7 @@ function formatLogData(data: unknown, maxWidth: number = 80): string {
   if (typeof data === "object" && data !== null) {
     // Create cache key based on data and maxWidth
     // Create a more efficient cache key using object identity and size
-    const cacheKey = `${typeof data === "object" ? Object.keys(data as Record<string, unknown>).length : "primitive"}-${maxWidth}`;
+    const cacheKey = `${typeof data === "object" ? keys(data as Record<string, unknown>).length : "primitive"}-${maxWidth}`;
 
     // Check cache first (LRU cache automatically handles access tracking)
     const cached = formatCache.get(cacheKey);
