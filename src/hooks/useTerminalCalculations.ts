@@ -4,19 +4,15 @@
 
 import { useConfig } from "@core/context/ConfigContext";
 import type { JsonValue } from "@core/types/index";
+import { formatJsonSchema, inferJsonSchema } from "@features/schema";
+import { calculateStatusBarHeight, getStatusContent } from "@features/status";
 import {
-  formatJsonSchema,
-  inferJsonSchema,
-} from "@features/schema/utils/schemaUtils";
-import {
-  calculateStatusBarHeight,
-  getStatusContent,
-} from "@features/status/utils/statusUtils";
-import { useDebugInfo } from "@store/hooks/useDebug";
-import { useJqState } from "@store/hooks/useJq";
-import { usePropertyDetails } from "@store/hooks/usePropertyDetails";
-import { useSearchState } from "@store/hooks/useSearch";
-import { useUI } from "@store/hooks/useUI";
+  useDebugInfo,
+  useJqState,
+  usePropertyDetails,
+  useSearchState,
+  useUI,
+} from "@store/hooks";
 import { useEffect, useMemo, useState } from "react";
 
 interface UseTerminalCalculationsProps {

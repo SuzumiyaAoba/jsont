@@ -5,7 +5,7 @@ import type {
   BaseViewerProps,
   DataProcessor,
 } from "@features/common/types/viewer";
-import { jsonHighlighter } from "@features/json-rendering/utils/jsonHighlighter";
+import { jsonHighlighter } from "@features/json-rendering";
 import { useIsRegexMode } from "@store/hooks/useSearch";
 import { memo, type ReactElement, useMemo } from "react";
 
