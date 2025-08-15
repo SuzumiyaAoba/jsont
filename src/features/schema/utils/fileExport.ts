@@ -90,9 +90,9 @@ export async function exportToFile(
     };
 
     // Validate data before conversion
-    const validation = converter.validate(data);
-    if (validation.isErr()) {
-      const validationError = validation.error;
+    const dataValidation = converter.validate(data);
+    if (dataValidation.isErr()) {
+      const validationError = dataValidation.error;
       throw new ExportError(
         validationError.message || "Data validation failed",
         ExportErrorCode.INVALID_DATA,
@@ -124,10 +124,14 @@ export async function exportToFile(
         : `${filename}${extension}`
       : defaultFilename;
 
-    // Validate filename
-    if (!isValidFilename(finalFilename)) {
+    // Validate filename using the existing validation logic
+    const optionsValidation = validateExportOptions({
+      filename: finalFilename,
+      outputDir,
+    });
+    if (!optionsValidation.isValid) {
       throw new ExportError(
-        "Invalid filename",
+        optionsValidation.error || "Invalid filename",
         ExportErrorCode.INVALID_FILENAME,
         { filename: finalFilename },
       );
@@ -160,26 +164,7 @@ export async function exportToFile(
   }
 }
 
-/**
- * Validate filename for security and compatibility
- */
-function isValidFilename(filename: string): boolean {
-  // Disallow filenames that are special directory references
-  if (filename === "." || filename === "..") {
-    return false;
-  }
-
-  // Check for invalid characters, including path separators
-  // Disable biome warning for intentional control character regex
-  // biome-ignore lint/suspicious/noControlCharactersInRegex: Control chars intentionally blocked for security
-  const invalidChars = /[<>:"/\\|?*\u0000-\u001f]/;
-  if (invalidChars.test(filename)) {
-    return false;
-  }
-
-  // Ensure the filename is not empty after trimming
-  return filename.trim().length > 0;
-}
+// Note: isValidFilename logic is now consolidated in validateExportOptions
 
 /**
  * Export JSON Schema to a file (backward compatibility)

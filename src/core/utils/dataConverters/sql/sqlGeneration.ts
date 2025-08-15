@@ -3,6 +3,7 @@
  */
 
 import type { JsonValue } from "@core/types/index";
+import { isEmpty } from "es-toolkit/compat";
 import type { SqlOptions } from "../types";
 import { getDialectConfig } from "./dialectSupport";
 import type { TableSchema } from "./types";
@@ -25,7 +26,7 @@ export function generateCreateTable(
 
   let sql = `CREATE TABLE ${escapeId(tableName)} (\n`;
 
-  if (columns.length === 0) {
+  if (isEmpty(columns)) {
     sql += `  id ${dialectConfig.getAutoIncrementType()}\n`;
   } else {
     const columnDefs = columns.map((col) => {
@@ -49,7 +50,7 @@ export function generateInsertStatements(
   schema: TableSchema,
   options: SqlOptions,
 ): string {
-  if (data.length === 0) {
+  if (isEmpty(data)) {
     return `-- No data to insert for table: ${schema.tableName}`;
   }
 
@@ -74,7 +75,7 @@ export function generateInsertStatements(
   for (let i = 0; i < data.length; i += effectiveBatchSize) {
     const batch = data.slice(i, i + effectiveBatchSize);
 
-    if (columns.length === 0) {
+    if (isEmpty(columns)) {
       // Empty table case
       sql += `INSERT INTO ${escapeId(tableName)} DEFAULT VALUES;\n`;
       continue;

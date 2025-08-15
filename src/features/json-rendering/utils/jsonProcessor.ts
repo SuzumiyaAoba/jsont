@@ -10,6 +10,7 @@ import type {
   ParseResult,
   ValidationResult,
 } from "@core/types/index";
+import { isEmpty } from "es-toolkit/compat";
 import JSON5 from "json5";
 
 /**
@@ -19,7 +20,7 @@ export function parseJsonSafely(input: string): ParseResult {
   const startTime = performance.now();
 
   // Handle empty or whitespace-only input
-  if (!input || !input.trim()) {
+  if (!input || isEmpty(input.trim())) {
     return {
       success: false,
       data: null,

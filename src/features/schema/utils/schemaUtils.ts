@@ -4,7 +4,7 @@
 
 import type { JsonArray, JsonObject, JsonValue } from "@core/types/index";
 import { LRUCache } from "@core/utils/lruCache";
-import { keys, values } from "es-toolkit/compat";
+import { isEmpty, keys, values } from "es-toolkit/compat";
 
 // Cache for schema inference to improve performance with LRU eviction
 const schemaCache = new LRUCache<string, JsonSchema>(200); // Reduced size for better memory efficiency
@@ -122,7 +122,7 @@ function inferType(value: JsonValue): JsonSchemaProperty {
  * Infer schema for an array
  */
 function inferArraySchema(array: JsonArray): JsonSchemaProperty {
-  if (array.length === 0) {
+  if (isEmpty(array)) {
     return {
       type: "array",
       items: { type: "string" }, // default for empty arrays
