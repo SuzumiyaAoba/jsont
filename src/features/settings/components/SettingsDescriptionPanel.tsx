@@ -76,7 +76,7 @@ function SettingsDescriptionPanelComponent({
         <Text color="gray">Current Value:</Text>
         <Box marginLeft={2}>
           <Text color={isEditing ? "yellow" : "cyan"} bold>
-            {JSON.stringify(currentValue)}
+            {String(currentValue)}
           </Text>
           {field.type === "number" &&
             field.min !== undefined &&
@@ -94,7 +94,7 @@ function SettingsDescriptionPanelComponent({
         <Text color="gray">Default Value:</Text>
         <Box marginLeft={2}>
           <Text color={isDefault ? "green" : "gray"}>
-            {JSON.stringify(field.defaultValue)}
+            {String(field.defaultValue)}
           </Text>
         </Box>
       </Box>
@@ -104,9 +104,7 @@ function SettingsDescriptionPanelComponent({
         <Text color="gray">Status:</Text>
         <Box marginLeft={2} flexDirection="column">
           {hasChanged && (
-            <Text color="yellow">
-              Modified from: {JSON.stringify(originalValue)}
-            </Text>
+            <Text color="yellow">Modified from: {String(originalValue)}</Text>
           )}
           {!isDefault && !hasChanged && (
             <Text color="blue">Custom value (non-default)</Text>

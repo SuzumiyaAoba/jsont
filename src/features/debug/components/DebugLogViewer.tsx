@@ -26,7 +26,8 @@ function formatLogData(data: unknown, maxWidth: number = 80): string {
 
   if (typeof data === "object" && data !== null) {
     // Create cache key based on data and maxWidth
-    const cacheKey = `${JSON.stringify(data)}-${maxWidth}`;
+    // Create a more efficient cache key using object identity and size
+    const cacheKey = `${typeof data === "object" ? Object.keys(data as Record<string, unknown>).length : "primitive"}-${maxWidth}`;
 
     // Check cache first (LRU cache automatically handles access tracking)
     const cached = formatCache.get(cacheKey);
