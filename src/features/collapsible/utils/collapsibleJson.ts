@@ -11,6 +11,7 @@ import type {
   NavigationAction,
   NavigationResult,
 } from "@features/collapsible/types/collapsible";
+import { keys } from "es-toolkit/compat";
 
 /**
  * Generate a unique ID for a JSON node based on its path
@@ -40,11 +41,7 @@ export function isCollapsible(value: JsonValue): boolean {
 
   if (type === "array") return Array.isArray(value) && value.length > 0;
   if (type === "object")
-    return !!(
-      value &&
-      typeof value === "object" &&
-      Object.keys(value).length > 0
-    );
+    return !!(value && typeof value === "object" && keys(value).length > 0);
 
   return false;
 }
@@ -541,12 +538,12 @@ export function formatCollapsedNode(node: JsonNode): string {
   }
 
   if (node.type === "object") {
-    const keys = node.children
+    const keysCount = node.children
       ? node.children.length
       : node.value && typeof node.value === "object"
-        ? Object.keys(node.value).length
+        ? keys(node.value).length
         : 0;
-    return keys > 0 ? `{...}` : "{}";
+    return keysCount > 0 ? `{...}` : "{}";
   }
 
   if (node.type === "array") {

@@ -3,6 +3,7 @@
  */
 
 import type { JsonValue } from "@core/types/index";
+import { keys } from "es-toolkit/compat";
 import { err, ok } from "neverthrow";
 import type { CsvOptions, DataValidationResult } from "./types";
 import { BaseDataConverter } from "./types";
@@ -128,7 +129,7 @@ export class CsvConverter extends BaseDataConverter<CsvOptions> {
     const allKeys = new Set<string>();
     const flattenedObjects = objects.map((obj) => {
       const flattened = flattenArrays ? this.flattenObject(obj) : obj;
-      Object.keys(flattened).forEach((key) => allKeys.add(key));
+      keys(flattened).forEach((key) => allKeys.add(key));
       return flattened;
     });
 

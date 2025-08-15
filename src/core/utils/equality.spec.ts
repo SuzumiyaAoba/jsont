@@ -113,7 +113,7 @@ describe("Equality Utilities", () => {
       expect(deepEqual([{ a: 1 }], [{ a: 2 }])).toBe(false);
     });
 
-    it("should respect max depth limit", () => {
+    it("should detect deep differences (es-toolkit isEqual)", () => {
       const deepObj = {
         level1: { level2: { level3: { level4: { level5: 1 } } } },
       };
@@ -121,10 +121,9 @@ describe("Equality Utilities", () => {
         level1: { level2: { level3: { level4: { level5: 2 } } } },
       };
 
-      // With depth 3, should not reach level5 difference
-      expect(deepEqual(deepObj, deepObj2, 3)).toBe(true);
-      // With depth 5, should detect level5 difference
-      expect(deepEqual(deepObj, deepObj2, 5)).toBe(false);
+      // es-toolkit's isEqual detects differences at any depth
+      expect(deepEqual(deepObj, deepObj2)).toBe(false);
+      expect(deepEqual(deepObj, deepObj)).toBe(true);
     });
 
     it("should handle circular references gracefully with depth limit", () => {

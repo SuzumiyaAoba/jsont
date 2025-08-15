@@ -3,6 +3,8 @@
  * Defines color schemes for JSON syntax highlighting
  */
 
+import { keys } from "es-toolkit/compat";
+
 export interface JsonColorScheme {
   // JSON structure colors
   keys: string; // Object property names
@@ -106,5 +108,5 @@ export function getTheme(themeName: string): ThemeConfig {
 }
 
 export function getThemeNames(): string[] {
-  return Object.keys(AVAILABLE_THEMES);
+  return keys(AVAILABLE_THEMES);
 }
