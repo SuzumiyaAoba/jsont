@@ -190,24 +190,26 @@ export function BaseViewer({
       if (!line) continue;
 
       // Heuristics to detect if this is a continuation of the previous line:
-      // 1. Line starts with whitespace but doesn't contain structural JSON elements
-      // 2. Previous line ended mid-word or mid-value
+      // A line is considered a continuation only if it appears to be a split long value
+      // Array elements and object properties should always get their own line numbers
       const isLikelyContinuation =
         i > 0 &&
         allLines[i - 1] &&
-        // Starts with whitespace and doesn't have JSON structural elements
-        ((line.match(/^\s+/) &&
-          !line.includes(":") &&
-          !line.includes("{") &&
-          !line.includes("}") &&
-          !line.includes("[") &&
-          !line.includes("]")) ||
-          // Previous line didn't end with comma, brace, or bracket (likely split mid-value)
-          !allLines[i - 1]!.match(/[,{}[\]"]\s*$/));
+        // Only treat as continuation if line doesn't look like a JSON element AND previous line didn't end properly
+        line.match(/^\s+/) &&
+        !line.includes(":") &&
+        !line.includes("{") &&
+        !line.includes("}") &&
+        !line.includes("[") &&
+        !line.includes("]") &&
+        !line.includes('"') && // Don't treat quoted strings as continuations
+        // Previous line didn't end with comma, brace, or bracket (likely split mid-value)
+        !allLines[i - 1]!.match(/[,{}[\]"]\s*$/);
 
       if (!isLikelyContinuation) {
-        // This appears to be a new logical line
+        // This appears to be a new logical line - assign the current line number first
         lineMapping.set(i, currentOriginalLine);
+        // Then increment for the next new line
         currentOriginalLine++;
       } else {
         // This is a continuation of the previous logical line
@@ -232,7 +234,7 @@ export function BaseViewer({
               {showLineNumbers && (
                 <Box marginRight={1} flexShrink={0}>
                   <Text color="gray">
-                    {formatLineNumber(originalLineNumber)}:
+                    {formatLineNumber(originalLineNumber - 1)}:
                   </Text>
                 </Box>
               )}
@@ -254,16 +256,12 @@ export function BaseViewer({
   // Use custom renderer or default
   const renderContent = contentRenderer || defaultContentRenderer;
 
-  // Adjust height to account for border height (2 lines: top + bottom border)
-  const borderHeight = 2;
-  const adjustedHeight = Math.max(1, (visibleLines || 10) - borderHeight);
-
-  // For cases where line splitting creates more lines than the original height limit,
-  // allow some flexibility to ensure content visibility
+  // The visibleLines already accounts for all UI elements including borders in useTerminalCalculations
+  // So we can use it directly without further adjustment
   const actualContentLines = visibleLineData.length;
-  const flexibleHeight = Math.max(
-    adjustedHeight,
-    Math.min(actualContentLines + 2, adjustedHeight + 3),
+  const effectiveHeight = Math.max(
+    visibleLines || 10,
+    Math.min(actualContentLines, (visibleLines || 10) + 5), // Allow some flexibility for content overflow
   );
 
   return (
@@ -272,7 +270,7 @@ export function BaseViewer({
       borderStyle="single"
       borderColor="gray"
       width="100%"
-      height={flexibleHeight}
+      height={effectiveHeight}
     >
       {renderContent(
         lines,
