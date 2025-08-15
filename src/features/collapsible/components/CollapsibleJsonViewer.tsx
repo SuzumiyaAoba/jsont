@@ -55,11 +55,16 @@ export const CollapsibleJsonViewer = forwardRef<
   const { searchResultsByLine, renderLineWithHighlighting } =
     useSearchHighlighting(searchTerm, searchResults);
 
-  // Calculate effective visible lines
-  const effectiveVisibleLines = Math.max(
+  // Adjust visible lines to account for border height (2 lines: top + bottom border)
+  // BorderStyle always has a border, so we always need to account for border height
+  const borderHeight = 2;
+  const adjustedVisibleLines = Math.max(
     1,
-    visibleLines || Math.max(10, displayLines.length),
+    (visibleLines || Math.max(10, displayLines.length)) - borderHeight,
   );
+
+  // Calculate effective visible lines
+  const effectiveVisibleLines = Math.max(1, adjustedVisibleLines);
 
   // Set up navigation handling
   const { handleNavigationAction } = useCollapsibleNavigation(

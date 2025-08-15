@@ -139,7 +139,7 @@ export function BaseViewer({
         )
       : syntaxTokens;
 
-    // Render the tokens
+    // Render the tokens - allow horizontal scrolling for long lines
     return (
       <Text key={originalIndex}>
         {highlightedTokens.map((token: HighlightToken, tokenIndex: number) => {
@@ -172,30 +172,76 @@ export function BaseViewer({
 
   // Default content renderer
   const defaultContentRenderer: ContentRenderer = (
-    _lines,
+    allLines,
     visibleLineData,
     startLine,
     _endLine,
     formatLineNumber,
     renderLineWithHighlighting,
   ) => {
+    // Build a mapping from display line index to original line number
+    // This works by tracking when lines appear to be continuations vs new logical lines
+    const lineMapping = new Map<number, number>();
+    let currentOriginalLine = 1;
+
+    for (let i = 0; i < allLines.length; i++) {
+      const line = allLines[i];
+
+      if (!line) continue;
+
+      // Heuristics to detect if this is a continuation of the previous line:
+      // A line is considered a continuation only if it appears to be a split long value
+      // Array elements and object properties should always get their own line numbers
+      const isLikelyContinuation =
+        i > 0 &&
+        allLines[i - 1] &&
+        // Only treat as continuation if line doesn't look like a JSON element AND previous line didn't end properly
+        line.match(/^\s+/) &&
+        !line.includes(":") &&
+        !line.includes("{") &&
+        !line.includes("}") &&
+        !line.includes("[") &&
+        !line.includes("]") &&
+        !line.includes('"') && // Don't treat quoted strings as continuations
+        // Previous line didn't end with comma, brace, or bracket (likely split mid-value)
+        !allLines[i - 1]!.match(/[,{}[\]"]\s*$/);
+
+      if (!isLikelyContinuation) {
+        // This appears to be a new logical line - assign the current line number first
+        lineMapping.set(i, currentOriginalLine);
+        // Then increment for the next new line
+        currentOriginalLine++;
+      } else {
+        // This is a continuation of the previous logical line
+        const prevOriginalLine =
+          lineMapping.get(i - 1) || currentOriginalLine - 1;
+        lineMapping.set(i, prevOriginalLine);
+      }
+    }
+
     return (
       <Box flexDirection="column">
         {visibleLineData.map((line, index) => {
-          const originalIndex = startLine + index;
-          const isCurrentResult = isCurrentResultLine(originalIndex);
+          const displayLineIndex = startLine + index;
+          const isCurrentResult = isCurrentResultLine(displayLineIndex);
+
+          // Use the mapping to get the original line number, or fall back to display index + 1
+          const originalLineNumber =
+            lineMapping.get(displayLineIndex) || displayLineIndex + 1;
 
           return (
-            <Box key={originalIndex} flexDirection="row">
+            <Box key={displayLineIndex} flexDirection="row" width="100%">
               {showLineNumbers && (
-                <Box marginRight={1}>
-                  <Text color="gray">{formatLineNumber(originalIndex)}:</Text>
+                <Box marginRight={1} flexShrink={0}>
+                  <Text color="gray">
+                    {formatLineNumber(originalLineNumber - 1)}:
+                  </Text>
                 </Box>
               )}
-              <Box flexGrow={1}>
+              <Box flexGrow={1} flexShrink={0} minWidth={0}>
                 {renderLineWithHighlighting(
                   line,
-                  originalIndex,
+                  displayLineIndex,
                   searchTerm,
                   isCurrentResult,
                 )}
@@ -210,14 +256,21 @@ export function BaseViewer({
   // Use custom renderer or default
   const renderContent = contentRenderer || defaultContentRenderer;
 
+  // The visibleLines already accounts for all UI elements including borders in useTerminalCalculations
+  // So we can use it directly without further adjustment
+  const actualContentLines = visibleLineData.length;
+  const effectiveHeight = Math.max(
+    visibleLines || 10,
+    Math.min(actualContentLines, (visibleLines || 10) + 5), // Allow some flexibility for content overflow
+  );
+
   return (
     <Box
       flexDirection="column"
       borderStyle="single"
       borderColor="gray"
       width="100%"
-      height={visibleLines || 10}
-      overflow="hidden"
+      height={effectiveHeight}
     >
       {renderContent(
         lines,

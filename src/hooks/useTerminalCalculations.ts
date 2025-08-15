@@ -186,19 +186,59 @@ export function useTerminalCalculations({
   const visibleLines = Math.max(5, terminalHeight - reservedSpace);
 
   // Calculate JSON lines for scroll calculations - memoized to avoid repeated stringification
+  // This must match the JsonViewer dataProcessor logic exactly
   const jsonLines = useMemo(() => {
     if (!initialData) return 0;
     try {
-      return JSON.stringify(
-        initialData,
-        null,
-        config.display.json.indent,
-      ).split("\n").length;
+      // Use the same formatting logic as JsonViewer
+      const indent = config.display.json.useTabs
+        ? "\t"
+        : " ".repeat(config.display.json.indent);
+      const formattedJson = JSON.stringify(initialData, null, indent);
+      const lines = formattedJson.split("\n");
+
+      // Apply the same long line processing as JsonViewer
+      const maxLineLength = config.display.json.maxLineLength;
+      const processedLines: string[] = [];
+
+      lines.forEach((line) => {
+        if (line.length <= maxLineLength) {
+          processedLines.push(line);
+        } else {
+          // Split long lines at word boundaries when possible (same logic as JsonViewer)
+          const chunks: string[] = [];
+          let remaining = line;
+
+          while (remaining.length > maxLineLength) {
+            let splitIndex = maxLineLength;
+            const breakPoint = remaining.lastIndexOf(" ", maxLineLength);
+            if (breakPoint > maxLineLength * 0.7) {
+              splitIndex = breakPoint + 1;
+            }
+
+            chunks.push(remaining.substring(0, splitIndex));
+            remaining = remaining.substring(splitIndex);
+          }
+
+          if (remaining.length > 0) {
+            chunks.push(remaining);
+          }
+
+          processedLines.push(...chunks);
+        }
+      });
+
+      return processedLines.length;
     } catch {
       // Fallback for objects that can't be stringified
       return 100; // Reasonable default
     }
-  }, [initialData, config.display.json.indent]);
+  }, [
+    initialData,
+    config.display.json.indent,
+    config.display.json.useTabs,
+    config.display.json.maxLineLength,
+  ]);
 
   // Calculate schema lines when in schema view mode
   const schemaLines = useMemo(() => {
