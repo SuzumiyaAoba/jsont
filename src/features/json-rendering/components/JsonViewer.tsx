@@ -28,12 +28,45 @@ export const JsonViewer = memo(function JsonViewer(
         const formattedJson = JSON.stringify(data, null, indent);
         const lines = formattedJson.split("\n");
 
-        return lines;
+        // Handle long lines by applying maxLineLength limit for better display
+        const maxLineLength = config.display.json.maxLineLength;
+        const processedLines = lines.flatMap((line) => {
+          if (line.length <= maxLineLength) {
+            return [line];
+          }
+          // Split long lines at word boundaries when possible
+          const chunks: string[] = [];
+          let remaining = line;
+
+          while (remaining.length > maxLineLength) {
+            let splitIndex = maxLineLength;
+            // Try to find a good break point (space, comma, etc.)
+            const breakPoint = remaining.lastIndexOf(" ", maxLineLength);
+            if (breakPoint > maxLineLength * 0.7) {
+              splitIndex = breakPoint + 1;
+            }
+
+            chunks.push(remaining.substring(0, splitIndex));
+            remaining = remaining.substring(splitIndex);
+          }
+
+          if (remaining.length > 0) {
+            chunks.push(remaining);
+          }
+
+          return chunks;
+        });
+
+        return processedLines;
       } catch {
         return ["Error: Unable to format JSON"];
       }
     },
-    [config.display.json.useTabs, config.display.json.indent],
+    [
+      config.display.json.useTabs,
+      config.display.json.indent,
+      config.display.json.maxLineLength,
+    ],
   );
 
   return (

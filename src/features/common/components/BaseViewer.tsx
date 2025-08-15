@@ -139,7 +139,7 @@ export function BaseViewer({
         )
       : syntaxTokens;
 
-    // Render the tokens
+    // Render the tokens - allow horizontal scrolling for long lines
     return (
       <Text key={originalIndex}>
         {highlightedTokens.map((token: HighlightToken, tokenIndex: number) => {
@@ -186,13 +186,13 @@ export function BaseViewer({
           const isCurrentResult = isCurrentResultLine(originalIndex);
 
           return (
-            <Box key={originalIndex} flexDirection="row">
+            <Box key={originalIndex} flexDirection="row" width="100%">
               {showLineNumbers && (
-                <Box marginRight={1}>
+                <Box marginRight={1} flexShrink={0}>
                   <Text color="gray">{formatLineNumber(originalIndex)}:</Text>
                 </Box>
               )}
-              <Box flexGrow={1}>
+              <Box flexGrow={1} flexShrink={0} minWidth={0}>
                 {renderLineWithHighlighting(
                   line,
                   originalIndex,
@@ -210,14 +210,25 @@ export function BaseViewer({
   // Use custom renderer or default
   const renderContent = contentRenderer || defaultContentRenderer;
 
+  // Adjust height to account for border height (2 lines: top + bottom border)
+  const borderHeight = 2;
+  const adjustedHeight = Math.max(1, (visibleLines || 10) - borderHeight);
+
+  // For cases where line splitting creates more lines than the original height limit,
+  // allow some flexibility to ensure content visibility
+  const actualContentLines = visibleLineData.length;
+  const flexibleHeight = Math.max(
+    adjustedHeight,
+    Math.min(actualContentLines + 2, adjustedHeight + 3),
+  );
+
   return (
     <Box
       flexDirection="column"
       borderStyle="single"
       borderColor="gray"
       width="100%"
-      height={visibleLines || 10}
-      overflow="hidden"
+      height={flexibleHeight}
     >
       {renderContent(
         lines,
