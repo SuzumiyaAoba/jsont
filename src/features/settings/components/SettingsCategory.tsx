@@ -2,6 +2,7 @@
  * Settings Category Display Component
  */
 
+import { settingsEqual } from "@core/utils/equality";
 import { Box, Text } from "ink";
 import { memo } from "react";
 import type { SettingsCategory as SettingsCategoryType } from "../types/settings";
@@ -71,10 +72,8 @@ export const SettingsCategory = memo(
       prevProps.category.id === nextProps.category.id &&
       prevProps.activeField === nextProps.activeField &&
       prevProps.isEditing === nextProps.isEditing &&
-      JSON.stringify(prevProps.previewValues) ===
-        JSON.stringify(nextProps.previewValues) &&
-      JSON.stringify(prevProps.originalValues) ===
-        JSON.stringify(nextProps.originalValues)
+      settingsEqual(prevProps.previewValues, nextProps.previewValues) &&
+      settingsEqual(prevProps.originalValues, nextProps.originalValues)
     );
   },
 );

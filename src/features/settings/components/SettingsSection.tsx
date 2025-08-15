@@ -2,6 +2,7 @@
  * Settings Section Component with improved UX
  */
 
+import { settingsEqual } from "@core/utils/equality";
 import { Box, Text } from "ink";
 import { memo } from "react";
 import type { SettingsSection as SettingsSectionType } from "../types/settings";
@@ -73,10 +74,8 @@ export const SettingsSection = memo(
       prevProps.activeField === nextProps.activeField &&
       prevProps.isEditing === nextProps.isEditing &&
       prevProps.isExpanded === nextProps.isExpanded &&
-      JSON.stringify(prevProps.previewValues) ===
-        JSON.stringify(nextProps.previewValues) &&
-      JSON.stringify(prevProps.originalValues) ===
-        JSON.stringify(nextProps.originalValues)
+      settingsEqual(prevProps.previewValues, nextProps.previewValues) &&
+      settingsEqual(prevProps.originalValues, nextProps.originalValues)
     );
   },
 );
