@@ -3,16 +3,14 @@
  */
 
 import type { JsonValue } from "@core/types/index";
-import {
-  searchInJson,
-  searchInJsonSchema,
-} from "@features/search/utils/searchUtils";
-import { useResetScroll, useScrollOffset } from "@store/hooks/useNavigation";
+import { searchInJson, searchInJsonSchema } from "@features/search";
 import {
   useCurrentSearchResult,
+  useResetScroll,
+  useScrollOffset,
   useSearchState,
   useUpdateSearchResults,
-} from "@store/hooks/useSearch";
+} from "@store/hooks";
 import { useCallback, useEffect } from "react";
 
 interface UseSearchHandlersProps {

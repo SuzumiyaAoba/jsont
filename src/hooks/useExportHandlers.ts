@@ -3,7 +3,7 @@
  */
 
 import type { JsonValue } from "@core/types/index";
-import { exportToFile } from "@features/schema/utils/fileExport";
+import { exportToFile } from "@features/schema";
 import {
   useCompleteExport,
   useHideExportDialog,

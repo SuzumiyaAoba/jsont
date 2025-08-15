@@ -9,7 +9,7 @@ import {
   formatJsonSchema,
   handleSchemaError,
   inferJsonSchema,
-} from "@features/schema/utils/schemaUtils";
+} from "@features/schema";
 import { useIsRegexMode } from "@store/hooks/useSearch";
 
 // Define the data processor for schema generation
