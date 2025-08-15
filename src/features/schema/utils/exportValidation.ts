@@ -4,6 +4,7 @@
 
 import { homedir } from "node:os";
 import { join, resolve } from "node:path";
+import { isEmpty } from "es-toolkit/compat";
 import type {
   ExportConfiguration,
   ValidationError,
@@ -70,7 +71,7 @@ function validateFilename(
   const errors: ValidationError[] = [];
   const warnings: ValidationWarning[] = [];
 
-  if (!filename || filename.trim().length === 0) {
+  if (!filename || isEmpty(filename.trim())) {
     errors.push({
       field: "filename",
       message: "Filename is required",
@@ -135,7 +136,7 @@ function validateDirectory(
   const errors: ValidationError[] = [];
   const warnings: ValidationWarning[] = [];
 
-  if (!directory || directory.trim().length === 0) {
+  if (!directory || isEmpty(directory.trim())) {
     errors.push({
       field: "outputDir",
       message: "Output directory is required",
@@ -199,7 +200,7 @@ function validateFormatOptions(
       if (config.csvOptions) {
         if (
           !config.csvOptions.delimiter ||
-          config.csvOptions.delimiter.length === 0
+          isEmpty(config.csvOptions.delimiter)
         ) {
           errors.push({
             field: "csvOptions",
@@ -224,7 +225,7 @@ function validateFormatOptions(
       if (config.schemaOptions) {
         if (
           !config.schemaOptions.title ||
-          config.schemaOptions.title.trim().length === 0
+          isEmpty(config.schemaOptions.title.trim())
         ) {
           warnings.push({
             field: "schemaOptions",

@@ -3,6 +3,7 @@
  */
 
 import type { JsonValue } from "@core/types/index";
+import { isEmpty } from "es-toolkit/compat";
 import type { ColumnInfo, TableSchema } from "./types";
 
 /**
@@ -12,7 +13,7 @@ export function inferSchema(
   data: Record<string, JsonValue>[],
   tableName: string,
 ): TableSchema {
-  if (data.length === 0) {
+  if (isEmpty(data)) {
     return { tableName, columns: [] };
   }
 
@@ -80,7 +81,7 @@ export function inferSqlType(value: JsonValue): string {
  * Infer SQL type from multiple values (for better type detection)
  */
 function inferSqlTypeFromValues(values: JsonValue[]): string {
-  if (values.length === 0) {
+  if (isEmpty(values)) {
     return "TEXT";
   }
 

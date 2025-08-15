@@ -6,7 +6,7 @@ import type { KeyboardInput } from "@core/types/app";
 import { stopEditingAtom, updatePreviewValueAtom } from "@store/atoms/settings";
 import { Box, Text, useInput } from "ink";
 import { useSetAtom } from "jotai";
-import { memo, useCallback, useState } from "react";
+import { memo, useCallback, useMemo, useState } from "react";
 import type { SettingsFieldDefinition } from "../../types/settings";
 
 interface NumberFieldProps {
@@ -68,29 +68,26 @@ function NumberFieldComponent({ field, value, isEditing }: NumberFieldProps) {
 
   useInput(handleKeyInput, { isActive: isEditing });
 
-  // Validate current input
-  const isValidInput = () => {
+  // Validate current input - memoized for performance
+  const isValidInput = useMemo(() => {
     const num = parseInt(inputValue, 10);
     if (Number.isNaN(num)) return false;
     if (field.min !== undefined && num < field.min) return false;
     if (field.max !== undefined && num > field.max) return false;
     return true;
-  };
+  }, [inputValue, field.min, field.max]);
 
   return (
     <Box flexDirection="row" alignItems="center">
       {isEditing ? (
         <Box flexDirection="row" alignItems="center">
-          <Text
-            color={isValidInput() ? "black" : "red"}
-            backgroundColor="white"
-          >
+          <Text color={isValidInput ? "black" : "red"} backgroundColor="white">
             {inputValue}|
           </Text>
           <Box marginLeft={1}>
             <Text color="black">(↑/↓)</Text>
           </Box>
-          {!isValidInput() && (
+          {!isValidInput && (
             <Box marginLeft={1}>
               <Text color="red">!</Text>
             </Box>
