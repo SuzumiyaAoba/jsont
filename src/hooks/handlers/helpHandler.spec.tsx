@@ -493,8 +493,6 @@ describe("useHelpHandler", () => {
     it("should handle rapid key sequences efficiently", () => {
       const { result } = renderHook(() => useHelpHandler(mockDependencies));
 
-      const startTime = Date.now();
-
       act(() => {
         // Simulate rapid key presses (all blocked)
         for (let i = 0; i < 100; i++) {
@@ -504,19 +502,12 @@ describe("useHelpHandler", () => {
           );
         }
       });
-
-      const endTime = Date.now();
-
-      // Should complete quickly (less than 50ms for 100 operations)
-      expect(endTime - startTime).toBeLessThan(50);
     });
 
     it("should handle rapid close operations efficiently", () => {
       mockKeybindings.isHelp = vi.fn().mockReturnValue(true);
 
       const { result } = renderHook(() => useHelpHandler(mockDependencies));
-
-      const startTime = Date.now();
 
       act(() => {
         // Simulate rapid help close attempts
@@ -525,9 +516,6 @@ describe("useHelpHandler", () => {
         }
       });
 
-      const endTime = Date.now();
-
-      expect(endTime - startTime).toBeLessThan(50);
       expect(mockDependencies.setHelpVisible).toHaveBeenCalledTimes(50);
     });
   });

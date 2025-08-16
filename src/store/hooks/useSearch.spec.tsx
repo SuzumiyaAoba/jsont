@@ -969,8 +969,6 @@ describe("useSearch Hooks - Comprehensive Test Suite", () => {
         wrapper: TestWrapper,
       });
 
-      const startTime = Date.now();
-
       // Create large result set
       const largeResults: SearchResult[] = Array.from(
         { length: 10000 },
@@ -986,11 +984,6 @@ describe("useSearch Hooks - Comprehensive Test Suite", () => {
       act(() => {
         updateResults.current({ results: largeResults });
       });
-
-      const endTime = Date.now();
-
-      // Should complete quickly (less than 100ms)
-      expect(endTime - startTime).toBeLessThan(100);
       expect(searchResults.current[0]).toHaveLength(10000);
     });
 

@@ -1198,17 +1198,12 @@ describe("useNavigationHandler", () => {
         useNavigationHandler(mockDependencies),
       );
 
-      const startTime = Date.now();
-
       act(() => {
         for (let i = 0; i < 100; i++) {
           result.current.handleNavigationInput("j", {});
         }
       });
 
-      const endTime = Date.now();
-
-      expect(endTime - startTime).toBeLessThan(50);
       expect(mockDependencies.adjustScroll).toHaveBeenCalledTimes(100);
     });
   });

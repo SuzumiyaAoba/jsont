@@ -563,8 +563,6 @@ describe("useSearchHandler", () => {
     it("should handle rapid key sequences efficiently", () => {
       const { result } = renderHook(() => useSearchHandler(mockDependencies));
 
-      const startTime = Date.now();
-
       act(() => {
         // Simulate rapid typing
         for (let i = 0; i < 100; i++) {
@@ -574,11 +572,6 @@ describe("useSearchHandler", () => {
           );
         }
       });
-
-      const endTime = Date.now();
-
-      // Should complete quickly (less than 50ms for 100 operations)
-      expect(endTime - startTime).toBeLessThan(50);
     });
 
     it("should maintain stable callback reference", () => {

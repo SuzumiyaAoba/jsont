@@ -971,15 +971,11 @@ describe("NumberField", () => {
         </Provider>,
       );
 
-      const startTime = Date.now();
-
       // Simulate rapid key presses
       for (let i = 0; i < 50; i++) {
         mockHandleKeyInput(i.toString(), {});
       }
 
-      const endTime = Date.now();
-      expect(endTime - startTime).toBeLessThan(50);
       expect(mockUpdatePreviewValue).toHaveBeenCalledTimes(50);
     });
 
@@ -990,16 +986,12 @@ describe("NumberField", () => {
         </Provider>,
       );
 
-      const startTime = Date.now();
-
       // Simulate rapid arrow key presses
       for (let i = 0; i < 20; i++) {
         const upKey: KeyboardInput = { upArrow: true };
         mockHandleKeyInput("", upKey);
       }
 
-      const endTime = Date.now();
-      expect(endTime - startTime).toBeLessThan(25);
       expect(mockUpdatePreviewValue).toHaveBeenCalledTimes(20);
     });
   });

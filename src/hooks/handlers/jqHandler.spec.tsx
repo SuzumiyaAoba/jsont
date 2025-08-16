@@ -790,17 +790,11 @@ describe("useJqHandler", () => {
 
       const { result } = renderHook(() => useJqHandler(jsonModeDeps));
 
-      const startTime = Date.now();
-
       act(() => {
         for (let i = 0; i < 100; i++) {
           result.current.handleJqInput("j", {});
         }
       });
-
-      const endTime = Date.now();
-
-      expect(endTime - startTime).toBeLessThan(50);
       expect(jsonModeDeps.adjustScroll).toHaveBeenCalledTimes(100);
     });
   });

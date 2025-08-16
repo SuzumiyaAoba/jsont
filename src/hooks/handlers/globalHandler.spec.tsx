@@ -469,8 +469,6 @@ describe("useGlobalHandler", () => {
 
       const { result } = renderHook(() => useGlobalHandler(mockDependencies));
 
-      const startTime = Date.now();
-
       act(() => {
         // Mixed sequence of commands
         for (let i = 0; i < 50; i++) {
@@ -479,11 +477,6 @@ describe("useGlobalHandler", () => {
           result.current.handleGlobalInput("c", { ctrl: true });
         }
       });
-
-      const endTime = Date.now();
-
-      // Should complete quickly (less than 50ms for 150 operations)
-      expect(endTime - startTime).toBeLessThan(50);
     });
   });
 

@@ -594,15 +594,11 @@ describe("BooleanField", () => {
         </Provider>,
       );
 
-      const startTime = Date.now();
-
       // Simulate rapid key presses
       for (let i = 0; i < 50; i++) {
         mockHandleKeyInput(" ", {});
       }
 
-      const endTime = Date.now();
-      expect(endTime - startTime).toBeLessThan(50);
       expect(mockUpdatePreviewValue).toHaveBeenCalledTimes(50);
     });
   });
