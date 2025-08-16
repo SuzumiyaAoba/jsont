@@ -145,7 +145,8 @@ describe("JsonViewer Regression Tests", () => {
       expect(output).toContain("Third item");
 
       // Should not start from line 2 (regression test)
-      const lines = output?.split("\n") || [];
+      expect(output).toBeDefined();
+      const lines = output!.split("\n");
       const firstLineWithNumber = lines.find((line) => line.includes(":"));
       if (firstLineWithNumber) {
         expect(firstLineWithNumber).toMatch(/1:/);
@@ -292,8 +293,8 @@ describe("JsonViewer Regression Tests", () => {
               lineIndex: 1,
               columnStart: 0,
               columnEnd: 6,
-              matchText: "object",
-              contextLine: "object content",
+              matchText: "search",
+              contextLine: "search term",
             },
           ]}
           currentSearchIndex={0}

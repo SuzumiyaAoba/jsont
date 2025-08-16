@@ -111,9 +111,10 @@ describe("BaseViewer Regression Tests", () => {
       );
 
       const output = lastFrame();
+      expect(output).toBeDefined();
 
       // Each array element should have its own line number
-      const lineNumbers = output?.match(/(\d+):/g) || [];
+      const lineNumbers = output!.match(/(\d+):/g) || [];
       const uniqueNumbers = new Set(lineNumbers);
 
       // Should have unique line numbers for each array element
@@ -148,7 +149,8 @@ describe("BaseViewer Regression Tests", () => {
 
       // Split lines should have appropriate line numbering
       // (continuation lines may share line numbers, but first line should be 1)
-      const firstLineMatch = output?.match(/1:\s*\{/);
+      expect(output).toBeDefined();
+      const firstLineMatch = output!.match(/1:\s*\{/);
       expect(firstLineMatch).toBeTruthy();
     });
   });
@@ -224,8 +226,8 @@ describe("BaseViewer Regression Tests", () => {
               lineIndex: 1,
               columnStart: 0,
               columnEnd: 7,
-              matchText: "example",
-              contextLine: "example line",
+              matchText: "content",
+              contextLine: "test content",
             },
           ]}
           currentSearchIndex={0}
