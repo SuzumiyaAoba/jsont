@@ -587,7 +587,7 @@ describe("JSON Processor", () => {
       const data = {
         zero: 0,
         negative: -42,
-        float: 3.14159,
+        float: Math.PI,
         scientific: 1.23e-10,
         infinity: "Infinity", // JSON doesn't support Infinity directly
         large: Number.MAX_SAFE_INTEGER,

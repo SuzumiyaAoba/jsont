@@ -130,8 +130,9 @@ describe("NumberField", () => {
         );
 
         const textElements = getAllByTestId("text");
-        const rangeText = textElements.find((el) =>
-          el.textContent?.includes("(") && el.textContent?.includes(")"),
+        const rangeText = textElements.find(
+          (el) =>
+            el.textContent?.includes("(") && el.textContent?.includes(")"),
         );
 
         expect(rangeText).toBeUndefined();
@@ -388,7 +389,7 @@ describe("NumberField", () => {
 
         // Should not crash with NaN value
         expect(() => {
-          const { getAllByTestId } = render(
+          render(
             <Provider>
               <NumberField {...defaultProps} value={NaN} isEditing={true} />
             </Provider>,
@@ -412,7 +413,7 @@ describe("NumberField", () => {
       it("should handle decimal values", () => {
         const { getAllByTestId } = render(
           <Provider>
-            <NumberField {...defaultProps} value={3.14159} isEditing={false} />
+            <NumberField {...defaultProps} value={Math.PI} isEditing={false} />
           </Provider>,
         );
 

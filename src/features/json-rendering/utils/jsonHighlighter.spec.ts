@@ -25,7 +25,7 @@ vi.mock("@features/json-rendering/utils/syntaxHighlight", () => ({
     if (line.includes(":")) {
       const parts = line.split(":");
       return [
-        { text: parts[0] + ":", color: "cyan" },
+        { text: `${parts[0]}:`, color: "cyan" },
         { text: parts.slice(1).join(":"), color: "white" },
       ];
     }
