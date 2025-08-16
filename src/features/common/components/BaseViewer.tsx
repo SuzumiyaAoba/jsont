@@ -204,7 +204,7 @@ export function BaseViewer({
         !line.includes("]") &&
         !line.includes('"') && // Don't treat quoted strings as continuations
         // Previous line didn't end with comma, brace, or bracket (likely split mid-value)
-        !allLines[i - 1]!.match(/[,{}[\]"]\s*$/);
+        !allLines[i - 1]?.match(/[,{}[\]"]\s*$/);
 
       if (!isLikelyContinuation) {
         // This appears to be a new logical line - assign the current line number first

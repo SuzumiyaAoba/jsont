@@ -215,7 +215,7 @@ export const JsonViewer = memo(function JsonViewer(
             !line.includes("[") &&
             !line.includes("]") &&
             !line.includes('"') &&
-            !allLines[i - 1]!.match(/[,{}[\]"]\s*$/);
+            !allLines[i - 1]?.match(/[,{}[\]"]\s*$/);
 
           if (!isLikelyContinuation) {
             lineMapping.set(i, currentOriginalLine);
