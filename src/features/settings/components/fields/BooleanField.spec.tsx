@@ -45,6 +45,14 @@ vi.mock("jotai", () => ({
 // Mock useInput hook
 import { useInput } from "ink";
 
+vi.mock("ink", async () => {
+  const actual = await vi.importActual("ink");
+  return {
+    ...actual,
+    useInput: vi.fn(),
+  };
+});
+
 describe("BooleanField", () => {
   const mockField: SettingsFieldDefinition = {
     key: "testBoolean",
@@ -66,7 +74,8 @@ describe("BooleanField", () => {
     vi.clearAllMocks();
 
     // Capture the key input handler
-    useInput.mockImplementation((handler: any, _options: any) => {
+    const mockedUseInput = useInput as any;
+    mockedUseInput.mockImplementation((handler: any, _options: any) => {
       mockHandleKeyInput = handler;
     });
   });

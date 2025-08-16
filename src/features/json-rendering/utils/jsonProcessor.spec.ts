@@ -5,7 +5,7 @@
  * format detection, repair functionality, and edge cases.
  */
 
-import type { JsonValue } from "@core/types";
+// JsonValue type imported but not used directly in tests
 import { describe, expect, it } from "vitest";
 import {
   detectJsonFormat,
@@ -210,12 +210,12 @@ describe("JSON Processor", () => {
 
       expect(result.isValid).toBe(true);
       expect(result.stats).toBeDefined();
-      expect(result.stats?.types.string).toBeGreaterThan(0);
-      expect(result.stats?.types.number).toBeGreaterThan(0);
-      expect(result.stats?.types.boolean).toBeGreaterThan(0);
-      expect(result.stats?.types.null).toBeGreaterThan(0);
-      expect(result.stats?.types.array).toBeGreaterThan(0);
-      expect(result.stats?.types.object).toBeGreaterThan(0);
+      expect(result.stats?.types["string"]).toBeGreaterThan(0);
+      expect(result.stats?.types["number"]).toBeGreaterThan(0);
+      expect(result.stats?.types["boolean"]).toBeGreaterThan(0);
+      expect(result.stats?.types["null"]).toBeGreaterThan(0);
+      expect(result.stats?.types["array"]).toBeGreaterThan(0);
+      expect(result.stats?.types["object"]).toBeGreaterThan(0);
     });
 
     it("should warn about large data size", () => {
@@ -241,15 +241,15 @@ describe("JSON Processor", () => {
       expect(result.isValid).toBe(true);
       expect(result.stats?.keys).toContain("id");
       expect(result.stats?.keys).toContain("name");
-      expect(result.stats?.types.array).toBeGreaterThan(0);
-      expect(result.stats?.types.object).toBeGreaterThan(0);
+      expect(result.stats?.types["array"]).toBeGreaterThan(0);
+      expect(result.stats?.types["object"]).toBeGreaterThan(0);
     });
 
     it("should handle null and primitive values", () => {
       const result = validateJsonStructure(null);
 
       expect(result.isValid).toBe(true);
-      expect(result.stats?.types.null).toBe(1);
+      expect(result.stats?.types["null"]).toBe(1);
     });
   });
 
@@ -641,11 +641,11 @@ describe("JSON Processor", () => {
       expect(validation.isValid).toBe(true);
       expect(validation.stats?.depth).toBeGreaterThan(3);
       expect(validation.stats?.keys.length).toBeGreaterThan(10);
-      expect(validation.stats?.types.object).toBeGreaterThan(5);
-      expect(validation.stats?.types.array).toBeGreaterThan(0);
-      expect(validation.stats?.types.string).toBeGreaterThan(5);
-      expect(validation.stats?.types.number).toBeGreaterThan(0);
-      expect(validation.stats?.types.boolean).toBeGreaterThan(0);
+      expect(validation.stats?.types["object"]).toBeGreaterThan(5);
+      expect(validation.stats?.types["array"]).toBeGreaterThan(0);
+      expect(validation.stats?.types["string"]).toBeGreaterThan(5);
+      expect(validation.stats?.types["number"]).toBeGreaterThan(0);
+      expect(validation.stats?.types["boolean"]).toBeGreaterThan(0);
     });
   });
 });

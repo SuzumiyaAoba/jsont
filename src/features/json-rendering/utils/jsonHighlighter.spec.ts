@@ -36,8 +36,11 @@ vi.mock("@features/json-rendering/utils/syntaxHighlight", () => ({
       tokens: HighlightToken[],
       searchTerm: string,
       isCurrentResult: boolean,
-      isRegexMode: boolean,
-      currentResultPosition?: { columnStart: number; columnEnd: number } | null,
+      _isRegexMode: boolean,
+      _currentResultPosition?: {
+        columnStart: number;
+        columnEnd: number;
+      } | null,
     ) => {
       if (!searchTerm) return tokens;
 
@@ -47,7 +50,6 @@ vi.mock("@features/json-rendering/utils/syntaxHighlight", () => ({
             ...token,
             isMatch: true,
             color: isCurrentResult ? "red" : "yellow",
-            backgroundColor: isCurrentResult ? "black" : undefined,
           };
         }
         return token;
@@ -176,7 +178,7 @@ describe("JsonHighlighter", () => {
 
       expect(result[0]?.isMatch).toBe(true);
       expect(result[0]?.color).toBe("red");
-      expect(result[0]?.backgroundColor).toBe("black");
+      // Note: backgroundColor not supported in current HighlightToken type
     });
 
     it("should handle empty search term", () => {
@@ -244,8 +246,8 @@ describe("JsonHighlighter", () => {
     it("should preserve original token properties", () => {
       const highlighter = new JsonHighlighter();
       const tokens: HighlightToken[] = [
-        { text: "name", color: "cyan", bold: true },
-        { text: "value", color: "green", italic: true },
+        { text: "name", color: "cyan" },
+        { text: "value", color: "green" },
       ];
 
       const result = highlighter.applySearchHighlighting(
@@ -255,8 +257,7 @@ describe("JsonHighlighter", () => {
         false,
       );
 
-      expect(result[0]?.bold).toBe(true);
-      expect(result[1]?.italic).toBe(true);
+      // Note: bold and italic not supported in current HighlightToken type
       expect(result[0]?.color).toBe("cyan");
       expect(result[1]?.color).toBe("green");
     });
