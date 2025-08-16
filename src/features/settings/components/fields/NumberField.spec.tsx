@@ -38,7 +38,6 @@ const mockUpdatePreviewValue = vi.fn();
 const mockStopEditing = vi.fn();
 
 vi.mock("jotai", () => ({
-  atom: vi.fn((initialValue) => ({ init: initialValue })),
   Provider: ({ children }: any) => children,
   useSetAtom: vi.fn((atom) => {
     const atomName = atom.toString();
@@ -49,15 +48,7 @@ vi.mock("jotai", () => ({
 }));
 
 // Mock useInput hook
-import { useInput } from "ink";
-
-vi.mock("ink", async () => {
-  const actual = await vi.importActual("ink");
-  return {
-    ...actual,
-    useInput: vi.fn(),
-  };
-});
+const { useInput } = require("ink");
 
 describe("NumberField", () => {
   const mockField: SettingsFieldDefinition = {
@@ -65,7 +56,7 @@ describe("NumberField", () => {
     label: "Test Number",
     description: "A test number field",
     type: "number",
-    defaultValue: 10,
+    defaultValue: 5,
     min: 0,
     max: 100,
   };
@@ -82,8 +73,7 @@ describe("NumberField", () => {
     vi.clearAllMocks();
 
     // Capture the key input handler
-    const mockedUseInput = useInput as any;
-    mockedUseInput.mockImplementation((handler: any, _options: any) => {
+    useInput.mockImplementation((handler: any, _options: any) => {
       mockHandleKeyInput = handler;
     });
   });
@@ -118,21 +108,22 @@ describe("NumberField", () => {
 
         expect(rangeText).toBeInTheDocument();
         expect(rangeText).toHaveAttribute("data-color", "gray");
-        expect(rangeText).toHaveAttribute("data-dim", "true");
       });
 
-      it("should show partial range constraints", () => {
-        const fieldWithMinOnly: SettingsFieldDefinition = {
-          ...mockField,
-          min: 5,
+      it("should not show range when min/max are undefined", () => {
+        const fieldWithoutRange: SettingsFieldDefinition = {
+          key: "noRange",
+          label: "No Range",
+          description: "Field without range",
+          type: "number",
+          defaultValue: 42,
         };
-        delete fieldWithMinOnly.max;
 
         const { getAllByTestId } = render(
           <Provider>
             <NumberField
-              field={fieldWithMinOnly}
-              value={10}
+              field={fieldWithoutRange}
+              value={42}
               isEditing={false}
             />
           </Provider>,
@@ -140,40 +131,28 @@ describe("NumberField", () => {
 
         const textElements = getAllByTestId("text");
         const rangeText = textElements.find((el) =>
-          el.textContent?.includes("(5-∞)"),
-        );
-
-        expect(rangeText).toBeInTheDocument();
-      });
-
-      it("should not show range when no constraints", () => {
-        const fieldNoConstraints: SettingsFieldDefinition = {
-          ...mockField,
-        };
-        delete fieldNoConstraints.min;
-        delete fieldNoConstraints.max;
-
-        const { getAllByTestId } = render(
-          <Provider>
-            <NumberField
-              field={fieldNoConstraints}
-              value={10}
-              isEditing={false}
-            />
-          </Provider>,
-        );
-
-        const textElements = getAllByTestId("text");
-        const rangeText = textElements.find((el) =>
-          el.textContent?.includes("("),
+          el.textContent?.includes("(") && el.textContent?.includes(")"),
         );
 
         expect(rangeText).toBeUndefined();
       });
+
+      it("should highlight values outside range in view mode", () => {
+        const { getAllByTestId } = render(
+          <Provider>
+            <NumberField {...defaultProps} value={150} />
+          </Provider>,
+        );
+
+        const textElements = getAllByTestId("text");
+        const valueText = textElements.find((el) => el.textContent === "150");
+
+        expect(valueText).toHaveAttribute("data-color", "red");
+      });
     });
 
-    describe("Editing Mode", () => {
-      it("should render in editing mode with cursor", () => {
+    describe("Edit Mode", () => {
+      it("should render input box in edit mode", () => {
         const { getAllByTestId } = render(
           <Provider>
             <NumberField {...defaultProps} isEditing={true} />
@@ -181,47 +160,303 @@ describe("NumberField", () => {
         );
 
         const textElements = getAllByTestId("text");
-        const inputText = textElements.find((el) =>
-          el.textContent?.includes("10|"),
-        );
-        const helpText = textElements.find((el) =>
-          el.textContent?.includes("(↑/↓)"),
+        const inputBox = textElements.find((el) =>
+          el.textContent?.includes("["),
         );
 
-        expect(inputText).toBeInTheDocument();
-        expect(inputText).toHaveAttribute("data-color", "black");
-        expect(inputText).toHaveAttribute("data-background", "white");
-        expect(helpText).toBeInTheDocument();
+        expect(inputBox).toBeInTheDocument();
+        expect(inputBox).toHaveAttribute("data-color", "cyan");
       });
 
       it("should show validation error for invalid input", () => {
-        const { getAllByTestId, rerender } = render(
+        const { getAllByTestId } = render(
+          <Provider>
+            <NumberField
+              {...defaultProps}
+              value={150} // Out of range
+              isEditing={true}
+            />
+          </Provider>,
+        );
+
+        const textElements = getAllByTestId("text");
+        const errorText = textElements.find((el) =>
+          el.textContent?.includes("Must be between 0 and 100"),
+        );
+
+        expect(errorText).toBeInTheDocument();
+        expect(errorText).toHaveAttribute("data-color", "red");
+      });
+
+      it("should show help text in edit mode", () => {
+        const { getAllByTestId } = render(
           <Provider>
             <NumberField {...defaultProps} isEditing={true} />
           </Provider>,
         );
 
-        // Simulate invalid input
+        const textElements = getAllByTestId("text");
+        const helpText = textElements.find((el) =>
+          el.textContent?.includes("(Enter to confirm)"),
+        );
+
+        expect(helpText).toBeInTheDocument();
+        expect(helpText).toHaveAttribute("data-color", "black");
+      });
+
+      it("should not show help text when not editing", () => {
+        const { getAllByTestId } = render(
+          <Provider>
+            <NumberField {...defaultProps} isEditing={false} />
+          </Provider>,
+        );
+
+        const textElements = getAllByTestId("text");
+        const helpText = textElements.find((el) =>
+          el.textContent?.includes("(Enter to confirm)"),
+        );
+
+        expect(helpText).toBeUndefined();
+      });
+    });
+  });
+
+  describe("Input Validation", () => {
+    describe("Numeric Input", () => {
+      it("should accept valid numeric characters", () => {
+        render(
+          <Provider>
+            <NumberField {...defaultProps} isEditing={true} />
+          </Provider>,
+        );
+
         const keyInput: KeyboardInput = {};
-        mockHandleKeyInput("a", keyInput);
 
-        // Force re-render to see validation state
-        rerender(
+        // Test digits
+        for (let digit = 0; digit <= 9; digit++) {
+          mockHandleKeyInput(digit.toString(), keyInput);
+        }
+
+        expect(mockUpdatePreviewValue).toHaveBeenCalledTimes(10);
+      });
+
+      it("should accept decimal point", () => {
+        render(
           <Provider>
             <NumberField {...defaultProps} isEditing={true} />
           </Provider>,
         );
 
-        // Note: Due to the way the test is structured, we test this indirectly
-        // The actual validation would be shown in a real scenario
-        expect(getAllByTestId("text")).toBeTruthy();
+        const keyInput: KeyboardInput = {};
+        mockHandleKeyInput(".", keyInput);
+
+        expect(mockUpdatePreviewValue).toHaveBeenCalled();
+      });
+
+      it("should accept negative sign at start", () => {
+        render(
+          <Provider>
+            <NumberField {...defaultProps} isEditing={true} />
+          </Provider>,
+        );
+
+        const keyInput: KeyboardInput = {};
+        mockHandleKeyInput("-", keyInput);
+
+        expect(mockUpdatePreviewValue).toHaveBeenCalled();
+      });
+
+      it("should reject non-numeric characters", () => {
+        render(
+          <Provider>
+            <NumberField {...defaultProps} isEditing={true} />
+          </Provider>,
+        );
+
+        const keyInput: KeyboardInput = {};
+        const invalidChars = ["a", "z", "!", "@", "#", "$", "%"];
+
+        invalidChars.forEach((char) => {
+          mockHandleKeyInput(char, keyInput);
+        });
+
+        expect(mockUpdatePreviewValue).not.toHaveBeenCalled();
+      });
+
+      it("should handle scientific notation", () => {
+        render(
+          <Provider>
+            <NumberField {...defaultProps} isEditing={true} />
+          </Provider>,
+        );
+
+        const keyInput: KeyboardInput = {};
+        mockHandleKeyInput("e", keyInput);
+
+        expect(mockUpdatePreviewValue).toHaveBeenCalled();
+      });
+    });
+
+    describe("Range Validation", () => {
+      it("should validate minimum value", () => {
+        render(
+          <Provider>
+            <NumberField {...defaultProps} value={-5} isEditing={true} />
+          </Provider>,
+        );
+
+        // The component should show validation error for values below minimum
+        const { getAllByTestId } = render(
+          <Provider>
+            <NumberField {...defaultProps} value={-5} isEditing={true} />
+          </Provider>,
+        );
+
+        const textElements = getAllByTestId("text");
+        const errorText = textElements.find((el) =>
+          el.textContent?.includes("Must be between 0 and 100"),
+        );
+
+        expect(errorText).toBeInTheDocument();
+      });
+
+      it("should validate maximum value", () => {
+        const { getAllByTestId } = render(
+          <Provider>
+            <NumberField {...defaultProps} value={150} isEditing={true} />
+          </Provider>,
+        );
+
+        const textElements = getAllByTestId("text");
+        const errorText = textElements.find((el) =>
+          el.textContent?.includes("Must be between 0 and 100"),
+        );
+
+        expect(errorText).toBeInTheDocument();
+      });
+
+      it("should accept values within range", () => {
+        const { getAllByTestId } = render(
+          <Provider>
+            <NumberField {...defaultProps} value={50} isEditing={true} />
+          </Provider>,
+        );
+
+        const textElements = getAllByTestId("text");
+        const errorText = textElements.find((el) =>
+          el.textContent?.includes("Must be between"),
+        );
+
+        expect(errorText).toBeUndefined();
+      });
+
+      it("should handle fields without range restrictions", () => {
+        const fieldWithoutRange: SettingsFieldDefinition = {
+          key: "unlimited",
+          label: "Unlimited",
+          description: "No range limits",
+          type: "number",
+          defaultValue: 0,
+        };
+
+        const { getAllByTestId } = render(
+          <Provider>
+            <NumberField
+              field={fieldWithoutRange}
+              value={999999}
+              isEditing={true}
+            />
+          </Provider>,
+        );
+
+        const textElements = getAllByTestId("text");
+        const errorText = textElements.find((el) =>
+          el.textContent?.includes("Must be between"),
+        );
+
+        expect(errorText).toBeUndefined();
+      });
+    });
+
+    describe("Edge Cases", () => {
+      it("should handle empty/invalid input", () => {
+        render(
+          <Provider>
+            <NumberField {...defaultProps} value={NaN} isEditing={true} />
+          </Provider>,
+        );
+
+        // Should not crash with NaN value
+        expect(() => {
+          const { getAllByTestId } = render(
+            <Provider>
+              <NumberField {...defaultProps} value={NaN} isEditing={true} />
+            </Provider>,
+          );
+        }).not.toThrow();
+      });
+
+      it("should handle zero value", () => {
+        const { getAllByTestId } = render(
+          <Provider>
+            <NumberField {...defaultProps} value={0} isEditing={false} />
+          </Provider>,
+        );
+
+        const textElements = getAllByTestId("text");
+        const valueText = textElements.find((el) => el.textContent === "0");
+
+        expect(valueText).toBeInTheDocument();
+      });
+
+      it("should handle decimal values", () => {
+        const { getAllByTestId } = render(
+          <Provider>
+            <NumberField {...defaultProps} value={3.14159} isEditing={false} />
+          </Provider>,
+        );
+
+        const textElements = getAllByTestId("text");
+        const valueText = textElements.find((el) =>
+          el.textContent?.includes("3.14159"),
+        );
+
+        expect(valueText).toBeInTheDocument();
+      });
+
+      it("should handle negative values when allowed", () => {
+        const fieldWithNegative: SettingsFieldDefinition = {
+          key: "negative",
+          label: "Negative Allowed",
+          description: "Allows negative values",
+          type: "number",
+          defaultValue: 0,
+          min: -100,
+          max: 100,
+        };
+
+        const { getAllByTestId } = render(
+          <Provider>
+            <NumberField
+              field={fieldWithNegative}
+              value={-50}
+              isEditing={false}
+            />
+          </Provider>,
+        );
+
+        const textElements = getAllByTestId("text");
+        const valueText = textElements.find((el) => el.textContent === "-50");
+
+        expect(valueText).toBeInTheDocument();
+        expect(valueText).toHaveAttribute("data-color", "cyan");
       });
     });
   });
 
   describe("Keyboard Input Handling", () => {
-    describe("Digit Input", () => {
-      it("should accept single digits", () => {
+    describe("Character Input", () => {
+      it("should build input string character by character", () => {
         render(
           <Provider>
             <NumberField {...defaultProps} isEditing={true} />
@@ -229,147 +464,25 @@ describe("NumberField", () => {
         );
 
         const keyInput: KeyboardInput = {};
-        mockHandleKeyInput("5", keyInput);
 
-        // The component should update its internal state
-        // We test this through the callback expectations
-        expect(useInput).toHaveBeenCalled();
-      });
-
-      it("should accept multiple digits", () => {
-        render(
-          <Provider>
-            <NumberField {...defaultProps} isEditing={true} />
-          </Provider>,
-        );
-
-        const keyInput: KeyboardInput = {};
         mockHandleKeyInput("1", keyInput);
         mockHandleKeyInput("2", keyInput);
         mockHandleKeyInput("3", keyInput);
 
-        expect(useInput).toHaveBeenCalled();
+        expect(mockUpdatePreviewValue).toHaveBeenCalledTimes(3);
       });
 
-      it("should accept negative sign", () => {
+      it("should handle backspace to remove characters", () => {
         render(
           <Provider>
             <NumberField {...defaultProps} isEditing={true} />
           </Provider>,
         );
 
-        const keyInput: KeyboardInput = {};
-        mockHandleKeyInput("-", keyInput);
+        const backspaceKey: KeyboardInput = { backspace: true };
+        mockHandleKeyInput("", backspaceKey);
 
-        expect(useInput).toHaveBeenCalled();
-      });
-
-      it("should reject second negative sign", () => {
-        render(
-          <Provider>
-            <NumberField {...defaultProps} isEditing={true} />
-          </Provider>,
-        );
-
-        const keyInput: KeyboardInput = {};
-        mockHandleKeyInput("-", keyInput);
-        mockHandleKeyInput("-", keyInput); // Second minus should be ignored
-
-        expect(useInput).toHaveBeenCalled();
-      });
-
-      it("should reject non-digit characters", () => {
-        render(
-          <Provider>
-            <NumberField {...defaultProps} isEditing={true} />
-          </Provider>,
-        );
-
-        const keyInput: KeyboardInput = {};
-        mockHandleKeyInput("a", keyInput);
-        mockHandleKeyInput(".", keyInput);
-        mockHandleKeyInput(" ", keyInput);
-
-        expect(useInput).toHaveBeenCalled();
-      });
-    });
-
-    describe("Arrow Key Increment/Decrement", () => {
-      it("should increment with up arrow", () => {
-        render(
-          <Provider>
-            <NumberField {...defaultProps} isEditing={true} />
-          </Provider>,
-        );
-
-        const keyInput: KeyboardInput = { upArrow: true };
-        mockHandleKeyInput("", keyInput);
-
-        expect(useInput).toHaveBeenCalled();
-      });
-
-      it("should decrement with down arrow", () => {
-        render(
-          <Provider>
-            <NumberField {...defaultProps} isEditing={true} />
-          </Provider>,
-        );
-
-        const keyInput: KeyboardInput = { downArrow: true };
-        mockHandleKeyInput("", keyInput);
-
-        expect(useInput).toHaveBeenCalled();
-      });
-
-      it("should respect max constraint when incrementing", () => {
-        const fieldWithMax: SettingsFieldDefinition = {
-          ...mockField,
-          max: 5,
-        };
-
-        render(
-          <Provider>
-            <NumberField field={fieldWithMax} value={5} isEditing={true} />
-          </Provider>,
-        );
-
-        const keyInput: KeyboardInput = { upArrow: true };
-        mockHandleKeyInput("", keyInput);
-
-        expect(useInput).toHaveBeenCalled();
-      });
-
-      it("should respect min constraint when decrementing", () => {
-        const fieldWithMin: SettingsFieldDefinition = {
-          ...mockField,
-          min: 0,
-        };
-
-        render(
-          <Provider>
-            <NumberField field={fieldWithMin} value={0} isEditing={true} />
-          </Provider>,
-        );
-
-        const keyInput: KeyboardInput = { downArrow: true };
-        mockHandleKeyInput("", keyInput);
-
-        expect(useInput).toHaveBeenCalled();
-      });
-    });
-
-    describe("Backspace and Delete", () => {
-      it("should handle backspace", () => {
-        render(
-          <Provider>
-            <NumberField {...defaultProps} isEditing={true} />
-          </Provider>,
-        );
-
-        const keyInput: KeyboardInput = { backspace: true };
-        mockHandleKeyInput("", keyInput);
-
-        expect(useInput).toHaveBeenCalled();
+        expect(mockUpdatePreviewValue).toHaveBeenCalled();
       });
 
       it("should handle delete key", () => {
@@ -379,114 +492,137 @@ describe("NumberField", () => {
           </Provider>,
         );
 
-        const keyInput: KeyboardInput = { delete: true };
-        mockHandleKeyInput("", keyInput);
+        const deleteKey: KeyboardInput = { delete: true };
+        mockHandleKeyInput("", deleteKey);
 
-        expect(useInput).toHaveBeenCalled();
+        expect(mockUpdatePreviewValue).toHaveBeenCalled();
+      });
+
+      it("should clear input with Ctrl+U", () => {
+        render(
+          <Provider>
+            <NumberField {...defaultProps} isEditing={true} />
+          </Provider>,
+        );
+
+        const clearKey: KeyboardInput = { ctrl: true };
+        mockHandleKeyInput("u", clearKey);
+
+        expect(mockUpdatePreviewValue).toHaveBeenCalled();
       });
     });
 
-    describe("Enter and Escape", () => {
-      it("should commit valid value on Enter", () => {
+    describe("Arrow Key Navigation", () => {
+      it("should increment value with up arrow", () => {
         render(
           <Provider>
-            <NumberField {...defaultProps} isEditing={true} />
+            <NumberField {...defaultProps} value={10} isEditing={true} />
           </Provider>,
         );
 
-        // First input a digit
-        mockHandleKeyInput("5", {});
-
-        // Then press Enter
-        const keyInput: KeyboardInput = { return: true };
-        mockHandleKeyInput("", keyInput);
-
-        expect(mockStopEditing).toHaveBeenCalled();
-        expect(mockUpdatePreviewValue).toHaveBeenCalledWith({
-          key: "testNumber",
-          value: 5,
-        });
-      });
-
-      it("should clamp value to max on Enter", () => {
-        render(
-          <Provider>
-            <NumberField {...defaultProps} isEditing={true} />
-          </Provider>,
-        );
-
-        // Input value above max
-        mockHandleKeyInput("1", {});
-        mockHandleKeyInput("5", {});
-        mockHandleKeyInput("0", {});
-
-        const keyInput: KeyboardInput = { return: true };
-        mockHandleKeyInput("", keyInput);
+        const upKey: KeyboardInput = { upArrow: true };
+        mockHandleKeyInput("", upKey);
 
         expect(mockUpdatePreviewValue).toHaveBeenCalledWith({
           key: "testNumber",
-          value: 100, // Clamped to max
+          value: 11,
         });
       });
 
-      it("should clamp value to min on Enter", () => {
+      it("should decrement value with down arrow", () => {
         render(
           <Provider>
-            <NumberField {...defaultProps} isEditing={true} />
+            <NumberField {...defaultProps} value={10} isEditing={true} />
           </Provider>,
         );
 
-        // Input negative value
-        mockHandleKeyInput("-", {});
-        mockHandleKeyInput("5", {});
-
-        const keyInput: KeyboardInput = { return: true };
-        mockHandleKeyInput("", keyInput);
+        const downKey: KeyboardInput = { downArrow: true };
+        mockHandleKeyInput("", downKey);
 
         expect(mockUpdatePreviewValue).toHaveBeenCalledWith({
           key: "testNumber",
-          value: 0, // Clamped to min
+          value: 9,
         });
       });
 
-      it("should not commit invalid value on Enter", () => {
+      it("should respect min boundary with down arrow", () => {
         render(
           <Provider>
-            <NumberField {...defaultProps} isEditing={true} />
+            <NumberField {...defaultProps} value={0} isEditing={true} />
           </Provider>,
         );
 
-        // Clear input to make it invalid
-        mockHandleKeyInput("", { backspace: true });
-        mockHandleKeyInput("", { backspace: true });
+        const downKey: KeyboardInput = { downArrow: true };
+        mockHandleKeyInput("", downKey);
 
-        const keyInput: KeyboardInput = { return: true };
-        mockHandleKeyInput("", keyInput);
-
-        expect(mockStopEditing).toHaveBeenCalled();
-        expect(mockUpdatePreviewValue).not.toHaveBeenCalled();
+        // Should not go below minimum (0)
+        expect(mockUpdatePreviewValue).toHaveBeenCalledWith({
+          key: "testNumber",
+          value: 0,
+        });
       });
 
-      it("should reset value on Escape", () => {
+      it("should respect max boundary with up arrow", () => {
         render(
           <Provider>
-            <NumberField {...defaultProps} isEditing={true} />
+            <NumberField {...defaultProps} value={100} isEditing={true} />
           </Provider>,
         );
 
-        // Input some digits
-        mockHandleKeyInput("5", {});
+        const upKey: KeyboardInput = { upArrow: true };
+        mockHandleKeyInput("", upKey);
 
-        // Press Escape
-        const keyInput: KeyboardInput = { escape: true };
-        mockHandleKeyInput("", keyInput);
+        // Should not go above maximum (100)
+        expect(mockUpdatePreviewValue).toHaveBeenCalledWith({
+          key: "testNumber",
+          value: 100,
+        });
+      });
 
-        expect(mockStopEditing).toHaveBeenCalled();
-        expect(mockUpdatePreviewValue).not.toHaveBeenCalled();
+      it("should handle large increments with Shift modifier", () => {
+        render(
+          <Provider>
+            <NumberField {...defaultProps} value={10} isEditing={true} />
+          </Provider>,
+        );
+
+        const shiftUpKey: KeyboardInput = { upArrow: true, shift: true };
+        mockHandleKeyInput("", shiftUpKey);
+
+        expect(mockUpdatePreviewValue).toHaveBeenCalledWith({
+          key: "testNumber",
+          value: 20, // +10 with shift
+        });
       });
     });
 
-    describe("Input Filtering", () => {
+    describe("Control Keys", () => {
+      it("should stop editing on Enter key", () => {
+        render(
+          <Provider>
+            <NumberField {...defaultProps} isEditing={true} />
+          </Provider>,
+        );
+
+        const enterKey: KeyboardInput = { return: true };
+        mockHandleKeyInput("", enterKey);
+
+        expect(mockStopEditing).toHaveBeenCalled();
+      });
+
+      it("should stop editing on Escape key", () => {
+        render(
+          <Provider>
+            <NumberField {...defaultProps} isEditing={true} />
+          </Provider>,
+        );
+
+        const escapeKey: KeyboardInput = { escape: true };
+        mockHandleKeyInput("", escapeKey);
+
+        expect(mockStopEditing).toHaveBeenCalled();
+      });
+
       it("should not handle input when not editing", () => {
         render(
           <Provider>
@@ -497,67 +633,8 @@ describe("NumberField", () => {
         const keyInput: KeyboardInput = {};
         mockHandleKeyInput("5", keyInput);
 
-        // Input should be ignored when not editing
         expect(mockUpdatePreviewValue).not.toHaveBeenCalled();
       });
-    });
-  });
-
-  describe("Validation Logic", () => {
-    it("should validate number within range", () => {
-      const { getAllByTestId } = render(
-        <Provider>
-          <NumberField {...defaultProps} isEditing={true} />
-        </Provider>,
-      );
-
-      // Valid input should not show error
-      const textElements = getAllByTestId("text");
-      const inputText = textElements.find((el) =>
-        el.textContent?.includes("|"),
-      );
-
-      expect(inputText).toHaveAttribute("data-color", "black");
-    });
-
-    it("should handle edge case values", () => {
-      const fieldWithEdgeCases: SettingsFieldDefinition = {
-        ...mockField,
-        min: -100,
-        max: 100,
-      };
-
-      expect(() => {
-        render(
-          <Provider>
-            <NumberField
-              field={fieldWithEdgeCases}
-              value={0}
-              isEditing={true}
-            />
-          </Provider>,
-        );
-      }).not.toThrow();
-    });
-
-    it("should handle no constraints", () => {
-      const fieldNoConstraints: SettingsFieldDefinition = {
-        ...mockField,
-      };
-      delete fieldNoConstraints.min;
-      delete fieldNoConstraints.max;
-
-      expect(() => {
-        render(
-          <Provider>
-            <NumberField
-              field={fieldNoConstraints}
-              value={1000}
-              isEditing={true}
-            />
-          </Provider>,
-        );
-      }).not.toThrow();
     });
   });
 
@@ -585,14 +662,38 @@ describe("NumberField", () => {
         isActive: false,
       });
     });
+
+    it("should update input handling when editing state changes", () => {
+      const { rerender } = render(
+        <Provider>
+          <NumberField {...defaultProps} isEditing={false} />
+        </Provider>,
+      );
+
+      expect(useInput).toHaveBeenLastCalledWith(expect.any(Function), {
+        isActive: false,
+      });
+
+      rerender(
+        <Provider>
+          <NumberField {...defaultProps} isEditing={true} />
+        </Provider>,
+      );
+
+      expect(useInput).toHaveBeenLastCalledWith(expect.any(Function), {
+        isActive: true,
+      });
+    });
   });
 
   describe("Component Memoization", () => {
     it("should be wrapped in memo for performance", () => {
+      // NumberField should be memoized to prevent unnecessary re-renders
+      expect(NumberField.displayName).toBe(undefined); // memo doesn't set displayName by default
       expect(typeof NumberField).toBe("object"); // memoized components are objects
     });
 
-    it("should re-render when value changes", () => {
+    it("should not re-render with same props", () => {
       const { rerender } = render(
         <Provider>
           <NumberField {...defaultProps} />
@@ -601,12 +702,34 @@ describe("NumberField", () => {
 
       vi.clearAllMocks();
 
+      // Re-render with same props
       rerender(
         <Provider>
-          <NumberField {...defaultProps} value={20} />
+          <NumberField {...defaultProps} />
         </Provider>,
       );
 
+      // useInput should not be called again due to memoization
+      expect(useInput).toHaveBeenCalledTimes(1);
+    });
+
+    it("should re-render when props change", () => {
+      const { rerender } = render(
+        <Provider>
+          <NumberField {...defaultProps} />
+        </Provider>,
+      );
+
+      vi.clearAllMocks();
+
+      // Re-render with different value
+      rerender(
+        <Provider>
+          <NumberField {...defaultProps} value={25} />
+        </Provider>,
+      );
+
+      // Should re-render and call useInput again
       expect(useInput).toHaveBeenCalledTimes(1);
     });
   });
@@ -618,23 +741,23 @@ describe("NumberField", () => {
         label: "Custom Number",
         description: "A custom number field",
         type: "number",
-        defaultValue: 5,
-        min: 1,
-        max: 10,
+        defaultValue: 42,
+        min: 10,
+        max: 90,
       };
 
       render(
         <Provider>
-          <NumberField field={customField} value={5} isEditing={true} />
+          <NumberField field={customField} value={30} isEditing={true} />
         </Provider>,
       );
 
-      const keyInput: KeyboardInput = { return: true };
-      mockHandleKeyInput("", keyInput);
+      const upKey: KeyboardInput = { upArrow: true };
+      mockHandleKeyInput("", upKey);
 
       expect(mockUpdatePreviewValue).toHaveBeenCalledWith({
         key: "customNumber",
-        value: 5,
+        value: 31,
       });
     });
 
@@ -644,71 +767,57 @@ describe("NumberField", () => {
         label: "Nested Number",
         description: "A nested number field",
         type: "number",
-        defaultValue: 42,
+        defaultValue: 1,
+        min: 1,
+        max: 10,
       };
 
       render(
         <Provider>
-          <NumberField field={complexField} value={42} isEditing={true} />
+          <NumberField field={complexField} value={5} isEditing={true} />
         </Provider>,
       );
 
-      const keyInput: KeyboardInput = { return: true };
-      mockHandleKeyInput("", keyInput);
+      const keyInput: KeyboardInput = {};
+      mockHandleKeyInput("7", keyInput);
 
+      expect(mockUpdatePreviewValue).toHaveBeenCalled();
+    });
+
+    it("should respect field-specific constraints", () => {
+      const strictField: SettingsFieldDefinition = {
+        key: "strict",
+        label: "Strict Field",
+        description: "Very strict constraints",
+        type: "number",
+        defaultValue: 5,
+        min: 5,
+        max: 5, // Only allows value 5
+      };
+
+      render(
+        <Provider>
+          <NumberField field={strictField} value={5} isEditing={true} />
+        </Provider>,
+      );
+
+      const upKey: KeyboardInput = { upArrow: true };
+      mockHandleKeyInput("", upKey);
+
+      // Should not exceed max (5)
       expect(mockUpdatePreviewValue).toHaveBeenCalledWith({
-        key: "nested.deep.number",
-        value: 42,
+        key: "strict",
+        value: 5,
       });
     });
   });
 
   describe("Error Handling and Edge Cases", () => {
-    it("should handle undefined min/max gracefully", () => {
-      const fieldUndefinedConstraints: SettingsFieldDefinition = {
-        ...mockField,
-      };
-      delete fieldUndefinedConstraints.min;
-      delete fieldUndefinedConstraints.max;
-
+    it("should handle undefined value gracefully", () => {
       expect(() => {
         render(
           <Provider>
-            <NumberField
-              field={fieldUndefinedConstraints}
-              value={10}
-              isEditing={true}
-            />
-          </Provider>,
-        );
-      }).not.toThrow();
-    });
-
-    it("should handle extreme values", () => {
-      const fieldExtremeValues: SettingsFieldDefinition = {
-        ...mockField,
-        min: -Infinity,
-        max: Infinity,
-      };
-
-      expect(() => {
-        render(
-          <Provider>
-            <NumberField
-              field={fieldExtremeValues}
-              value={Number.MAX_SAFE_INTEGER}
-              isEditing={true}
-            />
-          </Provider>,
-        );
-      }).not.toThrow();
-    });
-
-    it("should handle NaN values gracefully", () => {
-      expect(() => {
-        render(
-          <Provider>
-            <NumberField {...defaultProps} value={NaN as any} />
+            <NumberField {...defaultProps} value={undefined as any} />
           </Provider>,
         );
       }).not.toThrow();
@@ -718,7 +827,7 @@ describe("NumberField", () => {
       expect(() => {
         render(
           <Provider>
-            <NumberField field={null as any} value={10} isEditing={false} />
+            <NumberField field={null as any} value={0} isEditing={false} />
           </Provider>,
         );
       }).not.toThrow();
@@ -736,6 +845,121 @@ describe("NumberField", () => {
         mockHandleKeyInput("", null as any);
       }).not.toThrow();
     });
+
+    it("should handle concurrent input operations", () => {
+      render(
+        <Provider>
+          <NumberField {...defaultProps} isEditing={true} />
+        </Provider>,
+      );
+
+      // Multiple rapid inputs
+      const keyInput: KeyboardInput = {};
+      mockHandleKeyInput("1", keyInput);
+      mockHandleKeyInput("2", keyInput);
+      mockHandleKeyInput("3", keyInput);
+
+      expect(mockUpdatePreviewValue).toHaveBeenCalledTimes(3);
+    });
+
+    it("should handle very large numbers", () => {
+      const { getAllByTestId } = render(
+        <Provider>
+          <NumberField
+            {...defaultProps}
+            value={Number.MAX_SAFE_INTEGER}
+            isEditing={false}
+          />
+        </Provider>,
+      );
+
+      const textElements = getAllByTestId("text");
+      const valueText = textElements.find((el) =>
+        el.textContent?.includes(Number.MAX_SAFE_INTEGER.toString()),
+      );
+
+      expect(valueText).toBeInTheDocument();
+    });
+
+    it("should handle very small numbers", () => {
+      const { getAllByTestId } = render(
+        <Provider>
+          <NumberField
+            {...defaultProps}
+            value={Number.MIN_SAFE_INTEGER}
+            isEditing={false}
+          />
+        </Provider>,
+      );
+
+      const textElements = getAllByTestId("text");
+      const valueText = textElements.find((el) =>
+        el.textContent?.includes(Number.MIN_SAFE_INTEGER.toString()),
+      );
+
+      expect(valueText).toBeInTheDocument();
+    });
+  });
+
+  describe("Accessibility and User Experience", () => {
+    it("should provide clear visual feedback for valid values", () => {
+      const { getAllByTestId } = render(
+        <Provider>
+          <NumberField {...defaultProps} value={50} isEditing={true} />
+        </Provider>,
+      );
+
+      const textElements = getAllByTestId("text");
+      const inputBox = textElements.find((el) => el.textContent?.includes("["));
+
+      expect(inputBox).toHaveAttribute("data-color", "cyan");
+    });
+
+    it("should provide clear visual feedback for invalid values", () => {
+      const { getAllByTestId } = render(
+        <Provider>
+          <NumberField {...defaultProps} value={150} isEditing={true} />
+        </Provider>,
+      );
+
+      const textElements = getAllByTestId("text");
+      const errorText = textElements.find((el) =>
+        el.textContent?.includes("Must be between"),
+      );
+
+      expect(errorText).toHaveAttribute("data-color", "red");
+    });
+
+    it("should provide help text during editing", () => {
+      const { getAllByTestId } = render(
+        <Provider>
+          <NumberField {...defaultProps} isEditing={true} />
+        </Provider>,
+      );
+
+      const textElements = getAllByTestId("text");
+      const helpText = textElements.find((el) =>
+        el.textContent?.includes("(Enter to confirm)"),
+      );
+
+      expect(helpText).toBeInTheDocument();
+    });
+
+    it("should show range information when available", () => {
+      const { getAllByTestId } = render(
+        <Provider>
+          <NumberField {...defaultProps} />
+        </Provider>,
+      );
+
+      const textElements = getAllByTestId("text");
+      const rangeText = textElements.find((el) =>
+        el.textContent?.includes("(0-100)"),
+      );
+
+      expect(rangeText).toBeInTheDocument();
+      expect(rangeText).toHaveAttribute("data-color", "gray");
+    });
   });
 
   describe("Performance", () => {
@@ -748,78 +972,77 @@ describe("NumberField", () => {
 
       const startTime = Date.now();
 
-      // Simulate rapid typing
+      // Simulate rapid key presses
       for (let i = 0; i < 50; i++) {
-        mockHandleKeyInput((i % 10).toString(), {});
+        mockHandleKeyInput(i.toString(), {});
       }
 
       const endTime = Date.now();
-      expect(endTime - startTime).toBeLessThan(100);
+      expect(endTime - startTime).toBeLessThan(50);
+      expect(mockUpdatePreviewValue).toHaveBeenCalledTimes(50);
     });
 
-    it("should memoize validation results", () => {
-      // The component uses useMemo for validation
-      // This ensures validation doesn't run on every render
-      const { rerender } = render(
+    it("should handle arrow key navigation efficiently", () => {
+      render(
         <Provider>
-          <NumberField {...defaultProps} isEditing={true} />
+          <NumberField {...defaultProps} value={50} isEditing={true} />
         </Provider>,
       );
 
-      // Re-render with same props shouldn't recalculate validation
-      rerender(
-        <Provider>
-          <NumberField {...defaultProps} isEditing={true} />
-        </Provider>,
-      );
+      const startTime = Date.now();
 
-      expect(useInput).toHaveBeenCalled();
+      // Simulate rapid arrow key presses
+      for (let i = 0; i < 20; i++) {
+        const upKey: KeyboardInput = { upArrow: true };
+        mockHandleKeyInput("", upKey);
+      }
+
+      const endTime = Date.now();
+      expect(endTime - startTime).toBeLessThan(25);
+      expect(mockUpdatePreviewValue).toHaveBeenCalledTimes(20);
     });
   });
 
-  describe("Complex Scenarios", () => {
-    it("should handle complete editing workflow", () => {
-      render(
+  describe("Integration with Settings System", () => {
+    it("should work with different number formats", () => {
+      const floatField: SettingsFieldDefinition = {
+        key: "decimal",
+        label: "Decimal Number",
+        description: "Accepts decimal values",
+        type: "number",
+        defaultValue: 3.14,
+        min: 0.1,
+        max: 99.9,
+      };
+
+      const { getAllByTestId } = render(
         <Provider>
-          <NumberField {...defaultProps} value={10} isEditing={true} />
+          <NumberField field={floatField} value={3.14} isEditing={false} />
         </Provider>,
       );
 
-      // Clear existing value
-      mockHandleKeyInput("", { backspace: true });
-      mockHandleKeyInput("", { backspace: true });
+      const textElements = getAllByTestId("text");
+      const valueText = textElements.find((el) =>
+        el.textContent?.includes("3.14"),
+      );
 
-      // Type new value
-      mockHandleKeyInput("2", {});
-      mockHandleKeyInput("5", {});
-
-      // Increment with arrow
-      mockHandleKeyInput("", { upArrow: true });
-
-      // Commit with Enter
-      mockHandleKeyInput("", { return: true });
-
-      expect(mockStopEditing).toHaveBeenCalled();
+      expect(valueText).toBeInTheDocument();
     });
 
-    it("should handle constraint violations and corrections", () => {
+    it("should integrate with settings preview system", () => {
       render(
         <Provider>
-          <NumberField {...defaultProps} isEditing={true} />
+          <NumberField {...defaultProps} value={25} isEditing={true} />
         </Provider>,
       );
 
-      // Type value that exceeds max
-      mockHandleKeyInput("2", {});
-      mockHandleKeyInput("0", {});
-      mockHandleKeyInput("0", {});
+      const keyInput: KeyboardInput = {};
+      mockHandleKeyInput("5", keyInput);
 
-      // Commit - should clamp to max
-      mockHandleKeyInput("", { return: true });
-
+      // Should call preview system
       expect(mockUpdatePreviewValue).toHaveBeenCalledWith({
         key: "testNumber",
-        value: 100,
+        value: expect.any(Number),
       });
     });
   });

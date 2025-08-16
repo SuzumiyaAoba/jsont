@@ -32,7 +32,6 @@ const mockUpdatePreviewValue = vi.fn();
 const mockStopEditing = vi.fn();
 
 vi.mock("jotai", () => ({
-  atom: vi.fn((initialValue) => ({ init: initialValue })),
   Provider: ({ children }: any) => children,
   useSetAtom: vi.fn((atom) => {
     const atomName = atom.toString();
@@ -43,15 +42,7 @@ vi.mock("jotai", () => ({
 }));
 
 // Mock useInput hook
-import { useInput } from "ink";
-
-vi.mock("ink", async () => {
-  const actual = await vi.importActual("ink");
-  return {
-    ...actual,
-    useInput: vi.fn(),
-  };
-});
+const { useInput } = require("ink");
 
 describe("BooleanField", () => {
   const mockField: SettingsFieldDefinition = {
@@ -74,8 +65,7 @@ describe("BooleanField", () => {
     vi.clearAllMocks();
 
     // Capture the key input handler
-    const mockedUseInput = useInput as any;
-    mockedUseInput.mockImplementation((handler: any, _options: any) => {
+    useInput.mockImplementation((handler: any, _options: any) => {
       mockHandleKeyInput = handler;
     });
   });

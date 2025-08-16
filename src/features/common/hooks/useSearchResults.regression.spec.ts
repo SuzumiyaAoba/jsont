@@ -7,7 +7,7 @@
  * 3. Memory leaks from not cleaning up search result mappings
  */
 
-import type { SearchResult } from "@core/types";
+import type { SearchResult } from "@features/search/types/search";
 import { renderHook } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { useSearchResults } from "./useSearchResults";
@@ -21,28 +21,28 @@ describe("useSearchResults Regression Tests", () => {
           columnStart: 5,
           columnEnd: 10,
           matchText: "test",
-          contextLine: "test line",
+          contextLine: "line 1 test content",
         },
         {
           lineIndex: 3,
           columnStart: 2,
           columnEnd: 8,
-          matchText: "test2",
-          contextLine: "test2 line",
+          matchText: "test",
+          contextLine: "  test line 3",
         },
         {
           lineIndex: 1,
           columnStart: 15,
           columnEnd: 20,
-          matchText: "test3",
-          contextLine: "test3 line",
+          matchText: "test",
+          contextLine: "line 1 test content",
         }, // Multiple results on same line
         {
           lineIndex: 7,
           columnStart: 0,
           columnEnd: 5,
-          matchText: "test4",
-          contextLine: "test4 line",
+          matchText: "test",
+          contextLine: "test line 7",
         },
       ];
 
@@ -68,21 +68,21 @@ describe("useSearchResults Regression Tests", () => {
           columnStart: 2,
           columnEnd: 6,
           matchText: "test",
-          contextLine: "test line",
+          contextLine: "line content",
         },
         {
           lineIndex: 5,
           columnStart: 10,
           columnEnd: 15,
-          matchText: "test2",
-          contextLine: "test2 line",
+          matchText: "test",
+          contextLine: "line content",
         },
         {
           lineIndex: 5,
           columnStart: 20,
           columnEnd: 25,
-          matchText: "test3",
-          contextLine: "test3 line",
+          matchText: "test",
+          contextLine: "line content",
         },
       ];
 
@@ -123,7 +123,7 @@ describe("useSearchResults Regression Tests", () => {
           columnStart: (i % 10) * 5,
           columnEnd: (i % 10) * 5 + 4,
           matchText: "test",
-          contextLine: "test line",
+          contextLine: "line content",
         }),
       );
 
@@ -149,7 +149,7 @@ describe("useSearchResults Regression Tests", () => {
           columnStart: 0,
           columnEnd: 5,
           matchText: "test",
-          contextLine: "test line",
+          contextLine: "line content",
         }),
       );
 
@@ -177,14 +177,14 @@ describe("useSearchResults Regression Tests", () => {
           columnStart: 0,
           columnEnd: 5,
           matchText: "test",
-          contextLine: "test line",
+          contextLine: "line content",
         },
         {
           lineIndex: 3,
           columnStart: 0,
           columnEnd: 5,
           matchText: "test",
-          contextLine: "test line",
+          contextLine: "line content",
         },
       ];
 
@@ -205,21 +205,21 @@ describe("useSearchResults Regression Tests", () => {
           columnStart: 0,
           columnEnd: 5,
           matchText: "test",
-          contextLine: "test line",
+          contextLine: "line content",
         },
         {
           lineIndex: 4,
           columnStart: 0,
           columnEnd: 5,
           matchText: "test",
-          contextLine: "test line",
+          contextLine: "line content",
         },
         {
           lineIndex: 6,
           columnStart: 0,
           columnEnd: 5,
           matchText: "test",
-          contextLine: "test line",
+          contextLine: "line content",
         },
       ];
 
@@ -241,21 +241,21 @@ describe("useSearchResults Regression Tests", () => {
           columnStart: 0,
           columnEnd: 5,
           matchText: "test",
-          contextLine: "test line",
+          contextLine: "line content",
         },
         {
           lineIndex: 20,
           columnStart: 0,
           columnEnd: 5,
           matchText: "test",
-          contextLine: "test line",
+          contextLine: "line content",
         },
         {
           lineIndex: 30,
           columnStart: 0,
           columnEnd: 5,
           matchText: "test",
-          contextLine: "test line",
+          contextLine: "line content",
         },
       ];
 
@@ -286,21 +286,21 @@ describe("useSearchResults Regression Tests", () => {
           columnStart: 0,
           columnEnd: 5,
           matchText: "test",
-          contextLine: "test line",
+          contextLine: "line content",
         }, // Negative line index
         {
           lineIndex: 0,
           columnStart: 0,
           columnEnd: 5,
           matchText: "test",
-          contextLine: "test line",
+          contextLine: "line content",
         }, // Valid
         {
           lineIndex: 1000000,
           columnStart: 0,
           columnEnd: 5,
           matchText: "test",
-          contextLine: "test line",
+          contextLine: "line content",
         }, // Very large line index
       ];
 
@@ -326,28 +326,28 @@ describe("useSearchResults Regression Tests", () => {
           columnStart: 10,
           columnEnd: 15,
           matchText: "test",
-          contextLine: "test line",
+          contextLine: "line content",
         },
         {
           lineIndex: 5,
           columnStart: 10,
           columnEnd: 15,
           matchText: "test",
-          contextLine: "test line",
+          contextLine: "line content",
         }, // Exact duplicate
         {
           lineIndex: 7,
           columnStart: 0,
           columnEnd: 5,
           matchText: "test",
-          contextLine: "test line",
+          contextLine: "line content",
         },
         {
           lineIndex: 7,
           columnStart: 0,
           columnEnd: 5,
           matchText: "test",
-          contextLine: "test line",
+          contextLine: "line content",
         }, // Exact duplicate
       ];
 
@@ -366,21 +366,21 @@ describe("useSearchResults Regression Tests", () => {
           columnStart: -5,
           columnEnd: 10,
           matchText: "test",
-          contextLine: "test line",
+          contextLine: "line content",
         }, // Negative start
         {
           lineIndex: 2,
           columnStart: 10,
           columnEnd: 5,
           matchText: "test",
-          contextLine: "test line",
+          contextLine: "line content",
         }, // End before start
         {
           lineIndex: 3,
           columnStart: 0,
           columnEnd: 1000000,
           matchText: "test",
-          contextLine: "test line",
+          contextLine: "line content",
         }, // Very large end
       ];
 
@@ -402,14 +402,14 @@ describe("useSearchResults Regression Tests", () => {
           columnStart: 5,
           columnEnd: 10,
           matchText: "test",
-          contextLine: "test line",
+          contextLine: "line content",
         },
         {
           lineIndex: 25,
           columnStart: 8,
           columnEnd: 12,
           matchText: "test",
-          contextLine: "test line",
+          contextLine: "line content",
         },
       ];
 
@@ -442,7 +442,7 @@ describe("useSearchResults Regression Tests", () => {
           columnStart: 0,
           columnEnd: 5,
           matchText: "test",
-          contextLine: "test line",
+          contextLine: "line content",
         },
       ];
 
@@ -452,7 +452,7 @@ describe("useSearchResults Regression Tests", () => {
           columnStart: 0,
           columnEnd: 5,
           matchText: "test",
-          contextLine: "test line",
+          contextLine: "line content",
         },
       ];
 
@@ -487,7 +487,7 @@ describe("useSearchResults Regression Tests", () => {
           columnStart: 4,
           columnEnd: 8,
           matchText: "test",
-          contextLine: "test line",
+          contextLine: "line content",
         },
         // Line 12: "test" in string value
         {
@@ -495,7 +495,7 @@ describe("useSearchResults Regression Tests", () => {
           columnStart: 15,
           columnEnd: 19,
           matchText: "test",
-          contextLine: "test line",
+          contextLine: "line content",
         },
         // Line 12: "testing" (overlapping with "test")
         {
@@ -503,7 +503,7 @@ describe("useSearchResults Regression Tests", () => {
           columnStart: 15,
           columnEnd: 22,
           matchText: "test",
-          contextLine: "test line",
+          contextLine: "line content",
         },
         // Line 45: "test" in another property
         {
@@ -511,7 +511,7 @@ describe("useSearchResults Regression Tests", () => {
           columnStart: 8,
           columnEnd: 12,
           matchText: "test",
-          contextLine: "test line",
+          contextLine: "line content",
         },
         // Line 67: "testData" (contains "test")
         {
@@ -519,7 +519,7 @@ describe("useSearchResults Regression Tests", () => {
           columnStart: 2,
           columnEnd: 6,
           matchText: "test",
-          contextLine: "test line",
+          contextLine: "line content",
         },
       ];
 
@@ -549,7 +549,7 @@ describe("useSearchResults Regression Tests", () => {
           columnStart: 7,
           columnEnd: 10,
           matchText: "test",
-          contextLine: "test line",
+          contextLine: "line content",
         },
         // Line 8: "port": 8080, "timeout": 30
         {
@@ -557,14 +557,14 @@ describe("useSearchResults Regression Tests", () => {
           columnStart: 9,
           columnEnd: 13,
           matchText: "test",
-          contextLine: "test line",
+          contextLine: "line content",
         }, // 8080
         {
           lineIndex: 8,
           columnStart: 27,
           columnEnd: 29,
           matchText: "test",
-          contextLine: "test line",
+          contextLine: "line content",
         }, // 30
         // Line 15: version "1.2.3"
         {
@@ -572,21 +572,21 @@ describe("useSearchResults Regression Tests", () => {
           columnStart: 11,
           columnEnd: 12,
           matchText: "test",
-          contextLine: "test line",
+          contextLine: "line content",
         }, // 1
         {
           lineIndex: 15,
           columnStart: 13,
           columnEnd: 14,
           matchText: "test",
-          contextLine: "test line",
+          contextLine: "line content",
         }, // 2
         {
           lineIndex: 15,
           columnStart: 15,
           columnEnd: 16,
           matchText: "test",
-          contextLine: "test line",
+          contextLine: "line content",
         }, // 3
       ];
 
