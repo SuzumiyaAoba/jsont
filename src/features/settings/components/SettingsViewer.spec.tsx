@@ -167,6 +167,7 @@ const mockSetters = {
 };
 
 vi.mock("jotai", () => ({
+  atom: vi.fn((initialValue) => ({ init: initialValue })),
   Provider: ({ children }: any) => children,
   useAtom: vi.fn(() => [mockSettingsState, vi.fn()]),
   useSetAtom: vi.fn((atom) => {

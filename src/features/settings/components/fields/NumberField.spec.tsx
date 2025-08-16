@@ -38,6 +38,7 @@ const mockUpdatePreviewValue = vi.fn();
 const mockStopEditing = vi.fn();
 
 vi.mock("jotai", () => ({
+  atom: vi.fn((initialValue) => ({ init: initialValue })),
   Provider: ({ children }: any) => children,
   useSetAtom: vi.fn((atom) => {
     const atomName = atom.toString();
@@ -48,7 +49,7 @@ vi.mock("jotai", () => ({
 }));
 
 // Mock useInput hook
-const { useInput } = require("ink");
+import { useInput } from "ink";
 
 describe("NumberField", () => {
   const mockField: SettingsFieldDefinition = {
