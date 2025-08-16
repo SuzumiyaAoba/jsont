@@ -228,17 +228,14 @@ describe("useTerminalCalculations Regression Tests", () => {
         },
       };
 
-      const { result, rerender } = renderHook(
-        (props) => useTerminalCalculations(props),
-        {
-          initialProps: {
-            keyboardEnabled: true,
-            error: null,
-            initialData: testData,
-            collapsibleMode: false,
-          },
+      const { result } = renderHook((props) => useTerminalCalculations(props), {
+        initialProps: {
+          keyboardEnabled: true,
+          error: null,
+          initialData: testData,
+          collapsibleMode: false,
         },
-      );
+      });
 
       // Should have schema lines calculated
       expect(result.current.schemaLines).toBeGreaterThan(0);

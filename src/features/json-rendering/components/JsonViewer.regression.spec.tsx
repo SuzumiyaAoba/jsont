@@ -8,10 +8,8 @@
  * 4. TypeScript type errors with contentRenderer
  */
 
-import { DEFAULT_CONFIG } from "@core/config/defaults";
 import type { JsonValue } from "@core/types";
 import { render } from "ink-testing-library";
-import React from "react";
 import { describe, expect, it, vi } from "vitest";
 import { JsonViewer } from "./JsonViewer";
 
@@ -147,7 +145,7 @@ describe("JsonViewer Regression Tests", () => {
       expect(output).toContain("Third item");
 
       // Should not start from line 2 (regression test)
-      const lines = output.split("\n");
+      const lines = output?.split("\n") || [];
       const firstLineWithNumber = lines.find((line) => line.includes(":"));
       if (firstLineWithNumber) {
         expect(firstLineWithNumber).toMatch(/1:/);
@@ -289,7 +287,15 @@ describe("JsonViewer Regression Tests", () => {
           showLineNumbers={false}
           scrollOffset={0}
           searchTerm="search"
-          searchResults={[{ lineIndex: 1, columnStart: 0, columnEnd: 6 }]}
+          searchResults={[
+            {
+              lineIndex: 1,
+              columnStart: 0,
+              columnEnd: 6,
+              matchText: "object",
+              contextLine: "object content",
+            },
+          ]}
           currentSearchIndex={0}
         />,
       );
