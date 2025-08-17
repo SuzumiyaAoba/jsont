@@ -102,6 +102,13 @@ vi.mock("@store/hooks/useNavigation", () => ({
 }));
 
 vi.mock("@store/hooks/useSearch", () => ({
+  useSearchInput: vi.fn(() => ["", vi.fn()]),
+  useSearchCursorPosition: vi.fn(() => [0, vi.fn()]),
+  useIsSearching: vi.fn(() => [false, vi.fn()]),
+  useSearchTerm: vi.fn(() => ["", vi.fn()]),
+  useSearchResults: vi.fn(() => [[], vi.fn()]),
+  useCurrentResultIndex: vi.fn(() => [0, vi.fn()]),
+  useSearchScope: vi.fn(() => ["all", vi.fn()]),
   useSearchState: vi.fn(() => ({
     isSearching: false,
     searchTerm: "",
@@ -110,13 +117,16 @@ vi.mock("@store/hooks/useSearch", () => ({
     searchResults: [],
     currentResultIndex: 0,
   })),
-  useSearchInput: vi.fn(() => ["", vi.fn()]),
-  useSearchCursorPosition: vi.fn(() => [0, vi.fn()]),
+  useHasSearchResults: vi.fn(() => false),
+  useCurrentSearchResult: vi.fn(() => null),
   useStartSearch: vi.fn(() => vi.fn()),
   useCancelSearch: vi.fn(() => vi.fn()),
-  useCycleScope: vi.fn(() => vi.fn()),
+  useUpdateSearchResults: vi.fn(() => vi.fn()),
+  useToggleRegexMode: vi.fn(() => vi.fn()),
+  useIsRegexMode: vi.fn(() => false),
   useNextSearchResult: vi.fn(() => vi.fn()),
   usePreviousSearchResult: vi.fn(() => vi.fn()),
+  useCycleScope: vi.fn(() => vi.fn()),
 }));
 
 vi.mock("@store/hooks/useUI", () => ({
