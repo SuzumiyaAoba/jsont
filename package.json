@@ -16,7 +16,7 @@
     "test:ci": "node --max-old-space-size=6144 node_modules/.bin/vitest run --config vitest.config.ci.ts",
     "test:watch": "vitest --watch",
     "test:coverage": "node --max-old-space-size=8192 node_modules/.bin/vitest run --coverage",
-    "test:coverage:ui": "node --max-old-space-size=8192 node_modules/.bin/vitest run --coverage --ui",
+    "test:coverage:ui": "node --max-old-space-size=8192 node_modules/.bin/vitest --ui --coverage",
     "lint": "biome lint ./src",
     "lint:fix": "biome lint --write ./src",
     "format": "biome format ./src",

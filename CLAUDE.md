@@ -20,7 +20,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `npm run test:ui` - Open Vitest UI for interactive testing
 - `npm run test:ci` - Run CI-optimized tests (memory-limited, single-threaded)
 - `npm run test:coverage` - Run tests with coverage reporting (HTML, JSON, text)
-- `npm run test:coverage:ui` - Run tests with coverage and open UI for interactive viewing
+- `npm run test:coverage:ui` - Open Vitest UI with coverage for interactive testing and viewing
 - `npm run test -- tree` - Run specific test files matching "tree"
 - `npm run test -- --coverage` - Run tests with coverage reporting (alternative syntax)
 
