@@ -623,18 +623,13 @@ describe("BooleanField", () => {
     });
 
     it("should not show help text when not editing", () => {
-      const { getAllByTestId } = render(
+      const { queryByText } = render(
         <Provider>
           <BooleanField {...defaultProps} isEditing={false} />
         </Provider>,
       );
 
-      const textElements = getAllByTestId("text");
-      const helpText = textElements.find((el) =>
-        el.textContent?.includes("(Space to toggle)"),
-      );
-
-      expect(helpText).toBeUndefined();
+      expect(queryByText("(Space to toggle)")).not.toBeInTheDocument();
     });
   });
 

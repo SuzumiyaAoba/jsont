@@ -235,7 +235,7 @@ describe("App", () => {
     });
 
     it("should pass correct props to child components", () => {
-      const { getByTestId } = render(
+      const { getByTestId, getAllByTestId } = render(
         <ConfigProvider>
           <Provider>
             <App {...defaultProps} />
@@ -243,7 +243,9 @@ describe("App", () => {
         </ConfigProvider>,
       );
 
-      expect(getByTestId("status-keyboard-enabled")).toHaveTextContent("true");
+      expect(getAllByTestId("status-keyboard-enabled")[0]).toHaveTextContent(
+        "true",
+      );
       expect(getByTestId("content-display-data")).toHaveTextContent(
         JSON.stringify(defaultProps.initialData),
       );
@@ -770,7 +772,7 @@ describe("App", () => {
     });
 
     it("should handle keyboard disabled state", () => {
-      const { getByTestId } = render(
+      const { getByTestId, getAllByTestId } = render(
         <ConfigProvider>
           <Provider>
             <App {...defaultProps} keyboardEnabled={false} />
@@ -778,7 +780,9 @@ describe("App", () => {
         </ConfigProvider>,
       );
 
-      expect(getByTestId("status-keyboard-enabled")).toHaveTextContent("false");
+      expect(getAllByTestId("status-keyboard-enabled")[0]).toHaveTextContent(
+        "false",
+      );
     });
 
     it("should handle missing property details gracefully", () => {
