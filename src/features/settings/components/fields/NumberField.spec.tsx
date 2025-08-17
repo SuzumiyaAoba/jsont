@@ -5,21 +5,47 @@
  * keyboard input handling, value clamping, and editing states.
  */
 
+// Mock useInput hook - access from mocked module
+const mockInk = vi.hoisted(() => ({
+  useInput: vi.fn(),
+}));
+
+// Mock the specific atoms - hoisted to avoid initialization issues
+const mockAtoms = vi.hoisted(() => ({
+  updatePreviewValueAtom: { toString: () => "updatePreviewValueAtom" },
+  stopEditingAtom: { toString: () => "stopEditingAtom" },
+}));
+
 import type { KeyboardInput } from "@core/types/app";
 import { render } from "@testing-library/react";
 import { Provider } from "jotai";
+import type React from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { SettingsFieldDefinition } from "../../types/settings";
 import { NumberField } from "./NumberField";
 
 // Mock Ink components
 vi.mock("ink", () => ({
-  Box: ({ children, ...props }: any) => (
+  Box: ({
+    children,
+    ...props
+  }: Record<string, unknown> & { children: React.ReactNode }) => (
     <div data-testid="box" {...props}>
       {children}
     </div>
   ),
-  Text: ({ children, color, backgroundColor, dimColor, ...props }: any) => (
+  Text: ({
+    children,
+    color,
+    backgroundColor,
+    dimColor,
+    ...props
+  }: Record<string, unknown> & {
+    children: React.ReactNode;
+    color?: string;
+    backgroundColor?: string;
+    dimColor?: boolean;
+  }) => (
     <span
       data-testid="text"
       data-color={color}
@@ -30,7 +56,7 @@ vi.mock("ink", () => ({
       {children}
     </span>
   ),
-  useInput: vi.fn(),
+  useInput: mockInk.useInput,
 }));
 
 // Mock Jotai atoms and hooks
@@ -38,17 +64,23 @@ const mockUpdatePreviewValue = vi.fn();
 const mockStopEditing = vi.fn();
 
 vi.mock("jotai", () => ({
-  Provider: ({ children }: any) => children,
+  Provider: ({ children }: { children: React.ReactNode }) => children,
+  atom: vi.fn(() => ({ toString: () => "mocked-atom" })),
   useSetAtom: vi.fn((atom) => {
-    const atomName = atom.toString();
-    if (atomName.includes("updatePreviewValue")) return mockUpdatePreviewValue;
-    if (atomName.includes("stopEditing")) return mockStopEditing;
+    if (atom && typeof atom.toString === "function") {
+      const atomName = atom.toString();
+      if (atomName.includes("updatePreviewValue"))
+        return mockUpdatePreviewValue;
+      if (atomName.includes("stopEditing")) return mockStopEditing;
+    }
     return vi.fn();
   }),
 }));
 
-// Mock useInput hook
-const { useInput } = require("ink");
+vi.mock("@store/atoms/settings", () => ({
+  updatePreviewValueAtom: mockAtoms.updatePreviewValueAtom,
+  stopEditingAtom: mockAtoms.stopEditingAtom,
+}));
 
 describe("NumberField", () => {
   const mockField: SettingsFieldDefinition = {
@@ -73,9 +105,14 @@ describe("NumberField", () => {
     vi.clearAllMocks();
 
     // Capture the key input handler
-    useInput.mockImplementation((handler: any, _options: any) => {
-      mockHandleKeyInput = handler;
-    });
+    mockInk.useInput.mockImplementation(
+      (
+        handler: (input: string, key: KeyboardInput) => void,
+        _options: { isActive: boolean },
+      ) => {
+        mockHandleKeyInput = handler;
+      },
+    );
   });
 
   describe("Component Rendering", () => {
@@ -647,7 +684,7 @@ describe("NumberField", () => {
         </Provider>,
       );
 
-      expect(useInput).toHaveBeenCalledWith(expect.any(Function), {
+      expect(mockInk.useInput).toHaveBeenCalledWith(expect.any(Function), {
         isActive: true,
       });
     });
@@ -659,7 +696,7 @@ describe("NumberField", () => {
         </Provider>,
       );
 
-      expect(useInput).toHaveBeenCalledWith(expect.any(Function), {
+      expect(mockInk.useInput).toHaveBeenCalledWith(expect.any(Function), {
         isActive: false,
       });
     });
@@ -671,7 +708,7 @@ describe("NumberField", () => {
         </Provider>,
       );
 
-      expect(useInput).toHaveBeenLastCalledWith(expect.any(Function), {
+      expect(mockInk.useInput).toHaveBeenLastCalledWith(expect.any(Function), {
         isActive: false,
       });
 
@@ -681,7 +718,7 @@ describe("NumberField", () => {
         </Provider>,
       );
 
-      expect(useInput).toHaveBeenLastCalledWith(expect.any(Function), {
+      expect(mockInk.useInput).toHaveBeenLastCalledWith(expect.any(Function), {
         isActive: true,
       });
     });
@@ -711,7 +748,7 @@ describe("NumberField", () => {
       );
 
       // useInput should not be called again due to memoization
-      expect(useInput).toHaveBeenCalledTimes(1);
+      expect(mockInk.useInput).toHaveBeenCalledTimes(1);
     });
 
     it("should re-render when props change", () => {
@@ -731,7 +768,7 @@ describe("NumberField", () => {
       );
 
       // Should re-render and call useInput again
-      expect(useInput).toHaveBeenCalledTimes(1);
+      expect(mockInk.useInput).toHaveBeenCalledTimes(1);
     });
   });
 
@@ -818,7 +855,10 @@ describe("NumberField", () => {
       expect(() => {
         render(
           <Provider>
-            <NumberField {...defaultProps} value={undefined as any} />
+            <NumberField
+              {...defaultProps}
+              value={undefined as unknown as number}
+            />
           </Provider>,
         );
       }).not.toThrow();
@@ -828,7 +868,11 @@ describe("NumberField", () => {
       expect(() => {
         render(
           <Provider>
-            <NumberField field={null as any} value={0} isEditing={false} />
+            <NumberField
+              field={null as unknown as SettingsFieldDefinition}
+              value={0}
+              isEditing={false}
+            />
           </Provider>,
         );
       }).not.toThrow();
@@ -842,8 +886,8 @@ describe("NumberField", () => {
       );
 
       expect(() => {
-        mockHandleKeyInput(null as any, {} as KeyboardInput);
-        mockHandleKeyInput("", null as any);
+        mockHandleKeyInput(null as unknown as string, {} as KeyboardInput);
+        mockHandleKeyInput("", null as unknown as KeyboardInput);
       }).not.toThrow();
     });
 

@@ -14,12 +14,23 @@ import { BooleanField } from "./BooleanField";
 
 // Mock Ink components
 vi.mock("ink", () => ({
-  Box: ({ children, ...props }: any) => (
+  Box: ({
+    children,
+    ...props
+  }: { children: React.ReactNode } & Record<string, unknown>) => (
     <div data-testid="box" {...props}>
       {children}
     </div>
   ),
-  Text: ({ children, color, bold, ...props }: any) => (
+  Text: ({
+    children,
+    color,
+    bold,
+    ...props
+  }: { children: React.ReactNode; color?: string; bold?: boolean } & Record<
+    string,
+    unknown
+  >) => (
     <span data-testid="text" data-color={color} data-bold={bold} {...props}>
       {children}
     </span>
@@ -32,7 +43,7 @@ const mockUpdatePreviewValue = vi.fn();
 const mockStopEditing = vi.fn();
 
 vi.mock("jotai", () => ({
-  Provider: ({ children }: any) => children,
+  Provider: ({ children }: { children: React.ReactNode }) => children,
   useSetAtom: vi.fn((atom) => {
     const atomName = atom.toString();
     if (atomName.includes("updatePreviewValue")) return mockUpdatePreviewValue;
@@ -65,9 +76,14 @@ describe("BooleanField", () => {
     vi.clearAllMocks();
 
     // Capture the key input handler
-    useInput.mockImplementation((handler: any, _options: any) => {
-      mockHandleKeyInput = handler;
-    });
+    useInput.mockImplementation(
+      (
+        handler: (input: string, key: KeyboardInput) => void,
+        _options: { isActive: boolean },
+      ) => {
+        mockHandleKeyInput = handler;
+      },
+    );
   });
 
   describe("Component Rendering", () => {

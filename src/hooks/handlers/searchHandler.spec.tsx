@@ -285,7 +285,11 @@ describe("useSearchHandler", () => {
     });
 
     it("should handle text input with correct state setters", () => {
-      let capturedSetters: any = null;
+      type TextInputSetters = {
+        setText: (text: string) => void;
+        setCursorPosition: (pos: number) => void;
+      };
+      let capturedSetters: TextInputSetters | null = null;
       mockDependencies.handleTextInput = vi
         .fn()
         .mockImplementation((_textState, setters, _key, _input) => {
@@ -300,8 +304,9 @@ describe("useSearchHandler", () => {
       });
 
       expect(capturedSetters).toBeTruthy();
-      expect(capturedSetters.setText).toBe(mockDependencies.setSearchInput);
-      expect(capturedSetters.setCursorPosition).toBe(
+      const setters = capturedSetters as unknown as TextInputSetters;
+      expect(setters.setText).toBe(mockDependencies.setSearchInput);
+      expect(setters.setCursorPosition).toBe(
         mockDependencies.setSearchCursorPosition,
       );
     });
