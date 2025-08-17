@@ -44,6 +44,7 @@ const mockStopEditing = vi.fn();
 
 vi.mock("jotai", () => ({
   Provider: ({ children }: { children: React.ReactNode }) => children,
+  atom: vi.fn(() => ({ toString: () => "mocked-atom" })),
   useSetAtom: vi.fn((atom) => {
     const atomName = atom.toString();
     if (atomName.includes("updatePreviewValue")) return mockUpdatePreviewValue;

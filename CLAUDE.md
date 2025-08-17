@@ -19,12 +19,23 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `npm run test:watch` - Run tests in explicit watch mode
 - `npm run test:ui` - Open Vitest UI for interactive testing
 - `npm run test:ci` - Run CI-optimized tests (memory-limited, single-threaded)
+- `npm run test:coverage` - Run tests with coverage reporting (HTML, JSON, text)
+- `npm run test:coverage:ui` - Run tests with coverage and open UI for interactive viewing
 - `npm run test -- tree` - Run specific test files matching "tree"
-- `npm run test -- --coverage` - Run tests with coverage reporting
+- `npm run test -- --coverage` - Run tests with coverage reporting (alternative syntax)
 
 **Memory-Intensive Test Exclusions**: Several tests are excluded in CI for memory optimization:
 - Performance tests, JSON processing tests, SQL converter tests, integration tests
 - See `vitest.config.ts` exclude list for complete details
+
+**Coverage Reports**: Coverage reports are generated in `./coverage/` directory:
+- **Text Report**: Displayed in terminal during test execution
+- **HTML Report**: Interactive web interface at `./coverage/index.html`
+  - Browse file-by-file coverage with line-by-line highlighting
+  - View uncovered lines, branch coverage, and function coverage
+  - Color-coded visualization: red (uncovered), green (covered), orange (partial)
+- **JSON Report**: Machine-readable format at `./coverage/coverage-final.json`
+- Coverage metrics include: Statements, Branches, Functions, Lines
 
 ### Code Quality
 - `npm run check` - Run Biome linter and formatter checks

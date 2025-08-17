@@ -168,6 +168,7 @@ const mockSetters = {
 
 vi.mock("jotai", () => ({
   Provider: ({ children }: any) => children,
+  atom: vi.fn(() => ({ toString: () => "mocked-atom" })),
   useAtom: vi.fn(() => [mockSettingsState, vi.fn()]),
   useSetAtom: vi.fn((atom) => {
     // Return different mocks based on atom
