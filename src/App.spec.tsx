@@ -143,7 +143,7 @@ vi.mock("@features/common", () => ({
 }));
 
 // Mock store hooks
-const mockAppState = {
+const mockAppState: any = {
   ui: {
     treeViewMode: false,
     collapsibleMode: false,
@@ -151,7 +151,7 @@ const mockAppState = {
   },
   jqState: {
     isActive: false,
-    transformedData: null,
+    transformedData: null as any,
     showOriginal: false,
   },
   searchState: {
@@ -167,7 +167,7 @@ const mockAppState = {
   },
 };
 
-const mockPropertyDetails = {
+const mockPropertyDetails: any = {
   details: { key: "test", value: "value" },
   config: { enabled: true },
 };
@@ -360,7 +360,7 @@ describe("App", () => {
   describe("Display Data Logic", () => {
     it("should use transformed data when jq is active and not showing original", () => {
       const transformedData = { transformed: true };
-      mockAppState.jqState = {
+      (mockAppState.jqState as any) = {
         isActive: true,
         transformedData,
         showOriginal: false,
@@ -380,7 +380,7 @@ describe("App", () => {
     });
 
     it("should use initial data when jq is active but showing original", () => {
-      mockAppState.jqState = {
+      (mockAppState.jqState as any) = {
         isActive: true,
         transformedData: { transformed: true },
         showOriginal: true,
@@ -400,7 +400,7 @@ describe("App", () => {
     });
 
     it("should use initial data when jq is not active", () => {
-      mockAppState.jqState = {
+      (mockAppState.jqState as any) = {
         isActive: false,
         transformedData: { transformed: true },
         showOriginal: false,
@@ -420,7 +420,7 @@ describe("App", () => {
     });
 
     it("should handle null transformed data", () => {
-      mockAppState.jqState = {
+      (mockAppState.jqState as any) = {
         isActive: true,
         transformedData: null,
         showOriginal: false,
@@ -783,8 +783,8 @@ describe("App", () => {
 
     it("should handle missing property details gracefully", () => {
       mockAppState.ui.treeViewMode = true;
-      mockPropertyDetails.details = null;
-      mockPropertyDetails.config = null;
+      (mockPropertyDetails as any).details = null;
+      (mockPropertyDetails as any).config = null;
 
       const { getByTestId } = render(
         <ConfigProvider>
@@ -842,7 +842,7 @@ describe("App", () => {
       const originalData = { original: true };
       const transformedData = { transformed: true };
 
-      mockAppState.jqState = {
+      (mockAppState.jqState as any) = {
         isActive: true,
         transformedData,
         showOriginal: false,
