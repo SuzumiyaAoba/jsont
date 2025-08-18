@@ -61,6 +61,8 @@ export class VirtualizedJsonRenderer {
   private options: Required<VirtualizedRenderOptions>;
   private flatItems: VirtualizedItem[] = [];
   private expandedItems = new Set<string>();
+  private collapsedItems = new Set<string>();
+  private maxExpandDepth: number | null = null;
   private currentWindow: RenderWindow;
   private itemCache = new Map<string, VirtualizedItem>();
 
@@ -89,6 +91,8 @@ export class VirtualizedJsonRenderer {
   initialize(data: JsonValue): void {
     this.flatItems = [];
     this.expandedItems.clear();
+    this.collapsedItems.clear();
+    this.maxExpandDepth = null;
     this.itemCache.clear();
 
     // Build flat item list from JSON structure
@@ -137,10 +141,21 @@ export class VirtualizedJsonRenderer {
       return false;
     }
 
-    if (this.expandedItems.has(itemId)) {
+    // Reset maxExpandDepth when manually toggling
+    this.maxExpandDepth = null;
+
+    if (
+      this.expandedItems.has(itemId) ||
+      (!this.collapsedItems.has(itemId) &&
+        item.depth < this.options.initialExpandLevel)
+    ) {
+      // Currently expanded - collapse it
       this.expandedItems.delete(itemId);
+      this.collapsedItems.add(itemId);
       this.collapseItem(itemId);
     } else {
+      // Currently collapsed - expand it
+      this.collapsedItems.delete(itemId);
       this.expandedItems.add(itemId);
       this.expandItem(itemId);
     }
@@ -155,15 +170,8 @@ export class VirtualizedJsonRenderer {
    */
   expandToDepth(maxDepth: number): void {
     this.expandedItems.clear();
-
-    for (const item of this.flatItems) {
-      if (
-        (item.type === "object" || item.type === "array") &&
-        item.depth <= maxDepth
-      ) {
-        this.expandedItems.add(item.id);
-      }
-    }
+    this.collapsedItems.clear();
+    this.maxExpandDepth = maxDepth;
 
     this.rebuildFlatList();
     this.updateWindow(this.currentWindow.startIndex);
@@ -174,6 +182,8 @@ export class VirtualizedJsonRenderer {
    */
   collapseAll(): void {
     this.expandedItems.clear();
+    this.collapsedItems.clear();
+    this.maxExpandDepth = null;
     this.rebuildFlatList();
     this.updateWindow(0);
   }
@@ -253,6 +263,7 @@ export class VirtualizedJsonRenderer {
     }
 
     const itemId = `${parentId || "root"}_${key || index}_${depth}`;
+    const shouldExpand = this.shouldExpand(itemId, depth);
 
     let item: VirtualizedItem;
 
@@ -263,7 +274,7 @@ export class VirtualizedJsonRenderer {
         depth,
         key,
         type: "array",
-        expanded: false,
+        expanded: shouldExpand,
         parentId: parentId || undefined,
         index,
       };
@@ -272,7 +283,7 @@ export class VirtualizedJsonRenderer {
       this.itemCache.set(itemId, item);
 
       // Add array items if expanded
-      if (this.shouldExpand(itemId, depth)) {
+      if (shouldExpand) {
         value.forEach((arrayItem, arrayIndex) => {
           this.buildFlatItemList(
             arrayItem,
@@ -290,7 +301,7 @@ export class VirtualizedJsonRenderer {
         depth,
         key,
         type: "object",
-        expanded: false,
+        expanded: shouldExpand,
         parentId: parentId || undefined,
         index,
       };
@@ -299,7 +310,7 @@ export class VirtualizedJsonRenderer {
       this.itemCache.set(itemId, item);
 
       // Add object properties if expanded
-      if (this.shouldExpand(itemId, depth)) {
+      if (shouldExpand) {
         Object.entries(value).forEach(([objKey, objValue], objIndex) => {
           this.buildFlatItemList(objValue, objKey, depth + 1, itemId, objIndex);
         });
@@ -341,6 +352,16 @@ export class VirtualizedJsonRenderer {
    * Check if item should be expanded
    */
   private shouldExpand(itemId: string, depth: number): boolean {
+    // Don't expand if explicitly collapsed
+    if (this.collapsedItems.has(itemId)) {
+      return false;
+    }
+
+    // Use maxExpandDepth if set by expandToDepth()
+    if (this.maxExpandDepth !== null) {
+      return depth <= this.maxExpandDepth;
+    }
+
     return (
       this.expandedItems.has(itemId) || depth < this.options.initialExpandLevel
     );

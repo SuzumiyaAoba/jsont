@@ -88,6 +88,7 @@ export class StreamingJsonParser extends EventEmitter {
   private maxDepth = 0;
   private errors: string[] = [];
   private completed = false;
+  private hasCriticalParseError = false;
   private parseStack: Array<{
     type: "object" | "array";
     data: any;
@@ -126,18 +127,6 @@ export class StreamingJsonParser extends EventEmitter {
             chunk instanceof Buffer ? chunk : Buffer.from(chunk, "utf8");
           chunks.push(bufferChunk);
           this.bytesProcessed += bufferChunk.length;
-
-          // Process chunk immediately if buffer allows
-          if (
-            this.buffer.length + bufferChunk.length <=
-            this.options.maxBufferSize
-          ) {
-            this.processChunk(bufferChunk.toString("utf8"));
-          } else {
-            // Buffer full, process accumulated data
-            this.processBufferedChunks(chunks);
-            chunks.length = 0; // Clear processed chunks
-          }
 
           this.updateProgress();
         } catch (error) {
@@ -248,6 +237,8 @@ export class StreamingJsonParser extends EventEmitter {
         this.errors.push(
           `Parse error at line ${this.line}, column ${this.column}: ${error}`,
         );
+        // Mark as having a critical parse error to avoid duplicate incomplete JSON errors
+        this.hasCriticalParseError = true;
         break;
       }
     }
@@ -439,7 +430,7 @@ export class StreamingJsonParser extends EventEmitter {
     }
 
     const numValue = Number(value);
-    if (isNaN(numValue)) {
+    if (Number.isNaN(numValue)) {
       throw new Error(`Invalid number: ${value}`);
     }
 
@@ -518,6 +509,10 @@ export class StreamingJsonParser extends EventEmitter {
         this.depth--;
         const objFrame = this.parseStack.pop();
         if (objFrame?.type === "object") {
+          // Check if we have an incomplete key-value pair (missing value after colon)
+          if (objFrame.key !== undefined) {
+            throw new Error(`Missing value for key "${objFrame.key}"`);
+          }
           this.handleCompletedObject(objFrame.data);
         }
         break;
@@ -615,7 +610,8 @@ export class StreamingJsonParser extends EventEmitter {
    */
   private finalizeParsing(): void {
     // Check for incomplete parsing states that should be errors
-    if (this.parseStack.length > 0) {
+    // Skip this check if we already have a critical parse error to avoid duplicates
+    if (this.parseStack.length > 0 && !this.hasCriticalParseError) {
       this.errors.push(
         `Incomplete JSON: ${this.parseStack.length} unclosed structures`,
       );
@@ -623,10 +619,26 @@ export class StreamingJsonParser extends EventEmitter {
       return;
     }
 
-    // Check if we have unparsed content (malformed)
+    // Check if we have unparsed content (malformed) or no valid JSON content
+    // Skip this check if we already have a critical parse error to avoid duplicates
     const remainingContent = this.buffer.slice(this.position).trim();
-    if (remainingContent.length > 0 && this.objectsParsed === 0) {
+    if (
+      remainingContent.length > 0 &&
+      this.objectsParsed === 0 &&
+      !this.hasCriticalParseError
+    ) {
       this.errors.push(`Invalid JSON: unparsed content "${remainingContent}"`);
+      this.completed = false;
+      return;
+    }
+
+    // Check if input was only whitespace (no actual JSON content)
+    if (
+      this.objectsParsed === 0 &&
+      this.buffer.trim().length === 0 &&
+      this.buffer.length > 0
+    ) {
+      this.errors.push("No valid JSON content found (whitespace only)");
       this.completed = false;
       return;
     }
@@ -789,7 +801,7 @@ export class JsonObjectTransform extends Transform {
   override _transform(
     chunk: Buffer,
     _encoding: string,
-    callback: Function,
+    callback: (error?: Error) => void,
   ): void {
     try {
       this.parser["processChunk"](chunk.toString("utf8"));
@@ -799,9 +811,18 @@ export class JsonObjectTransform extends Transform {
     }
   }
 
-  override _flush(callback: Function): void {
+  override _flush(callback: (error?: Error) => void): void {
     try {
       this.parser["finalizeParsing"]();
+
+      // Check if parser has errors and emit them
+      const result = this.parser["getResult"]();
+      if (result.errors.length > 0) {
+        const error = new Error(`JSON parsing failed: ${result.errors[0]}`);
+        callback(error);
+        return;
+      }
+
       callback();
     } catch (error) {
       callback(error);
