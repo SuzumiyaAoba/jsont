@@ -410,6 +410,7 @@ describe("JsonObjectTransform", () => {
 
 describe("Edge Cases", () => {
   it("should handle empty input", () => {
+    const parser = new StreamingJsonParser();
     const result = parser.parseString("");
 
     expect(result.completed).toBe(false);
@@ -417,6 +418,7 @@ describe("Edge Cases", () => {
   });
 
   it("should handle whitespace-only input", () => {
+    const parser = new StreamingJsonParser();
     const result = parser.parseString("   \n\t  ");
 
     expect(result.completed).toBe(false);
@@ -424,6 +426,7 @@ describe("Edge Cases", () => {
   });
 
   it("should handle single character input", () => {
+    const parser = new StreamingJsonParser();
     const result = parser.parseString("{");
 
     expect(result.completed).toBe(false);
@@ -431,6 +434,7 @@ describe("Edge Cases", () => {
   });
 
   it("should handle extremely large numbers", () => {
+    const parser = new StreamingJsonParser();
     const input = '{"large": 1.7976931348623157e+308}'; // Near Number.MAX_VALUE
     const result = parser.parseString(input);
 
@@ -439,6 +443,7 @@ describe("Edge Cases", () => {
   });
 
   it("should handle very long strings", () => {
+    const parser = new StreamingJsonParser();
     const longString = "x".repeat(10000);
     const input = JSON.stringify({ long: longString });
     const result = parser.parseString(input);

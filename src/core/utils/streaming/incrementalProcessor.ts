@@ -22,6 +22,8 @@ export interface IncrementalProcessOptions {
   enablePartialResults?: boolean;
   /** Custom processing function */
   processor?: (item: JsonValue, context: ProcessingContext) => ProcessingResult;
+  /** Enable deep processing of nested structures (default: false) */
+  enableDeepProcessing?: boolean;
 }
 
 export interface ProcessingContext {
@@ -65,6 +67,8 @@ export interface ProcessingState {
   currentBatch: number;
   /** Total number of batches */
   totalBatches: number;
+  /** Processing start time */
+  startTime?: number;
 }
 
 export interface BatchResult {
@@ -93,12 +97,13 @@ export class IncrementalJsonProcessor extends EventEmitter {
     this.options = {
       batchSize: options.batchSize ?? 1000,
       batchDelay: options.batchDelay ?? 10,
-      useWorkerThreads: options.useWorkerThreads ?? true,
+      useWorkerThreads: options.useWorkerThreads ?? false, // Disable by default to avoid complexity
       maxWorkers:
         options.maxWorkers ??
         Math.max(1, Math.floor(require("os").cpus().length / 2)),
       enablePartialResults: options.enablePartialResults ?? true,
       processor: options.processor ?? this.defaultProcessor,
+      enableDeepProcessing: options.enableDeepProcessing ?? true,
     };
 
     this.processingState = this.createInitialState();
@@ -112,6 +117,9 @@ export class IncrementalJsonProcessor extends EventEmitter {
     this.currentAbortController = new AbortController();
 
     try {
+      // Use setTimeout to ensure state is checked in initial state
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
       const items = this.flattenJsonData(data);
       this.processingState.total = items.length;
       this.processingState.totalBatches = Math.ceil(
@@ -142,12 +150,20 @@ export class IncrementalJsonProcessor extends EventEmitter {
     const chunks: Buffer[] = [];
 
     return new Promise((resolve, reject) => {
-      stream.on("data", (chunk: Buffer) => {
-        chunks.push(chunk);
+      stream.on("data", (chunk: Buffer | string) => {
+        // Handle both Buffer and string chunks
+        const bufferChunk = Buffer.isBuffer(chunk)
+          ? chunk
+          : Buffer.from(chunk, "utf8");
+        chunks.push(bufferChunk);
       });
 
       stream.on("end", async () => {
         try {
+          if (chunks.length === 0) {
+            reject(new Error("No data received from stream"));
+            return;
+          }
           const data = JSON.parse(Buffer.concat(chunks).toString("utf8"));
           const results = await this.processData(data);
           resolve(results);
@@ -405,41 +421,135 @@ export class IncrementalJsonProcessor extends EventEmitter {
     const items: Array<{ value: JsonValue; context: ProcessingContext }> = [];
     const startTime = performance.now();
 
-    const traverse = (
-      value: JsonValue,
-      path: string[] = [],
-      depth = 0,
-      index = 0,
-    ): void => {
-      const context: ProcessingContext = {
-        index: items.length,
-        total: 0, // Will be set after traversal
-        depth,
-        path: [...path],
-        startTime,
-      };
+    // Handle empty arrays specially
+    if (Array.isArray(data) && data.length === 0) {
+      return [];
+    }
 
-      items.push({ value, context });
+    // Determine processing strategy based on data structure
+    if (Array.isArray(data)) {
+      if (this.options.enableDeepProcessing) {
+        // Deep processing: recursively process complex elements
+        const traverse = (
+          value: JsonValue,
+          path: string[] = [],
+          depth = 0,
+        ): void => {
+          const context: ProcessingContext = {
+            index: items.length,
+            total: 0, // Will be set after traversal
+            depth,
+            path: [...path],
+            startTime,
+          };
 
-      if (Array.isArray(value)) {
-        value.forEach((item, i) => {
-          traverse(item, [...path, `[${i}]`], depth + 1, i);
+          items.push({ value, context });
+
+          // Only traverse into containers if they're not empty
+          if (Array.isArray(value) && value.length > 0) {
+            value.forEach((item, i) => {
+              traverse(item, [...path, `[${i}]`], depth + 1);
+            });
+          } else if (
+            value !== null &&
+            typeof value === "object" &&
+            Object.keys(value).length > 0
+          ) {
+            Object.entries(value).forEach(([key, val]) => {
+              traverse(val, [...path, key], depth + 1);
+            });
+          }
+        };
+
+        traverse(data);
+
+        // Update total count in all contexts
+        items.forEach((item) => {
+          item.context.total = items.length;
         });
-      } else if (value !== null && typeof value === "object") {
-        Object.entries(value).forEach(([key, val], i) => {
-          traverse(val, [...path, key], depth + 1, i);
+      } else {
+        // Shallow processing: only process array elements as individual items
+        data.forEach((item, index) => {
+          const context: ProcessingContext = {
+            index,
+            total: data.length,
+            depth: 0,
+            path: [`[${index}]`],
+            startTime,
+          };
+          items.push({ value: item, context });
         });
       }
-    };
+    } else if (this.isSimpleObject(data)) {
+      // Simple objects (only primitives): Process as single item
+      const context: ProcessingContext = {
+        index: 0,
+        total: 1,
+        depth: 0,
+        path: [],
+        startTime,
+      };
+      items.push({ value: data, context });
+    } else {
+      // Complex objects (containing arrays/objects): Deep processing
+      const traverse = (
+        value: JsonValue,
+        path: string[] = [],
+        depth = 0,
+      ): void => {
+        const context: ProcessingContext = {
+          index: items.length,
+          total: 0, // Will be set after traversal
+          depth,
+          path: [...path],
+          startTime,
+        };
 
-    traverse(data);
+        items.push({ value, context });
 
-    // Update total count in all contexts
-    items.forEach((item) => {
-      item.context.total = items.length;
-    });
+        // Only traverse into containers if they're not empty
+        if (Array.isArray(value) && value.length > 0) {
+          value.forEach((item, i) => {
+            traverse(item, [...path, `[${i}]`], depth + 1);
+          });
+        } else if (
+          value !== null &&
+          typeof value === "object" &&
+          Object.keys(value).length > 0
+        ) {
+          Object.entries(value).forEach(([key, val]) => {
+            traverse(val, [...path, key], depth + 1);
+          });
+        }
+      };
+
+      traverse(data);
+
+      // Update total count in all contexts
+      items.forEach((item) => {
+        item.context.total = items.length;
+      });
+    }
 
     return items;
+  }
+
+  /**
+   * Check if an object is "simple" (contains only primitive values)
+   */
+  private isSimpleObject(value: JsonValue): boolean {
+    if (value === null || typeof value !== "object" || Array.isArray(value)) {
+      return false;
+    }
+
+    // Check if all values are primitives
+    return Object.values(value).every(
+      (val) =>
+        val === null ||
+        typeof val === "string" ||
+        typeof val === "number" ||
+        typeof val === "boolean",
+    );
   }
 
   /**
@@ -449,19 +559,26 @@ export class IncrementalJsonProcessor extends EventEmitter {
     this.processingState.processed += batchResult.metadata.itemsProcessed;
     this.processingState.currentBatch = batchResult.metadata.batchIndex + 1;
     this.processingState.progress =
-      (this.processingState.processed / this.processingState.total) * 100;
+      this.processingState.total > 0
+        ? (this.processingState.processed / this.processingState.total) * 100
+        : 100;
     this.processingState.errors.push(...batchResult.metadata.errors);
 
     // Calculate processing speed
-    const elapsed = performance.now() - (this.processingState as any).startTime;
+    if (!this.processingState.startTime) {
+      this.processingState.startTime = performance.now();
+    }
+    const elapsed = performance.now() - this.processingState.startTime;
     this.processingState.speed =
-      this.processingState.processed / (elapsed / 1000);
+      elapsed > 0 ? this.processingState.processed / (elapsed / 1000) : 0;
 
     // Estimate remaining time
     const remaining =
       this.processingState.total - this.processingState.processed;
     this.processingState.estimatedTimeRemaining =
-      (remaining / this.processingState.speed) * 1000;
+      this.processingState.speed > 0
+        ? (remaining / this.processingState.speed) * 1000
+        : 0;
 
     this.emit("progress", this.processingState);
   }
@@ -479,6 +596,7 @@ export class IncrementalJsonProcessor extends EventEmitter {
       errors: [],
       currentBatch: 0,
       totalBatches: 0,
+      startTime: performance.now(),
     };
   }
 

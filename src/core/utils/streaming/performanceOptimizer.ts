@@ -115,8 +115,9 @@ export class PerformanceOptimizer {
 
     let complexity: "low" | "medium" | "high" = "low";
     if (
-      fileSize > PerformanceOptimizer.SIZE_THRESHOLDS.MEDIUM &&
-      estimatedDepth > 10
+      fileSize > PerformanceOptimizer.SIZE_THRESHOLDS.LARGE ||
+      (fileSize > PerformanceOptimizer.SIZE_THRESHOLDS.MEDIUM &&
+        estimatedDepth > 5)
     ) {
       complexity = "high";
     } else if (
@@ -198,7 +199,7 @@ export class PerformanceOptimizer {
       strategy = {
         ...strategy,
         useStreaming: true,
-        useVirtualization: estimatedObjects > 1000,
+        useVirtualization: estimatedObjects >= 1000,
         useIncremental: estimatedObjects > 5000,
         useWorkerThreads: cpuCores > 4 && estimatedObjects > 10000,
         chunkSize: 256 * 1024, // 256KB chunks
@@ -228,14 +229,17 @@ export class PerformanceOptimizer {
       };
     }
 
-    // Adjust for complexity
-    if (complexity === "high") {
+    // Adjust for complexity (only for smaller files, large files already optimized)
+    if (
+      complexity === "high" &&
+      fileSize <= PerformanceOptimizer.SIZE_THRESHOLDS.LARGE
+    ) {
       strategy = {
         ...strategy,
         useStreaming: true,
         useVirtualization: true,
         useIncremental: true,
-        batchSize: Math.floor(strategy.batchSize * 0.5), // Smaller batches for complex data
+        batchSize: Math.floor(strategy.batchSize * 0.75), // Smaller batches for complex data
       };
     }
 
@@ -371,8 +375,9 @@ export class PerformanceOptimizer {
    */
   static estimateMemoryUsage(data: JsonValue): number {
     const jsonString = JSON.stringify(data);
-    // Rough estimate: JSON string size * 2 (for parsing overhead) + 1MB base
-    return jsonString.length * 2 + 1024 * 1024;
+    // Rough estimate: JSON string size * 3 (for parsing overhead) + reasonable base
+    const baseOverhead = Math.max(1024, jsonString.length * 0.1); // Minimum 1KB or 10% of string size
+    return jsonString.length * 3 + baseOverhead;
   }
 
   /**
@@ -382,9 +387,25 @@ export class PerformanceOptimizer {
     profile: PerformanceProfile,
     strategy: OptimizationStrategy,
   ): boolean {
-    const estimatedMemoryUsage = PerformanceOptimizer.estimateMemoryUsage({
-      size: profile.fileSize,
-    } as any);
+    // Estimate memory usage based on file size and processing strategy
+    let estimatedMemoryUsage = profile.fileSize * 0.5; // Assume file will use 50% of its size in memory
+
+    if (strategy.useStreaming) {
+      // Streaming reduces memory usage significantly
+      estimatedMemoryUsage = Math.max(
+        strategy.bufferSize,
+        profile.fileSize * 0.1,
+      );
+    }
+
+    if (strategy.useIncremental) {
+      // Incremental processing further reduces memory usage
+      estimatedMemoryUsage = Math.max(
+        strategy.bufferSize,
+        estimatedMemoryUsage * 0.5,
+      );
+    }
+
     return estimatedMemoryUsage <= strategy.memoryLimit;
   }
 }

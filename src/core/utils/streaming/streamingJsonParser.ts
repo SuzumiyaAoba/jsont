@@ -337,6 +337,14 @@ export class StreamingJsonParser extends EventEmitter {
           return this.parseBoolean();
         } else if (char === "n") {
           return this.parseNull();
+        } else if (char === "u") {
+          // Check for invalid 'undefined' keyword
+          if (
+            this.buffer.slice(this.position, this.position + 9) === "undefined"
+          ) {
+            throw new Error("'undefined' is not valid JSON");
+          }
+          throw new Error(`Unexpected character: ${char}`);
         }
 
         throw new Error(`Unexpected character: ${char}`);
@@ -540,13 +548,12 @@ export class StreamingJsonParser extends EventEmitter {
    * Handle completed object
    */
   private handleCompletedObject(obj: any): void {
-    this.objectsParsed++;
-
     if (this.parseStack.length === 0) {
-      // Top-level object completed
+      // Top-level object completed - only count these
+      this.objectsParsed++;
       this.emit("object", obj);
     } else {
-      // Nested object - add to parent
+      // Nested object - add to parent but don't count
       const parent = this.parseStack[this.parseStack.length - 1];
       if (parent.type === "object" && parent.key) {
         parent.data[parent.key] = obj;
@@ -581,7 +588,8 @@ export class StreamingJsonParser extends EventEmitter {
    */
   private handleValue(value: JsonValue): void {
     if (this.parseStack.length === 0) {
-      // Top-level primitive value
+      // Top-level primitive value - count as object
+      this.objectsParsed++;
       this.emit("value", value);
       return;
     }
@@ -606,12 +614,31 @@ export class StreamingJsonParser extends EventEmitter {
    * Finalize parsing process
    */
   private finalizeParsing(): void {
+    // Check for incomplete parsing states that should be errors
+    if (this.parseStack.length > 0) {
+      this.errors.push(
+        `Incomplete JSON: ${this.parseStack.length} unclosed structures`,
+      );
+      this.completed = false;
+      return;
+    }
+
+    // Check if we have unparsed content (malformed)
+    const remainingContent = this.buffer.slice(this.position).trim();
+    if (remainingContent.length > 0 && this.objectsParsed === 0) {
+      this.errors.push(`Invalid JSON: unparsed content "${remainingContent}"`);
+      this.completed = false;
+      return;
+    }
+
     // Parser is completed if:
     // 1. All parsing is done (stack is empty)
     // 2. We've processed at least some content OR had valid primitive values
+    // 3. No errors occurred
     this.completed =
       this.parseStack.length === 0 &&
-      (this.objectsParsed > 0 || this.bytesProcessed > 0);
+      (this.objectsParsed > 0 || this.bytesProcessed > 0) &&
+      this.errors.length === 0;
     this.updateProgress();
   }
 

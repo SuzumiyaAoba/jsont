@@ -154,6 +154,7 @@ describe("IncrementalJsonProcessor", () => {
     it("should fall back to sequential processing if workers fail", async () => {
       const options: IncrementalProcessOptions = {
         useWorkerThreads: false, // Explicitly disable workers
+        enableDeepProcessing: false, // Only process array elements
       };
       const sequentialProcessor = new IncrementalJsonProcessor(options);
 
@@ -357,6 +358,7 @@ describe("IncrementalJsonProcessor", () => {
 
       const options: IncrementalProcessOptions = {
         processor: errorProcessor,
+        enableDeepProcessing: false, // Only process array elements
       };
       const processor = new IncrementalJsonProcessor(options);
 
@@ -487,6 +489,7 @@ describe("Convenience Functions", () => {
       const options: IncrementalProcessOptions = {
         batchSize: 5,
         enablePartialResults: false,
+        enableDeepProcessing: false, // Only process array elements
       };
 
       const results = await processJsonIncrementally(data, options);
@@ -515,6 +518,7 @@ describe("Convenience Functions", () => {
 
       const options: IncrementalProcessOptions = {
         batchSize: 3,
+        enableDeepProcessing: false, // Only process array elements
       };
 
       const results = await processJsonStreamIncrementally(stream, options);
