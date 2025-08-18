@@ -772,7 +772,7 @@ describe("App", () => {
     });
 
     it("should handle keyboard disabled state", () => {
-      const { getByTestId, getAllByTestId } = render(
+      const { getAllByTestId } = render(
         <ConfigProvider>
           <Provider>
             <App {...defaultProps} keyboardEnabled={false} />

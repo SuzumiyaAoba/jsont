@@ -6,7 +6,7 @@
  */
 
 import { EventEmitter } from "node:events";
-import { Worker } from "node:worker_threads";
+import type { Worker } from "node:worker_threads";
 import type { JsonValue } from "@core/types/index";
 
 export interface IncrementalProcessOptions {
@@ -90,7 +90,7 @@ export class IncrementalJsonProcessor extends EventEmitter {
   private options: Required<IncrementalProcessOptions>;
   private workers: Worker[] = [];
   private processingState: ProcessingState;
-  private currentAbortController?: AbortController;
+  private currentAbortController: AbortController | undefined;
 
   constructor(options: IncrementalProcessOptions = {}) {
     super();
@@ -299,114 +299,6 @@ export class IncrementalJsonProcessor extends EventEmitter {
         errors,
       },
     };
-  }
-
-  /**
-   * Process batch with worker thread
-   * Currently unused - kept for future worker thread implementation
-   */
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  private async processBatchWithWorker(
-    worker: Worker,
-    batch: Array<{ value: JsonValue; context: ProcessingContext }>,
-    batchIndex: number,
-  ): Promise<BatchResult> {
-    return new Promise((resolve, reject) => {
-      const timeout = setTimeout(() => {
-        reject(new Error(`Worker batch ${batchIndex} timed out`));
-      }, 30000); // 30 second timeout
-
-      worker.once("message", (result: BatchResult) => {
-        clearTimeout(timeout);
-        resolve(result);
-      });
-
-      worker.once("error", (error) => {
-        clearTimeout(timeout);
-        reject(error);
-      });
-
-      // Send only serializable options, not the processor function
-      const serializableOptions = {
-        batchSize: this.options.batchSize,
-        batchDelay: this.options.batchDelay,
-        maxWorkers: this.options.maxWorkers,
-        useWorkerThreads: this.options.useWorkerThreads,
-        enablePartialResults: this.options.enablePartialResults,
-        // Note: processor function cannot be serialized, worker will use default
-      };
-
-      worker.postMessage({
-        type: "processBatch",
-        batch,
-        batchIndex,
-        options: serializableOptions,
-      });
-    });
-  }
-
-  /**
-   * Initialize worker threads
-   * Currently unused - kept for future worker thread implementation
-   */
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  private async initializeWorkers(): Promise<void> {
-    const workerScript = `
-      const { parentPort } = require('worker_threads');
-      
-      parentPort.on('message', async ({ type, batch, batchIndex, options }) => {
-        if (type === 'processBatch') {
-          const startTime = performance.now();
-          const results = [];
-          const errors = [];
-          
-          for (const item of batch) {
-            try {
-              // Default processing - can be customized
-              const result = {
-                value: item.value,
-                success: true,
-                metadata: {
-                  processedAt: Date.now(),
-                  depth: item.context.depth,
-                  path: item.context.path.join('.'),
-                }
-              };
-              results.push(result);
-            } catch (error) {
-              const errorMessage = error.message || 'Unknown error';
-              errors.push(errorMessage);
-              results.push({
-                value: item.value,
-                success: false,
-                error: errorMessage,
-              });
-            }
-          }
-          
-          const processingTime = performance.now() - startTime;
-          
-          parentPort.postMessage({
-            results,
-            metadata: {
-              batchIndex,
-              itemsProcessed: batch.length,
-              processingTime,
-              errors,
-            },
-          });
-        }
-      });
-    `;
-
-    for (let i = 0; i < this.options.maxWorkers; i++) {
-      const worker = new Worker(workerScript, { eval: true });
-
-      // Set max listeners to prevent memory leak warnings
-      worker.setMaxListeners(20);
-
-      this.workers.push(worker);
-    }
   }
 
   /**
@@ -629,7 +521,7 @@ export class IncrementalJsonProcessor extends EventEmitter {
    */
   private cleanup(): void {
     this.terminateWorkers();
-    this.currentAbortController = undefined as AbortController | undefined;
+    this.currentAbortController = undefined;
   }
 
   /**

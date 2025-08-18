@@ -275,7 +275,7 @@ export class VirtualizedJsonRenderer {
         key,
         type: "array",
         expanded: shouldExpand,
-        parentId: parentId || undefined,
+        ...(parentId ? { parentId } : {}),
         index,
       };
 
@@ -302,7 +302,7 @@ export class VirtualizedJsonRenderer {
         key,
         type: "object",
         expanded: shouldExpand,
-        parentId: parentId || undefined,
+        ...(parentId ? { parentId } : {}),
         index,
       };
 
@@ -324,7 +324,7 @@ export class VirtualizedJsonRenderer {
         key,
         type: "value",
         expanded: false,
-        parentId: parentId || undefined,
+        ...(parentId ? { parentId } : {}),
         index,
       };
 
@@ -434,7 +434,7 @@ export class VirtualizedJsonRenderer {
         key,
         type: "array",
         expanded: this.expandedItems.has(itemId),
-        parentId,
+        ...(parentId ? { parentId } : {}),
         index,
       };
 
@@ -461,7 +461,7 @@ export class VirtualizedJsonRenderer {
         key,
         type: "object",
         expanded: this.expandedItems.has(itemId),
-        parentId,
+        ...(parentId ? { parentId } : {}),
         index,
       };
 
@@ -488,7 +488,7 @@ export class VirtualizedJsonRenderer {
         key,
         type: "value",
         expanded: false,
-        parentId,
+        ...(parentId ? { parentId } : {}),
         index,
       };
 

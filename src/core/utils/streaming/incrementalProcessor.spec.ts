@@ -26,8 +26,8 @@ describe("IncrementalJsonProcessor", () => {
       const results = await processor.processData(data);
 
       expect(results).toHaveLength(1);
-      expect(results[0].success).toBe(true);
-      expect(results[0].value).toEqual(data);
+      expect(results[0]?.success).toBe(true);
+      expect(results[0]?.value).toEqual(data);
     });
 
     it("should process array", async () => {
@@ -59,8 +59,8 @@ describe("IncrementalJsonProcessor", () => {
       for (const primitive of primitives) {
         const results = await processor.processData(primitive);
         expect(results).toHaveLength(1);
-        expect(results[0].success).toBe(true);
-        expect(results[0].value).toBe(primitive);
+        expect(results[0]?.success).toBe(true);
+        expect(results[0]?.value).toBe(primitive);
       }
     });
   });
@@ -86,7 +86,7 @@ describe("IncrementalJsonProcessor", () => {
 
       expect(results.length).toBeGreaterThan(50);
       expect(progressUpdates.length).toBeGreaterThan(1);
-      expect(progressUpdates[progressUpdates.length - 1].progress).toBe(100);
+      expect(progressUpdates[progressUpdates.length - 1]?.progress).toBe(100);
     });
 
     it("should emit partial results", async () => {
@@ -184,7 +184,7 @@ describe("IncrementalJsonProcessor", () => {
       const results = await processor.processData(data);
 
       expect(customProcessor).toHaveBeenCalled();
-      expect(results.every((result) => result.metadata?.custom)).toBe(true);
+      expect(results.every((result) => result.metadata?.["custom"])).toBe(true);
     });
 
     it("should handle processor errors gracefully", async () => {
@@ -252,7 +252,7 @@ describe("IncrementalJsonProcessor", () => {
       await processor.processData(data);
 
       expect(progressEvents.length).toBeGreaterThan(0);
-      expect(progressEvents[progressEvents.length - 1].progress).toBe(100);
+      expect(progressEvents[progressEvents.length - 1]?.progress).toBe(100);
     });
 
     it("should emit complete event", async () => {
@@ -276,8 +276,8 @@ describe("IncrementalJsonProcessor", () => {
       await processor.processData(data);
 
       const finalState = progressEvents[progressEvents.length - 1];
-      expect(finalState.speed).toBeGreaterThan(0);
-      expect(finalState.estimatedTimeRemaining).toBeGreaterThanOrEqual(0);
+      expect(finalState?.speed).toBeGreaterThan(0);
+      expect(finalState?.estimatedTimeRemaining).toBeGreaterThanOrEqual(0);
     });
   });
 
@@ -315,8 +315,8 @@ describe("IncrementalJsonProcessor", () => {
       await batchProcessor.processData(data);
 
       const finalState = progressEvents[progressEvents.length - 1];
-      expect(finalState.totalBatches).toBeGreaterThan(1);
-      expect(finalState.currentBatch).toBe(finalState.totalBatches);
+      expect(finalState?.totalBatches).toBeGreaterThan(1);
+      expect(finalState?.currentBatch).toBe(finalState?.totalBatches);
     });
   });
 
@@ -366,8 +366,8 @@ describe("IncrementalJsonProcessor", () => {
       const results = await processor.processData(data);
 
       expect(results).toHaveLength(5);
-      expect(results[2].success).toBe(false);
-      expect(results[2].error).toBeTruthy();
+      expect(results[2]?.success).toBe(false);
+      expect(results[2]?.error).toBeTruthy();
 
       // Other items should still be processed successfully
       expect(results.filter((r) => r.success)).toHaveLength(4);
@@ -392,7 +392,7 @@ describe("IncrementalJsonProcessor", () => {
       await processor.processData(data);
 
       const finalState = progressEvents[progressEvents.length - 1];
-      expect(finalState.errors.length).toBeGreaterThan(0);
+      expect(finalState?.errors.length).toBeGreaterThan(0);
     });
   });
 
@@ -441,7 +441,7 @@ describe("IncrementalJsonProcessor", () => {
       const results = await processor.processData(42);
 
       expect(results).toHaveLength(1);
-      expect(results[0].value).toBe(42);
+      expect(results[0]?.value).toBe(42);
     });
 
     it("should handle deeply nested structures", async () => {

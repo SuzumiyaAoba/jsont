@@ -123,8 +123,9 @@ export class StreamingJsonParser extends EventEmitter {
       stream.on("data", (chunk: Buffer | string) => {
         try {
           // Convert string to Buffer if needed
-          const bufferChunk =
-            chunk instanceof Buffer ? chunk : Buffer.from(chunk, "utf8");
+          const bufferChunk = Buffer.isBuffer(chunk)
+            ? chunk
+            : Buffer.from(String(chunk), "utf8");
           chunks.push(bufferChunk);
           this.bytesProcessed += bufferChunk.length;
 
@@ -223,7 +224,7 @@ export class StreamingJsonParser extends EventEmitter {
     ) {
       const char = this.buffer[this.position];
 
-      if (this.isWhitespace(char)) {
+      if (!char || this.isWhitespace(char)) {
         this.advancePosition();
         continue;
       }
@@ -262,6 +263,8 @@ export class StreamingJsonParser extends EventEmitter {
   private parseToken(): JsonToken | null {
     const start = this.position;
     const char = this.buffer[this.position];
+
+    if (!char) return null;
 
     switch (char) {
       case "{":
@@ -421,7 +424,7 @@ export class StreamingJsonParser extends EventEmitter {
 
     while (this.position < this.buffer.length) {
       const char = this.buffer[this.position];
-      if (this.isNumericChar(char)) {
+      if (char && this.isNumericChar(char)) {
         value += char;
         this.advancePosition();
       } else {
@@ -534,7 +537,9 @@ export class StreamingJsonParser extends EventEmitter {
       }
 
       case "value":
-        this.handleValue(token.value);
+        if (token.value !== undefined) {
+          this.handleValue(token.value);
+        }
         break;
     }
   }
@@ -799,15 +804,18 @@ export class JsonObjectTransform extends Transform {
   }
 
   override _transform(
-    chunk: Buffer,
+    chunk: Buffer | string,
     _encoding: string,
     callback: (error?: Error) => void,
   ): void {
     try {
-      this.parser["processChunk"](chunk.toString("utf8"));
+      const chunkString = Buffer.isBuffer(chunk)
+        ? chunk.toString("utf8")
+        : String(chunk);
+      this.parser["processChunk"](chunkString);
       callback();
     } catch (error) {
-      callback(error);
+      callback(error instanceof Error ? error : new Error(String(error)));
     }
   }
 
@@ -819,13 +827,13 @@ export class JsonObjectTransform extends Transform {
       const result = this.parser["getResult"]();
       if (result.errors.length > 0) {
         const error = new Error(`JSON parsing failed: ${result.errors[0]}`);
-        callback(error);
+        callback(error instanceof Error ? error : new Error(String(error)));
         return;
       }
 
       callback();
     } catch (error) {
-      callback(error);
+      callback(error instanceof Error ? error : new Error(String(error)));
     }
   }
 }

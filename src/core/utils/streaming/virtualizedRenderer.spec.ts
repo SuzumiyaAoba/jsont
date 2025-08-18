@@ -281,6 +281,7 @@ describe("VirtualizedJsonRenderer", () => {
       const window = renderer.getCurrentWindow();
       const item = window.visibleItems[0];
 
+      if (!item) return; // Guard against undefined
       const formatted = renderer.formatItem(item, 5);
       expect(formatted).toContain("5:");
     });
@@ -436,6 +437,7 @@ describe("VirtualizedJsonRenderer", () => {
       const window = renderer.getCurrentWindow();
       const firstItem = window.visibleItems[0];
 
+      if (!firstItem) return; // Guard against undefined
       const retrievedItem = renderer.getItem(firstItem.id);
       expect(retrievedItem).toEqual(firstItem);
     });

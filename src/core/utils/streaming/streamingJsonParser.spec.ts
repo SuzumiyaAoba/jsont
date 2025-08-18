@@ -185,7 +185,7 @@ describe("StreamingJsonParser", () => {
       await progressParser.parseStream(stream, data.length);
 
       expect(progressEvents.length).toBeGreaterThan(0);
-      expect(progressEvents[progressEvents.length - 1].percentage).toBe(100);
+      expect(progressEvents[progressEvents.length - 1]?.percentage).toBe(100);
     });
 
     it("should emit object events during parsing", async () => {
@@ -303,7 +303,7 @@ describe("StreamingJsonParser", () => {
         heapUsed: 400 * 1024 * 1024, // 400MB
         external: 0,
         arrayBuffers: 0,
-      }));
+      })) as any;
 
       try {
         const input = JSON.stringify({ test: "memory pressure" });
