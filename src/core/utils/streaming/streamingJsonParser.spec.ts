@@ -8,7 +8,6 @@ import {
   JsonObjectTransform,
   type ParseProgress,
   parseJsonStream,
-  parseJsonStreamFromFile,
   StreamingJsonParser,
   type StreamingParseOptions,
 } from "./streamingJsonParser";
@@ -347,7 +346,7 @@ describe("Convenience Functions", () => {
 });
 
 describe("JsonObjectTransform", () => {
-  it("should transform stream objects", (done) => {
+  it("should transform stream objects", async () => {
     const transform = new JsonObjectTransform();
     const objects: any[] = [];
 
@@ -355,19 +354,22 @@ describe("JsonObjectTransform", () => {
       objects.push(obj);
     });
 
-    transform.on("end", () => {
-      expect(objects).toHaveLength(1);
-      expect(objects[0]).toEqual({ transform: "test" });
-      done();
+    const promise = new Promise<void>((resolve) => {
+      transform.on("end", () => {
+        expect(objects).toHaveLength(1);
+        expect(objects[0]).toEqual({ transform: "test" });
+        resolve();
+      });
     });
 
     const data = JSON.stringify({ transform: "test" });
     const stream = Readable.from([data]);
 
     stream.pipe(transform);
+    await promise;
   });
 
-  it("should handle multiple objects in transform", (done) => {
+  it("should handle multiple objects in transform", async () => {
     const transform = new JsonObjectTransform();
     const objects: any[] = [];
 
@@ -375,9 +377,11 @@ describe("JsonObjectTransform", () => {
       objects.push(obj);
     });
 
-    transform.on("end", () => {
-      expect(objects.length).toBeGreaterThan(0);
-      done();
+    const promise = new Promise<void>((resolve) => {
+      transform.on("end", () => {
+        expect(objects.length).toBeGreaterThan(0);
+        resolve();
+      });
     });
 
     const data = '{"first": 1} {"second": 2}';
@@ -385,26 +389,31 @@ describe("JsonObjectTransform", () => {
     const stream = Readable.from(chunks);
 
     stream.pipe(transform);
+    await promise;
   });
 
-  it("should handle transform errors gracefully", (done) => {
+  it("should handle transform errors gracefully", async () => {
     const transform = new JsonObjectTransform();
     let errorEmitted = false;
 
-    transform.on("error", () => {
-      errorEmitted = true;
-      done();
-    });
+    const promise = new Promise<void>((resolve, reject) => {
+      transform.on("error", () => {
+        errorEmitted = true;
+        resolve();
+      });
 
-    transform.on("end", () => {
-      if (!errorEmitted) {
-        done(new Error("Expected error was not emitted"));
-      }
+      transform.on("end", () => {
+        if (!errorEmitted) {
+          reject(new Error("Expected error was not emitted"));
+        }
+      });
     });
 
     // Send malformed JSON
     const stream = Readable.from(['{"malformed":']);
     stream.pipe(transform);
+
+    await promise;
   });
 });
 

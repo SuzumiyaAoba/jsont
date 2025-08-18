@@ -264,7 +264,7 @@ export class VirtualizedJsonRenderer {
         key,
         type: "array",
         expanded: false,
-        parentId,
+        parentId: parentId || undefined,
         index,
       };
 
@@ -291,7 +291,7 @@ export class VirtualizedJsonRenderer {
         key,
         type: "object",
         expanded: false,
-        parentId,
+        parentId: parentId || undefined,
         index,
       };
 
@@ -313,7 +313,7 @@ export class VirtualizedJsonRenderer {
         key,
         type: "value",
         expanded: false,
-        parentId,
+        parentId: parentId || undefined,
         index,
       };
 
@@ -492,6 +492,8 @@ export class VirtualizedJsonRenderer {
     // Find where descendants end
     while (endIndex < this.flatItems.length) {
       const currentItem = this.flatItems[endIndex];
+      if (!currentItem) break;
+
       if (
         currentItem.depth <= item.depth &&
         !this.isDescendantOf(currentItem.id, itemId)

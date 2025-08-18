@@ -555,10 +555,10 @@ export class StreamingJsonParser extends EventEmitter {
     } else {
       // Nested object - add to parent but don't count
       const parent = this.parseStack[this.parseStack.length - 1];
-      if (parent.type === "object" && parent.key) {
+      if (parent && parent.type === "object" && parent.key) {
         parent.data[parent.key] = obj;
         delete parent.key;
-      } else if (parent.type === "array") {
+      } else if (parent && parent.type === "array") {
         parent.data.push(obj);
       }
     }
@@ -574,10 +574,10 @@ export class StreamingJsonParser extends EventEmitter {
     } else {
       // Nested array - add to parent
       const parent = this.parseStack[this.parseStack.length - 1];
-      if (parent.type === "object" && parent.key) {
+      if (parent && parent.type === "object" && parent.key) {
         parent.data[parent.key] = arr;
         delete parent.key;
-      } else if (parent.type === "array") {
+      } else if (parent && parent.type === "array") {
         parent.data.push(arr);
       }
     }
@@ -596,7 +596,7 @@ export class StreamingJsonParser extends EventEmitter {
 
     const parent = this.parseStack[this.parseStack.length - 1];
 
-    if (parent.type === "object") {
+    if (parent && parent.type === "object") {
       if (!parent.key) {
         // This value is a key
         parent.key = value as string;
@@ -605,7 +605,7 @@ export class StreamingJsonParser extends EventEmitter {
         parent.data[parent.key] = value;
         delete parent.key;
       }
-    } else if (parent.type === "array") {
+    } else if (parent && parent.type === "array") {
       parent.data.push(value);
     }
   }
@@ -786,7 +786,11 @@ export class JsonObjectTransform extends Transform {
     });
   }
 
-  _transform(chunk: Buffer, _encoding: string, callback: Function): void {
+  override _transform(
+    chunk: Buffer,
+    _encoding: string,
+    callback: Function,
+  ): void {
     try {
       this.parser["processChunk"](chunk.toString("utf8"));
       callback();
@@ -795,7 +799,7 @@ export class JsonObjectTransform extends Transform {
     }
   }
 
-  _flush(callback: Function): void {
+  override _flush(callback: Function): void {
     try {
       this.parser["finalizeParsing"]();
       callback();

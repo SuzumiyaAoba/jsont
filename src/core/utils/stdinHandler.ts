@@ -105,7 +105,6 @@ export async function readStdinThenReinitialize(): Promise<StdinReadResult> {
       error:
         error instanceof Error ? error.message : "Unknown error reading stdin",
       canUseKeyboard: false,
-      performanceProfile: undefined,
       streamingUsed: false,
     };
   }
@@ -561,7 +560,6 @@ export async function readFromFile(filePath: string): Promise<StdinReadResult> {
           ? `Failed to read file '${filePath}': ${error.message}`
           : `Unknown error reading file '${filePath}'`,
       canUseKeyboard: true, // Always enable keyboard for file input
-      performanceProfile: undefined,
       streamingUsed: false,
     };
   }

@@ -303,8 +303,8 @@ export class PerformanceOptimizer {
         ? Math.min(
             4,
             Math.floor(
-              process.env.UV_THREADPOOL_SIZE
-                ? parseInt(process.env.UV_THREADPOOL_SIZE)
+              process.env["UV_THREADPOOL_SIZE"]
+                ? parseInt(process.env["UV_THREADPOOL_SIZE"])
                 : 4,
             ),
           )

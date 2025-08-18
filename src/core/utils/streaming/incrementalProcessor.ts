@@ -223,6 +223,7 @@ export class IncrementalJsonProcessor extends EventEmitter {
       }
 
       const batch = batches[batchIndex];
+      if (!batch) continue; // Skip if batch is undefined
       const batchResult = await this.processBatch(batch, batchIndex);
 
       results.push(...batchResult.results);
@@ -302,7 +303,9 @@ export class IncrementalJsonProcessor extends EventEmitter {
 
   /**
    * Process batch with worker thread
+   * Currently unused - kept for future worker thread implementation
    */
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   private async processBatchWithWorker(
     worker: Worker,
     batch: Array<{ value: JsonValue; context: ProcessingContext }>,
@@ -344,7 +347,9 @@ export class IncrementalJsonProcessor extends EventEmitter {
 
   /**
    * Initialize worker threads
+   * Currently unused - kept for future worker thread implementation
    */
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   private async initializeWorkers(): Promise<void> {
     const workerScript = `
       const { parentPort } = require('worker_threads');
@@ -624,7 +629,7 @@ export class IncrementalJsonProcessor extends EventEmitter {
    */
   private cleanup(): void {
     this.terminateWorkers();
-    this.currentAbortController = undefined;
+    this.currentAbortController = undefined as AbortController | undefined;
   }
 
   /**
