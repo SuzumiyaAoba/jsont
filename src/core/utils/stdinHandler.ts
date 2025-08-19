@@ -22,6 +22,12 @@ export interface StdinReadResult {
   streamingUsed?: boolean;
 }
 
+type SimpleParseResult = {
+  success: boolean;
+  data: JsonValue | null;
+  error: string | null;
+};
+
 /**
  * Read from stdin completely, then prepare for keyboard input
  */
@@ -57,7 +63,7 @@ export async function readStdinThenReinitialize(): Promise<StdinReadResult> {
     const strategy =
       PerformanceOptimizer.generateOptimizationStrategy(performanceProfile);
 
-    let parseResult: any;
+    let parseResult: SimpleParseResult;
     let streamingUsed = false;
 
     // Use streaming parser for large data
@@ -78,7 +84,7 @@ export async function readStdinThenReinitialize(): Promise<StdinReadResult> {
             success: true,
             data:
               streamResult.objects.length === 1
-                ? streamResult.objects[0]
+                ? (streamResult.objects[0] ?? null)
                 : streamResult.objects,
             error: null,
           };
@@ -125,8 +131,14 @@ async function readAllStdinData(): Promise<string> {
   return new Promise((resolve, reject) => {
     const chunks: Buffer[] = [];
     let hasEnded = false;
+    let timeoutId: NodeJS.Timeout | null = null;
 
     const onData = (chunk: Buffer) => {
+      // Cancel the "no data" timeout once we actually receive data
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+        timeoutId = null;
+      }
       chunks.push(chunk);
     };
 
@@ -151,6 +163,10 @@ async function readAllStdinData(): Promise<string> {
       process.stdin.removeListener("data", onData);
       process.stdin.removeListener("end", onEnd);
       process.stdin.removeListener("error", onError);
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+        timeoutId = null;
+      }
     };
 
     process.stdin.on("data", onData);
@@ -161,7 +177,7 @@ async function readAllStdinData(): Promise<string> {
     process.stdin.resume();
 
     // Set a timeout to prevent hanging if no data is available
-    setTimeout(() => {
+    timeoutId = setTimeout(() => {
       if (!hasEnded) {
         hasEnded = true;
         cleanup();
@@ -392,15 +408,8 @@ async function setupStdinForInkCompatibility(): Promise<boolean> {
     // Provide a working setRawMode function
     if (!process.stdin.setRawMode) {
       Object.defineProperty(process.stdin, "setRawMode", {
-        value: function (mode: boolean) {
-          try {
-            // Try to actually set raw mode if possible
-            if (this.isTTY && typeof this.setRawMode === "function") {
-              return this.setRawMode(mode);
-            }
-          } catch {
-            // Silently handle setRawMode errors
-          }
+        // Safe no-op to satisfy consumers expecting setRawMode
+        value: function (_mode: boolean) {
           return this;
         },
         writable: true,
@@ -510,7 +519,7 @@ export async function readFromFile(filePath: string): Promise<StdinReadResult> {
       };
     }
 
-    let parseResult: any;
+    let parseResult: SimpleParseResult;
     let streamingUsed = false;
 
     // Use streaming parser for large files
@@ -530,21 +539,41 @@ export async function readFromFile(filePath: string): Promise<StdinReadResult> {
             success: true,
             data:
               streamResult.objects.length === 1
-                ? streamResult.objects[0]
+                ? (streamResult.objects[0] ?? null)
                 : streamResult.objects,
             error: null,
           };
         } else {
-          // Fall back to traditional file reading on streaming errors
+          // Fall back to traditional file reading on streaming errors (only for reasonably small files)
+          if (performanceProfile.fileSize <= 10 * 1024 * 1024) {
+            // <=10MB
+            const fsPromises = await import("node:fs/promises");
+            const inputData = await fsPromises.readFile(filePath, "utf8");
+            parseResult = parseJsonWithValidation(inputData);
+          } else {
+            parseResult = {
+              success: false,
+              data: null,
+              error:
+                "Streaming parse failed and file is too large for safe in-memory fallback",
+            };
+          }
+        }
+      } catch (_error) {
+        // Fall back to traditional file reading (only for reasonably small files)
+        if (performanceProfile.fileSize <= 10 * 1024 * 1024) {
+          // <=10MB
           const fsPromises = await import("node:fs/promises");
           const inputData = await fsPromises.readFile(filePath, "utf8");
           parseResult = parseJsonWithValidation(inputData);
+        } else {
+          parseResult = {
+            success: false,
+            data: null,
+            error:
+              "File access failed and file is too large for safe in-memory fallback",
+          };
         }
-      } catch (_error) {
-        // Fall back to traditional file reading
-        const fsPromises = await import("node:fs/promises");
-        const inputData = await fsPromises.readFile(filePath, "utf8");
-        parseResult = parseJsonWithValidation(inputData);
       }
     } else {
       // Traditional file reading for smaller files

@@ -5,23 +5,14 @@
 
 import { parentPort } from "node:worker_threads";
 import type { JsonValue } from "@core/types";
-
-interface ProcessingContext {
-  index: number;
-  path: string[];
-  depth: number;
-}
+import type {
+  ProcessingContext,
+  ProcessingResult,
+} from "./incrementalProcessor";
 
 interface WorkerBatchItem {
   value: JsonValue;
   context: ProcessingContext;
-}
-
-interface ProcessingResult {
-  value: JsonValue;
-  metadata?: Record<string, any>;
-  success: boolean;
-  error?: string;
 }
 
 interface WorkerMessage {
