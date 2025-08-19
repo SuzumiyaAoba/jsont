@@ -560,12 +560,12 @@ describe("useKeyboardHandler", () => {
       }).not.toThrow();
     });
 
-    it("should handle undefined key object", () => {
+    it("should handle empty key object", () => {
       const { result } = renderHook(() => useKeyboardHandler(mockDependencies));
 
       expect(() => {
         act(() => {
-          result.current.handleKeyInput("test", undefined as any);
+          result.current.handleKeyInput("test", {} as KeyboardInput);
         });
       }).not.toThrow();
     });

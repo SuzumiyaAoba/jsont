@@ -6,13 +6,27 @@
 import { ReadStream } from "node:tty";
 import type { JsonValue } from "@core/types/index";
 import { parseJsonWithValidation } from "@features/json-rendering/utils/jsonProcessor";
+import {
+  PerformanceOptimizer,
+  type PerformanceProfile,
+} from "./streaming/performanceOptimizer";
 
 export interface StdinReadResult {
   success: boolean;
   data: JsonValue | null;
   error: string | null;
   canUseKeyboard: boolean;
+  /** Performance profile for optimization decisions */
+  performanceProfile?: PerformanceProfile;
+  /** Whether streaming parsing was used */
+  streamingUsed?: boolean;
 }
+
+type SimpleParseResult = {
+  success: boolean;
+  data: JsonValue | null;
+  error: string | null;
+};
 
 /**
  * Read from stdin completely, then prepare for keyboard input
@@ -42,8 +56,50 @@ export async function readStdinThenReinitialize(): Promise<StdinReadResult> {
       };
     }
 
-    // Parse the JSON
-    const parseResult = parseJsonWithValidation(inputData);
+    // Create performance profile for optimization
+    const dataSize = Buffer.byteLength(inputData, "utf8");
+    const performanceProfile =
+      await PerformanceOptimizer.createPerformanceProfile(undefined, dataSize);
+    const strategy =
+      PerformanceOptimizer.generateOptimizationStrategy(performanceProfile);
+
+    let parseResult: SimpleParseResult;
+    let streamingUsed = false;
+
+    // Use streaming parser for large data
+    if (strategy.useStreaming && dataSize > 1024 * 1024) {
+      // > 1MB
+      try {
+        const { Readable } = await import("node:stream");
+        const stream = Readable.from([inputData]);
+        const { parseJsonStreamWithCollection } = await import(
+          "./streaming/streamingJsonParser"
+        );
+        const streamResult = await parseJsonStreamWithCollection(stream);
+
+        if (streamResult.completed && streamResult.errors.length === 0) {
+          // Use streaming result if successful
+          streamingUsed = true;
+          parseResult = {
+            success: true,
+            data:
+              streamResult.objects.length === 1
+                ? (streamResult.objects[0] ?? null)
+                : streamResult.objects,
+            error: null,
+          };
+        } else {
+          // Fall back to traditional parsing on streaming errors
+          parseResult = parseJsonWithValidation(inputData);
+        }
+      } catch (_error) {
+        // Fall back to traditional parsing
+        parseResult = parseJsonWithValidation(inputData);
+      }
+    } else {
+      // Use traditional parsing for smaller data
+      parseResult = parseJsonWithValidation(inputData);
+    }
 
     // Now try to reinitialize stdin for keyboard input
     await reinitializeStdinForKeyboard();
@@ -53,6 +109,8 @@ export async function readStdinThenReinitialize(): Promise<StdinReadResult> {
       data: parseResult.data,
       error: parseResult.error,
       canUseKeyboard: true, // Force enable keyboard for pipe input - let AppService handle final validation
+      performanceProfile,
+      streamingUsed,
     };
   } catch (error) {
     return {
@@ -61,6 +119,7 @@ export async function readStdinThenReinitialize(): Promise<StdinReadResult> {
       error:
         error instanceof Error ? error.message : "Unknown error reading stdin",
       canUseKeyboard: false,
+      streamingUsed: false,
     };
   }
 }
@@ -72,8 +131,14 @@ async function readAllStdinData(): Promise<string> {
   return new Promise((resolve, reject) => {
     const chunks: Buffer[] = [];
     let hasEnded = false;
+    let timeoutId: NodeJS.Timeout | null = null;
 
     const onData = (chunk: Buffer) => {
+      // Cancel the "no data" timeout once we actually receive data
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+        timeoutId = null;
+      }
       chunks.push(chunk);
     };
 
@@ -98,6 +163,10 @@ async function readAllStdinData(): Promise<string> {
       process.stdin.removeListener("data", onData);
       process.stdin.removeListener("end", onEnd);
       process.stdin.removeListener("error", onError);
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+        timeoutId = null;
+      }
     };
 
     process.stdin.on("data", onData);
@@ -108,7 +177,7 @@ async function readAllStdinData(): Promise<string> {
     process.stdin.resume();
 
     // Set a timeout to prevent hanging if no data is available
-    setTimeout(() => {
+    timeoutId = setTimeout(() => {
       if (!hasEnded) {
         hasEnded = true;
         cleanup();
@@ -339,15 +408,8 @@ async function setupStdinForInkCompatibility(): Promise<boolean> {
     // Provide a working setRawMode function
     if (!process.stdin.setRawMode) {
       Object.defineProperty(process.stdin, "setRawMode", {
-        value: function (mode: boolean) {
-          try {
-            // Try to actually set raw mode if possible
-            if (this.isTTY && typeof this.setRawMode === "function") {
-              return this.setRawMode(mode);
-            }
-          } catch {
-            // Silently handle setRawMode errors
-          }
+        // Safe no-op to satisfy consumers expecting setRawMode
+        value: function (_mode: boolean) {
           return this;
         },
         writable: true,
@@ -438,19 +500,99 @@ async function setupMinimalStdin(): Promise<boolean> {
  */
 export async function readFromFile(filePath: string): Promise<StdinReadResult> {
   try {
-    const fs = await import("node:fs/promises");
-    const inputData = await fs.readFile(filePath, "utf8");
+    // Create performance profile for the file
+    const performanceProfile =
+      await PerformanceOptimizer.createPerformanceProfile(filePath);
+    const strategy =
+      PerformanceOptimizer.generateOptimizationStrategy(performanceProfile);
 
-    if (!inputData.trim()) {
+    if (
+      !PerformanceOptimizer.canHandleProcessing(performanceProfile, strategy)
+    ) {
       return {
         success: false,
         data: null,
-        error: `File '${filePath}' is empty or contains only whitespace`,
-        canUseKeyboard: true, // File mode, stdin should be available for keyboard
+        error: `File '${filePath}' is too large to process with available memory. Consider using a machine with more RAM.`,
+        canUseKeyboard: true,
+        performanceProfile,
+        streamingUsed: false,
       };
     }
 
-    const parseResult = parseJsonWithValidation(inputData);
+    let parseResult: SimpleParseResult;
+    let streamingUsed = false;
+
+    // Use streaming parser for large files
+    if (strategy.useStreaming) {
+      try {
+        const fs = await import("node:fs");
+        const stream = fs.createReadStream(filePath, { encoding: "utf8" });
+        const { parseJsonStreamWithCollection } = await import(
+          "./streaming/streamingJsonParser"
+        );
+        const streamResult = await parseJsonStreamWithCollection(stream);
+
+        if (streamResult.completed && streamResult.errors.length === 0) {
+          // Use streaming result if successful
+          streamingUsed = true;
+          parseResult = {
+            success: true,
+            data:
+              streamResult.objects.length === 1
+                ? (streamResult.objects[0] ?? null)
+                : streamResult.objects,
+            error: null,
+          };
+        } else {
+          // Fall back to traditional file reading on streaming errors (only for reasonably small files)
+          if (performanceProfile.fileSize <= 10 * 1024 * 1024) {
+            // <=10MB
+            const fsPromises = await import("node:fs/promises");
+            const inputData = await fsPromises.readFile(filePath, "utf8");
+            parseResult = parseJsonWithValidation(inputData);
+          } else {
+            parseResult = {
+              success: false,
+              data: null,
+              error:
+                "Streaming parse failed and file is too large for safe in-memory fallback",
+            };
+          }
+        }
+      } catch (_error) {
+        // Fall back to traditional file reading (only for reasonably small files)
+        if (performanceProfile.fileSize <= 10 * 1024 * 1024) {
+          // <=10MB
+          const fsPromises = await import("node:fs/promises");
+          const inputData = await fsPromises.readFile(filePath, "utf8");
+          parseResult = parseJsonWithValidation(inputData);
+        } else {
+          parseResult = {
+            success: false,
+            data: null,
+            error:
+              "File access failed and file is too large for safe in-memory fallback",
+          };
+        }
+      }
+    } else {
+      // Traditional file reading for smaller files
+      const fsPromises = await import("node:fs/promises");
+      const inputData = await fsPromises.readFile(filePath, "utf8");
+
+      if (!inputData.trim()) {
+        return {
+          success: false,
+          data: null,
+          error: `File '${filePath}' is empty or contains only whitespace`,
+          canUseKeyboard: true, // File mode, stdin should be available for keyboard
+          performanceProfile,
+          streamingUsed: false,
+        };
+      }
+
+      parseResult = parseJsonWithValidation(inputData);
+    }
 
     // For file input, we still need to ensure stdin is properly set up for Ink
     // Even though we didn't consume stdin, it might need TTY setup for useInput to work
@@ -461,6 +603,8 @@ export async function readFromFile(filePath: string): Promise<StdinReadResult> {
       data: parseResult.data,
       error: parseResult.error,
       canUseKeyboard: keyboardAvailable, // Use actual keyboard setup result
+      performanceProfile,
+      streamingUsed,
     };
   } catch (error) {
     return {
@@ -471,6 +615,7 @@ export async function readFromFile(filePath: string): Promise<StdinReadResult> {
           ? `Failed to read file '${filePath}': ${error.message}`
           : `Unknown error reading file '${filePath}'`,
       canUseKeyboard: true, // Always enable keyboard for file input
+      streamingUsed: false,
     };
   }
 }
