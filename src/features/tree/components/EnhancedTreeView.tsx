@@ -20,6 +20,7 @@ import {
 import {
   getTreeLineText,
   renderTreeLines,
+  tokenizeTreeLine,
 } from "@features/tree/utils/treeRenderer";
 import { usePropertyDetails } from "@store/hooks";
 import { Box, Text } from "ink";
@@ -347,13 +348,38 @@ export function EnhancedTreeView({
                     </Text>
                   </>
                 )}
-                {isSelected ? (
-                  <Text backgroundColor="blue" color="white" bold>
-                    {lineText}
-                  </Text>
-                ) : (
-                  <Text color={isMatched ? "yellow" : "gray"}>{lineText}</Text>
-                )}
+                {/* Render with syntax highlighting */}
+                {(() => {
+                  const tokens = tokenizeTreeLine(line, displayOptions);
+
+                  if (isSelected) {
+                    return (
+                      <Text backgroundColor="blue" color="white" bold>
+                        {tokens.map((token, tokenIndex) => (
+                          <Text
+                            key={`${line.id}-${tokenIndex}-${token.text}`}
+                            color="white"
+                          >
+                            {token.text}
+                          </Text>
+                        ))}
+                      </Text>
+                    );
+                  } else {
+                    return (
+                      <Text>
+                        {tokens.map((token, tokenIndex) => (
+                          <Text
+                            key={`${line.id}-${tokenIndex}-${token.text}`}
+                            color={isMatched ? "yellow" : token.color}
+                          >
+                            {token.text}
+                          </Text>
+                        ))}
+                      </Text>
+                    );
+                  }
+                })()}
               </Box>
             );
           })

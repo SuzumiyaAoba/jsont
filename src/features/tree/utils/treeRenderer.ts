@@ -3,6 +3,7 @@
  */
 
 import type { JsonValue } from "@core/types/index";
+import type { HighlightToken } from "@features/json-rendering/utils/syntaxHighlight";
 import type {
   TreeDisplayOptions,
   TreeLine,
@@ -215,6 +216,131 @@ export function getTreeLineText(
   }
 
   return line.prefix + displayText;
+}
+
+/**
+ * Tokenize tree line text for syntax highlighting
+ */
+export function tokenizeTreeLine(
+  line: TreeLine,
+  options?: TreeDisplayOptions,
+): HighlightToken[] {
+  const tokens: HighlightToken[] = [];
+
+  // Add prefix (tree structure) in gray
+  if (line.prefix) {
+    tokens.push({ text: line.prefix, color: "gray" });
+  }
+
+  if (line.type === "primitive") {
+    // For primitive values, show key and value with different colors
+    if (line.key !== null && line.key !== undefined && line.key !== "") {
+      // Key in cyan/blue
+      tokens.push({ text: line.key, color: "cyan" });
+      tokens.push({ text: ": ", color: "white" });
+
+      // Value with appropriate color based on original value type and display value
+      const value = line.value || "";
+      const originalValue = line.originalValue;
+      let valueColor = "white";
+
+      // Determine color based on original value type, not the potentially truncated display value
+      if (originalValue === null) {
+        valueColor = "gray";
+      } else if (typeof originalValue === "boolean") {
+        valueColor = "yellow";
+      } else if (typeof originalValue === "number") {
+        valueColor = "magenta";
+      } else if (typeof originalValue === "string") {
+        valueColor = "green";
+      } else {
+        // Fallback: try to infer from display value
+        if (value === "null") {
+          valueColor = "gray";
+        } else if (value === "true" || value === "false") {
+          valueColor = "yellow";
+        } else if (/^-?\d+(\.\d+)?$/.test(value)) {
+          valueColor = "magenta";
+        } else if (
+          value.startsWith('"') &&
+          (value.endsWith('"') || value.endsWith("..."))
+        ) {
+          // Handle truncated strings that end with ...
+          valueColor = "green";
+        }
+      }
+
+      tokens.push({ text: value, color: valueColor });
+    } else {
+      // Root primitive value
+      const value = line.value || "";
+      const originalValue = line.originalValue;
+      let valueColor = "white";
+
+      // Determine color based on original value type
+      if (originalValue === null) {
+        valueColor = "gray";
+      } else if (typeof originalValue === "boolean") {
+        valueColor = "yellow";
+      } else if (typeof originalValue === "number") {
+        valueColor = "magenta";
+      } else if (typeof originalValue === "string") {
+        valueColor = "green";
+      } else {
+        // Fallback: try to infer from display value
+        if (value === "null") {
+          valueColor = "gray";
+        } else if (value === "true" || value === "false") {
+          valueColor = "yellow";
+        } else if (/^-?\d+(\.\d+)?$/.test(value)) {
+          valueColor = "magenta";
+        } else if (
+          value.startsWith('"') &&
+          (value.endsWith('"') || value.endsWith("..."))
+        ) {
+          valueColor = "green";
+        }
+      }
+
+      tokens.push({ text: value, color: valueColor });
+    }
+  } else {
+    // For objects and arrays, show key name in cyan/blue
+    if (line.key !== null && line.key !== undefined && line.key !== "") {
+      tokens.push({ text: line.key, color: "cyan" });
+    } else {
+      // Root object/array
+      if (line.type === "object") {
+        tokens.push({ text: ".", color: "cyan" });
+      } else if (line.type === "array") {
+        // For arrays, show the array length
+        const arrayValue = line.originalValue;
+        if (Array.isArray(arrayValue)) {
+          tokens.push({ text: `${arrayValue.length}:`, color: "cyan" });
+        } else {
+          tokens.push({ text: "1:", color: "cyan" });
+        }
+      } else {
+        tokens.push({ text: "1:", color: "cyan" });
+      }
+    }
+
+    // Add collapsed indicators in gray
+    if (line.hasChildren && !line.isExpanded) {
+      if (line.type === "object") {
+        tokens.push({ text: " {...}", color: "gray" });
+      } else if (line.type === "array") {
+        tokens.push({ text: " [...]", color: "gray" });
+      }
+    }
+  }
+
+  // Add schema type if enabled in gray
+  if (options?.showSchemaTypes && line.schemaType) {
+    tokens.push({ text: ` <${line.schemaType}>`, color: "gray" });
+  }
+
+  return tokens;
 }
 
 /**
