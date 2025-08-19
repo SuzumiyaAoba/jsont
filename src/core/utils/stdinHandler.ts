@@ -10,7 +10,6 @@ import {
   PerformanceOptimizer,
   type PerformanceProfile,
 } from "./streaming/performanceOptimizer";
-import { parseJsonStream } from "./streaming/streamingJsonParser";
 
 export interface StdinReadResult {
   success: boolean;
@@ -67,18 +66,27 @@ export async function readStdinThenReinitialize(): Promise<StdinReadResult> {
       try {
         const { Readable } = await import("node:stream");
         const stream = Readable.from([inputData]);
-        const streamResult = await parseJsonStream(stream);
+        const { parseJsonStreamWithCollection } = await import(
+          "./streaming/streamingJsonParser"
+        );
+        const streamResult = await parseJsonStreamWithCollection(stream);
 
         if (streamResult.completed && streamResult.errors.length === 0) {
-          // For streaming, we need to collect the parsed data
-          // Since streaming emits objects via events, we'll fall back to traditional parsing
-          // but mark that streaming was attempted
+          // Use streaming result if successful
           streamingUsed = true;
+          parseResult = {
+            success: true,
+            data:
+              streamResult.objects.length === 1
+                ? streamResult.objects[0]
+                : streamResult.objects,
+            error: null,
+          };
+        } else {
+          // Fall back to traditional parsing on streaming errors
+          parseResult = parseJsonWithValidation(inputData);
         }
-
-        // Fall back to traditional parsing for now
-        parseResult = parseJsonWithValidation(inputData);
-      } catch (error) {
+      } catch (_error) {
         // Fall back to traditional parsing
         parseResult = parseJsonWithValidation(inputData);
       }
@@ -510,34 +518,52 @@ export async function readFromFile(filePath: string): Promise<StdinReadResult> {
       try {
         const fs = await import("node:fs");
         const stream = fs.createReadStream(filePath, { encoding: "utf8" });
-        const streamResult = await parseJsonStream(stream);
+        const { parseJsonStreamWithCollection } = await import(
+          "./streaming/streamingJsonParser"
+        );
+        const streamResult = await parseJsonStreamWithCollection(stream);
 
         if (streamResult.completed && streamResult.errors.length === 0) {
+          // Use streaming result if successful
           streamingUsed = true;
-          // For now, fall back to traditional parsing but mark streaming as used
-          // In a full implementation, we'd collect objects from stream events
+          parseResult = {
+            success: true,
+            data:
+              streamResult.objects.length === 1
+                ? streamResult.objects[0]
+                : streamResult.objects,
+            error: null,
+          };
+        } else {
+          // Fall back to traditional file reading on streaming errors
+          const fsPromises = await import("node:fs/promises");
+          const inputData = await fsPromises.readFile(filePath, "utf8");
+          parseResult = parseJsonWithValidation(inputData);
         }
-      } catch (error) {
+      } catch (_error) {
         // Fall back to traditional file reading
+        const fsPromises = await import("node:fs/promises");
+        const inputData = await fsPromises.readFile(filePath, "utf8");
+        parseResult = parseJsonWithValidation(inputData);
       }
+    } else {
+      // Traditional file reading for smaller files
+      const fsPromises = await import("node:fs/promises");
+      const inputData = await fsPromises.readFile(filePath, "utf8");
+
+      if (!inputData.trim()) {
+        return {
+          success: false,
+          data: null,
+          error: `File '${filePath}' is empty or contains only whitespace`,
+          canUseKeyboard: true, // File mode, stdin should be available for keyboard
+          performanceProfile,
+          streamingUsed: false,
+        };
+      }
+
+      parseResult = parseJsonWithValidation(inputData);
     }
-
-    // Traditional file reading (or fallback)
-    const fs = await import("node:fs/promises");
-    const inputData = await fs.readFile(filePath, "utf8");
-
-    if (!inputData.trim()) {
-      return {
-        success: false,
-        data: null,
-        error: `File '${filePath}' is empty or contains only whitespace`,
-        canUseKeyboard: true, // File mode, stdin should be available for keyboard
-        performanceProfile,
-        streamingUsed: false,
-      };
-    }
-
-    parseResult = parseJsonWithValidation(inputData);
 
     // For file input, we still need to ensure stdin is properly set up for Ink
     // Even though we didn't consume stdin, it might need TTY setup for useInput to work

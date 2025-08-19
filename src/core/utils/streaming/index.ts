@@ -17,6 +17,7 @@ export {
   type ParseProgress,
   parseJsonStream,
   parseJsonStreamFromFile,
+  parseJsonStreamWithCollection,
   StreamingJsonParser,
   type StreamingParseOptions,
   type StreamingParseResult,

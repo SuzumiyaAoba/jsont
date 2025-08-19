@@ -161,8 +161,41 @@ describe("StreamingJsonParser", () => {
       const data = '{"chunked": "data", "numbers": [1, 2, 3, 4, 5]}';
       const chunks = [data.slice(0, 10), data.slice(10, 25), data.slice(25)];
 
+      console.log("Original data:", data);
+      console.log("Chunks:", chunks);
+
+      const chunkedParser = new StreamingJsonParser();
+      let objectCount = 0;
+      let arrayCount = 0;
+      let valueCount = 0;
+
+      chunkedParser.on("object", (obj) => {
+        console.log("Object emitted:", obj);
+        objectCount++;
+      });
+
+      chunkedParser.on("array", (arr) => {
+        console.log("Array emitted:", arr);
+        arrayCount++;
+      });
+
+      chunkedParser.on("value", (val) => {
+        console.log("Value emitted:", val);
+        valueCount++;
+      });
+
       const stream = Readable.from(chunks);
-      const result = await parser.parseStream(stream);
+      const result = await chunkedParser.parseStream(stream);
+
+      console.log("Parse result:", JSON.stringify(result, null, 2));
+      console.log(
+        "Event counts - objects:",
+        objectCount,
+        "arrays:",
+        arrayCount,
+        "values:",
+        valueCount,
+      );
 
       expect(result.completed).toBe(true);
       expect(result.errors).toHaveLength(0);

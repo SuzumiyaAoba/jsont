@@ -92,7 +92,7 @@ export class PerformanceOptimizer {
     filePath?: string,
     dataSize?: number,
   ): Promise<PerformanceProfile> {
-    const systemInfo = PerformanceOptimizer.getSystemInfo();
+    const systemInfo = await PerformanceOptimizer.getSystemInfo();
 
     let fileSize = dataSize || 0;
 
@@ -300,14 +300,7 @@ export class PerformanceOptimizer {
       batchDelay: strategy.useWorkerThreads ? 5 : 10,
       useWorkerThreads: strategy.useWorkerThreads,
       maxWorkers: strategy.useWorkerThreads
-        ? Math.min(
-            4,
-            Math.floor(
-              process.env["UV_THREADPOOL_SIZE"]
-                ? parseInt(process.env["UV_THREADPOOL_SIZE"])
-                : 4,
-            ),
-          )
+        ? Math.min(4, parseInt(process.env["UV_THREADPOOL_SIZE"] || "4", 10))
         : 1,
       enablePartialResults: true,
     };
@@ -325,11 +318,11 @@ export class PerformanceOptimizer {
   /**
    * Get system information
    */
-  private static getSystemInfo(): {
+  private static async getSystemInfo(): Promise<{
     availableMemory: number;
     cpuCores: number;
-  } {
-    const os = require("os");
+  }> {
+    const os = await import("node:os");
 
     return {
       availableMemory: os.freemem(),
@@ -375,9 +368,12 @@ export class PerformanceOptimizer {
    */
   static estimateMemoryUsage(data: JsonValue): number {
     const jsonString = JSON.stringify(data);
-    // Rough estimate: JSON string size * 3 (for parsing overhead) + reasonable base
-    const baseOverhead = Math.max(1024, jsonString.length * 0.1); // Minimum 1KB or 10% of string size
-    return jsonString.length * 3 + baseOverhead;
+    // More accurate estimate accounting for object overhead
+    // Base: string size * 2 for Unicode + object overhead (~4x for nested objects)
+    const objectCount = (jsonString.match(/[{}[\]]/g) || []).length / 2;
+    const stringOverhead = jsonString.length * 2;
+    const objectOverhead = objectCount * 100; // ~100 bytes per object
+    return stringOverhead + objectOverhead + 1024 * 1024;
   }
 
   /**

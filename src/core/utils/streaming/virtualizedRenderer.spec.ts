@@ -63,6 +63,7 @@ describe("VirtualizedJsonRenderer", () => {
       primitives.forEach((data) => {
         renderer.initialize(data);
         const window = renderer.getCurrentWindow();
+        expect(window).toBeDefined();
         expect(window.totalItems).toBe(1);
       });
     });
@@ -138,9 +139,13 @@ describe("VirtualizedJsonRenderer", () => {
 
       // Find an expandable item
       const window = renderer.getCurrentWindow();
-      rootItem = window.visibleItems.find(
+      const foundItem = window.visibleItems.find(
         (item) => item.type === "object" && item.key === "expandable",
-      )!;
+      );
+      if (!foundItem) {
+        throw new Error("Could not find expandable item in test setup");
+      }
+      rootItem = foundItem;
     });
 
     it("should toggle expansion of objects", () => {

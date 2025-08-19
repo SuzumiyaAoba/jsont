@@ -100,7 +100,7 @@ export class IncrementalJsonProcessor extends EventEmitter {
       useWorkerThreads: options.useWorkerThreads ?? false, // Disable by default to avoid complexity
       maxWorkers:
         options.maxWorkers ??
-        Math.max(1, Math.floor(require("os").cpus().length / 2)),
+        Math.max(1, Math.floor(require("node:os").cpus().length / 2)),
       enablePartialResults: options.enablePartialResults ?? true,
       processor: options.processor ?? this.defaultProcessor,
       enableDeepProcessing: options.enableDeepProcessing ?? true,
@@ -200,12 +200,94 @@ export class IncrementalJsonProcessor extends EventEmitter {
   private async processWithWorkers(
     items: Array<{ value: JsonValue; context: ProcessingContext }>,
   ): Promise<ProcessingResult[]> {
-    // For now, fall back to sequential processing to avoid worker complexity
-    // This ensures tests pass while we debug worker thread issues
-    console.warn(
-      "Worker threads disabled temporarily - using sequential processing",
-    );
-    return this.processSequentially(items);
+    try {
+      const { Worker } = await import("node:worker_threads");
+      const path = await import("node:path");
+      const { fileURLToPath } = await import("node:url");
+
+      const maxWorkers = this.options.maxWorkers ?? 1;
+      const batches = this.createBatches(items);
+      const results: ProcessingResult[] = [];
+      const workers: Worker[] = [];
+
+      // Get the worker script path
+      const __filename = fileURLToPath(import.meta.url);
+      const __dirname = path.dirname(__filename);
+      const workerScriptPath = path.join(
+        __dirname,
+        "incrementalProcessor.worker.js",
+      );
+
+      // Create worker pool
+      for (let i = 0; i < Math.min(maxWorkers, batches.length); i++) {
+        const worker = new Worker(workerScriptPath);
+        workers.push(worker);
+      }
+
+      // Process batches with workers
+      let batchIndex = 0;
+      const workerPromises: Promise<ProcessingResult[]>[] = [];
+
+      for (let i = 0; i < workers.length && batchIndex < batches.length; i++) {
+        const worker = workers[i];
+        if (!worker) continue;
+
+        const batch = batches[batchIndex++];
+
+        const workerPromise = new Promise<ProcessingResult[]>(
+          (resolve, reject) => {
+            const timeout = setTimeout(() => {
+              reject(new Error("Worker timeout"));
+            }, 5000); // 5 second timeout for tests
+
+            worker.once("message", (result: any) => {
+              clearTimeout(timeout);
+              if (result.success) {
+                resolve(result.results);
+              } else {
+                reject(new Error(result.error));
+              }
+            });
+
+            worker.once("error", (error) => {
+              clearTimeout(timeout);
+              reject(error);
+            });
+
+            worker.postMessage({ batch, workerIndex: i });
+          },
+        );
+
+        workerPromises.push(workerPromise);
+      }
+
+      // Wait for all workers to complete
+      const workerResults = await Promise.allSettled(workerPromises);
+
+      for (const result of workerResults) {
+        if (result.status === "fulfilled") {
+          results.push(...result.value);
+        } else {
+          // Handle worker failure by falling back to sequential processing
+          console.warn(
+            "Worker failed, falling back to sequential processing:",
+            result.reason,
+          );
+          return this.processSequentially(items);
+        }
+      }
+
+      // Clean up workers
+      await Promise.all(workers.map((worker) => worker.terminate()));
+
+      return results;
+    } catch (error) {
+      console.warn(
+        "Worker thread error, falling back to sequential processing:",
+        error,
+      );
+      return this.processSequentially(items);
+    }
   }
 
   /**

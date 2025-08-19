@@ -118,16 +118,17 @@ export class StreamingJsonParser extends EventEmitter {
     this.startTime = performance.now();
 
     return new Promise((resolve, reject) => {
-      const chunks: Buffer[] = [];
-
       stream.on("data", (chunk: Buffer | string) => {
         try {
-          // Convert string to Buffer if needed
-          const bufferChunk = Buffer.isBuffer(chunk)
-            ? chunk
-            : Buffer.from(String(chunk), "utf8");
-          chunks.push(bufferChunk);
-          this.bytesProcessed += bufferChunk.length;
+          // Convert to string if needed and process immediately for streaming
+          const chunkString = Buffer.isBuffer(chunk)
+            ? chunk.toString("utf8")
+            : String(chunk);
+
+          this.bytesProcessed += Buffer.byteLength(chunkString, "utf8");
+
+          // Process chunk immediately for true streaming behavior
+          this.processChunk(chunkString);
 
           this.updateProgress();
         } catch (error) {
@@ -137,12 +138,7 @@ export class StreamingJsonParser extends EventEmitter {
 
       stream.on("end", () => {
         try {
-          // Process any remaining chunks
-          if (chunks.length > 0) {
-            this.processBufferedChunks(chunks);
-          }
-
-          // Process any remaining buffer content
+          // Finalize parsing - no need to process chunks as they were already processed
           this.finalizeParsing();
           resolve(this.getResult());
         } catch (error) {
@@ -191,6 +187,27 @@ export class StreamingJsonParser extends EventEmitter {
   }
 
   /**
+   * Public method to process a chunk of data (for Transform stream usage)
+   */
+  public processChunkPublic(chunk: string): void {
+    this.processChunk(chunk);
+  }
+
+  /**
+   * Public method to finalize parsing (for Transform stream usage)
+   */
+  public finalizeParsingPublic(): void {
+    this.finalizeParsing();
+  }
+
+  /**
+   * Public method to get parsing result (for Transform stream usage)
+   */
+  public getResultPublic(): StreamingParseResult {
+    return this.getResult();
+  }
+
+  /**
    * Reset parser state
    */
   private reset(): void {
@@ -235,6 +252,16 @@ export class StreamingJsonParser extends EventEmitter {
           this.processToken(token);
         }
       } catch (error) {
+        // Check if this is an incomplete token error (like unterminated string)
+        // that might be completed in the next chunk
+        const errorMessage =
+          error instanceof Error ? error.message : String(error);
+        if (errorMessage === "Unterminated string" && this.position > 0) {
+          // This might be a string that spans across chunks
+          // Stop processing and wait for more data
+          break;
+        }
+
         this.errors.push(
           `Parse error at line ${this.line}, column ${this.column}: ${error}`,
         );
@@ -246,15 +273,6 @@ export class StreamingJsonParser extends EventEmitter {
 
     // Clean up processed buffer to prevent memory bloat
     this.cleanupBuffer();
-  }
-
-  /**
-   * Process buffered chunks efficiently
-   */
-  private processBufferedChunks(chunks: Buffer[]): void {
-    const combinedBuffer = Buffer.concat(chunks);
-    const chunk = combinedBuffer.toString("utf8");
-    this.processChunk(chunk);
   }
 
   /**
@@ -781,6 +799,39 @@ export async function parseJsonStream(
 }
 
 /**
+ * Parse JSON stream and collect all emitted objects
+ * Returns the complete result with collected objects for traditional usage
+ */
+export async function parseJsonStreamWithCollection(
+  stream: NodeJS.ReadableStream,
+  options?: StreamingParseOptions,
+): Promise<StreamingParseResult> {
+  const parser = new StreamingJsonParser(options);
+  const collectedObjects: JsonValue[] = [];
+
+  // Collect objects as they are emitted
+  parser.on("object", (obj: JsonValue) => {
+    collectedObjects.push(obj);
+  });
+
+  parser.on("array", (arr: JsonValue[]) => {
+    collectedObjects.push(arr);
+  });
+
+  parser.on("value", (value: JsonValue) => {
+    collectedObjects.push(value);
+  });
+
+  const result = await parser.parseStream(stream);
+
+  // Return result with collected objects
+  return {
+    ...result,
+    objects: collectedObjects,
+  };
+}
+
+/**
  * Transform stream for processing JSON objects as they are parsed
  */
 export class JsonObjectTransform extends Transform {
@@ -812,7 +863,7 @@ export class JsonObjectTransform extends Transform {
       const chunkString = Buffer.isBuffer(chunk)
         ? chunk.toString("utf8")
         : String(chunk);
-      this.parser["processChunk"](chunkString);
+      this.parser.processChunkPublic(chunkString);
       callback();
     } catch (error) {
       callback(error instanceof Error ? error : new Error(String(error)));
@@ -821,10 +872,10 @@ export class JsonObjectTransform extends Transform {
 
   override _flush(callback: (error?: Error) => void): void {
     try {
-      this.parser["finalizeParsing"]();
+      this.parser.finalizeParsingPublic();
 
       // Check if parser has errors and emit them
-      const result = this.parser["getResult"]();
+      const result = this.parser.getResultPublic();
       if (result.errors.length > 0) {
         const error = new Error(`JSON parsing failed: ${result.errors[0]}`);
         callback(error instanceof Error ? error : new Error(String(error)));

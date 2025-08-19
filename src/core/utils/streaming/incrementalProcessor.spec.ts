@@ -26,6 +26,7 @@ describe("IncrementalJsonProcessor", () => {
       const results = await processor.processData(data);
 
       expect(results).toHaveLength(1);
+      expect(results[0]).toBeDefined();
       expect(results[0]?.success).toBe(true);
       expect(results[0]?.value).toEqual(data);
     });
@@ -59,6 +60,7 @@ describe("IncrementalJsonProcessor", () => {
       for (const primitive of primitives) {
         const results = await processor.processData(primitive);
         expect(results).toHaveLength(1);
+        expect(results[0]).toBeDefined();
         expect(results[0]?.success).toBe(true);
         expect(results[0]?.value).toBe(primitive);
       }
@@ -252,6 +254,7 @@ describe("IncrementalJsonProcessor", () => {
       await processor.processData(data);
 
       expect(progressEvents.length).toBeGreaterThan(0);
+      expect(progressEvents[progressEvents.length - 1]).toBeDefined();
       expect(progressEvents[progressEvents.length - 1]?.progress).toBe(100);
     });
 
