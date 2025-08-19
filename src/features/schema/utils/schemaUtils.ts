@@ -101,9 +101,6 @@ function inferType(value: JsonValue): JsonSchemaProperty {
       schema.format = "uuid";
     }
 
-    schema.minLength = value.length;
-    schema.maxLength = value.length;
-
     return schema;
   }
 
