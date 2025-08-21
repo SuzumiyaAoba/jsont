@@ -17,8 +17,6 @@ export interface HelpViewerProps {
   height?: number;
   /** Width of the help viewer in characters */
   width?: number;
-  /** Height (in terminal rows) of the property details area reserved below the help viewer. Must be >= 0. */
-  propertyDetailsHeight?: number;
 }
 
 export function HelpViewer({
@@ -26,19 +24,11 @@ export function HelpViewer({
   keybindings,
   height = 20,
   width = 80,
-  propertyDetailsHeight = 0,
 }: HelpViewerProps) {
   const helpContent = useMemo(
     () => getHelpContentForMode(mode, keybindings).sections,
     [mode, keybindings],
   );
-
-  // Sanitize input to prevent negative values
-  const reservedBottom = Math.max(0, Math.floor(propertyDetailsHeight));
-
-  // Layout constants
-  const contentPadding = 4;
-  const minContentHeight = 10;
 
   return (
     <Box
@@ -47,16 +37,12 @@ export function HelpViewer({
       height={height}
       justifyContent="center"
       alignItems="center"
-      paddingBottom={reservedBottom}
     >
       {/* Help content with border frame */}
       <Box
         flexDirection="column"
-        width={Math.min(width - contentPadding, 76)}
-        height={Math.max(
-          height - reservedBottom - contentPadding,
-          minContentHeight,
-        )}
+        width={Math.min(width - 4, 76)}
+        height={Math.max(height - 4, 10)}
         borderStyle="double"
         borderColor="cyan"
         paddingX={2}
