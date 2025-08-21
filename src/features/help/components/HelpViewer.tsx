@@ -33,24 +33,23 @@ export function HelpViewer({
     [mode, keybindings],
   );
 
-  // Calculate effective height considering property details area
-  const effectiveHeight = height - propertyDetailsHeight;
+  // Calculate the available height for the help content
+  // This is the space above the property details area
+  const availableHeight = height - propertyDetailsHeight;
 
   return (
     <Box
       flexDirection="column"
       width={width}
-      height={height}
+      height={availableHeight}
       justifyContent="center"
       alignItems="center"
-      // Adjust positioning to account for property details at the bottom
-      marginBottom={propertyDetailsHeight > 0 ? propertyDetailsHeight : 0}
     >
       {/* Help content with border frame */}
       <Box
         flexDirection="column"
         width={Math.min(width - 4, 76)}
-        maxHeight={Math.max(effectiveHeight - 4, 10)}
+        maxHeight={Math.max(availableHeight - 4, 10)}
         borderStyle="double"
         borderColor="cyan"
         paddingX={2}
