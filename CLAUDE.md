@@ -248,6 +248,25 @@ The application implements sophisticated stdin processing to enable keyboard nav
 - **Node Options**: `NODE_OPTIONS="--max-old-space-size=6144"` for heap size control
 - **Build Pipeline**: Performance regression detection with automated test exclusions
 
+### CI Test Exclusions
+The following test categories are excluded in CI for memory optimization:
+```typescript
+// Excluded in vitest.config.ci.ts
+exclude: [
+  "src/performance.spec.ts",           // Performance benchmarks
+  "src/error-scenarios.spec.ts",       // Error handling scenarios  
+  "src/json-processing.spec.ts",       // Large JSON processing
+  "src/core/utils/stdinHandler.spec.ts", // stdin processing
+  "src/library-integration.spec.ts",   // Third-party integrations
+  "src/integration/**",                // Full integration tests
+  "src/core/utils/dataConverters/SqlConverter.spec.ts", // SQL processing
+  "src/core/services/appService.spec.ts", // App service tests
+  "src/features/json-rendering/utils/syntaxHighlight.spec.ts", // Syntax highlighting
+  "src/core/utils/processManager.spec.ts", // Process management
+  "src/features/collapsible/utils/collapsibleJson.spec.ts", // Large data collapsing
+]
+```
+
 ## Configuration System
 
 ### YAML Configuration
@@ -351,6 +370,55 @@ The project has plans for **UI separation architecture** to enable future GUI (W
 - **Goal**: Enable multiple UI frontends (current TUI + future Web UI) sharing core business logic
 - **Status**: Architecture planning complete, implementation pending
 
+## Modal and UI State Management
+
+### Modal Priority System
+The application uses a layered modal system managed by `ModalManager`:
+- **Highest Priority**: Debug Log Viewer (fullscreen overlay)
+- **High Priority**: Settings Viewer, Export Dialogs
+- **Medium Priority**: Help Viewer (conditional rendering based on other modals)
+- **Lowest Priority**: Main content (hidden when high-priority modals are active)
+
+### UI State Coordination
+- **Help Visibility**: When `ui.helpVisible` is true, Property Details are automatically hidden to prevent layout conflicts
+- **Modal Stacking**: Higher priority modals automatically suppress lower priority ones
+- **Keyboard Input**: Only active when no blocking modals are visible
+
+### Critical UI Patterns
+```typescript
+// Property Details conditional rendering pattern
+{(currentMode === "tree" || currentMode === "collapsible") &&
+ !ui.helpVisible && (
+  <PropertyDetailsDisplay ... />
+)}
+
+// Modal priority rendering pattern  
+{!debugLogViewerVisible && 
+ !settingsVisible && 
+ !exportDialog.isVisible && 
+ children}
+```
+
+## Development Workflow Patterns
+
+### Adding New Modal Components
+1. Add modal state to appropriate Jotai atom (usually `uiAtoms`)
+2. Register modal in `ModalManager` with correct priority level
+3. Ensure proper keyboard input blocking in `KeyboardManager`
+4. Test modal stacking behavior with existing modals
+
+### Debugging Layout Issues
+- Use Debug Mode (`D` key) to inspect terminal calculations
+- Check `useTerminalCalculations` for height calculations
+- Verify modal priority in `ModalManager` 
+- Test with different terminal sizes using resize
+
+### Performance Considerations for Large Files
+- LRU caches are pre-configured for schema inference (200 entries) and debug logs (1000 entries)
+- Virtual scrolling automatically activates for large datasets
+- Use `npm run test:ci` for memory-constrained testing
+- Performance tests are excluded in CI but available locally
+
 ## Important Development Reminders
 
 - **Always use extensionless imports** - The build system requires this
@@ -361,3 +429,5 @@ The project has plans for **UI separation architecture** to enable future GUI (W
 - **Never assume libraries are available** - Always check existing dependencies first
 - **Use `neverthrow` Result pattern** - Avoid throwing exceptions in favor of explicit error handling
 - **Follow feature-based architecture** - Keep components, types, and utils together within feature directories
+- **Modal UI conflicts** - Always check if new UI elements conflict with existing modals
+- **Biome formatting** - Uses double quotes, 2-space indentation, and auto-import organization
