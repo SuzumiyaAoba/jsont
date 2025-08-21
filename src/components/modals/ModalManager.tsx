@@ -121,7 +121,9 @@ export function ModalManager({
               keybindings={config.keybindings}
               height={terminalSize.height}
               width={terminalSize.width}
-              propertyDetailsHeight={terminalCalculations.propertyDetailsHeight}
+              propertyDetailsHeight={
+                terminalCalculations.propertyDetailsHeight ?? 0
+              }
             />
           </Box>
         )}

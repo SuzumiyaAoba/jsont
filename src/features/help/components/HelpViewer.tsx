@@ -17,7 +17,7 @@ export interface HelpViewerProps {
   height?: number;
   /** Width of the help viewer in characters */
   width?: number;
-  /** Height of property details area to adjust positioning */
+  /** Height (in terminal rows) of the property details area reserved below the help viewer. Must be >= 0. */
   propertyDetailsHeight?: number;
 }
 
@@ -33,23 +33,30 @@ export function HelpViewer({
     [mode, keybindings],
   );
 
-  // Calculate the available height for the help content
-  // This is the space above the property details area
-  const availableHeight = height - propertyDetailsHeight;
+  // Sanitize input to prevent negative values
+  const reservedBottom = Math.max(0, Math.floor(propertyDetailsHeight));
+
+  // Layout constants
+  const contentPadding = 4;
+  const minContentHeight = 10;
 
   return (
     <Box
       flexDirection="column"
       width={width}
-      height={availableHeight}
+      height={height}
       justifyContent="center"
       alignItems="center"
+      paddingBottom={reservedBottom}
     >
       {/* Help content with border frame */}
       <Box
         flexDirection="column"
-        width={Math.min(width - 4, 76)}
-        height={Math.max(availableHeight - 4, 10)}
+        width={Math.min(width - contentPadding, 76)}
+        height={Math.max(
+          height - reservedBottom - contentPadding,
+          minContentHeight,
+        )}
         borderStyle="double"
         borderColor="cyan"
         paddingX={2}
