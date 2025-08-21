@@ -49,7 +49,7 @@ export function HelpViewer({
       <Box
         flexDirection="column"
         width={Math.min(width - 4, 76)}
-        maxHeight={Math.max(availableHeight - 4, 10)}
+        height={Math.max(availableHeight - 4, 10)}
         borderStyle="double"
         borderColor="cyan"
         paddingX={2}
