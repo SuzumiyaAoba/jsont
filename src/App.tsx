@@ -186,14 +186,15 @@ function AppContent({
           collapsibleViewerRef={collapsibleViewerRef}
         />
 
-        {/* Property details display at the bottom */}
-        {(currentMode === "tree" || currentMode === "collapsible") && (
-          <PropertyDetailsDisplay
-            details={propertyDetails}
-            config={propertyDetailsConfig}
-            width={terminalCalculations.terminalSize.width}
-          />
-        )}
+        {/* Property details display at the bottom - hide when help is visible */}
+        {(currentMode === "tree" || currentMode === "collapsible") &&
+          !ui.helpVisible && (
+            <PropertyDetailsDisplay
+              details={propertyDetails}
+              config={propertyDetailsConfig}
+              width={terminalCalculations.terminalSize.width}
+            />
+          )}
 
         {/* Keyboard input manager */}
         <KeyboardManager
