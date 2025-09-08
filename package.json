@@ -81,7 +81,7 @@
   },
   "homepage": "https://github.com/SuzumiyaAoba/jsont#readme",
   "dependencies": {
-    "@types/react": "^19.1.10",
+    "@types/react": "^19.1.12",
     "defu": "^6.1.4",
     "es-toolkit": "^1.39.10",
     "ink": "^6.2.0",
